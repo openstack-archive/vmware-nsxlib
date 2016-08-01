@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = vmware_nsxlib
+omit = vmware_nsxlib/openstack/*
+
+[report]
+ignore_errors = True
