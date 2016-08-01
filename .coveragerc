@@ -1,0 +1,6 @@
+[run]
+branch = True
+source = vmware_nsxlib
+
+[report]
+ignore_errors = True
