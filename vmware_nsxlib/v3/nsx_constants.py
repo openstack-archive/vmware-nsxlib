@@ -94,3 +94,9 @@ IPV4_IPV6 = 'IPV4_IPV6'
 LOCAL_IP_PREFIX = 'local_ip_prefix'
 
 LOGGING = 'logging'
+
+# QoS directions egress/ingress
+EGRESS = 'egress'
+INGRESS = 'ingress'
+EGRESS_SHAPING = 'EgressRateShaper'
+INGRESS_SHAPING = 'IngressRateShaper'

@@ -235,11 +235,17 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
             body["description"] = description
         return body
 
+    def _get_resource_type(self, direction):
+        if direction == nsx_constants.EGRESS:
+            return nsx_constants.EGRESS_SHAPING
+        return nsx_constants.INGRESS_SHAPING
+
     def _enable_shaping_in_args(self, body, burst_size=None,
-                                peak_bandwidth=None, average_bandwidth=None):
+                                peak_bandwidth=None, average_bandwidth=None,
+                                direction=None):
+        resource_type = self._get_resource_type(direction)
         for shaper in body["shaper_configuration"]:
-            # We currently supports only shaping of Egress traffic
-            if shaper["resource_type"] == "EgressRateShaper":
+            if shaper["resource_type"] == resource_type:
                 shaper["enabled"] = True
                 if burst_size:
                     shaper["burst_size_bytes"] = burst_size
@@ -251,10 +257,10 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
 
         return body
 
-    def _disable_shaping_in_args(self, body):
+    def _disable_shaping_in_args(self, body, direction=None):
+        resource_type = self._get_resource_type(direction)
         for shaper in body["shaper_configuration"]:
-            # We currently supports only shaping of Egress traffic
-            if shaper["resource_type"] == "EgressRateShaper":
+            if shaper["resource_type"] == resource_type:
                 shaper["enabled"] = False
                 shaper["burst_size_bytes"] = 0
                 shaper["peak_bandwidth_mbps"] = 0
@@ -289,7 +295,8 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
                        burst_size=None,
                        peak_bandwidth=None,
                        average_bandwidth=None,
-                       qos_marking=None, dscp=None):
+                       qos_marking=None, dscp=None,
+                       direction=nsx_constants.INGRESS):
         resource = 'switching-profiles/%s' % profile_id
         # get the current configuration
         body = self.get(profile_id)
@@ -298,9 +305,10 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
             body = self._enable_shaping_in_args(
                 body, burst_size=burst_size,
                 peak_bandwidth=peak_bandwidth,
-                average_bandwidth=average_bandwidth)
+                average_bandwidth=average_bandwidth,
+                direction=direction)
         else:
-            body = self._disable_shaping_in_args(body)
+            body = self._disable_shaping_in_args(body, direction=direction)
         body = self._update_dscp_in_args(body, qos_marking, dscp)
         return self._update_resource_with_retry(resource, body)
 
