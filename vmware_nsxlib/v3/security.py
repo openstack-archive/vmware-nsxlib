@@ -370,7 +370,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
 
     def list(self):
         resource = 'firewall/sections'
-        return self.client.get(resource).get('results', [])
+        return self.client.list(resource).get('results', [])
 
     def delete(self, section_id):
         resource = 'firewall/sections/%s?cascade=true' % section_id
