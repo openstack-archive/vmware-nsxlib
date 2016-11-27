@@ -193,9 +193,9 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
 
     def _update_with_members(self, nsgroup_id, members, action):
         #Using internal method so we can access max_attempts in the decorator
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
+        #@utils.retry_upon_exception(
+        #    exceptions.StaleRevision,
+        #    max_attempts=self.nsxlib_config.max_attempts)
         def _do_update():
             members_update = 'ns-groups/%s?action=%s' % (nsgroup_id, action)
             return self.client.create(members_update, members)
