@@ -69,7 +69,7 @@ class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
         api = self.new_mocked_client(client.RESTClient,
                                      url_prefix='/cloud/api')
 
-        api.list()
+        api.list('')
 
         assert_call(
             'get', api,
@@ -90,7 +90,7 @@ class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
             client.RESTClient, default_headers=default_headers,
             url_prefix='/v1/api')
 
-        api.list()
+        api.list('')
 
         assert_call(
             'get', api,
@@ -123,7 +123,7 @@ class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
     def test_client_list(self):
         api = self.new_mocked_client(client.RESTClient,
                                      url_prefix='api/v1/ports')
-        api.list()
+        api.list('')
 
         assert_call(
             'get', api,
