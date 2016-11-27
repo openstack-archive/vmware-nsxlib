@@ -27,6 +27,7 @@ LOG = log.getLogger(__name__)
 ERRORS = {requests.codes.NOT_FOUND: exceptions.ResourceNotFound,
           requests.codes.PRECONDITION_FAILED: exceptions.StaleRevision}
 DEFAULT_ERROR = exceptions.ManagerError
+NULL_CURSOR_PREFIX = '0000'
 
 
 class RESTClient(object):
@@ -70,7 +71,16 @@ class RESTClient(object):
         return self.url_post(resource, body, headers=headers)
 
     def url_list(self, url, headers=None):
-        return self.url_get(url, headers=headers)
+        concanated_response = self.url_get(url, headers=headers)
+        cursor = concanated_response.get('cursor', NULL_CURSOR_PREFIX)
+        op = '&' if urlparse.urlparse(url).query else '?'
+        url += op + 'cursor='
+
+        while not cursor.startwith(NULL_CURSOR_PREFIX):
+            page = self.url_get(url + cursor, headers=headers)
+            concanated_response['results'].append(page.get('results', []))
+            cursor = page.get('cursor', NULL_CURSOR_PREFIX)
+        return concanated_response
 
     def url_get(self, url, headers=None):
         return self._rest_call(url, method='GET', headers=headers)
