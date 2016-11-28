@@ -94,49 +94,6 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
             self.remove_member(
                 nsgroup_id, consts.TARGET_TYPE_LOGICAL_PORT, lport_id)
 
-    def init_default_section(self, name, description, nested_groups,
-                             log_sg_blocked_traffic):
-        fw_sections = self.list_sections()
-        for section in fw_sections:
-            if section['display_name'] == name:
-                break
-        else:
-            tags = utils.build_v3_api_version_tag()
-            section = self.create_empty_section(
-                name, description, nested_groups, tags)
-
-        block_rule = self.get_firewall_rule_dict(
-            'Block All', action=consts.FW_ACTION_DROP,
-            logged=log_sg_blocked_traffic)
-        # TODO(roeyc): Add additional rules to allow IPV6 NDP.
-        dhcp_client = self.get_nsservice(
-            consts.L4_PORT_SET_NSSERVICE,
-            l4_protocol=consts.UDP,
-            source_ports=[67],
-            destination_ports=[68])
-        dhcp_client_rule_in = self.get_firewall_rule_dict(
-            'DHCP Reply',
-            direction=consts.IN,
-            service=dhcp_client)
-
-        dhcp_server = (
-            self.get_nsservice(consts.L4_PORT_SET_NSSERVICE,
-                               l4_protocol=consts.UDP,
-                               source_ports=[68],
-                               destination_ports=[67]))
-        dhcp_client_rule_out = self.get_firewall_rule_dict(
-            'DHCP Request',
-            direction=consts.OUT,
-            service=dhcp_server)
-
-        self.update_section(section['id'],
-                            name, section['description'],
-                            applied_tos=nested_groups,
-                            rules=[dhcp_client_rule_out,
-                                   dhcp_client_rule_in,
-                                   block_rule])
-        return section['id']
-
     def get_nsservice(self, resource_type, **properties):
         service = {'resource_type': resource_type}
         service.update(properties)
