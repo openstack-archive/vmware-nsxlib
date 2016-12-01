@@ -201,8 +201,26 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
             LOG.debug("NSGroup %s does not exists for delete request.",
                       nsgroup_id)
 
+    def find_by_display_name(self, display_name):
+        found = []
+        for resource in self.list():
+            if resource['display_name'] == display_name:
+                found.append(resource)
+        return found
+
 
 class NsxLibFirewallSection(utils.NsxLibApiBase):
+
+    def add_member_to_fw_exclude_list(self, target_id):
+        resource = 'firewall/excludelist?action=add_member'
+        body = {"target_id": target_id,
+                "target_type": consts.TARGET_TYPE_LOGICAL_PORT}
+        self.client.create(resource, body)
+
+    def remove_member_from_fw_exclude_list(self, target_id, target_type):
+        resource = ('firewall/excludelist?action=remove_member&object_id='
+                    + target_id)
+        self.client.create(resource)
 
     def _get_direction(self, sg_rule):
         return (
