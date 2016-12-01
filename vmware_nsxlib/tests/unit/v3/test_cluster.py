@@ -54,7 +54,7 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
 
         self.assertEqual(session.auth, ('nsxuser', 'nsxpassword'))
         self.assertEqual(session.verify, False)
-        self.assertEqual(session.cert, None)
+        self.assertIsNone(session.cert)
         self.assertEqual(session.adapters['https://'].max_retries.total, 100)
         self.assertEqual(session.timeout, 99)
 
