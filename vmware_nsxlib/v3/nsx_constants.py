@@ -48,6 +48,7 @@ SERVICE_DHCP = "dhcp"
 NSGROUP = 'NSGroup'
 NSGROUP_SIMPLE_EXP = 'NSGroupSimpleExpression'
 NSGROUP_TAG_EXP = 'NSGroupTagExpression'
+EXCLUDE_PORT = 'Exclude-Port'
 
 # Firewall rule position
 FW_INSERT_BEFORE = 'insert_before'
