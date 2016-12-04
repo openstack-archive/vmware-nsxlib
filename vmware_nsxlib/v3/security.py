@@ -211,10 +211,10 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
 
 class NsxLibFirewallSection(utils.NsxLibApiBase):
 
-    def add_member_to_fw_exclude_list(self, target_id):
+    def add_member_to_fw_exclude_list(self, target_id, target_type):
         resource = 'firewall/excludelist?action=add_member'
         body = {"target_id": target_id,
-                "target_type": consts.TARGET_TYPE_LOGICAL_PORT}
+                "target_type": target_type}
         self.client.create(resource, body)
 
     def remove_member_from_fw_exclude_list(self, target_id, target_type):
