@@ -457,7 +457,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
     def init_default(self, name, description, nested_groups,
                      log_sg_blocked_traffic):
         fw_sections = self.list()
-        for section in fw_sections:
+        for section in reversed(fw_sections):
             if section['display_name'] == name:
                 break
         else:
