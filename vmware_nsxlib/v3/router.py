@@ -111,6 +111,26 @@ class RouterLib(object):
         self._router_port_client.delete(tier1_link_port_id)
         self._router_port_client.delete(tier0_link_port_id)
 
+    def update_vrf(self, tier1_uuid, vrf_id=None):
+        # NSX backend does not allow updating VRF on a logical router port.
+        # Need to delete it and re-create it with new VRF info.
+        tier1_link_port = self._router_port_client.get_tier1_link_port(
+            tier1_uuid)
+        if tier1_link_port.get('vrf_id') == vrf_id:
+            return None  # no change
+        # Delete current Tier1 logical router link port
+        self._router_port_client.delete(tier1_link_port['id'])
+        # Create new Tier1 logical router link port
+        return self._router_port_client.create(
+            tier1_link_port['logical_router_id'],
+            display_name=TIER1_ROUTER_LINK_PORT_NAME,
+            tags=tier1_link_port['tags'],
+            resource_type=nsx_constants.LROUTERPORT_LINKONTIER1,
+            logical_port_id=tier1_link_port[
+                'linked_logical_switch_port_id'].get('target_id'),
+            address_groups=None,
+            vrf_id=vrf_id)
+
     def update_advertisement(self, logical_router_id,
                              advertise_route_nat,
                              advertise_route_connected,
