@@ -575,3 +575,33 @@ class LogicalDhcpServer(AbstractRESTResource):
     def delete_binding(self, server_uuid, binding_uuid):
         url = "%s/static-bindings/%s" % (server_uuid, binding_uuid)
         return self._client.url_delete(url)
+
+
+class IpPool(AbstractRESTResource):
+
+    @property
+    def uri_segment(self):
+        return 'pools/ip-pools'
+
+    def create(self, display_name=None, gateway_ip=None, ranges=None):
+        print "DEBUG ADIT nsxlib IpPool create!"
+        body = {
+            "display_name": display_name,
+            #"description": "IPPool-IPV6-1 Description",
+            "subnets": [
+                {
+                    #"dns_nameservers": ["2002:a70:cbfa:1:1:1:1:1"],
+                    "allocation_ranges": ranges,
+                    # [
+                    #     {
+                    #         "start": "2002:a70:cbfa:0:0:0:0:1",
+                    #         "end": "2002:a70:cbfa:0:0:0:0:5"
+                    #     }
+                    # ],
+                    "gateway_ip": gateway_ip,
+                    #"cidr": cidr
+                }
+            ]
+        }
+
+        return self._client.create(body=body)
