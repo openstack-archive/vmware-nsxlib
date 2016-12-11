@@ -15,6 +15,7 @@
 #
 import abc
 import collections
+import netaddr
 import six
 
 from vmware_nsxlib._i18n import _
@@ -575,3 +576,84 @@ class LogicalDhcpServer(AbstractRESTResource):
     def delete_binding(self, server_uuid, binding_uuid):
         url = "%s/static-bindings/%s" % (server_uuid, binding_uuid)
         return self._client.url_delete(url)
+
+
+class IpPool(AbstractRESTResource):
+    #TODO(asarfaty): Check the DK api - could be different
+    @property
+    def uri_segment(self):
+        return 'pools/ip-pools'
+
+    def _generate_ranges(self, cidr, gateway_ip):
+        """Create list of ranges from the given cidr.
+
+        Ignore the gateway_ip, if defined
+        """
+        ip_set = netaddr.IPSet(netaddr.IPNetwork(cidr))
+        if gateway_ip:
+            ip_set.remove(gateway_ip)
+        return [{"start": str(r[0]),
+                 "end": str(r[-1])} for r in ip_set.iter_ipranges()]
+
+    def create(self, cidr, ranges=None, display_name=None, description=None,
+               gateway_ip=None, dns_nameservers=None):
+        """Create an IpPool.
+
+        Arguments:
+        cidr: (required)
+        ranges: (optional) a list of dictionaries, each with 'start'
+                and 'end' keys, and IP values.
+                If None: the cidr will be used to create the ranges,
+                excluding the gateway.
+        display_name: (optional)
+        description: (optional)
+        gateway_ip: (optional)
+        dns_nameservers: (optional) list of addresses
+        """
+        if not cidr:
+            raise exceptions.InvalidInput(operation="IP Pool create",
+                                          arg_name="cidr", arg_val=cidr)
+        if not ranges:
+            # generate ranges from (cidr - gateway)
+            ranges = self._generate_ranges(cidr, gateway_ip)
+
+        subnet = {"allocation_ranges": ranges,
+                  "cidr": cidr}
+        if gateway_ip:
+            subnet["gateway_ip"] = gateway_ip
+        if dns_nameservers:
+            subnet["dns_nameservers"] = dns_nameservers
+
+        body = {"subnets": [subnet]}
+        if description:
+            body['description'] = description
+        if display_name:
+            body['display_name'] = display_name
+
+        return self._client.create(body=body)
+
+    def delete(self, pool_id):
+        """Delete an IPPool by its ID."""
+        return self._client.delete(pool_id)
+
+    def update(self, uuid, *args, **kwargs):
+        # Not supported yet
+        pass
+
+    def get(self, pool_id):
+        return self._client.get(pool_id)
+
+    def allocate(self, pool_id, ip_addr=None):
+        """Allocate an IP from a pool."""
+        # Note: Currently the backend does not support allocation of a
+        # specific IP, so an exception will be raised by the backend.
+        # Depending on the backend version, this may be allowed in the future
+        url = "%s?action=ALLOCATE" % pool_id
+        body = {"allocation_id": ip_addr}
+        return self._client.url_post(url, body=body)
+
+    def release(self, pool_id, ip_addr):
+        """Release an IP back to a pool."""
+        url = "%s?action=RELEASE" % pool_id
+        body = {"allocation_id": ip_addr}
+        return self._client.url_post(url, body=body)

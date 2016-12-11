@@ -94,9 +94,11 @@ class RESTClient(object):
     def url_post(self, url, body, headers=None):
         return self._rest_call(url, method='POST', body=body, headers=headers)
 
-    def _raise_error(self, status_code, operation, result_msg):
+    def _raise_error(self, status_code, operation, result_msg,
+                     error_code=None):
         error = ERRORS.get(status_code, DEFAULT_ERROR)
-        raise error(manager='', operation=operation, details=result_msg)
+        raise error(manager='', operation=operation, details=result_msg,
+                    error_code=error_code)
 
     def _validate_result(self, result, expected, operation):
         if result.status_code not in expected:
@@ -109,14 +111,17 @@ class RESTClient(object):
                                                for code in expected]),
                          'body': result_msg})
 
+            error_code = None
             if isinstance(result_msg, dict) and 'error_message' in result_msg:
+                error_code = result_msg.get('error_code')
                 related_errors = [error['error_message'] for error in
                                   result_msg.get('related_errors', [])]
                 result_msg = result_msg['error_message']
                 if related_errors:
                     result_msg += " relatedErrors: %s" % ' '.join(
                         related_errors)
-            self._raise_error(result.status_code, operation, result_msg)
+            self._raise_error(result.status_code, operation, result_msg,
+                              error_code=error_code)
 
     @classmethod
     def merge_headers(cls, *headers):
@@ -215,9 +220,11 @@ class NSX3Client(JSONRESTClient):
             default_headers=default_headers,
             client_obj=client_obj)
 
-    def _raise_error(self, status_code, operation, result_msg):
+    def _raise_error(self, status_code, operation, result_msg,
+                     error_code=None):
         """Override the Rest client errors to add the manager IPs"""
         error = ERRORS.get(status_code, DEFAULT_ERROR)
         raise error(manager=self.nsx_api_managers,
                     operation=operation,
-                    details=result_msg)
+                    details=result_msg,
+                    error_code=error_code)

@@ -101,3 +101,9 @@ EGRESS = 'egress'
 INGRESS = 'ingress'
 EGRESS_SHAPING = 'EgressRateShaper'
 INGRESS_SHAPING = 'IngressRateShaper'
+
+# Error codes returned by the backend
+ERR_CODE_OBJECT_NOT_FOUND = 202
+ERR_CODE_IPAM_POOL_EXHAUSTED = 5109
+ERR_CODE_IPAM_SPECIFIC_IP = 5123
+ERR_CODE_IPAM_IP_NOT_IN_POOL = 5110

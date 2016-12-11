@@ -160,3 +160,23 @@ FAKE_QOS_PROFILE = {
     "_create_user": "admin",
     "_revision": 0
 }
+
+FAKE_IP_POOL_UUID = uuidutils.generate_uuid()
+FAKE_IP_POOL = {
+    "_revision": 0,
+    "id": FAKE_IP_POOL_UUID,
+    "display_name": "IPPool-IPV6-1",
+    "description": "IPPool-IPV6-1 Description",
+    "resource_type": "IpPool",
+    "subnets": [{
+        "dns_nameservers": [
+            "2002:a70:cbfa:1:1:1:1:1"
+        ],
+        "allocation_ranges": [{
+            "start": "2002:a70:cbfa:0:0:0:0:1",
+            "end": "2002:a70:cbfa:0:0:0:0:5"
+        }],
+        "gateway_ip": "2002:a80:cbfa:0:0:0:0:255",
+        "cidr": "2002:a70:cbfa:0:0:0:0:0/24"
+    }],
+}
