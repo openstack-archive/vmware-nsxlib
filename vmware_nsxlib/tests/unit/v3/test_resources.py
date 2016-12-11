@@ -540,3 +540,40 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             'get', lrport,
             'https://1.2.3.4/api/v1/logical-router-ports/?'
             'logical_switch_id=%s' % switch_id)
+
+
+class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
+
+    def _mocked_pool(self, session_response=None):
+        return self.mocked_resource(
+            resources.IpPool, session_response=session_response)
+
+    def test_create_ip_pool(self):
+        """Test creating an IP pool
+
+        returns the correct response and 201 status
+        """
+        pool = self._mocked_pool()
+
+        display_name = 'dummy'
+        gateway_ip = '1.1.1.1'
+        ranges = [{'start': '2.2.2.0', 'end': '2.2.2.255'}]
+        cidr = '2.2.2.0/24'
+        description = 'desc'
+        pool.create(display_name=display_name, gateway_ip=gateway_ip,
+                    description=description, ranges=ranges, cidr=cidr)
+
+        data = {
+            'display_name': display_name,
+            'description': description,
+            'subnets': [{
+                'gateway_ip': gateway_ip,
+                'allocation_ranges': ranges,
+                'cidr': cidr,
+            }]
+        }
+
+        test_client.assert_json_call(
+            'post', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools',
+            data=jsonutils.dumps(data, sort_keys=True))

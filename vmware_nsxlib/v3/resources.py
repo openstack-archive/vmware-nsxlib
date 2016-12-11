@@ -575,3 +575,63 @@ class LogicalDhcpServer(AbstractRESTResource):
     def delete_binding(self, server_uuid, binding_uuid):
         url = "%s/static-bindings/%s" % (server_uuid, binding_uuid)
         return self._client.url_delete(url)
+
+
+class IpPool(AbstractRESTResource):
+
+    @property
+    def uri_segment(self):
+        return 'pools/ip-pools'
+
+    def create(self, display_name=None, description=None,
+               gateway_ip=None, ranges=None, cidr=None):
+        """Create an IpPoll.
+
+        Ranges arg should be a lis of dictionaries, each with 'start'
+        and 'end' keys, and IP values.
+        """
+        #print "DEBUG ADIT nsxlib IpPool create!"
+        # DEBUG ADIT - ranges should be netaddr ranges!
+        body = {
+            "display_name": display_name,
+            #"description": "IPPool-IPV6-1 Description",
+            "subnets": [
+                {
+                    #"dns_nameservers": ["2002:a70:cbfa:1:1:1:1:1"],
+                    "allocation_ranges": ranges,
+                    # [
+                    #     {
+                    #         "start": "2002:a70:cbfa:0:0:0:0:1",
+                    #         "end": "2002:a70:cbfa:0:0:0:0:5"
+                    #     }
+                    # ],
+                    "gateway_ip": gateway_ip,
+                    "cidr": cidr
+                }
+            ]
+        }
+        if description:
+            # DEBUG ADIT - max len ??
+            body['description'] = description
+
+        return self._client.create(body=body)
+
+    def delete(self, pool_id):
+        """Delete an IPPool by its ID."""
+        return self._client.delete(pool_id)
+
+    def update(self, uuid, *args, **kwargs):
+        pass
+
+    def get(self, pool_id):
+        return self._client.get(pool_id)
+
+    def allocate(self, pool_id, ip_addr=None):
+        """Allocate an IP (specific ar any) from a pool."""
+        # Not yet
+        pass
+
+    def release(self, pool_id, ip_addr):
+        """Release an IP back to a pool."""
+        # Not yet
+        pass
