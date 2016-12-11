@@ -63,6 +63,7 @@ class ManagerError(NsxLibException):
             self.msg = self.message % kwargs
         except KeyError:
             self.msg = details
+        self.error_code = kwargs.get('error_code', None)
 
 
 class ResourceNotFound(ManagerError):

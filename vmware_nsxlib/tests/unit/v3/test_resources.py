@@ -540,3 +540,98 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             'get', lrport,
             'https://1.2.3.4/api/v1/logical-router-ports/?'
             'logical_switch_id=%s' % switch_id)
+
+
+class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
+
+    def _mocked_pool(self, session_response=None):
+        return self.mocked_resource(
+            resources.IpPool, session_response=session_response)
+
+    def test_create_ip_pool(self):
+        """Test creating an IP pool
+
+        returns the correct response and 201 status
+        """
+        pool = self._mocked_pool()
+
+        display_name = 'dummy'
+        gateway_ip = '1.1.1.1'
+        ranges = [{'start': '2.2.2.0', 'end': '2.2.2.255'},
+                  {'start': '3.2.2.0', 'end': '3.2.2.255'}]
+        cidr = '2.2.2.0/24'
+        description = 'desc'
+        dns_nameserver = '7.7.7.7'
+        pool.create(ranges, cidr,
+                    display_name=display_name,
+                    gateway_ip=gateway_ip,
+                    description=description,
+                    dns_nameservers=[dns_nameserver])
+
+        data = {
+            'display_name': display_name,
+            'description': description,
+            'subnets': [{
+                'gateway_ip': gateway_ip,
+                'allocation_ranges': ranges,
+                'cidr': cidr,
+                'dns_nameservers': [dns_nameserver]
+            }]
+        }
+
+        test_client.assert_json_call(
+            'post', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools',
+            data=jsonutils.dumps(data, sort_keys=True))
+
+    def test_get_ip_pool(self):
+        """Test getting a router port by router id"""
+        fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
+        resp_resources = fake_ip_pool
+
+        pool = self._mocked_pool(
+            session_response=mocks.MockRequestsResponse(
+                200, jsonutils.dumps(resp_resources)))
+
+        uuid = fake_ip_pool['id']
+        result = pool.get(uuid)
+        self.assertEqual(fake_ip_pool, result)
+        test_client.assert_json_call(
+            'get', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid)
+
+    def test_delete_ip_pool(self):
+        """Test deleting router port"""
+        pool = self._mocked_pool()
+
+        uuid = test_constants.FAKE_IP_POOL['id']
+        pool.delete(uuid)
+        test_client.assert_json_call(
+            'delete', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid)
+
+    def test_allocate_ip_from_pool(self):
+        pool = self._mocked_pool()
+
+        uuid = test_constants.FAKE_IP_POOL['id']
+        addr = '1.1.1.1'
+        pool.allocate(uuid, ip_addr=addr)
+
+        data = {'allocation_id': addr}
+        test_client.assert_json_call(
+            'post', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s?action=ALLOCATE' % uuid,
+            data=jsonutils.dumps(data, sort_keys=True))
+
+    def test_release_ip_to_pool(self):
+        pool = self._mocked_pool()
+
+        uuid = test_constants.FAKE_IP_POOL['id']
+        addr = '1.1.1.1'
+        pool.release(uuid, addr)
+
+        data = {'allocation_id': addr}
+        test_client.assert_json_call(
+            'post', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s?action=RELEASE' % uuid,
+            data=jsonutils.dumps(data, sort_keys=True))
