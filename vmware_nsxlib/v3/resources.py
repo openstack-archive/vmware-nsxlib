@@ -284,7 +284,7 @@ class LogicalPort(AbstractRESTResource):
         return self._client.create(body=body)
 
     def delete(self, lport_id):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self._client.max_attempts)
@@ -299,7 +299,7 @@ class LogicalPort(AbstractRESTResource):
                tags_update=None,
                attachment_type=nsx_constants.ATTACHMENT_VIF,
                parent_vif_id=None, parent_tag=None):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self._client.max_attempts)
@@ -348,7 +348,7 @@ class LogicalRouter(AbstractRESTResource):
         return self._client.url_delete(lrouter_id)
 
     def update(self, lrouter_id, *args, **kwargs):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self._client.max_attempts)
@@ -399,7 +399,7 @@ class LogicalRouterPort(AbstractRESTResource):
         return self._client.create(body=body)
 
     def update(self, logical_port_id, **kwargs):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self._client.max_attempts)
@@ -416,7 +416,7 @@ class LogicalRouterPort(AbstractRESTResource):
         return _do_update()
 
     def delete(self, logical_port_id):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self._client.max_attempts)
@@ -531,7 +531,7 @@ class LogicalDhcpServer(AbstractRESTResource):
     def update(self, uuid, dhcp_profile_id=None, server_ip=None, name=None,
                dns_nameservers=None, domain_name=None, gateway_ip=False,
                options=None, tags=None):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self._client.max_attempts)
@@ -564,7 +564,7 @@ class LogicalDhcpServer(AbstractRESTResource):
         return self._client.url_get(url)
 
     def update_binding(self, server_uuid, binding_uuid, **kwargs):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self._client.max_attempts)
@@ -582,7 +582,7 @@ class LogicalDhcpServer(AbstractRESTResource):
 
 
 class IpPool(AbstractRESTResource):
-    #TODO(asarfaty): Check the DK api - could be different
+    # TODO(asarfaty): Check the DK api - could be different
     @property
     def uri_segment(self):
         return 'pools/ip-pools'

@@ -44,11 +44,11 @@ logging.getLogger(
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractHTTPProvider(object):
-    """Interface for providers of HTTP connections which
-    are responsible for creating and validating connections
+    """Interface for providers of HTTP connections.
+
+    which are responsible for creating and validating connections
     for their underlying HTTP support.
     """
-
     @property
     def default_scheme(self):
         return 'https'
@@ -60,13 +60,14 @@ class AbstractHTTPProvider(object):
 
     @abc.abstractmethod
     def validate_connection(self, cluster_api, endpoint, conn):
-        """Validate the said connection for the given endpoint and cluster.
-        """
+        """Validate the said connection for the given endpoint and cluster."""
         pass
 
     @abc.abstractmethod
     def new_connection(self, cluster_api, provider):
-        """Create a new http connection for the said cluster and
+        """Create a new http connection.
+
+        Create a new http connection for the said cluster and
         cluster provider. The actual connection should duck type
         requests.Session http methods (get(), put(), etc.).
         """
@@ -74,16 +75,14 @@ class AbstractHTTPProvider(object):
 
     @abc.abstractmethod
     def is_connection_exception(self, exception):
-        """Determine if the given exception is related to connection
-        failure. Return True if it's a connection exception and
-        False otherwise.
+        """Determine if the given exception is related to connection failure.
+
+        Return True if it's a connection exception and False otherwise.
         """
 
 
 class TimeoutSession(requests.Session):
-    """Extends requests.Session to support timeout
-    at the session level.
-    """
+    """Extends requests.Session to support timeout at the session level."""
 
     def __init__(self, timeout, read_timeout):
         self.timeout = timeout
@@ -99,7 +98,8 @@ class TimeoutSession(requests.Session):
 
 
 class NSXRequestsHTTPProvider(AbstractHTTPProvider):
-    """Concrete implementation of AbstractHTTPProvider
+    """Concrete implementation of AbstractHTTPProvider.
+
     using requests.Session() as the underlying connection.
     """
 
@@ -145,8 +145,9 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
 
 
 class ClusterHealth(object):
-    """Indicator of overall cluster health with respect
-    to the connectivity of the clusters managed endpoints.
+    """Indicator of overall cluster health.
+
+    with respect to the connectivity of the clusters managed endpoints.
     """
     # all endpoints are UP
     GREEN = 'GREEN'
@@ -157,8 +158,7 @@ class ClusterHealth(object):
 
 
 class EndpointState(object):
-    """Tracks the connectivity state for a said endpoint.
-    """
+    """Tracks the connectivity state for a said endpoint."""
     # no UP or DOWN state recorded yet
     INITIALIZED = 'INITIALIZED'
     # endpoint has been validate and is good
@@ -168,8 +168,9 @@ class EndpointState(object):
 
 
 class Provider(object):
-    """Data holder for a provider which has a unique id
-    a connection URL, and the credential details.
+    """Data holder for a provider
+
+    Which has a unique id a connection URL, and the credential details.
     """
 
     def __init__(self, provider_id, provider_url, username, password, ca_file):
@@ -184,7 +185,9 @@ class Provider(object):
 
 
 class Endpoint(object):
-    """A single NSX manager endpoint (host) which includes
+    """A single NSX manager endpoint (host).
+
+    A single NSX manager endpoint (host) which includes
     related information such as the endpoint's provider,
     state, etc.. A pool is used to hold connections to the
     endpoint which are doled out when proxying HTTP methods
@@ -224,8 +227,9 @@ class Endpoint(object):
 
 
 class EndpointConnection(object):
-    """Simple data holder which contains an endpoint and
-    a connection for that endpoint.
+    """Simple data holder
+
+    Which contains an endpoint and a connection for that endpoint.
     """
 
     def __init__(self, endpoint, connection):
@@ -234,8 +238,9 @@ class EndpointConnection(object):
 
 
 class ClusteredAPI(object):
-    """Duck types the major HTTP based methods of a
-    requests.Session such as get(), put(), post(), etc.
+    """Duck types the major HTTP based methods of a requests.Session
+
+    Such as get(), put(), post(), etc.
     and transparently proxies those calls to one of
     its managed NSX manager endpoints.
     """
@@ -444,9 +449,7 @@ class ClusteredAPI(object):
 
 
 class NSXClusteredAPI(ClusteredAPI):
-    """Extends ClusteredAPI to get conf values and setup the
-    NSX v3 cluster.
-    """
+    """Extends ClusteredAPI to get conf values and setup the NSXv3 cluster."""
 
     def __init__(self, nsxlib_config):
         self.nsxlib_config = nsxlib_config

@@ -72,7 +72,7 @@ def retry_upon_exception(exc, delay=0.5, max_delay=2,
     return tenacity.retry(reraise=True,
                           retry=tenacity.retry_if_exception_type(exc),
                           wait=tenacity.wait_exponential(
-                                multiplier=delay, max=max_delay),
+                              multiplier=delay, max=max_delay),
                           stop=tenacity.stop_after_attempt(max_attempts))
 
 

@@ -28,8 +28,8 @@ LOG = log.getLogger(__name__)
 
 
 class NSGroupManager(object):
-    """
-    This class assists with NSX integration for Neutron security-groups,
+    """This class assists with NSX integration for Neutron security-groups
+
     Each Neutron security-group is associated with NSX NSGroup object.
     Some specific security policies are the same across all security-groups,
     i.e - Default drop rule, DHCP. In order to bind these rules to all
@@ -44,7 +44,6 @@ class NSGroupManager(object):
     group it should be added, and when deleting an NSGroup (security-group) we
     use the same procedure to find which nested group it was added.
     """
-
     NESTED_GROUP_NAME = 'OS Nested Group'
     NESTED_GROUP_DESCRIPTION = ('OpenStack NSGroup. Do not delete.')
 

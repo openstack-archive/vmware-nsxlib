@@ -121,7 +121,7 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
 
     def update(self, nsgroup_id, display_name=None, description=None,
                membership_criteria=None, members=None):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)
@@ -306,7 +306,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
 
     def update(self, section_id, display_name=None, description=None,
                applied_tos=None, rules=None):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)
@@ -355,13 +355,10 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return {'target_id': ip_cidr_block,
                 'target_type': target_type}
 
-    def get_rule_dict(
-        self, display_name, source=None,
-        destination=None,
-        direction=consts.IN_OUT,
-        ip_protocol=consts.IPV4_IPV6,
-        service=None, action=consts.FW_ACTION_ALLOW,
-        logged=False):
+    def get_rule_dict(self, display_name, source=None, destination=None,
+                      direction=consts.IN_OUT, ip_protocol=consts.IPV4_IPV6,
+                      service=None, action=consts.FW_ACTION_ALLOW,
+                      logged=False):
         return {'display_name': display_name,
                 'sources': [source] if source else [],
                 'destinations': [destination] if destination else [],
