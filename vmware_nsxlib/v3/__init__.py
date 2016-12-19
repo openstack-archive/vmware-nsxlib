@@ -62,9 +62,9 @@ class NsxLib(object):
         self.transport_zone = NsxLibTransportZone(
             self.client, nsxlib_config)
         self.native_dhcp_profile = NsxLibDhcpProfile(
-             self.client, nsxlib_config)
+            self.client, nsxlib_config)
         self.native_md_proxy = NsxLibMetadataProxy(
-             self.client, nsxlib_config)
+            self.client, nsxlib_config)
         self.firewall_section = security.NsxLibFirewallSection(
             self.client, nsxlib_config)
         self.ns_group = security.NsxLibNsGroup(
@@ -183,7 +183,7 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
         return self.client.create(resource, body)
 
     def delete(self, lswitch_id):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)
@@ -199,7 +199,7 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
         return self.client.get(resource)
 
     def update(self, lswitch_id, name=None, admin_state=None, tags=None):
-        #Using internal method so we can access max_attempts in the decorator
+        # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)

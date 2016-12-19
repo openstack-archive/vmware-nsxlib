@@ -139,12 +139,12 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
                 expected_path = ('switching-profiles/%s' %
                                  test_constants.FAKE_QOS_PROFILE['id'])
                 expected_body = self._body_with_shaping(
-                        shaping_enabled=True,
-                        burst_size=burst_size,
-                        peak_bandwidth=peak_bandwidth,
-                        average_bandwidth=average_bandwidth,
-                        qos_marking="untrusted", dscp=10,
-                        direction=direction)
+                    shaping_enabled=True,
+                    burst_size=burst_size,
+                    peak_bandwidth=peak_bandwidth,
+                    average_bandwidth=average_bandwidth,
+                    qos_marking="untrusted", dscp=10,
+                    direction=direction)
                 self.assertEqual(expected_path, actual_path)
                 self.assertEqual(expected_body, actual_body)
 
@@ -158,9 +158,9 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def _disable_qos_switching_profile_shaping(
         self, direction=nsx_constants.EGRESS):
-        """Test updating a qos-switching profile
+        """Test updating a qos-switching profile.
 
-        returns the correct response
+        Returns the correct response
         """
         burst_size = 100
         peak_bandwidth = 200
@@ -187,7 +187,7 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
                 expected_path = ('switching-profiles/%s' %
                                  test_constants.FAKE_QOS_PROFILE['id'])
                 expected_body = self._body_with_shaping(qos_marking="trusted",
-                                            direction=direction)
+                                                        direction=direction)
                 self.assertEqual(expected_path, actual_path)
                 self.assertEqual(expected_body, actual_body)
 

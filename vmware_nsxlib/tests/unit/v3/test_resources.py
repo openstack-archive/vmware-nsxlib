@@ -259,7 +259,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         return fake_pkt_classifiers, fake_binding_repr
 
     def test_create_logical_port(self):
-        """Test creating a port
+        """Test creating a port.
 
         returns the correct response and 200 status
         """
@@ -346,7 +346,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
             data=jsonutils.dumps(resp_body, sort_keys=True))
 
     def test_create_logical_port_admin_down(self):
-        """Test creating port with admin_state down"""
+        """Test creating port with admin_state down."""
         fake_port = test_constants.FAKE_PORT
         fake_port['admin_state'] = "DOWN"
 
@@ -362,7 +362,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         self.assertEqual(fake_port, result)
 
     def test_delete_logical_port(self):
-        """Test deleting port"""
+        """Test deleting port."""
         mocked_resource = self._mocked_lport()
 
         uuid = test_constants.FAKE_PORT['id']
@@ -390,9 +390,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
             data=jsonutils.dumps(fake_port, sort_keys=True))
 
     def test_create_logical_port_fail(self):
-        """
-        Test the failure of port creation
-        """
+        """Test the failure of port creation."""
         fake_port = test_constants.FAKE_PORT.copy()
 
         profile_dicts = self._get_profile_dicts(fake_port)
@@ -422,7 +420,7 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             resources.LogicalRouter, session_response=session_response)
 
     def test_create_logical_router(self):
-        """Test creating a router returns the correct response and 201 status
+        """Test creating a router returns the correct response and 201 status.
 
         """
         fake_router = test_constants.FAKE_ROUTER.copy()
@@ -460,7 +458,7 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             resources.LogicalRouterPort, session_response=session_response)
 
     def test_create_logical_router_port(self):
-        """Test creating a router port
+        """Test creating a router port.
 
         returns the correct response and 201 status
         """
@@ -487,16 +485,14 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             data=jsonutils.dumps(data, sort_keys=True))
 
     def test_logical_router_port_max_attempts(self):
-        """
-        Test a router port api has the configured retries
-        """
+        """Test a router port api has the configured retries."""
         lrport = self._mocked_lrport()
 
         self.assertEqual(nsxlib_testcase.NSX_MAX_ATTEMPTS,
                          lrport._client.max_attempts)
 
     def test_delete_logical_router_port(self):
-        """Test deleting router port"""
+        """Test deleting router port."""
         lrport = self._mocked_lrport()
 
         uuid = test_constants.FAKE_ROUTER_PORT['id']
@@ -506,7 +502,7 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             'https://1.2.3.4/api/v1/logical-router-ports/%s' % uuid)
 
     def test_get_logical_router_port_by_router_id(self):
-        """Test getting a router port by router id"""
+        """Test getting a router port by router id."""
         fake_router_port = test_constants.FAKE_ROUTER_PORT.copy()
         resp_resources = {'results': [fake_router_port]}
 
@@ -523,7 +519,7 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             'logical_router_id=%s' % router_id)
 
     def test_get_logical_router_port_by_switch_id(self):
-        """Test getting a router port by switch id"""
+        """Test getting a router port by switch id."""
         fake_router_port = test_constants.FAKE_ROUTER_PORT.copy()
         resp_resources = {
             'result_count': 1,
