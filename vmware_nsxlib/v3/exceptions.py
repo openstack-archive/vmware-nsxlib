@@ -63,11 +63,17 @@ class ManagerError(NsxLibException):
             self.msg = self.message % kwargs
         except KeyError:
             self.msg = details
+        self.error_code = kwargs.get('error_code')
 
 
 class ResourceNotFound(ManagerError):
     message = _("Resource could not be found on backend (%(manager)s) for "
                 "%(operation)s")
+
+
+class InvalidInput(ManagerError):
+    message = _("%(operation)s failed: Invalid input %(arg_val)s "
+                "for %(arg_name)s")
 
 
 class StaleRevision(ManagerError):
