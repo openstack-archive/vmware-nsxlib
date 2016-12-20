@@ -43,24 +43,31 @@ def assert_call(verb, client_or_resource,
                 url, verify=nsxlib_testcase.NSX_CERT,
                 data=None, headers=DFT_ACCEPT_HEADERS,
                 timeout=(nsxlib_testcase.NSX_HTTP_TIMEOUT,
-                         nsxlib_testcase.NSX_HTTP_READ_TIMEOUT)):
+                         nsxlib_testcase.NSX_HTTP_READ_TIMEOUT),
+                single_call=True):
     nsx_client = client_or_resource
     if getattr(nsx_client, '_client', None) is not None:
         nsx_client = nsx_client._client
     cluster = nsx_client._conn
-    cluster.assert_called_once(
-        verb,
-        **{'url': url, 'verify': verify, 'body': data,
-           'headers': headers, 'cert': None, 'timeout': timeout})
+    if single_call:
+        cluster.assert_called_once(
+            verb,
+            **{'url': url, 'verify': verify, 'body': data,
+            'headers': headers, 'cert': None, 'timeout': timeout})
+    else:
+        cluster.assert_any_call(verb,
+                **{'url': url, 'verify': verify, 'body': data,
+                'headers': headers, 'cert': None, 'timeout': timeout})
 
 
 def assert_json_call(verb, client_or_resource, url,
                      verify=nsxlib_testcase.NSX_CERT,
                      data=None,
-                     headers=client.JSONRESTClient._DEFAULT_HEADERS):
+                     headers=client.JSONRESTClient._DEFAULT_HEADERS,
+                     single_call=True):
     return assert_call(verb, client_or_resource, url,
                        verify=verify, data=data,
-                       headers=headers)
+                       headers=headers, single_call=single_call)
 
 
 class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
