@@ -223,7 +223,12 @@ class NsxClientTestCase(NsxLibTestCase):
 
         def __init__(self, session_response=None):
             super(NsxClientTestCase.MockHTTPProvider, self).__init__()
-            self._session_response = session_response
+            if isinstance(session_response, list):
+                self._session_responses = session_response
+            elif session_response:
+                self._session_responses = [session_response]
+            else:
+                self._session_responses = None
 
         def new_connection(self, cluster_api, provider):
             # wrapper the session so we can intercept and record calls
@@ -246,12 +251,15 @@ class NsxClientTestCase(NsxLibTestCase):
 
             def _session_send(request, **kwargs):
                 # calls at the Session level
-                if self._session_response:
+                if self._session_responses:
+                    # pop first response
+                    current_response = self._session_responses[0]
+                    del self._session_responses[0]
                     # consumer has setup a response for the session
                     cluster_api.record_call(request, **kwargs)
-                    return (self._session_response()
-                            if hasattr(self._session_response, '__call__')
-                            else self._session_response)
+                    return (current_response()
+                            if hasattr(current_response, '__call__')
+                            else current_response)
 
                 # bypass requests redirect handling for mock
                 kwargs['allow_redirects'] = False

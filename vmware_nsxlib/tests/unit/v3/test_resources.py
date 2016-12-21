@@ -197,7 +197,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
         session_response = mocks.MockRequestsResponse(
             200, jsonutils.dumps(resp_resources))
         mocked_resource = self._mocked_switching_profile(
-            session_response=session_response)
+            session_response=[session_response] * 3)
 
         self.assertEqual([{'display_name': 'resource-1'}],
                          mocked_resource.find_by_display_name('resource-1'))
