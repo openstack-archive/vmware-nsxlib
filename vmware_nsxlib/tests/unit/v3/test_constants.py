@@ -167,7 +167,6 @@ FAKE_IP_POOL = {
     "id": FAKE_IP_POOL_UUID,
     "display_name": "IPPool-IPV6-1",
     "description": "IPPool-IPV6-1 Description",
-    "resource_type": "IpPool",
     "subnets": [{
         "dns_nameservers": [
             "2002:a70:cbfa:1:1:1:1:1"

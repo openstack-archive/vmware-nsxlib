@@ -561,7 +561,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         cidr = '2.2.2.0/24'
         description = 'desc'
         dns_nameserver = '7.7.7.7'
-        pool.create(cidr, ranges=ranges,
+        pool.create(cidr, allocation_ranges=ranges,
                     display_name=display_name,
                     gateway_ip=gateway_ip,
                     description=description,
@@ -589,7 +589,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         ranges = [{'start': '2.2.2.0', 'end': '2.2.2.255'},
                   {'start': '3.2.2.0', 'end': '3.2.2.255'}]
         cidr = '2.2.2.0/24'
-        pool.create(cidr, ranges=ranges)
+        pool.create(cidr, allocation_ranges=ranges)
 
         data = {
             'subnets': [{
@@ -607,7 +607,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         pool = self._mocked_pool()
         cidr = '2.2.2.0/30'
         gateway_ip = '2.2.2.1'
-        pool.create(cidr, ranges=None, gateway_ip=gateway_ip)
+        pool.create(cidr, allocation_ranges=None, gateway_ip=gateway_ip)
         exp_ranges = [{'start': '2.2.2.0', 'end': '2.2.2.0'},
                       {'start': '2.2.2.2', 'end': '2.2.2.3'}]
 
@@ -627,7 +627,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
     def test_create_ip_pool_no_ranges_no_gateway(self):
         pool = self._mocked_pool()
         cidr = '2.2.2.0/30'
-        pool.create(cidr, ranges=None)
+        pool.create(cidr, allocation_ranges=None)
         exp_ranges = [{'start': '2.2.2.0', 'end': '2.2.2.3'}]
 
         data = {
@@ -650,13 +650,60 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         cidr = None
 
         try:
-            pool.create(cidr, ranges=ranges,
+            pool.create(cidr, allocation_ranges=ranges,
                         gateway_ip=gateway_ip)
         except exceptions.InvalidInput:
             # This call should fail
             pass
         else:
             self.fail("shouldn't happen")
+
+    def test_update_ip_pool_name(self):
+        fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
+        resp_resources = fake_ip_pool
+        pool = self._mocked_pool(
+            session_response=mocks.MockRequestsResponse(
+                200, jsonutils.dumps(resp_resources)))
+
+        uuid = fake_ip_pool['id']
+        new_name = 'new_name'
+        pool.update(uuid, display_name=new_name)
+        fake_ip_pool['display_name'] = new_name
+        test_client.assert_json_call(
+            'put', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
+            data=jsonutils.dumps(fake_ip_pool, sort_keys=True))
+
+    def test_update_ip_pool_gateway(self):
+        fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
+        resp_resources = fake_ip_pool
+        pool = self._mocked_pool(
+            session_response=mocks.MockRequestsResponse(
+                200, jsonutils.dumps(resp_resources)))
+
+        uuid = fake_ip_pool['id']
+        new_gateway = '1.0.0.1'
+        pool.update(uuid, gateway_ip=new_gateway)
+        fake_ip_pool["subnets"][0]['gateway_ip'] = new_gateway
+        test_client.assert_json_call(
+            'put', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
+            data=jsonutils.dumps(fake_ip_pool, sort_keys=True))
+
+    def test_update_ip_pool_delete_gateway(self):
+        fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
+        resp_resources = fake_ip_pool
+        pool = self._mocked_pool(
+            session_response=mocks.MockRequestsResponse(
+                200, jsonutils.dumps(resp_resources)))
+
+        uuid = fake_ip_pool['id']
+        pool.update(uuid, gateway_ip=None)
+        del fake_ip_pool["subnets"][0]['gateway_ip']
+        test_client.assert_json_call(
+            'put', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
+            data=jsonutils.dumps(fake_ip_pool, sort_keys=True))
 
     def test_get_ip_pool(self):
         """Test getting a router port by router id"""

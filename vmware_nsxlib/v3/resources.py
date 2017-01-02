@@ -601,16 +601,16 @@ class IpPool(AbstractRESTResource):
         return [{"start": str(r[0]),
                  "end": str(r[-1])} for r in ip_set.iter_ipranges()]
 
-    def create(self, cidr, ranges=None, display_name=None, description=None,
-               gateway_ip=None, dns_nameservers=None):
+    def create(self, cidr, allocation_ranges=None, display_name=None,
+               description=None, gateway_ip=None, dns_nameservers=None):
         """Create an IpPool.
 
         Arguments:
         cidr: (required)
-        ranges: (optional) a list of dictionaries, each with 'start'
-                and 'end' keys, and IP values.
-                If None: the cidr will be used to create the ranges,
-                excluding the gateway.
+        allocation_ranges: (optional) a list of dictionaries, each with
+           'start' and 'end' keys, and IP values.
+            If None: the cidr will be used to create the ranges,
+            excluding the gateway.
         display_name: (optional)
         description: (optional)
         gateway_ip: (optional)
@@ -619,11 +619,11 @@ class IpPool(AbstractRESTResource):
         if not cidr:
             raise exceptions.InvalidInput(operation="IP Pool create",
                                           arg_name="cidr", arg_val=cidr)
-        if not ranges:
+        if not allocation_ranges:
             # generate ranges from (cidr - gateway)
-            ranges = self._generate_ranges(cidr, gateway_ip)
+            allocation_ranges = self._generate_ranges(cidr, gateway_ip)
 
-        subnet = {"allocation_ranges": ranges,
+        subnet = {"allocation_ranges": allocation_ranges,
                   "cidr": cidr}
         if gateway_ip:
             subnet["gateway_ip"] = gateway_ip
@@ -632,9 +632,9 @@ class IpPool(AbstractRESTResource):
 
         body = {"subnets": [subnet]}
         if description:
-            body['description'] = description
+            body["description"] = description
         if display_name:
-            body['display_name'] = display_name
+            body["display_name"] = display_name
 
         return self._client.create(body=body)
 
@@ -642,9 +642,35 @@ class IpPool(AbstractRESTResource):
         """Delete an IPPool by its ID."""
         return self._client.delete(pool_id)
 
-    def update(self, uuid, *args, **kwargs):
-        # Not supported yet
-        pass
+    def _update_param_in_pool(self, args_dict, key, pool_data):
+        # update the arg only if it exists in the args dictionary
+        if key in args_dict:
+            if args_dict[key]:
+                pool_data[key] = args_dict[key]
+            else:
+                # remove the current value
+                del pool_data[key]
+
+    def update(self, pool_id, **kwargs):
+        """Update the given attributes in the current pool configuration."""
+        # Get the current pool, and remove irrelevant fields
+        pool = self.get(pool_id)
+        for key in ["resource_type", "_create_time", "_create_user"
+                    "_last_modified_user", "_last_modified_time"]:
+            pool.pop(key, None)
+
+        # update only the attributes in kwargs
+        self._update_param_in_pool(kwargs, 'display_name', pool)
+        self._update_param_in_pool(kwargs, 'description', pool)
+        self._update_param_in_pool(kwargs, 'gateway_ip',
+                                   pool["subnets"][0])
+        self._update_param_in_pool(kwargs, 'dns_nameservers',
+                                   pool["subnets"][0])
+        self._update_param_in_pool(kwargs, 'allocation_ranges',
+                                   pool["subnets"][0])
+        self._update_param_in_pool(kwargs, 'cidr',
+                                   pool["subnets"][0])
+        return self._client.update(pool_id, pool)
 
     def get(self, pool_id):
         return self._client.get(pool_id)
