@@ -428,12 +428,15 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
         router = self._mocked_lrouter()
 
         tier0_router = True
-        router.create(fake_router['display_name'], None, None, tier0_router)
+        description = 'dummy'
+        router.create(fake_router['display_name'], None, None, tier0_router,
+                      description=description)
 
         data = {
             'display_name': fake_router['display_name'],
             'router_type': 'TIER0' if tier0_router else 'TIER1',
-            'tags': None
+            'tags': None,
+            'description': description
         }
 
         test_client.assert_json_call(

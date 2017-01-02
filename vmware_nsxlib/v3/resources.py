@@ -332,7 +332,8 @@ class LogicalRouter(AbstractRESTResource):
     def uri_segment(self):
         return 'logical-routers'
 
-    def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False):
+    def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
+               description=None):
         # TODO(salv-orlando): If possible do not manage edge clusters
         # in the main plugin logic.
         router_type = (nsx_constants.ROUTER_TYPE_TIER0 if tier_0 else
@@ -342,6 +343,8 @@ class LogicalRouter(AbstractRESTResource):
                 'tags': tags}
         if edge_cluster_uuid:
             body['edge_cluster_id'] = edge_cluster_uuid
+        if description:
+            body['description'] = description
         return self._client.create(body=body)
 
     def delete(self, lrouter_id):
