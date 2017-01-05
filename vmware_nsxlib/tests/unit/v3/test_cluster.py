@@ -58,6 +58,25 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
         self.assertEqual(session.adapters['https://'].max_retries.total, 100)
         self.assertEqual(session.timeout, 99)
 
+    def test_new_connection_with_client_auth(self):
+        mock_api = mock.Mock()
+        mock_api.nsxlib_config = mock.Mock()
+        mock_api.nsxlib_config.retries = 100
+        mock_api.nsxlib_config.insecure = True
+        mock_api.nsxlib_config.ca_file = None
+        mock_api.nsxlib_config.http_timeout = 99
+        mock_api.nsxlib_config.conn_idle_timeout = 39
+        provider = cluster.NSXRequestsHTTPProvider()
+        session = provider.new_connection(
+            mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
+                                       None, None, None,
+                                       '/etc/cert.pem'))
+
+        self.assertEqual(session.auth, None)
+        self.assertEqual(session.verify, False)
+        self.assertEqual(session.cert, '/etc/cert.pem')
+        self.assertEqual(session.timeout, 99)
+
     def test_validate_connection(self):
         self.skipTest("Revist")
         mock_conn = mocks.MockRequestSessionApi()
@@ -123,6 +142,14 @@ class NsxV3ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
         mock_call = api.recorded_calls.method_calls[0]
         name, args, kwargs = mock_call
         self.assertEqual(kwargs['timeout'], (7, 37))
+
+
+# Repeat the above tests with client cert present
+# in NsxLib initialization
+class NsxV3ClusteredAPIWithClientCertTestCase(NsxV3ClusteredAPITestCase):
+
+    def use_client_cert_auth(self):
+        return True
 
 
 class ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
