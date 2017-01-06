@@ -17,6 +17,8 @@ import netaddr
 from neutron_lib.api import validators
 from neutron_lib import constants
 
+from neutron.extensions import dns
+
 from vmware_nsxlib.v3 import utils
 
 
@@ -54,10 +56,14 @@ class NsxLibNativeDhcp(utils.NsxLibApiBase):
         options = {'option121': {'static_routes': host_routes}}
         name = utils.get_name_and_uuid(network['name'] or 'dhcpserver',
                                        network['id'])
+        dns_domain = network.get(dns.DNSDOMAIN)
+        if not dns_domain:
+            dns_domain = self.nsxlib_config.dns_domain
+
         return {'name': name,
                 'server_ip': server_ip,
                 'dns_nameservers': dns_nameservers,
-                'domain_name': self.nsxlib_config.dns_domain,
+                'domain_name': dns_domain,
                 'gateway_ip': gateway_ip,
                 'options': options,
                 'tags': tags}
