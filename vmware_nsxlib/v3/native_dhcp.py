@@ -54,10 +54,14 @@ class NsxLibNativeDhcp(utils.NsxLibApiBase):
         options = {'option121': {'static_routes': host_routes}}
         name = utils.get_name_and_uuid(network['name'] or 'dhcpserver',
                                        network['id'])
+        dns_domain = network.get('dns_domain')
+        domain_name = dns_domain['dns_domain'] if dns_domain else (
+            self.nsxlib_config.dns_domain)
+
         return {'name': name,
                 'server_ip': server_ip,
                 'dns_nameservers': dns_nameservers,
-                'domain_name': self.nsxlib_config.dns_domain,
+                'domain_name': domain_name,
                 'gateway_ip': gateway_ip,
                 'options': options,
                 'tags': tags}
