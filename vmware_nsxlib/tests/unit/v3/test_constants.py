@@ -161,6 +161,7 @@ FAKE_QOS_PROFILE = {
     "_revision": 0
 }
 
+FAKE_MAC_POOL_UUID = uuidutils.generate_uuid()
 FAKE_IP_POOL_UUID = uuidutils.generate_uuid()
 FAKE_IP_POOL = {
     "_revision": 0,
