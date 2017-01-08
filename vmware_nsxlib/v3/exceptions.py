@@ -51,6 +51,14 @@ class NsxLibException(Exception):
         return False
 
 
+class ObjectAlreadyExists(NsxLibException):
+    message = _("%(object_type) already exists")
+
+
+class ObjectNotGenerated(NsxLibException):
+    message = _("%(object_type) was not generated")
+
+
 class ManagerError(NsxLibException):
     message = _("Unexpected error from backend manager (%(manager)s) "
                 "for %(operation)s %(details)s")
