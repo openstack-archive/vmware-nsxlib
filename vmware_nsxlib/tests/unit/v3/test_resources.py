@@ -345,6 +345,56 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
             'https://1.2.3.4/api/v1/logical-ports',
             data=jsonutils.dumps(resp_body, sort_keys=True))
 
+    def test_create_logical_port_for_container(self):
+        """
+        Test creating a port for container returns the correct response
+        and 200 status
+        """
+        fake_port = test_constants.FAKE_CONTAINER_PORT.copy()
+        fake_port_ctx = fake_port['attachment']['context']
+        fake_container_host_vif_id = fake_port_ctx['container_host_vif_id']
+        profile_dicts = []
+        for profile_id in fake_port['switching_profile_ids']:
+            profile_dicts.append({'resource_type': profile_id['key'],
+                                  'id': profile_id['value']})
+
+        key_values = [{'key': 'IP_POOL_ID',
+                       'value': test_constants.FAKE_IP_POOL_UUID}]
+
+        mocked_resource = self._mocked_lport()
+
+        switch_profile = resources.SwitchingProfile
+        mocked_resource.create(
+            fake_port['logical_switch_id'],
+            fake_port['attachment']['id'],
+            parent_vif_id=fake_container_host_vif_id,
+            parent_tag=[],
+            switch_profile_ids=switch_profile.build_switch_profile_ids(
+                mock.Mock(), *profile_dicts),
+            key_values=key_values)
+
+        resp_body = {
+            'logical_switch_id': fake_port['logical_switch_id'],
+            'switching_profile_ids': fake_port['switching_profile_ids'],
+            'attachment': {
+                'attachment_type': 'CIF',
+                'id': fake_port['attachment']['id'],
+                'context': {
+                    'container_host_vif_id': fake_container_host_vif_id,
+                    'resource_type': 'CifAttachmentContext',
+                    'vlan_tag': [],
+                    'key_values': key_values
+                }
+            },
+            'admin_state': 'UP',
+            'address_bindings': []
+        }
+
+        test_client.assert_json_call(
+            'post', mocked_resource,
+            'https://1.2.3.4/api/v1/logical-ports',
+            data=jsonutils.dumps(resp_body, sort_keys=True))
+
     def test_create_logical_port_admin_down(self):
         """Test creating port with admin_state down."""
         fake_port = test_constants.FAKE_PORT
