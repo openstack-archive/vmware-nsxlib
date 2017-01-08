@@ -121,7 +121,11 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
         config = cluster_api.nsxlib_config
         session = TimeoutSession(config.http_timeout,
                                  config.http_read_timeout)
-        session.auth = (provider.username, provider.password)
+        if provider.client_cert_file:
+            session.cert = provider.client_cert_file
+        else:
+            session.auth = (provider.username, provider.password)
+
         # NSX v3 doesn't use redirects
         session.max_redirects = 0
 
@@ -173,11 +177,13 @@ class Provider(object):
     Which has a unique id a connection URL, and the credential details.
     """
 
-    def __init__(self, provider_id, provider_url, username, password, ca_file):
+    def __init__(self, provider_id, provider_url,
+                 username, password, ca_file, client_cert_file=None):
         self.id = provider_id
         self.url = provider_url
         self.username = username
         self.password = password
+        self.client_cert_file = client_cert_file
         self.ca_file = ca_file
 
     def __str__(self):
@@ -492,5 +498,6 @@ class NSXClusteredAPI(ClusteredAPI):
                     urlparse.urlunparse(conf_url),
                     self.nsxlib_config.username(provider_index),
                     self.nsxlib_config.password(provider_index),
-                    self.nsxlib_config.ca_file(provider_index)))
+                    self.nsxlib_config.ca_file(provider_index),
+                    self.nsxlib_config.client_cert_file(provider_index)))
         return providers

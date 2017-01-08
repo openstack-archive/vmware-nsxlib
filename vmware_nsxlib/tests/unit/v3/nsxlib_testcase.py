@@ -30,6 +30,7 @@ NSX_PASSWORD = 'default'
 NSX_MANAGER = '1.2.3.4'
 NSX_INSECURE = False
 NSX_CERT = '/opt/stack/certs/nsx.pem'
+CLIENT_CERT = '/opt/stack/certs/client.pem'
 NSX_HTTP_RETRIES = 10
 NSX_HTTP_TIMEOUT = 10
 NSX_HTTP_READ_TIMEOUT = 180
@@ -108,13 +109,37 @@ def get_default_nsxlib_config():
         plugin_ver=PLUGIN_VER)
 
 
+def get_nsxlib_config_with_client_cert():
+    return config.NsxLibConfig(
+        client_cert_file=CLIENT_CERT,
+        retries=NSX_HTTP_RETRIES,
+        insecure=NSX_INSECURE,
+        ca_file=NSX_CERT,
+        concurrent_connections=NSX_CONCURENT_CONN,
+        http_timeout=NSX_HTTP_TIMEOUT,
+        http_read_timeout=NSX_HTTP_READ_TIMEOUT,
+        conn_idle_timeout=NSX_CONN_IDLE_TIME,
+        http_provider=None,
+        nsx_api_managers=[],
+        plugin_scope=PLUGIN_SCOPE,
+        plugin_tag=PLUGIN_TAG,
+        plugin_ver=PLUGIN_VER)
+
+
 class NsxLibTestCase(unittest.TestCase):
+
+    def use_client_cert_auth(self):
+        return False
 
     def setUp(self, *args, **kwargs):
         super(NsxLibTestCase, self).setUp()
         _mock_nsxlib()
 
-        nsxlib_config = get_default_nsxlib_config()
+        if self.use_client_cert_auth():
+            nsxlib_config = get_nsxlib_config_with_client_cert()
+        else:
+            nsxlib_config = get_default_nsxlib_config()
+
         self.nsxlib = v3.NsxLib(nsxlib_config)
 
         # print diffs when assert comparisons fail
