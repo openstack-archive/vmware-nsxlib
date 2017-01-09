@@ -71,6 +71,10 @@ class NsxLib(object):
             self.client, nsxlib_config, self.firewall_section)
         self.native_dhcp = native_dhcp.NsxLibNativeDhcp(
             self.client, nsxlib_config)
+        self.ip_pool = NsxLibIpPool(
+            self.client, nsxlib_config)
+        self.ip_block = NsxLibIpBlock(
+            self.client, nsxlib_config)
 
         super(NsxLib, self).__init__()
 
@@ -474,3 +478,39 @@ class NsxLibBridgeCluster(utils.NsxLibApiBase):
 
         return self._get_resource_by_name_or_id(name_or_id,
                                                 'bridge-clusters')
+
+
+class NsxIpPool(utils.NsxLibApiBase):
+
+    def create(self, ip_start, ip_end, cidr):
+        """Create a IP Pool on the backend."""
+        resource = 'pools/ip-pools'
+        body = {
+            'subnets': [{
+                'allocation_ranges': [{
+                    'start': ip_start,
+                    'end': ip_end
+                }],
+            'cidr': cidr
+            }]
+        }
+        return self.client.create(resource, body)
+
+    def delete(self, ip_pool_id):
+        """Delete a IP Pool on the backend."""
+        resource = 'pools/ip-pools/%s' % ip_pool_id
+        self.client.delete(resource)
+
+
+class NsxIpBlock(utils.NsxLibApiBase):
+
+    def create(self, ip_block_id, subnet_size):
+        """Create a IP block on the backend."""
+        resource = 'pools/ip-blocks/%s/subnets' % ip_block_id
+        body = {'size': subnet_size}
+        return self.client.create(resource, body)
+
+    def delete(self, ip_block_id, subnet_id):
+        """Delete a IP block on the backend."""
+        resource = 'pools/ip-blocks/%s/subnets/%s' % (ip_block_id, subnet_id)
+        self.client.delete(resource)
