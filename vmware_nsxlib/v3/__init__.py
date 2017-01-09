@@ -71,6 +71,8 @@ class NsxLib(object):
             self.client, nsxlib_config, self.firewall_section)
         self.native_dhcp = native_dhcp.NsxLibNativeDhcp(
             self.client, nsxlib_config)
+        self.ip_block_subnet = NsxLibIpBlockSubnet(
+            self.client, nsxlib_config)
 
         super(NsxLib, self).__init__()
 
@@ -474,3 +476,17 @@ class NsxLibBridgeCluster(utils.NsxLibApiBase):
 
         return self._get_resource_by_name_or_id(name_or_id,
                                                 'bridge-clusters')
+
+
+class NsxLibIpBlockSubnet(utils.NsxLibApiBase):
+
+    def create(self, ip_block_id, subnet_size):
+        """Create a IP block subnet on the backend."""
+        resource = 'pools/ip-blocks/%s/subnets' % ip_block_id
+        body = {'size': subnet_size}
+        return self.client.create(resource, body)
+
+    def delete(self, ip_block_id, subnet_id):
+        """Delete a IP block subnet on the backend."""
+        resource = 'pools/ip-blocks/%s/subnets/%s' % (ip_block_id, subnet_id)
+        self.client.delete(resource)
