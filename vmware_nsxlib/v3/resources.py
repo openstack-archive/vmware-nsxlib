@@ -675,13 +675,17 @@ class IpPool(AbstractRESTResource):
     def get(self, pool_id):
         return self._client.get(pool_id)
 
-    def allocate(self, pool_id, ip_addr=None):
+    def allocate(self, pool_id, display_name=None, tags=None, ip_addr=None):
         """Allocate an IP from a pool."""
         # Note: Currently the backend does not support allocation of a
         # specific IP, so an exception will be raised by the backend.
         # Depending on the backend version, this may be allowed in the future
         url = "%s?action=ALLOCATE" % pool_id
         body = {"allocation_id": ip_addr}
+        if tags is not None:
+            body['tags'] = tags
+        if display_name is not None:
+            body['display_name'] = display_name
         return self._client.url_post(url, body=body)
 
     def release(self, pool_id, ip_addr):
