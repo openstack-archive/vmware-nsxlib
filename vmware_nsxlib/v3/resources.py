@@ -218,11 +218,11 @@ class LogicalPort(AbstractRESTResource):
             bindings = []
             for binding in address_bindings:
                 address_classifier = {
-                    'ip_address': binding.ip_address,
-                    'mac_address': binding.mac_address
+                    'ip_address': binding.get('ip_address'),
+                    'mac_address': binding.get('mac_address')
                 }
-                if binding.vlan is not None:
-                    address_classifier['vlan'] = int(binding.vlan)
+                if binding.get('vlan') is not None:
+                    address_classifier['vlan'] = int(binding.get('vlan'))
                 bindings.append(address_classifier)
             body['address_bindings'] = bindings
         elif address_bindings == []:
@@ -308,6 +308,8 @@ class LogicalPort(AbstractRESTResource):
             tags = lport.get('tags', [])
             if tags_update:
                 tags = utils.update_v3_tags(tags, tags_update)
+            if address_bindings is None:
+                address_bindings = lport.get('address_bindings')
             attachment = self._prepare_attachment(vif_uuid, parent_vif_id,
                                                   parent_tag, address_bindings,
                                                   attachment_type)
