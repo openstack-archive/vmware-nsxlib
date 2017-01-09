@@ -262,6 +262,14 @@ class LogicalPort(AbstractRESTResource):
         else:
             return False  # no attachment change
 
+    def _build_address_bindings(self, address_bindings):
+        addr_bindings = []
+        for binding in address_bindings:
+            addr_bindings.append(PacketAddressClassifier(
+                binding.get('ip_address'), binding.get('mac_address'),
+                binding.get('vlan')))
+        return addr_bindings
+
     def create(self, lswitch_id, vif_uuid, tags=None,
                attachment_type=nsx_constants.ATTACHMENT_VIF,
                admin_state=True, name=None, address_bindings=None,
@@ -310,13 +318,18 @@ class LogicalPort(AbstractRESTResource):
             tags = lport.get('tags', [])
             if tags_update:
                 tags = utils.update_v3_tags(tags, tags_update)
+            # Assign outer function argument to a local scope
+            addr_bindings = address_bindings
+            if addr_bindings is None:
+                addr_bindings = self._build_address_bindings(
+                    lport.get('address_bindings'))
             attachment = self._prepare_attachment(vif_uuid, parent_vif_id,
-                                                  parent_tag, address_bindings,
+                                                  parent_tag, addr_bindings,
                                                   attachment_type, key_values)
             lport.update(self._build_body_attrs(
                 display_name=name,
                 admin_state=admin_state, tags=tags,
-                address_bindings=address_bindings,
+                address_bindings=addr_bindings,
                 switch_profile_ids=switch_profile_ids,
                 attachment=attachment))
 
