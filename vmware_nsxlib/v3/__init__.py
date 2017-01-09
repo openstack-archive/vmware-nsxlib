@@ -353,7 +353,9 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
 
     def add_nat_rule(self, logical_router_id, action, translated_network,
                      source_net=None, dest_net=None,
-                     enabled=True, rule_priority=None):
+                     enabled=True, rule_priority=None,
+                     match_ports=None, match_protocol=None,
+                     match_resource_type=None):
         resource = 'logical-routers/%s/nat/rules' % logical_router_id
         body = {'action': action,
                 'enabled': enabled,
@@ -364,6 +366,12 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
             body['match_destination_network'] = dest_net
         if rule_priority:
             body['rule_priority'] = rule_priority
+        if match_ports is not None:
+            body['match_service'] = {
+                'resource_type': (match_resource_type or
+                                  nsx_constants.L4_PORT_SET_NSSERVICE),
+                'destination_ports': match_ports,
+                'l4_protocol': match_protocol or nsx_constants.TCP}
         return self.client.create(resource, body)
 
     def add_static_route(self, logical_router_id, dest_cidr, nexthop):
