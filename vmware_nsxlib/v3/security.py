@@ -99,6 +99,12 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
         service.update(properties)
         return {'service': service}
 
+    def get_switch_tag_expression(self, scope, tag):
+        return {'resource_type': consts.NSGROUP_TAG_EXP,
+                'target_type': consts.TARGET_TYPE_LOGICAL_SWITCH,
+                'scope': scope,
+                'tag': tag}
+
     def get_port_tag_expression(self, scope, tag):
         return {'resource_type': consts.NSGROUP_TAG_EXP,
                 'target_type': consts.TARGET_TYPE_LOGICAL_PORT,
