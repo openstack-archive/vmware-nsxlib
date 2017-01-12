@@ -777,3 +777,39 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'get', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools/%s/allocations' % uuid)
+
+
+class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
+
+    def test_nsx_search_tags(self):
+        """Test search of resources with the specified tag."""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            user_tags = [{'scope': 'user', 'tag': 'k8s'}]
+            query = self.nsxlib._build_query(tags=user_tags)
+            self.nsxlib.search_by_tags(tags=user_tags)
+            search.assert_called_with('search?query=%s' % query)
+
+    def test_nsx_search_tags_and_resource_type(self):
+        """Test search of specified resource with the specified tag."""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            user_tags = [{'scope': 'user', 'tag': 'k8s'}]
+            res_type = 'LogicalPort'
+            query = self.nsxlib._build_query(tags=user_tags)
+            # Add resource_type to the query
+            query = "%s AND %s" % (res_type, query)
+            self.nsxlib.search_by_tags(tags=user_tags, resource_type=res_type)
+            search.assert_called_with('search?query=%s' % query)
+
+    def test_nsx_search_invalid_query_fail(self):
+        """Test search query failure for missing tag argument."""
+        self.assertRaises(exceptions.NsxSearchInvalidQuery,
+                          self.nsxlib.search_by_tags,
+                          tags=None, resource_type=None)
+
+    def test_nsx_search_invalid_tags_fail(self):
+        """Test search of resources with the invalid tag."""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            user_tags = [{'scope': 'user', 'invalid_tag_key': 'k8s'}]
+            self.assertRaises(exceptions.NsxSearchInvalidQuery,
+                              self.nsxlib._build_query,
+                              tags=user_tags)
