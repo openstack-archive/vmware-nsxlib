@@ -213,8 +213,12 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
         def _do_update():
             resource = "logical-switches/%s" % lswitch_id
             lswitch = self.get(lswitch_id)
-            if name is not None:
-                lswitch['display_name'] = name
+            # Assign name to a local variable since 'name' is out of scope
+            ls_name = name
+            if ls_name is None:
+                ls_name = lswitch.get('display_name')
+            if ls_name is not None:
+                lswitch['display_name'] = ls_name
             if admin_state is not None:
                 if admin_state:
                     lswitch['admin_state'] = nsx_constants.ADMIN_STATE_UP
