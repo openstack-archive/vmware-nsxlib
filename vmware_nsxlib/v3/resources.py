@@ -716,3 +716,47 @@ class IpPool(AbstractRESTResource):
         """Return information about the allocated IPs in the pool."""
         url = "%s/allocations" % pool_id
         return self._client.url_get(url)
+
+
+class NsxSearch(AbstractRESTResource):
+
+    @property
+    def uri_segment(self):
+        return 'search'
+
+    def create(self, *args, **kwargs):
+        pass
+
+    def update(self, uuid, *args, **kwargs):
+        pass
+
+    def _build_query(self, tags):
+        query = []
+        for tag in tags:
+            query += map(lambda t: 'tags.%s:%s' % (t[0], t[1]),
+                         six.iteritems(tag))
+        if query:
+            return " AND ".join(query)
+
+    # TODO(abhiraut): Revisit this method to generate complex boolean
+    #                 queries to search resources.
+    def search(self, tags, resource_type=None):
+        """Return the list of resources searched based on tags.
+
+        :param tags: List of dictionaries containing tags. Each
+                     NSX tag dictionary is of the form:
+                     {'scope': <scope_key>, 'tag': <tag_value>}
+        :param resource_type: Optional string parameter to limit the
+                              scope of the search to the given ResourceType.
+        """
+        query = ""
+        query_tags = self._build_query(tags)
+        if resource_type:
+            if query_tags:
+                query = "%s AND %s" % (resource_type, query_tags)
+            else:
+                query = resource_type
+        else:
+            query = query_tags
+        url = "?query=%s" % query
+        return self._client.url_get(url)
