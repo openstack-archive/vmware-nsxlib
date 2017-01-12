@@ -119,3 +119,8 @@ class NumberOfNsgroupCriteriaTagsReached(ManagerError):
 class SecurityGroupMaximumCapacityReached(ManagerError):
     message = _("Security Group %(sg_id)s has reached its maximum capacity, "
                 "no more ports can be associated with this security-group.")
+
+
+class NsxSearchInvalidQuery(NsxLibException):
+    message = _("Missing tags and resource type for NSX search query. "
+                "NSX Search requires at least one input for query.")

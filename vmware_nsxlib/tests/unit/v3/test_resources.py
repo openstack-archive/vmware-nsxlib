@@ -16,6 +16,7 @@
 import copy
 
 import mock
+import six.moves.urllib.parse as urlparse
 
 from oslo_serialization import jsonutils
 
@@ -821,3 +822,72 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'get', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools/%s/allocations' % uuid)
+
+
+class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
+
+    def _mocked_nsx_search(self, session_response=None):
+        return self.mocked_resource(
+            resources.NsxSearch, session_response=session_response)
+
+    def test_nsx_search_resource_type(self):
+        """Test search of a particular resource type."""
+        fake_port = test_constants.FAKE_PORT.copy()
+        resp_resources = fake_port
+        nsx_search = self._mocked_nsx_search(
+            session_response=mocks.MockRequestsResponse(
+                200, jsonutils.dumps(resp_resources)))
+
+        res_type = fake_port['resource_type']
+        result = nsx_search.search(tags=None, resource_type=res_type)
+        self.assertEqual(fake_port, result)
+        test_client.assert_json_call(
+            'get', nsx_search,
+            'https://1.2.3.4/api/v1/search/?query=%s' % res_type)
+
+    def test_nsx_search_tags(self):
+        """Test search of resources with the specified tag."""
+        fake_port = test_constants.FAKE_PORT.copy()
+        # Add tags to the fake port resource
+        user_tags = [{'scope': 'user', 'tag': 'k8s'}]
+        fake_port['tags'] = user_tags
+        resp_resources = fake_port
+        nsx_search = self._mocked_nsx_search(
+            session_response=mocks.MockRequestsResponse(
+                200, jsonutils.dumps(resp_resources)))
+
+        query = nsx_search._build_query(tags=user_tags)
+        encoded_query = urlparse.quote(query, safe=':')
+        result = nsx_search.search(tags=user_tags, resource_type=None)
+        self.assertEqual(fake_port, result)
+        test_client.assert_json_call(
+            'get', nsx_search,
+            'https://1.2.3.4/api/v1/search/?query=%s' % encoded_query)
+
+    def test_nsx_search_tags_and_resource_type(self):
+        """Test search of specified resource with the specified tag."""
+        fake_port = test_constants.FAKE_PORT.copy()
+        # Add tags to the fake port resource
+        user_tags = [{'scope': 'user', 'tag': 'k8s'}]
+        fake_port['tags'] = user_tags
+        res_type = fake_port['resource_type']
+        resp_resources = fake_port
+        nsx_search = self._mocked_nsx_search(
+            session_response=mocks.MockRequestsResponse(
+                200, jsonutils.dumps(resp_resources)))
+
+        query = nsx_search._build_query(tags=user_tags)
+        # Add resource_type to the query
+        query = "%s AND %s" % (res_type, query)
+        encoded_query = urlparse.quote(query, safe=':')
+        result = nsx_search.search(tags=user_tags, resource_type=res_type)
+        self.assertEqual(fake_port, result)
+        test_client.assert_json_call(
+            'get', nsx_search,
+            'https://1.2.3.4/api/v1/search/?query=%s' % encoded_query)
+
+    def test_nsx_search_invalid_query_fail(self):
+        """Test search query failure for missing query arguments."""
+        nsx_search = self._mocked_nsx_search()
+        self.assertRaises(exceptions.NsxSearchInvalidQuery, nsx_search.search,
+                          tags=None, resource_type=None)
