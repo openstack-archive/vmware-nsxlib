@@ -118,7 +118,13 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
                 'tags': tags,
                 'members': []}
         if membership_criteria:
-            body.update({'membership_criteria': [membership_criteria]})
+            # Allow caller to pass a list of membership criterias.
+            # The 'else' block is maintained for backwards compatibility
+            # where in a caller might only send a single membership criteria.
+            if isinstance(membership_criteria, list):
+                body.update({'membership_criteria': membership_criteria})
+            else:
+                body.update({'membership_criteria': [membership_criteria]})
         return self.client.create('ns-groups', body)
 
     def list(self):
