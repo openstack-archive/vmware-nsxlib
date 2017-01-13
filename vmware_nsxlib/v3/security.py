@@ -118,7 +118,13 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
                 'tags': tags,
                 'members': []}
         if membership_criteria:
-            body.update({'membership_criteria': [membership_criteria]})
+            # Allow caller to pass a list of membership criterias.
+            # The 'else' block is maintained for backwards compatibility
+            # where in a caller might only send a single membership criteria.
+            if isinstance(membership_criteria, list):
+                body.update({'membership_criteria': membership_criteria})
+            else:
+                body.update({'membership_criteria': [membership_criteria]})
         return self.client.create('ns-groups', body)
 
     def list(self):
@@ -361,18 +367,20 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return {'target_id': ip_cidr_block,
                 'target_type': target_type}
 
-    def get_rule_dict(self, display_name, source=None, destination=None,
+    def get_rule_dict(self, display_name, sources=None, destinations=None,
                       direction=consts.IN_OUT, ip_protocol=consts.IPV4_IPV6,
-                      service=None, action=consts.FW_ACTION_ALLOW,
-                      logged=False):
-        return {'display_name': display_name,
-                'sources': [source] if source else [],
-                'destinations': [destination] if destination else [],
-                'direction': direction,
-                'ip_protocol': ip_protocol,
-                'services': [service] if service else [],
-                'action': action,
-                'logged': logged}
+                      services=None, action=consts.FW_ACTION_ALLOW,
+                      logged=False, disabled=False):
+        rule_dict = {'display_name': display_name,
+                     'direction': direction,
+                     'ip_protocol': ip_protocol,
+                     'action': action,
+                     'logged': logged,
+                     'disabled': disabled,
+                     'sources': sources or [],
+                     'destinations': destinations or [],
+                     'services': services or []}
+        return rule_dict
 
     def add_rule(self, rule, section_id):
         resource = 'firewall/sections/%s/rules' % section_id
@@ -421,9 +429,9 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         service = self._decide_service(sg_rule)
         name = sg_rule['id']
 
-        return self.get_rule_dict(name, source,
-                                  destination, direction,
-                                  ip_protocol, service,
+        return self.get_rule_dict(name, [source],
+                                  [destination], direction,
+                                  ip_protocol, [service],
                                   action, logged)
 
     def create_rules(self, context, section_id, nsgroup_id,
@@ -479,7 +487,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             destination_ports=[68])
         dhcp_client_rule_in = self.get_rule_dict(
             'DHCP Reply', direction=consts.IN,
-            service=dhcp_client)
+            services=[dhcp_client])
 
         dhcp_server = (
             self.get_nsservice(
@@ -489,7 +497,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                 destination_ports=[67]))
         dhcp_client_rule_out = self.get_rule_dict(
             'DHCP Request', direction=consts.OUT,
-            service=dhcp_server)
+            services=[dhcp_server])
 
         self.update(section['id'],
                     name, section['description'],
