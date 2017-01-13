@@ -118,7 +118,13 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
                 'tags': tags,
                 'members': []}
         if membership_criteria:
-            body.update({'membership_criteria': [membership_criteria]})
+            # Allow caller to pass a list of membership criterias.
+            # The 'else' block is maintained for backwards compatibility
+            # where in a caller might only send a single membership criteria.
+            if isinstance(membership_criteria, list):
+                body.update({'membership_criteria': membership_criteria})
+            else:
+                body.update({'membership_criteria': [membership_criteria]})
         return self.client.create('ns-groups', body)
 
     def list(self):
@@ -364,15 +370,26 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
     def get_rule_dict(self, display_name, source=None, destination=None,
                       direction=consts.IN_OUT, ip_protocol=consts.IPV4_IPV6,
                       service=None, action=consts.FW_ACTION_ALLOW,
-                      logged=False):
-        return {'display_name': display_name,
-                'sources': [source] if source else [],
-                'destinations': [destination] if destination else [],
-                'direction': direction,
-                'ip_protocol': ip_protocol,
-                'services': [service] if service else [],
-                'action': action,
-                'logged': logged}
+                      logged=False, disabled=False):
+        rule_dict = {'display_name': display_name,
+                     'direction': direction,
+                     'ip_protocol': ip_protocol,
+                     'action': action,
+                     'logged': logged,
+                     'disabled': disabled}
+        if isinstance(source, list):
+            rule_dict['sources'] = source
+        else:
+            rule_dict['sources'] = [source] if source else []
+        if isinstance(destination, list):
+            rule_dict['destinations'] = destination
+        else:
+            rule_dict['destinations'] = [destination] if destination else []
+        if isinstance(service, list):
+            rule_dict['services'] = service
+        else:
+            rule_dict['services'] = [service] if service else []
+        return rule_dict
 
     def add_rule(self, rule, section_id):
         resource = 'firewall/sections/%s/rules' % section_id
