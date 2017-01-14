@@ -373,7 +373,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
     def get_rule_dict(self, display_name, sources=None, destinations=None,
                       direction=consts.IN_OUT, ip_protocol=consts.IPV4_IPV6,
                       services=None, action=consts.FW_ACTION_ALLOW,
-                      logged=False, disabled=False):
+                      logged=False, disabled=False, applied_tos=None):
         rule_dict = {'display_name': display_name,
                      'direction': direction,
                      'ip_protocol': ip_protocol,
@@ -382,7 +382,8 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                      'disabled': disabled,
                      'sources': sources or [],
                      'destinations': destinations or [],
-                     'services': services or []}
+                     'services': services or [],
+                     'applied_tos': applied_tos or []}
         return rule_dict
 
     def add_rule(self, rule, section_id):
