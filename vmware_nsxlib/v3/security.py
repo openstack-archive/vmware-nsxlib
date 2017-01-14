@@ -311,7 +311,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return self.client.create(resource, body)
 
     def update(self, section_id, display_name=None, description=None,
-               applied_tos=None, rules=None):
+               applied_tos=None, rules=None, tags_update=None):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
@@ -330,6 +330,9 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             if applied_tos is not None:
                 section['applied_tos'] = [self.get_nsgroup_reference(nsg_id)
                                           for nsg_id in applied_tos]
+            if tags_update is not None:
+                section['tags'] = utils.update_v3_tags(section.get('tags', []),
+                                                       tags_update)
             if rules is not None:
                 return self.client.create(resource, section)
             elif any(p is not None for p in (display_name, description,
