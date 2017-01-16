@@ -18,6 +18,7 @@ from oslo_utils import uuidutils
 
 FAKE_NAME = "fake_name"
 FAKE_SWITCH_UUID = uuidutils.generate_uuid()
+FAKE_IP_SET_UUID = uuidutils.generate_uuid()
 
 FAKE_PORT_UUID = uuidutils.generate_uuid()
 FAKE_PORT = {
@@ -180,4 +181,14 @@ FAKE_IP_POOL = {
         "gateway_ip": "2002:a80:cbfa:0:0:0:0:255",
         "cidr": "2002:a70:cbfa:0:0:0:0:0/24"
     }],
+}
+
+FAKE_IP_SET = {
+    "id": FAKE_IP_SET_UUID,
+    "display_name": FAKE_NAME,
+    "resource_type": "IPSet",
+    "ip_addresses": [
+        "192.168.1.1-192.168.1.6",
+        "192.168.1.8",
+        "192.168.4.8/24"]
 }

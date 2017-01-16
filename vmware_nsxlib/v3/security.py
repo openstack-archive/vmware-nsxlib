@@ -553,3 +553,49 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                            dhcp_client_rule_in,
                            block_rule])
         return section['id']
+
+
+class NsxLibIPSet(utils.NsxLibApiBase):
+
+    def create(self, display_name, description=None, ip_addresses=None,
+               tags=None):
+        resource = 'ip-sets'
+        body = {
+            'display_name': display_name,
+            'description': description or '',
+            'ip_addresses': ip_addresses or [],
+            'tags': tags or []
+        }
+        return self.client.create(resource, body)
+
+    def update(self, ip_set_id, display_name=None, description=None,
+               ip_addresses=None, tags_update=None):
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _do_update():
+            resource = 'ip-sets/%s' % ip_set_id
+            ip_set = self.read(ip_set_id)
+            tags = ip_set.get('tags', [])
+            if tags_update:
+                tags = utils.update_v3_tags(tags, tags_update)
+            if display_name is not None:
+                ip_set['display_name'] = display_name
+            if description is not None:
+                ip_set['description'] = description
+            if ip_addresses:
+                ip_set['ip_addresses'] = ip_addresses
+            return self.client.update(resource, ip_set)
+
+        return _do_update()
+
+    def read(self, ip_set_id):
+        return self.client.get('ip-sets/%s' % ip_set_id)
+
+    def delete(self, ip_set_id):
+        return self.client.delete('ip-sets/%s' % ip_set_id)
+
+    def get_ipset_reference(self, ip_set_id):
+        return {'target_id': ip_set_id,
+                'target_type': consts.IP_SET}

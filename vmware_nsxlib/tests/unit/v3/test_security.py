@@ -15,7 +15,11 @@
 
 import mock
 
+from oslo_utils import uuidutils
+
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
+from vmware_nsxlib.tests.unit.v3 import test_constants
+from vmware_nsxlib.v3 import nsx_constants as const
 
 
 class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
@@ -81,3 +85,55 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
             resource = 'firewall/sections?operation=insert_bottom' \
                 '&action=create_with_rules'
             create.assert_called_with(resource, expected_body)
+
+
+class TestNsxLibIPSet(nsxlib_testcase.NsxClientTestCase):
+    """Tests for vmware_nsxlib.v3.security.NsxLibIPSet"""
+
+    def test_get_ipset_reference(self):
+        mock_ip_set = uuidutils.generate_uuid()
+        result = self.nsxlib.ip_set.get_ipset_reference(
+            mock_ip_set)
+        expected = {
+            'target_id': mock_ip_set,
+            'target_type': const.IP_SET
+        }
+        self.assertEqual(expected, result)
+
+    def test_create_ip_set(self):
+        fake_ip_set = test_constants.FAKE_IP_SET.copy()
+        data = {
+            'display_name': fake_ip_set['display_name'],
+            'ip_addresses': fake_ip_set['ip_addresses'],
+            'description': 'ipset-desc',
+            'tags': []
+        }
+        with mock.patch.object(self.nsxlib.client, 'create') as create:
+            self.nsxlib.ip_set.create(
+                fake_ip_set['display_name'], 'ipset-desc',
+                ip_addresses=fake_ip_set['ip_addresses'])
+            resource = 'ip-sets'
+            create.assert_called_with(resource, data)
+
+    def test_delete_ip_set(self):
+        with mock.patch.object(self.nsxlib.client, 'delete') as delete:
+            fake_ip_set = test_constants.FAKE_IP_SET.copy()
+            self.nsxlib.ip_set.delete(fake_ip_set['id'])
+            delete.assert_called_with('ip-sets/%s' % fake_ip_set['id'])
+
+    def test_update_ip_set(self):
+        fake_ip_set = test_constants.FAKE_IP_SET.copy()
+        new_ip_addresses = ['10.0.0.0']
+        data = {
+            'id': fake_ip_set['id'],
+            'display_name': fake_ip_set['display_name'],
+            'ip_addresses': new_ip_addresses,
+            'resource_type': 'IPSet'
+        }
+        with mock.patch.object(self.nsxlib.client, 'get',
+                               return_value=fake_ip_set):
+            with mock.patch.object(self.nsxlib.client, 'update') as update:
+                self.nsxlib.ip_set.update(
+                    fake_ip_set['id'], ip_addresses=new_ip_addresses)
+                resource = 'ip-sets/%s' % fake_ip_set['id']
+                update.assert_called_with(resource, data)

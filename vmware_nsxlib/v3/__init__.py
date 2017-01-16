@@ -75,6 +75,8 @@ class NsxLib(object):
             self.client, nsxlib_config)
         self.ip_block = NsxLibIpBlock(
             self.client, nsxlib_config)
+        self.ip_set = security.NsxLibIPSet(
+            self.client, nsxlib_config)
 
         super(NsxLib, self).__init__()
 
