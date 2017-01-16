@@ -203,15 +203,16 @@ class NsxLibApiBase(object):
         # There may be cases when the plugin creates the port, for example DHCP
         if not project_name:
             project_name = self.nsxlib_config.plugin_tag
-        tenant_id = resource.get('tenant_id', '')
-        # If tenant_id is present in resource and set to None, explicitly set
-        # the tenant_id in tags as ''.
-        if tenant_id is None:
-            tenant_id = ''
+        project_id = (resource.get('project_id', '') or
+                      resource.get('tenant_id', ''))
+        # If project_id is present in resource and set to None, explicitly set
+        # the project_id in tags as ''.
+        if project_id is None:
+            project_id = ''
         return [{'scope': resource_type,
                  'tag': resource.get('id', '')[:MAX_TAG_LEN]},
                 {'scope': 'os-project-id',
-                 'tag': tenant_id[:MAX_TAG_LEN]},
+                 'tag': project_id[:MAX_TAG_LEN]},
                 {'scope': 'os-project-name',
                  'tag': project_name[:MAX_TAG_LEN]},
                 {'scope': 'os-api-version',

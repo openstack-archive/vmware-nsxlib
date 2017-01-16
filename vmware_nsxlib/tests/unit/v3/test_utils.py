@@ -24,12 +24,12 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
     def test_build_v3_tags_payload(self):
         result = self.nsxlib.build_v3_tags_payload(
             {'id': 'fake_id',
-             'tenant_id': 'fake_tenant_id'},
+             'project_id': 'fake_proj_id'},
             resource_type='os-net-id',
-            project_name='fake_tenant_name')
+            project_name='fake_proj_name')
         expected = [{'scope': 'os-net-id', 'tag': 'fake_id'},
-                    {'scope': 'os-project-id', 'tag': 'fake_tenant_id'},
-                    {'scope': 'os-project-name', 'tag': 'fake_tenant_name'},
+                    {'scope': 'os-project-id', 'tag': 'fake_proj_id'},
+                    {'scope': 'os-project-name', 'tag': 'fake_proj_name'},
                     {'scope': 'os-api-version',
                      'tag': nsxlib_testcase.PLUGIN_VER}]
         self.assertEqual(expected, result)
@@ -37,11 +37,11 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
     def test_build_v3_tags_payload_internal(self):
         result = self.nsxlib.build_v3_tags_payload(
             {'id': 'fake_id',
-             'tenant_id': 'fake_tenant_id'},
+             'project_id': 'fake_proj_id'},
             resource_type='os-net-id',
             project_name=None)
         expected = [{'scope': 'os-net-id', 'tag': 'fake_id'},
-                    {'scope': 'os-project-id', 'tag': 'fake_tenant_id'},
+                    {'scope': 'os-project-id', 'tag': 'fake_proj_id'},
                     {'scope': 'os-project-name',
                      'tag': nsxlib_testcase.PLUGIN_TAG},
                     {'scope': 'os-api-version',
@@ -52,7 +52,7 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
         self.assertRaises(n_exc.InvalidInput,
                           self.nsxlib.build_v3_tags_payload,
                           {'id': 'fake_id',
-                           'tenant_id': 'fake_tenant_id'},
+                           'project_id': 'fake_proj_id'},
                           resource_type='os-longer-maldini-rocks-id',
                           project_name='fake')
 
@@ -67,7 +67,7 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
     def test_is_internal_resource(self):
         project_tag = self.nsxlib.build_v3_tags_payload(
             {'id': 'fake_id',
-             'tenant_id': 'fake_tenant_id'},
+             'project_id': 'fake_proj_id'},
             resource_type='os-net-id',
             project_name=None)
         internal_tag = self.nsxlib.build_v3_api_version_tag()
@@ -93,7 +93,7 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
     def test_build_v3_tags_max_length_payload(self):
         result = self.nsxlib.build_v3_tags_payload(
             {'id': 'X' * 255,
-             'tenant_id': 'X' * 255},
+             'project_id': 'X' * 255},
             resource_type='os-net-id',
             project_name='X' * 255)
         expected = [{'scope': 'os-net-id', 'tag': 'X' * 40},

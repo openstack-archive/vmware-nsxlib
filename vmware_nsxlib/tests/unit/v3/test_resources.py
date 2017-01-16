@@ -57,7 +57,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
         tags = [
             {
                 'scope': 'os-project-id',
-                'tag': 'tenant-1'
+                'tag': 'project-1'
             },
             {
                 'scope': 'os-api-version',
@@ -83,7 +83,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
         tags = [
             {
                 'scope': 'os-project-id',
-                'tag': 'tenant-1'
+                'tag': 'project-1'
             },
             {
                 'scope': 'os-api-version',
@@ -113,7 +113,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
         tags = [
             {
                 'scope': 'os-project-id',
-                'tag': 'tenant-1'
+                'tag': 'project-1'
             },
             {
                 'scope': 'os-api-version',
@@ -158,7 +158,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
         tags = [
             {
                 'scope': 'os-project-id',
-                'tag': 'tenant-1'
+                'tag': 'project-1'
             },
             {
                 'scope': 'os-api-version',
