@@ -46,6 +46,7 @@ LROUTERPORT_LINKONTIER1 = "LogicalRouterLinkPortOnTIER1"
 SERVICE_DHCP = "dhcp"
 
 # NSX-V3 Distributed Firewall constants
+IP_SET = 'IPSet'
 NSGROUP = 'NSGroup'
 NSGROUP_SIMPLE_EXP = 'NSGroupSimpleExpression'
 NSGROUP_TAG_EXP = 'NSGroupTagExpression'
