@@ -247,11 +247,11 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
         for shaper in body["shaper_configuration"]:
             if shaper["resource_type"] == resource_type:
                 shaper["enabled"] = True
-                if burst_size:
+                if burst_size is not None:
                     shaper["burst_size_bytes"] = burst_size
-                if peak_bandwidth:
+                if peak_bandwidth is not None:
                     shaper["peak_bandwidth_mbps"] = peak_bandwidth
-                if average_bandwidth:
+                if average_bandwidth is not None:
                     shaper["average_bandwidth_mbps"] = average_bandwidth
                 break
 

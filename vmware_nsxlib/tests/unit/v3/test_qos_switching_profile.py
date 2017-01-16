@@ -108,14 +108,14 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
                     self._body(description=new_description))
 
     def _enable_qos_switching_profile_shaping(
-        self, direction=nsx_constants.EGRESS):
+        self, direction=nsx_constants.EGRESS, new_burst_size=100):
         """Test updating a qos-switching profile
 
         returns the correct response
         """
-
-        original_profile = self._body_with_shaping(direction=direction)
-        burst_size = 100
+        original_burst = 10
+        original_profile = self._body_with_shaping(direction=direction,
+                                                   burst_size=original_burst)
         peak_bandwidth = 200
         average_bandwidth = 300
         qos_marking = "untrusted"
@@ -128,7 +128,7 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
                 self.nsxlib.qos_switching_profile.update_shaping(
                     test_constants.FAKE_QOS_PROFILE['id'],
                     shaping_enabled=True,
-                    burst_size=burst_size,
+                    burst_size=new_burst_size,
                     peak_bandwidth=peak_bandwidth,
                     average_bandwidth=average_bandwidth,
                     qos_marking=qos_marking,
@@ -138,9 +138,11 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
                 actual_path = update.call_args[0][0]
                 expected_path = ('switching-profiles/%s' %
                                  test_constants.FAKE_QOS_PROFILE['id'])
+                expected_burst = (new_burst_size if new_burst_size is not None
+                                  else original_burst)
                 expected_body = self._body_with_shaping(
                     shaping_enabled=True,
-                    burst_size=burst_size,
+                    burst_size=expected_burst,
                     peak_bandwidth=peak_bandwidth,
                     average_bandwidth=average_bandwidth,
                     qos_marking="untrusted", dscp=10,
@@ -155,6 +157,18 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
     def test_enable_qos_switching_profile_ingress_shaping(self):
         self._enable_qos_switching_profile_shaping(
             direction=nsx_constants.INGRESS)
+
+    def test_update_qos_switching_profile_with_burst_size(self):
+        self._enable_qos_switching_profile_shaping(
+            direction=nsx_constants.EGRESS, new_burst_size=101)
+
+    def test_update_qos_switching_profile_without_burst_size(self):
+        self._enable_qos_switching_profile_shaping(
+            direction=nsx_constants.EGRESS, new_burst_size=None)
+
+    def test_update_qos_switching_profile_zero_burst_size(self):
+        self._enable_qos_switching_profile_shaping(
+            direction=nsx_constants.EGRESS, new_burst_size=0)
 
     def _disable_qos_switching_profile_shaping(
         self, direction=nsx_constants.EGRESS):
