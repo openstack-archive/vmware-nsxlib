@@ -796,7 +796,7 @@ class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
             res_type = 'LogicalPort'
             query = self.nsxlib._build_query(tags=user_tags)
             # Add resource_type to the query
-            query = "%s AND %s" % (res_type, query)
+            query = "resource_type:%s AND %s" % (res_type, query)
             self.nsxlib.search_by_tags(tags=user_tags, resource_type=res_type)
             search.assert_called_with('search?query=%s' % query)
 

@@ -118,7 +118,7 @@ class NsxLib(object):
             raise exceptions.NsxSearchInvalidQuery(reason=reason)
         # Query will return nothing if the same scope is repeated.
         query_tags = self._build_query(tags)
-        query = resource_type
+        query = 'resource_type:%s' % resource_type if resource_type else None
         if query:
             query += " AND %s" % query_tags
         else:
