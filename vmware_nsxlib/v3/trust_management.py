@@ -62,5 +62,5 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
                 return result
 
         raise nsxlib_exc.ResourceNotFound(
-            manager=self._client.nsx_api_managers,
+            manager=self.client.nsx_api_managers,
             operation="Principal identity %s not found" % identity)

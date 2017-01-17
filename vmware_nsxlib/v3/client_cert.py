@@ -139,7 +139,7 @@ class ClientCertificateManager(object):
                 self._nsx_trust_management.delete_cert(
                     details['certificate_id'])
 
-        except exceptions.ManagerError as e:
+        except nsxlib_exceptions.ManagerError as e:
             LOG.error(_LE("Failed to clear certificate on backend: %s"), e)
             ok = False
 
