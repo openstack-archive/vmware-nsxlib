@@ -43,6 +43,10 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
             # should be only one result
             return results[0]['id']
 
+    def get_cert(self, cert_id):
+        resource = CERT_SECTION + '/' + cert_id
+        return self.client.get(resource)
+
     def delete_cert(self, cert_id):
         resource = CERT_SECTION + '/' + cert_id
         self.client.delete(resource)
