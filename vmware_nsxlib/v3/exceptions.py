@@ -52,11 +52,15 @@ class NsxLibException(Exception):
 
 
 class ObjectAlreadyExists(NsxLibException):
-    message = _("%(object_type) already exists")
+    message = _("%(object_type)s already exists")
 
 
 class ObjectNotGenerated(NsxLibException):
-    message = _("%(object_type) was not generated")
+    message = _("%(object_type)s was not generated")
+
+
+class CertificateError(NsxLibException):
+    message = _("Certificate error: %(msg)s")
 
 
 class ManagerError(NsxLibException):

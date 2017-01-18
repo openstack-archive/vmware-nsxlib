@@ -181,18 +181,26 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
         self.assertEqual(cert_pem, stored_cert)
         self.assertEqual(key_pem, stored_key)
 
-    def test_load_and_delete_existing_cert(self):
-        """Test startup with existing certificate + certificate deletion"""
-
+    def _prepare_storage_with_existing_cert(self, key_size, days, alg, subj):
         # prepare storage driver with existing cert and key
         # this test simulates system startup
-        cert, key = client_cert.generate_self_signed_cert_pair(4096, 365,
-                                                               'sha256', {})
+        cert, key = client_cert.generate_self_signed_cert_pair(key_size, days,
+                                                               alg, subj)
         storage_driver = DummyStorageDriver()
         cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
         key_pem = crypto.dump_privatekey(crypto.FILETYPE_PEM, key)
 
         storage_driver.store_cert(self.identity, cert_pem, key_pem)
+        return storage_driver
+
+    def test_load_and_delete_existing_cert(self):
+        """Test startup with existing certificate + certificate deletion"""
+
+        storage_driver = self._prepare_storage_with_existing_cert(4096,
+                                                                  3650,
+                                                                  'sha256',
+                                                                  {})
+
         # get mocked backend driver for trust management,
         # prepared for get request, that preceeds delete operation
         mocked_trust = self._get_mocked_trust('delete')
@@ -222,6 +230,30 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
         uri = base_uri + '/certificates/' + self.cert_id
         test_client.assert_json_call('delete', mocked_trust.client, uri,
                                      single_call=False)
+
+    def test_get_certificate_details(self):
+        """Test retrieving cert details for existing cert"""
+
+        key_size = 2048
+        days = 999
+        alg = 'sha256'
+        subj = {'country': 'CA',
+                'organization': 'squirrel rights',
+                'hostname': 'www.squirrels.ca',
+                'unit': 'nuts',
+                'state': 'BC'}
+
+        storage_driver = self._prepare_storage_with_existing_cert(key_size,
+                                                                  days, alg,
+                                                                  subj)
+        with client_cert.ClientCertificateManager(self.identity,
+                                                  None,
+                                                  storage_driver) as cert:
+            self.assertTrue(cert.exists())
+            self.assertEqual(days - 1, cert.expires_in_days())
+            self.assertEqual(key_size, cert.get_key_size())
+            cert_subj = cert.get_subject()
+            self.assertEqual(subj, cert_subj)
 
     def test_bad_certificate_values(self):
         bad_cert_values = [{'key_size': 1024,
