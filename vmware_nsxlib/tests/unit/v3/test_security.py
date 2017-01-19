@@ -137,3 +137,17 @@ class TestNsxLibIPSet(nsxlib_testcase.NsxClientTestCase):
                     fake_ip_set['id'], ip_addresses=new_ip_addresses)
                 resource = 'ip-sets/%s' % fake_ip_set['id']
                 update.assert_called_with(resource, data)
+
+
+class TestNsxLibNSGroup(nsxlib_testcase.NsxClientTestCase):
+    """Tests for vmware_nsxlib.v3.security.NsxLibNSGroup"""
+
+    def test_get_nsgroup_complex_expression(self):
+        port_tags = {'app': 'foo', 'project': 'myproject'}
+        port_exp = [self.nsxlib.ns_group.get_port_tag_expressions(k, v)
+                    for k, v in six.iteritems(port_tags)]
+        complex_exp = self.nsxlib.ns_group.get_nsgroup_complex_expression(
+            expressions=port_exp)
+        expected_exp = {'resource_type': const.NSGROUP_COMPLEX_EXP,
+                        'expressions': port_exp}
+        self.assertEqual(expected_exp, complex_exp)
