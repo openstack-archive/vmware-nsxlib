@@ -588,7 +588,7 @@ class NsxLibIPSet(utils.NsxLibApiBase):
                 ip_set['display_name'] = display_name
             if description is not None:
                 ip_set['description'] = description
-            if ip_addresses:
+            if ip_addresses is not None:
                 ip_set['ip_addresses'] = ip_addresses
             return self.client.update(resource, ip_set)
 
