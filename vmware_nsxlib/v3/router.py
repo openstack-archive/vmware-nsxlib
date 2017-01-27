@@ -143,7 +143,8 @@ class RouterLib(object):
                                                  tags,
                                                  ls_id,
                                                  logical_switch_port_id,
-                                                 address_groups):
+                                                 address_groups,
+                                                 urpf_mode=None):
         try:
             port = self._router_port_client.get_by_lswitch_id(ls_id)
         except exceptions.ResourceNotFound:
@@ -153,7 +154,8 @@ class RouterLib(object):
                 tags,
                 nsx_constants.LROUTERPORT_DOWNLINK,
                 logical_switch_port_id,
-                address_groups)
+                address_groups,
+                urpf_mode=urpf_mode)
         else:
             return self._router_port_client.update(
                 port['id'], subnets=address_groups)
