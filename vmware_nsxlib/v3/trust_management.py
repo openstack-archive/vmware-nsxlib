@@ -30,8 +30,8 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         """
         lines = pem.split(b'\n')
         result = lines[0] + b'\n'
-        result += b''.join(lines[1:-1])
-        result += b'\n' + lines[-1]
+        result += b''.join(lines[1:-2])
+        result += b'\n' + lines[-2]
         return result
 
     def create_cert(self, cert_pem):
@@ -42,6 +42,10 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         if len(results) > 0:
             # should be only one result
             return results[0]['id']
+
+    def get_cert(self, cert_id):
+        resource = CERT_SECTION + '/' + cert_id
+        return self.client.get(resource)
 
     def delete_cert(self, cert_id):
         resource = CERT_SECTION + '/' + cert_id
