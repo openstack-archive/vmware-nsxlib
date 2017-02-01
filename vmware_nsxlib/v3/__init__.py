@@ -94,6 +94,9 @@ class NsxLib(object):
     def reinitialize_cluster(self, resource, event, trigger, **kwargs):
         self.cluster._reinit_cluster()
 
+    def subscribe(self, callback, event):
+        self.cluster.subscribe(callback, event)
+
 
 class NsxLibPortMirror(utils.NsxLibApiBase):
 
