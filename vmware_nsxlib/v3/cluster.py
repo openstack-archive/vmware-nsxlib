@@ -33,9 +33,11 @@ from requests import exceptions as requests_exceptions
 from vmware_nsxlib._i18n import _, _LI, _LW
 from vmware_nsxlib.v3 import client as nsx_client
 from vmware_nsxlib.v3 import exceptions
+from vmware_nsxlib.v3 import nsx_constants
 
 
 LOG = log.getLogger(__name__)
+
 
 # disable warning message for each HTTP retry
 logging.getLogger(
@@ -206,6 +208,12 @@ class Endpoint(object):
         self._state = EndpointState.INITIALIZED
         self._last_updated = datetime.datetime.now()
 
+    def regenerate_pool(self):
+        self.pool = pools.Pool(min_size=self.pool.min_size,
+                               max_size=self.pool.max_size,
+                               order_as_stack=True,
+                               create=self.pool.create)
+
     @property
     def last_updated(self):
         return self._last_updated
@@ -260,6 +268,7 @@ class ClusteredAPI(object):
 
         self._http_provider = http_provider
         self._keepalive_interval = keepalive_interval
+        self._callbacks = {}
 
         def _init_cluster(*args, **kwargs):
             self._init_endpoints(providers,
@@ -358,11 +367,30 @@ class ClusteredAPI(object):
                 if up == len(self._endpoints)
                 else ClusterHealth.ORANGE)
 
+    def subscribe(self, callback, event):
+        if event in self._callbacks:
+            self._callbacks[event].add(callback)
+        else:
+            self._callbacks[event] = [callback]
+
+    def _notify(self, event):
+        if event in self._callbacks:
+            for callback in self._callbacks[event]:
+                callback()
+
     def _validate(self, endpoint):
         try:
             with endpoint.pool.item() as conn:
                 self._http_provider.validate_connection(self, endpoint, conn)
                 endpoint.set_state(EndpointState.UP)
+        except exceptions.ClientCertificateNotTrusted:
+            LOG.warning(_LW("Failed to validate API cluster endpoint "
+                            "'%(ep)s' due to untrusted client certificate"),
+                        {'ep': endpoint})
+            # allow nsxlib user to reload certificate that possibly changed
+            self._notify(nsx_constants.ON_CLIENT_CERT_UNTRUSTED)
+            # regenerate connection pool based on new certificate
+            endpoint.regenerate_pool()
         except Exception as e:
             endpoint.set_state(EndpointState.DOWN)
             LOG.warning(_LW("Failed to validate API cluster endpoint "
