@@ -55,11 +55,11 @@ class RESTClient(object):
             default_headers=self._default_headers,
             client_obj=self)
 
-    def list(self, resource='', headers=None):
-        return self.url_list(resource, headers=headers)
+    def list(self, resource='', headers=None, silent=False):
+        return self.url_list(resource, headers=headers, silent=silent)
 
-    def get(self, uuid, headers=None):
-        return self.url_get(uuid, headers=headers)
+    def get(self, uuid, headers=None, silent=False):
+        return self.url_get(uuid, headers=headers, silent=silent)
 
     def delete(self, uuid, headers=None):
         return self.url_delete(uuid, headers=headers)
@@ -70,20 +70,21 @@ class RESTClient(object):
     def create(self, resource='', body=None, headers=None):
         return self.url_post(resource, body, headers=headers)
 
-    def url_list(self, url, headers=None):
+    def url_list(self, url, headers=None, silent=False):
         concatenate_response = self.url_get(url, headers=headers)
         cursor = concatenate_response.get('cursor', NULL_CURSOR_PREFIX)
         op = '&' if urlparse.urlparse(url).query else '?'
         url += op + 'cursor='
 
         while cursor and not cursor.startswith(NULL_CURSOR_PREFIX):
-            page = self.url_get(url + cursor, headers=headers)
+            page = self.url_get(url + cursor, headers=headers, silent=silent)
             concatenate_response['results'].extend(page.get('results', []))
             cursor = page.get('cursor', NULL_CURSOR_PREFIX)
         return concatenate_response
 
-    def url_get(self, url, headers=None):
-        return self._rest_call(url, method='GET', headers=headers)
+    def url_get(self, url, headers=None, silent=False):
+        return self._rest_call(url, method='GET', headers=headers,
+                               silent=silent)
 
     def url_delete(self, url, headers=None):
         return self._rest_call(url, method='DELETE', headers=headers)
@@ -140,22 +141,26 @@ class RESTClient(object):
             uri = "%s://%s" % (prefix.scheme, uri)
         return uri
 
-    def _rest_call(self, url, method='GET', body=None, headers=None):
+    def _rest_call(self, url, method='GET', body=None, headers=None,
+                   silent=False):
         request_headers = headers.copy() if headers else {}
         request_headers.update(self._default_headers)
         request_url = self._build_url(url)
 
         do_request = getattr(self._conn, method.lower())
-        LOG.debug("REST call: %s %s\nHeaders: %s\nBody: %s",
-                  method, request_url, request_headers, body)
+        if not silent:
+            LOG.debug("REST call: %s %s\nHeaders: %s\nBody: %s",
+                      method, request_url, request_headers, body)
 
         result = do_request(
             request_url,
             data=body,
             headers=request_headers)
 
-        LOG.debug("REST call: %s %s\nResponse: %s",
-                  method, request_url, result.json() if result.content else '')
+        if not silent:
+            LOG.debug("REST call: %s %s\nResponse: %s",
+                      method, request_url, result.json()
+                      if result.content else '')
 
         self._validate_result(
             result, RESTClient._VERB_RESP_CODES[method.lower()],

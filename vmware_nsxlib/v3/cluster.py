@@ -109,7 +109,7 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
 
     def validate_connection(self, cluster_api, endpoint, conn):
         client = nsx_client.NSX3Client(conn, url_prefix=endpoint.provider.url)
-        zones = client.get('transport-zones')
+        zones = client.get('transport-zones', silent=True)
         if not zones or zones['result_count'] <= 0:
             msg = _("No transport zones found "
                     "for '%s'") % endpoint.provider.url
