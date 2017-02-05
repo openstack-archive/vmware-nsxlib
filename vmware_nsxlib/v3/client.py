@@ -24,10 +24,25 @@ from vmware_nsxlib.v3 import utils
 
 LOG = log.getLogger(__name__)
 
-ERRORS = {requests.codes.NOT_FOUND: exceptions.ResourceNotFound,
-          requests.codes.PRECONDITION_FAILED: exceptions.StaleRevision}
-DEFAULT_ERROR = exceptions.ManagerError
 NULL_CURSOR_PREFIX = '0000'
+
+
+def http_error_to_exception(status_code, error_code):
+    errors = {requests.codes.NOT_FOUND: exceptions.ResourceNotFound,
+              requests.codes.PRECONDITION_FAILED: exceptions.StaleRevision,
+              requests.codes.INTERNAL_SERVER_ERROR:
+                  {'99': exceptions.ClientCertificateNotTrusted}}
+
+    if status_code in errors:
+        if isinstance(errors[status_code], dict):
+            # choose based on error code
+            if error_code in errors[status_code]:
+                return errors[status_code][error_code]
+        else:
+            return errors[status_code]
+
+    # default exception
+    return exceptions.ManagerError
 
 
 class RESTClient(object):
@@ -97,7 +112,7 @@ class RESTClient(object):
 
     def _raise_error(self, status_code, operation, result_msg,
                      error_code=None):
-        error = ERRORS.get(status_code, DEFAULT_ERROR)
+        error = http_error_to_exception(status_code, error_code)
         raise error(manager='', operation=operation, details=result_msg,
                     error_code=error_code)
 
@@ -228,7 +243,7 @@ class NSX3Client(JSONRESTClient):
     def _raise_error(self, status_code, operation, result_msg,
                      error_code=None):
         """Override the Rest client errors to add the manager IPs"""
-        error = ERRORS.get(status_code, DEFAULT_ERROR)
+        error = http_error_to_exception(status_code, error_code)
         raise error(manager=self.nsx_api_managers,
                     operation=operation,
                     details=result_msg,

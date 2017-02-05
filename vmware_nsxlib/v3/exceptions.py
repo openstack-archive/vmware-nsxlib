@@ -92,6 +92,10 @@ class StaleRevision(ManagerError):
     pass
 
 
+class ClientCertificateNotTrusted(ManagerError):
+    message = _("Certificate not trusted")
+
+
 class ServiceClusterUnavailable(ManagerError):
     message = _("Service cluster: '%(cluster_id)s' is unavailable. Please, "
                 "check NSX setup and/or configuration")
