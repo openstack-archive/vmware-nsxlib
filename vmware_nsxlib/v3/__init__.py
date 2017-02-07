@@ -73,6 +73,8 @@ class NsxLib(object):
             self.client, nsxlib_config)
         self.ip_block_subnet = NsxLibIpBlockSubnet(
             self.client, nsxlib_config)
+        self.ip_block = NsxLibIpBlock(
+            self.client, nsxlib_config)
 
         super(NsxLib, self).__init__()
 
@@ -501,3 +503,12 @@ class NsxLibIpBlockSubnet(utils.NsxLibApiBase):
         """Delete a IP block subnet on the backend."""
         resource = 'pools/ip-blocks/%s/subnets/%s' % (ip_block_id, subnet_id)
         self.client.delete(resource)
+
+    def list(self, ip_block_id):
+        resource = 'pools/ip-blocks/%s/subnets' % ip_block_id
+        return self.client.get(resource)
+
+
+class NsxLibIpBlock(utils.NsxLibApiBase):
+    def list(self):
+        return self.client.get('pools/ip-blocks')
