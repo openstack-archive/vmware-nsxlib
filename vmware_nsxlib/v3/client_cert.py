@@ -26,6 +26,11 @@ from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions
 LOG = log.getLogger(__name__)
 
 NSX_ERROR_IDENTITY_EXISTS = 2027
+CERT_SUBJECT_COUNTRY = 'country'
+CERT_SUBJECT_STATE = 'state'
+CERT_SUBJECT_ORG = 'organization'
+CERT_SUBJECT_UNIT = 'unit'
+CERT_SUBJECT_HOST = 'hostname'
 
 
 def validate_cert_params(key_size, valid_for_days,
@@ -48,6 +53,28 @@ def validate_cert_params(key_size, valid_for_days,
             {'value': signature_alg,
              'list': expected_signature_algs})
 
+    if (CERT_SUBJECT_COUNTRY in subject and
+       (len(subject[CERT_SUBJECT_COUNTRY]) != 2)):
+        raise exceptions.InvalidInput(
+            error_message=_('Invalid country %s: '
+                            'must be exactly 2 characters') %
+            subject[CERT_SUBJECT_COUNTRY])
+
+    # values defined in rfc5280
+    max_len_constraints = {CERT_SUBJECT_STATE: 128,
+                           CERT_SUBJECT_ORG: 64,
+                           CERT_SUBJECT_UNIT: 64,
+                           CERT_SUBJECT_HOST: 64}
+
+    for field, max_len in max_len_constraints.items():
+        if field in subject and (len(subject[field]) > max_len):
+            raise exceptions.InvalidInput(
+                error_message=_('Invalid %(field)s [%(value)s]: '
+                                'must not exceed %(max)d characters') %
+                {'field': field,
+                 'value': subject[field],
+                 'max': max_len})
+
 
 def generate_self_signed_cert_pair(key_size, valid_for_days,
                                    signature_alg, subject):
@@ -62,11 +89,11 @@ def generate_self_signed_cert_pair(key_size, valid_for_days,
 
     # generate certificate
     cert = crypto.X509()
-    cert.get_subject().C = subject.get('country', 'US')
-    cert.get_subject().ST = subject.get('state', 'California')
-    cert.get_subject().O = subject.get('organization', 'MyOrg')
-    cert.get_subject().OU = subject.get('unit', 'MyUnit')
-    cert.get_subject().CN = subject.get('hostname', 'myorg.com')
+    cert.get_subject().C = subject.get(CERT_SUBJECT_COUNTRY, 'US')
+    cert.get_subject().ST = subject.get(CERT_SUBJECT_STATE, 'California')
+    cert.get_subject().O = subject.get(CERT_SUBJECT_ORG, 'MyOrg')
+    cert.get_subject().OU = subject.get(CERT_SUBJECT_UNIT, 'MyUnit')
+    cert.get_subject().CN = subject.get(CERT_SUBJECT_HOST, 'myorg.com')
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(valid_for_days * 24 * 60 * 60)
     cert.set_issuer(cert.get_subject())
@@ -251,11 +278,11 @@ class ClientCertificateManager(object):
         self._validate_exists()
 
         cert, key = self.get_cert_and_key()
-        return {'country': cert.get_subject().C,
-                'state': cert.get_subject().ST,
-                'organization': cert.get_subject().O,
-                'unit': cert.get_subject().OU,
-                'hostname': cert.get_subject().CN}
+        return {CERT_SUBJECT_COUNTRY: cert.get_subject().C,
+                CERT_SUBJECT_STATE: cert.get_subject().ST,
+                CERT_SUBJECT_ORG: cert.get_subject().O,
+                CERT_SUBJECT_UNIT: cert.get_subject().OU,
+                CERT_SUBJECT_HOST: cert.get_subject().CN}
 
     def get_signature_alg(self):
         self._validate_exists()
