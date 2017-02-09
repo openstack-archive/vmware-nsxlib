@@ -244,17 +244,20 @@ class LogicalPort(AbstractRESTResource):
 
         return body
 
-    def _prepare_attachment(self, vif_uuid, parent_vif_id, parent_tag,
-                            address_bindings, attachment_type, key_values):
+    def _prepare_attachment(self, attachment_type, vif_uuid,
+                            allocate_addresses, vif_type,
+                            parent_vif_id, traffic_tag, app_id):
         if attachment_type and vif_uuid:
             attachment = {'attachment_type': attachment_type,
                           'id': vif_uuid}
-            if parent_vif_id:
-                context = {'vlan_tag': parent_tag,
-                           'container_host_vif_id': parent_vif_id,
-                           'resource_type': nsx_constants.CIF_RESOURCE_TYPE}
-                if key_values is not None:
-                    context['key_values'] = key_values
+            if vif_type:
+                context = {'resource_type': nsx_constants.VIF_RESOURCE_TYPE,
+                           'allocate_addresses': allocate_addresses,
+                           'vif_type': vif_type}
+                if parent_vif_id:
+                    context['parent_vif_id'] = parent_vif_id
+                    context['traffic_tag'] = traffic_tag
+                    context['app_id'] = app_id
                 attachment['context'] = context
             return attachment
         elif attachment_type is None and vif_uuid is None:
@@ -273,18 +276,18 @@ class LogicalPort(AbstractRESTResource):
     def create(self, lswitch_id, vif_uuid, tags=None,
                attachment_type=nsx_constants.ATTACHMENT_VIF,
                admin_state=True, name=None, address_bindings=None,
-               parent_vif_id=None, parent_tag=None,
-               switch_profile_ids=None, key_values=None):
+               parent_vif_id=None, traffic_tag=None,
+               switch_profile_ids=None, vif_type=None, app_id=None,
+               allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE):
         tags = tags or []
 
         body = {'logical_switch_id': lswitch_id}
         # NOTE(arosen): If parent_vif_id is specified we need to use
         # CIF attachment type.
-        if parent_vif_id:
-            attachment_type = nsx_constants.ATTACHMENT_CIF
-        attachment = self._prepare_attachment(vif_uuid, parent_vif_id,
-                                              parent_tag, address_bindings,
-                                              attachment_type, key_values)
+        attachment = self._prepare_attachment(attachment_type, vif_uuid,
+                                              allocate_addresses, vif_type,
+                                              parent_vif_id, traffic_tag,
+                                              app_id)
         body.update(self._build_body_attrs(
             display_name=name,
             admin_state=admin_state, tags=tags,
@@ -308,7 +311,9 @@ class LogicalPort(AbstractRESTResource):
                address_bindings=None, switch_profile_ids=None,
                tags_update=None,
                attachment_type=nsx_constants.ATTACHMENT_VIF,
-               parent_vif_id=None, parent_tag=None, key_values=None):
+               parent_vif_id=None, traffic_tag=None,
+               vif_type=None, app_id=None,
+               allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
@@ -323,9 +328,10 @@ class LogicalPort(AbstractRESTResource):
             if addr_bindings is None:
                 addr_bindings = self._build_address_bindings(
                     lport.get('address_bindings'))
-            attachment = self._prepare_attachment(vif_uuid, parent_vif_id,
-                                                  parent_tag, addr_bindings,
-                                                  attachment_type, key_values)
+            attachment = self._prepare_attachment(attachment_type, vif_uuid,
+                                                  allocate_addresses, vif_type,
+                                                  parent_vif_id, traffic_tag,
+                                                  app_id)
             lport.update(self._build_body_attrs(
                 display_name=name,
                 admin_state=admin_state, tags=tags,
