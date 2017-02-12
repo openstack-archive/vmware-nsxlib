@@ -620,7 +620,8 @@ class IpPool(AbstractRESTResource):
                  "end": str(r[-1])} for r in ip_set.iter_ipranges()]
 
     def create(self, cidr, allocation_ranges=None, display_name=None,
-               description=None, gateway_ip=None, dns_nameservers=None):
+               description=None, gateway_ip=None, dns_nameservers=None,
+               tags=None):
         """Create an IpPool.
 
         Arguments:
@@ -653,6 +654,8 @@ class IpPool(AbstractRESTResource):
             body["description"] = description
         if display_name:
             body["display_name"] = display_name
+        if tags:
+            body['tags'] = tags
 
         return self._client.create(body=body)
 
@@ -680,6 +683,7 @@ class IpPool(AbstractRESTResource):
         # update only the attributes in kwargs
         self._update_param_in_pool(kwargs, 'display_name', pool)
         self._update_param_in_pool(kwargs, 'description', pool)
+        self._update_param_in_pool(kwargs, 'tags', pool)
         self._update_param_in_pool(kwargs, 'gateway_ip',
                                    pool["subnets"][0])
         self._update_param_in_pool(kwargs, 'dns_nameservers',
