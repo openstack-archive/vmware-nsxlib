@@ -168,7 +168,8 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
 
     def create(self, display_name, transport_zone_id, tags,
                replication_mode=nsx_constants.MTEP,
-               admin_state=True, vlan_id=None):
+               admin_state=True, vlan_id=None, ip_pool_id=None,
+               mac_pool_id=None):
         # TODO(salv-orlando): Validate Replication mode and admin_state
         # NOTE: These checks might be moved to the API client library if one
         # that performs such checks in the client is available
@@ -186,6 +187,12 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
 
         if vlan_id:
             body['vlan'] = vlan_id
+
+        if ip_pool_id:
+            body['ip_pool_id'] = ip_pool_id
+
+        if mac_pool_id:
+            body['mac_pool_id'] = mac_pool_id
 
         return self.client.create(resource, body)
 
@@ -496,17 +503,18 @@ class NsxLibIpBlockSubnet(utils.NsxLibApiBase):
 
     def create(self, ip_block_id, subnet_size):
         """Create a IP block subnet on the backend."""
-        resource = 'pools/ip-blocks/%s/subnets' % ip_block_id
-        body = {'size': subnet_size}
+        resource = 'pools/ip-subnets'
+        body = {'size': subnet_size,
+                'block_id': ip_block_id}
         return self.client.create(resource, body)
 
-    def delete(self, ip_block_id, subnet_id):
+    def delete(self, subnet_id):
         """Delete a IP block subnet on the backend."""
-        resource = 'pools/ip-blocks/%s/subnets/%s' % (ip_block_id, subnet_id)
+        resource = 'pools/ip-subnets/%s' % subnet_id
         self.client.delete(resource)
 
     def list(self, ip_block_id):
-        resource = 'pools/ip-blocks/%s/subnets' % ip_block_id
+        resource = 'pools/ip-subnets?block_id=%s' % ip_block_id
         return self.client.get(resource)
 
 

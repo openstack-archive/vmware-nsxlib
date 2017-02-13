@@ -69,12 +69,14 @@ FAKE_CONTAINER_PORT = {
     "admin_state": "UP",
     "attachment": {
         "id": "9ca8d413-f7bf-4276-b4c9-62f42516bdb2",
-        "attachment_type": "CIF",
+        "attachment_type": "VIF",
         "context": {
             "vlan_tag": 122,
             "container_host_vif_id": "c6f817a0-4e36-421e-98a6-8a2faed880bc",
-            "key_values": [],
-            "resource_type": "CifAttachmentContext",
+            "resource_type": "VifAttachmentContext",
+            "app_id": "container-1",
+            "vif_type": "CHILD",
+            "allocate_addresses": "Both",
         }
     },
     "switching_profile_ids": [

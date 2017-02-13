@@ -319,74 +319,30 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
             fake_port['logical_switch_id'],
             fake_port['attachment']['id'],
             parent_vif_id=fake_container_host_vif_id,
-            parent_tag=fake_port_ctx['vlan_tag'],
+            traffic_tag=fake_port_ctx['vlan_tag'],
             address_bindings=pkt_classifiers,
             switch_profile_ids=switch_profile.build_switch_profile_ids(
-                mock.Mock(), *profile_dicts))
+                mock.Mock(), *profile_dicts),
+            vif_type=fake_port_ctx['vif_type'], app_id=fake_port_ctx['app_id'],
+            allocate_addresses=fake_port_ctx['allocate_addresses'])
 
         resp_body = {
             'logical_switch_id': fake_port['logical_switch_id'],
             'switching_profile_ids': fake_port['switching_profile_ids'],
             'attachment': {
-                'attachment_type': 'CIF',
+                'attachment_type': 'VIF',
                 'id': fake_port['attachment']['id'],
                 'context': {
-                    'vlan_tag': fake_port_ctx['vlan_tag'],
-                    'container_host_vif_id': fake_container_host_vif_id,
-                    'resource_type': 'CifAttachmentContext'
+                    'resource_type': 'VifAttachmentContext',
+                    'allocate_addresses': 'Both',
+                    'parent_vif_id': fake_container_host_vif_id,
+                    'traffic_tag': fake_port_ctx['vlan_tag'],
+                    'app_id': fake_port_ctx['app_id'],
+                    'vif_type': 'CHILD',
                 }
             },
             'admin_state': 'UP',
             'address_bindings': fake_port['address_bindings']
-        }
-
-        test_client.assert_json_call(
-            'post', mocked_resource,
-            'https://1.2.3.4/api/v1/logical-ports',
-            data=jsonutils.dumps(resp_body, sort_keys=True))
-
-    def test_create_logical_port_for_container_with_ip_pool_key_value(self):
-        """Test creating for container port returns correct response
-
-        """
-        fake_port = test_constants.FAKE_CONTAINER_PORT.copy()
-        fake_port_ctx = fake_port['attachment']['context']
-        fake_container_host_vif_id = fake_port_ctx['container_host_vif_id']
-        profile_dicts = []
-        for profile_id in fake_port['switching_profile_ids']:
-            profile_dicts.append({'resource_type': profile_id['key'],
-                                  'id': profile_id['value']})
-
-        key_values = [{'key': 'IP_POOL_ID',
-                       'value': test_constants.FAKE_IP_POOL_UUID}]
-
-        mocked_resource = self._mocked_lport()
-
-        switch_profile = resources.SwitchingProfile
-        mocked_resource.create(
-            fake_port['logical_switch_id'],
-            fake_port['attachment']['id'],
-            parent_vif_id=fake_container_host_vif_id,
-            parent_tag=[],
-            switch_profile_ids=switch_profile.build_switch_profile_ids(
-                mock.Mock(), *profile_dicts),
-            key_values=key_values)
-
-        resp_body = {
-            'logical_switch_id': fake_port['logical_switch_id'],
-            'switching_profile_ids': fake_port['switching_profile_ids'],
-            'attachment': {
-                'attachment_type': 'CIF',
-                'id': fake_port['attachment']['id'],
-                'context': {
-                    'container_host_vif_id': fake_container_host_vif_id,
-                    'resource_type': 'CifAttachmentContext',
-                    'vlan_tag': [],
-                    'key_values': key_values
-                }
-            },
-            'admin_state': 'UP',
-            'address_bindings': []
         }
 
         test_client.assert_json_call(
