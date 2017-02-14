@@ -170,7 +170,7 @@ class NsxLibApiBase(object):
 
         return matched_results[0].get('id')
 
-    def build_v3_api_version_tag(self,):
+    def build_v3_api_version_tag(self):
         """Some resources are created on the manager
 
         that do not have a corresponding plugin resource.
