@@ -99,6 +99,39 @@ class NsxLib(object):
     def subscribe(self, callback, event):
         self.cluster.subscribe(callback, event)
 
+    # TODO(abhiraut): Revisit this method to generate complex boolean
+    #                 queries to search resources.
+    def search_by_tags(self, tags, resource_type=None):
+        """Return the list of resources searched based on tags.
+
+        Currently the query only supports AND boolean operator.
+        :param tags: List of dictionaries containing tags. Each
+                     NSX tag dictionary is of the form:
+                     {'scope': <scope_key>, 'tag': <tag_value>}
+        :param resource_type: Optional string parameter to limit the
+                              scope of the search to the given ResourceType.
+        """
+        if not tags:
+            reason = _("Missing required argument 'tags'")
+            raise exceptions.NsxSearchInvalidQuery(reason=reason)
+        # Query will return nothing if the same scope is repeated.
+        query_tags = self._build_query(tags)
+        query = resource_type
+        if query:
+            query += " AND %s" % query_tags
+        else:
+            query = query_tags
+        url = "search?query=%s" % query
+        return self.client.url_get(url)
+
+    def _build_query(self, tags):
+        try:
+            return " AND ".join(['tags.scope:%(scope)s AND '
+                                 'tags.tag:%(tag)s' % item for item in tags])
+        except KeyError as e:
+            reason = _('Missing key:%s in tags') % str(e)
+            raise exceptions.NsxSearchInvalidQuery(reason=reason)
+
 
 class NsxLibPortMirror(utils.NsxLibApiBase):
 
