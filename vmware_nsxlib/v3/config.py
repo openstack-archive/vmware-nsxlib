@@ -25,10 +25,9 @@ class NsxLibConfig(object):
                              and port 443 for https.
     :param username: User name for the NSX manager
     :param password: Password for the NSX manager
-    :param client_cert_file: Specify a file containing client certificate and
-                             private key. If specified, nsxlib will use client
-                             cert authentication instead of basic
-                             authentication.
+    :param client_cert_provider: None, or ClientCertProvider object.
+                             If specified, nsxlib will use client cert auth
+                             instead of basic authentication.
     :param insecure: If true, the NSX Manager server certificate is not
                      verified. If false the CA bundle specified via "ca_file"
                      will be used or if unsest the default system root CAs
@@ -71,7 +70,7 @@ class NsxLibConfig(object):
                  nsx_api_managers=None,
                  username=None,
                  password=None,
-                 client_cert_file=None,
+                 client_cert_provider=None,
                  insecure=True,
                  ca_file=None,
                  concurrent_connections=10,
@@ -91,7 +90,6 @@ class NsxLibConfig(object):
         self.nsx_api_managers = nsx_api_managers
         self._username = username
         self._password = password
-        self._client_cert_file = client_cert_file
         self._ca_file = ca_file
         self.insecure = insecure
         self.concurrent_connections = concurrent_connections
@@ -100,6 +98,7 @@ class NsxLibConfig(object):
         self.http_read_timeout = http_read_timeout
         self.conn_idle_timeout = conn_idle_timeout
         self.http_provider = http_provider
+        self.client_cert_provider = client_cert_provider
         self.max_attempts = max_attempts
         self.plugin_scope = plugin_scope
         self.plugin_tag = plugin_tag
@@ -124,9 +123,6 @@ class NsxLibConfig(object):
 
     def password(self, index):
         return self._attribute_by_index(self._password, index)
-
-    def client_cert_file(self, index):
-        return self._attribute_by_index(self._client_cert_file, index)
 
     def ca_file(self, index):
         return self._attribute_by_index(self._ca_file, index)

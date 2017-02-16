@@ -111,7 +111,7 @@ def get_default_nsxlib_config():
 
 def get_nsxlib_config_with_client_cert():
     return config.NsxLibConfig(
-        client_cert_file=CLIENT_CERT,
+        client_cert_provider=nsx_cluster.ClientCertProvider(CLIENT_CERT),
         retries=NSX_HTTP_RETRIES,
         insecure=NSX_INSECURE,
         ca_file=NSX_CERT,

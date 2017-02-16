@@ -33,7 +33,6 @@ from requests import exceptions as requests_exceptions
 from vmware_nsxlib._i18n import _, _LI, _LW
 from vmware_nsxlib.v3 import client as nsx_client
 from vmware_nsxlib.v3 import exceptions
-from vmware_nsxlib.v3 import nsx_constants
 
 
 LOG = log.getLogger(__name__)
@@ -82,20 +81,64 @@ class AbstractHTTPProvider(object):
         """
 
 
+class ClientCertProvider(object):
+    """Basic implementation for client certificate provider
+
+       Responsible for preparing, providing and disposing client certificate
+       file. Basic implementation assumes the file exists in the file system
+       and does not take responsibility of deleting this sensitive information
+       after use.
+       Inheriting objects should make use of __enter__ and __exit__ APIs to
+       prepare and dispose the certificate file data.
+    """
+    def __init__(self, filename):
+        self._filename = filename
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+    def filename(self):
+        return self._filename
+
+
 class TimeoutSession(requests.Session):
     """Extends requests.Session to support timeout at the session level."""
 
     def __init__(self, timeout, read_timeout):
         self.timeout = timeout
         self.read_timeout = read_timeout
+        self.cert_provider = None
         super(TimeoutSession, self).__init__()
+
+    @property
+    def cert_provider(self):
+        return self._cert_provider
+
+    @cert_provider.setter
+    def cert_provider(self, value):
+        self._cert_provider = value
 
     # wrapper timeouts at the session level
     # see: https://goo.gl/xNk7aM
     def request(self, *args, **kwargs):
         if 'timeout' not in kwargs:
             kwargs['timeout'] = (self.timeout, self.read_timeout)
-        return super(TimeoutSession, self).request(*args, **kwargs)
+
+        if not self._cert_provider:
+            return super(TimeoutSession, self).request(*args, **kwargs)
+
+        # The following with statement allows for preparing certificate and
+        # private key file and dispose it once connections are spawned
+        # (since PJK is sensitive information, immediate disposal is
+        # important), or to fetch/dispose of the certificate file at every
+        # request. It is up to the implementor of the certificate provider
+        # class to define this secure behavior.
+        with self._cert_provider:
+            self.cert = self._cert_provider.filename()
+            return super(TimeoutSession, self).request(*args, **kwargs)
 
 
 class NSXRequestsHTTPProvider(AbstractHTTPProvider):
@@ -122,8 +165,8 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
         config = cluster_api.nsxlib_config
         session = TimeoutSession(config.http_timeout,
                                  config.http_read_timeout)
-        if provider.client_cert_file:
-            session.cert = provider.client_cert_file
+        if config.client_cert_provider:
+            session.cert_provider = config.client_cert_provider
         else:
             session.auth = (provider.username, provider.password)
 
@@ -178,13 +221,11 @@ class Provider(object):
     Which has a unique id a connection URL, and the credential details.
     """
 
-    def __init__(self, provider_id, provider_url,
-                 username, password, ca_file, client_cert_file=None):
+    def __init__(self, provider_id, provider_url, username, password, ca_file):
         self.id = provider_id
         self.url = provider_url
         self.username = username
         self.password = password
-        self.client_cert_file = client_cert_file
         self.ca_file = ca_file
 
     def __str__(self):
@@ -267,7 +308,6 @@ class ClusteredAPI(object):
 
         self._http_provider = http_provider
         self._keepalive_interval = keepalive_interval
-        self._callbacks = {}
 
         def _init_cluster(*args, **kwargs):
             self._init_endpoints(providers,
@@ -288,6 +328,7 @@ class ClusteredAPI(object):
             def _conn():
                 # called when a pool needs to create a new connection
                 return self._http_provider.new_connection(self, p)
+
             return _conn
 
         self._endpoints = {}
@@ -366,17 +407,6 @@ class ClusteredAPI(object):
                 if up == len(self._endpoints)
                 else ClusterHealth.ORANGE)
 
-    def subscribe(self, callback, event):
-        if event in self._callbacks:
-            self._callbacks[event].append(callback)
-        else:
-            self._callbacks[event] = [callback]
-
-    def _notify(self, event):
-        if event in self._callbacks:
-            for callback in self._callbacks[event]:
-                callback()
-
     def _validate(self, endpoint):
         try:
             with endpoint.pool.item() as conn:
@@ -386,8 +416,6 @@ class ClusteredAPI(object):
             LOG.warning(_LW("Failed to validate API cluster endpoint "
                             "'%(ep)s' due to untrusted client certificate"),
                         {'ep': endpoint})
-            # allow nsxlib user to reload certificate that possibly changed
-            self._notify(nsx_constants.ON_CLIENT_CERT_UNTRUSTED)
             # regenerate connection pool based on new certificate
             endpoint.regenerate_pool()
         except Exception as e:
@@ -525,6 +553,5 @@ class NSXClusteredAPI(ClusteredAPI):
                     urlparse.urlunparse(conf_url),
                     self.nsxlib_config.username(provider_index),
                     self.nsxlib_config.password(provider_index),
-                    self.nsxlib_config.ca_file(provider_index),
-                    self.nsxlib_config.client_cert_file(provider_index)))
+                    self.nsxlib_config.ca_file(provider_index)))
         return providers
