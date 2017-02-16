@@ -22,6 +22,7 @@ from requests import exceptions as requests_exceptions
 
 from vmware_nsxlib import v3
 from vmware_nsxlib.v3 import client as nsx_client
+from vmware_nsxlib.v3 import client_cert
 from vmware_nsxlib.v3 import cluster as nsx_cluster
 from vmware_nsxlib.v3 import config
 
@@ -111,7 +112,7 @@ def get_default_nsxlib_config():
 
 def get_nsxlib_config_with_client_cert():
     return config.NsxLibConfig(
-        client_cert_file=CLIENT_CERT,
+        client_cert_provider=client_cert.ClientCertProvider(CLIENT_CERT),
         retries=NSX_HTTP_RETRIES,
         insecure=NSX_INSECURE,
         ca_file=NSX_CERT,
