@@ -77,6 +77,32 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
         self.assertEqual(session.cert, '/etc/cert.pem')
         self.assertEqual(session.timeout, 99)
 
+    def test_new_connection_with_cert_ctx_mgr(self):
+        mock_ctx_mgr = mock.Mock()
+        mock_ctx_mgr.cert_file = '/tmp/foo_file.pem'
+        mock_exit = mock.Mock()
+        mock_ctx_mgr.__enter__ = mock.Mock(return_value=(mock_exit, None))
+        mock_ctx_mgr.__exit__ = mock_exit
+        mock_api = mock.Mock()
+        mock_api.nsxlib_config = mock.Mock()
+        mock_api.nsxlib_config.retries = 100
+        mock_api.nsxlib_config.insecure = True
+        mock_api.nsxlib_config.ca_file = None
+        mock_api.nsxlib_config.http_timeout = 99
+        mock_api.nsxlib_config.conn_idle_timeout = 39
+        provider = cluster.NSXRequestsHTTPProvider()
+        session = provider.new_connection(
+            mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
+                                       None, None, None,
+                                       client_cert_ctx_mgr=mock_ctx_mgr))
+        self.assertEqual(session.auth, None)
+        self.assertEqual(session.verify, False)
+        self.assertEqual(session.cert, '/tmp/foo_file.pem')
+        mock_ctx_mgr.__enter__.assert_called_once_with()
+        # __exit__ takes 3 parameters
+        mock_exit.assert_called_once_with(None, None, None)
+        self.assertEqual(session.timeout, 99)
+
     def test_validate_connection(self):
         self.skipTest("Revist")
         mock_conn = mocks.MockRequestSessionApi()

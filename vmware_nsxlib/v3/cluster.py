@@ -122,7 +122,11 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
         config = cluster_api.nsxlib_config
         session = TimeoutSession(config.http_timeout,
                                  config.http_read_timeout)
-        if provider.client_cert_file:
+        # Get certificate from context manager, if provided
+        if provider.client_cert_ctx_mgr:
+            with provider.client_cert_ctx_mgr:
+                session.cert = provider.client_cert_ctx_mgr.cert_file
+        elif provider.client_cert_file:
             session.cert = provider.client_cert_file
         else:
             session.auth = (provider.username, provider.password)
@@ -179,12 +183,15 @@ class Provider(object):
     """
 
     def __init__(self, provider_id, provider_url,
-                 username, password, ca_file, client_cert_file=None):
+                 username, password, ca_file,
+                 client_cert_file=None,
+                 client_cert_ctx_mgr=None):
         self.id = provider_id
         self.url = provider_url
         self.username = username
         self.password = password
         self.client_cert_file = client_cert_file
+        self.client_cert_ctx_mgr = client_cert_ctx_mgr
         self.ca_file = ca_file
 
     def __str__(self):
