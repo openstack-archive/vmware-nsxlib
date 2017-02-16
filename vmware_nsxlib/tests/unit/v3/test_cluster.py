@@ -47,6 +47,7 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
         mock_api.nsxlib_config.ca_file = None
         mock_api.nsxlib_config.http_timeout = 99
         mock_api.nsxlib_config.conn_idle_timeout = 39
+        mock_api.nsxlib_config.client_cert_provider = None
         provider = cluster.NSXRequestsHTTPProvider()
         session = provider.new_connection(
             mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
@@ -66,11 +67,12 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
         mock_api.nsxlib_config.ca_file = None
         mock_api.nsxlib_config.http_timeout = 99
         mock_api.nsxlib_config.conn_idle_timeout = 39
+        mock_api.nsxlib_config.client_cert_provider = (
+            cluster.ClientCertProvider('/etc/cert.pem'))
         provider = cluster.NSXRequestsHTTPProvider()
         session = provider.new_connection(
             mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
-                                       None, None, None,
-                                       '/etc/cert.pem'))
+                                       None, None, None))
 
         self.assertEqual(session.auth, None)
         self.assertEqual(session.verify, False)
