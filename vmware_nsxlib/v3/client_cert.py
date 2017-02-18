@@ -16,6 +16,7 @@
 import datetime
 from OpenSSL import crypto
 from time import time
+import uuid
 
 from neutron_lib import exceptions
 from oslo_log import log
@@ -142,7 +143,7 @@ class ClientCertificateManager(object):
         self._key = None
 
     def generate(self, subject, key_size=2048, valid_for_days=3650,
-                 signature_alg='sha256'):
+                 signature_alg='sha256', node_id=None):
         """Generate new certificate and register it in the system
 
         Generate certificate with RSA key based on arguments provided,
@@ -157,7 +158,7 @@ class ClientCertificateManager(object):
                                                    subject)
 
         # register on backend
-        self._register_cert(cert)
+        self._register_cert(cert, node_id or uuid.uuid4())
 
         # save in storage
         cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
@@ -210,7 +211,7 @@ class ClientCertificateManager(object):
         cert_pem, key_pem = self._storage_driver.get_cert(self._identity)
         return cert_pem is not None
 
-    def import_pem(self, filename):
+    def import_pem(self, filename, node_id=None):
         """Import and register existing certificate in PEM format"""
 
         # TODO(annak): support PK import as well
@@ -231,7 +232,7 @@ class ClientCertificateManager(object):
                 msg=_("Failed to import client certificate"))
 
         # register on backend
-        self._register_cert(cert)
+        self._register_cert(cert, node_id)
 
         self._storage_driver.store_cert(self._identity, cert_pem, None)
 
@@ -325,12 +326,15 @@ class ClientCertificateManager(object):
 
         return cert, key
 
-    def _register_cert(self, cert):
+    def _register_cert(self, cert, node_id):
         cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
         nsx_cert_id = self._nsx_trust_management.create_cert(cert_pem)
         try:
             self._nsx_trust_management.create_identity(self._identity,
-                                                       nsx_cert_id)
+                                                       nsx_cert_id,
+                                                       node_id,
+                                                       'read_write_api_users',
+                                                       )
         except nsxlib_exceptions.ManagerError as e:
             if e.error_code != NSX_ERROR_IDENTITY_EXISTS:
                 raise e
@@ -343,7 +347,9 @@ class ClientCertificateManager(object):
                 self._identity)
             self._nsx_trust_management.delete_identity(details['id'])
             self._nsx_trust_management.create_identity(self._identity,
-                                                       nsx_cert_id)
+                                                       nsx_cert_id,
+                                                       node_id,
+                                                       'read_write_api_users')
 
 
 class ClientCertProvider(object):
