@@ -12,13 +12,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3 import utils
 
 BASE_SECTION = 'trust-management'
 CERT_SECTION = BASE_SECTION + '/certificates'
 ID_SECTION = BASE_SECTION + '/principal-identities'
+USER_GROUP_TYPES = [
+    'read_only_api_users',
+    'read_write_api_users',
+    'superusers']
 
 
 class NsxLibTrustManagement(utils.NsxLibApiBase):
@@ -51,8 +54,17 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         resource = CERT_SECTION + '/' + cert_id
         self.client.delete(resource)
 
-    def create_identity(self, identity, cert_id):
-        body = {'name': identity, 'certificate_id': cert_id}
+    def create_identity(self, identity, cert_id,
+                        node_id, permission_group):
+        # Validate permission group before sending to server
+        if permission_group not in USER_GROUP_TYPES:
+            raise nsxlib_exc.InvalidInput(
+                operation='create_identity',
+                arg_val=permission_group,
+                arg_name='permission_group')
+        body = {'name': identity, 'certificate_id': cert_id,
+                'node_id': node_id, 'permission_group': permission_group,
+                'is_protected': True}
         self.client.create(ID_SECTION, body)
 
     def delete_identity(self, identity):
