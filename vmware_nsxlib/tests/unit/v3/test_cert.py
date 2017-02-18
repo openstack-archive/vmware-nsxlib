@@ -126,7 +126,8 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
                                                     storage_driver)
         self.assertFalse(cert.exists())
 
-        cert.generate(subject={}, key_size=2048, valid_for_days=333)
+        cert.generate(subject={}, key_size=2048, valid_for_days=333,
+                      node_id='meh')
 
         # verify client cert was generated and makes sense
         self.assertTrue(cert.exists())
@@ -150,6 +151,8 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
         # verify API call to bind cert to identity on backend
         uri = base_uri + '/principal-identities'
         expected_body = {'name': self.identity,
+                         'node_id': 'meh',
+                         'permission_group': 'read_write_api_users',
                          'certificate_id': self.cert_id}
         test_client.assert_json_call('post', mocked_trust.client, uri,
                                      single_call=False,
