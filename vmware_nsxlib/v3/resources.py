@@ -520,6 +520,35 @@ class DhcpProfile(AbstractRESTResource):
 
 class LogicalDhcpServer(AbstractRESTResource):
 
+    def get_code(self, name):
+        _supported_options = {
+            'time-offset': 2,
+            'boot-file-size': 13,
+            'ip-forwarding': 19,
+            'broadcast-address': 28,
+            'arp-cache-timeout': 35,
+            'nis-domain': 40,
+            'nis-servers': 41,
+            'ntp-servers': 42,
+            'netbios-name-servers': 44,
+            'netbios-dd-server': 45,
+            'netbios-node-type': 46,
+            'netbios-scope': 47,
+            'dhcp-renewal-time': 58,
+            'dhcp-rebinding-time': 59,
+            'nisplus-domain': 64,
+            'nisplus-servers': 65,
+            'tftp-server-name': 66,
+            'bootfile-name': 67,
+            'name-search': 117,
+            'domain-search': 119,
+            'tftp-server-address': 150,
+            'config-file': 209,
+            'path-prefix': 210,
+            'reboot-time': 211,
+        }
+        return _supported_options.get(name)
+
     @property
     def uri_segment(self):
         return 'dhcp/servers'
