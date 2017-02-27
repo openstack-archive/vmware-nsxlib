@@ -434,9 +434,11 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         service = self._decide_service(sg_rule)
         name = sg_rule['id']
 
-        return self.get_rule_dict(name, [source],
-                                  [destination], direction,
-                                  ip_protocol, [service],
+        return self.get_rule_dict(name, [source] if source else None,
+                                  [destination] if destination else None,
+                                  direction,
+                                  ip_protocol,
+                                  [service] if service else None,
                                   action, logged)
 
     def create_rules(self, context, section_id, nsgroup_id,
