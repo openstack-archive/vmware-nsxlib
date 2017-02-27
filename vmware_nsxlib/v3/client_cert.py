@@ -344,3 +344,26 @@ class ClientCertificateManager(object):
             self._nsx_trust_management.delete_identity(details['id'])
             self._nsx_trust_management.create_identity(self._identity,
                                                        nsx_cert_id)
+
+
+class ClientCertProvider(object):
+    """Basic implementation for client certificate provider
+
+       Responsible for preparing, providing and disposing client certificate
+       file. Basic implementation assumes the file exists in the file system
+       and does not take responsibility of deleting this sensitive information
+       after use.
+       Inheriting objects should make use of __enter__ and __exit__ APIs to
+       prepare and dispose the certificate file data.
+    """
+    def __init__(self, filename):
+        self._filename = filename
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+    def filename(self):
+        return self._filename
