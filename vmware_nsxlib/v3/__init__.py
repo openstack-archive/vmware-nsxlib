@@ -29,6 +29,8 @@ LOG = log.getLogger(__name__)
 
 class NsxLib(object):
 
+    SEARCH_RESERVED_CHARS = "+-&|><!(){}[]^\"~*?:/"
+
     def __init__(self, nsxlib_config):
 
         self.nsxlib_config = nsxlib_config
@@ -125,9 +127,16 @@ class NsxLib(object):
         return self.client.url_get(url)
 
     def _build_query(self, tags):
+
+        def escape(data):
+            for c in self.SEARCH_RESERVED_CHARS:
+                data = data.replace(c, '\\%s' % c)
+            return data
+
         try:
-            return " AND ".join(['tags.scope:%(scope)s AND '
-                                 'tags.tag:%(tag)s' % item for item in tags])
+            return " AND ".join(['tags.scope:%s AND tags.tag:%s' %
+                                 (escape(item['scope']), escape(item['tag']))
+                                 for item in tags])
         except KeyError as e:
             reason = _('Missing key:%s in tags') % str(e)
             raise exceptions.NsxSearchInvalidQuery(reason=reason)
