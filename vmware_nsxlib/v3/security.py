@@ -316,6 +316,25 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             resource += '&id=%s' % other_section
         return self.client.create(resource, body)
 
+    def create_with_rules(self, display_name, description, applied_tos=None,
+                          tags=None, operation=consts.FW_INSERT_BOTTOM,
+                          other_section=None, rules=None):
+        resource = 'firewall/sections?operation=%s' % operation
+        body = {
+            'display_name': display_name,
+            'description': description,
+            'stateful': True,
+            'section_type': consts.FW_SECTION_LAYER3,
+            'applied_tos': applied_tos or [],
+            'rules': rules or [],
+            'tags': tags or []
+        }
+        if rules:
+            resource += '&action=create_with_rules'
+        if other_section:
+            resource += '&id=%s' % other_section
+        return self.client.create(resource, body)
+
     def update(self, section_id, display_name=None, description=None,
                applied_tos=None, rules=None, tags_update=None):
         # Using internal method so we can access max_attempts in the decorator
@@ -363,12 +382,33 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return {'target_id': nsgroup_id,
                 'target_type': consts.NSGROUP}
 
+    def get_logicalport_reference(self, port_id):
+        return {'target_id': port_id,
+                'target_type': consts.TARGET_TYPE_LOGICAL_PORT}
+
     def get_ip_cidr_reference(self, ip_cidr_block, ip_protocol):
         target_type = (consts.TARGET_TYPE_IPV4ADDRESS
                        if ip_protocol == consts.IPV4
                        else consts.TARGET_TYPE_IPV6ADDRESS)
         return {'target_id': ip_cidr_block,
                 'target_type': target_type}
+
+    def get_rule_address(self, target_id, display_name=None, is_valid=True,
+                         target_type=consts.TARGET_TYPE_IPV4ADDRESS):
+        return {'target_display_name': display_name or '',
+                'target_id': target_id,
+                'is_valid': is_valid,
+                'target_type': target_type}
+
+    def get_l4portset_nsservice(self, sources=None, destinations=None,
+                                protocol=consts.TCP):
+        return {
+            'service': {
+                'resource_type': 'L4PortSetNSService',
+                'source_ports': sources or [],
+                'destination_ports': destinations or [],
+                'l4_protocol': protocol}
+        }
 
     def get_rule_dict(self, display_name, sources=None, destinations=None,
                       direction=consts.IN_OUT, ip_protocol=consts.IPV4_IPV6,
