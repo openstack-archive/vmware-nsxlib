@@ -26,7 +26,6 @@ from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions
 
 LOG = log.getLogger(__name__)
 
-NSX_ERROR_IDENTITY_EXISTS = 2027
 CERT_SUBJECT_COUNTRY = 'country'
 CERT_SUBJECT_STATE = 'state'
 CERT_SUBJECT_ORG = 'organization'
@@ -169,32 +168,22 @@ class ClientCertificateManager(object):
 
     def delete(self):
         """Delete existing certificate from storage and backend"""
-        if not self.exists():
+        cert_pem, key_pem = self.get_pem()
+        if not cert_pem:
             return
 
         ok = True
         try:
-            # delete certificate and principal identity from backend
-            details = self._nsx_trust_management.get_identity_details(
-                self._identity)
-
-            # TODO(annak): do not delete the identity once
-            # NSX supports multiple certificates per identity
-            # this will be required to support multiple openstack
-            # installations using same backend NSX
-            self._nsx_trust_management.delete_identity(details['id'])
-            if details['certificate_id']:
-                self._nsx_trust_management.delete_cert(
-                    details['certificate_id'])
-
+            self._nsx_trust_management.delete_cert_and_identity(
+                self._identity, cert_pem)
         except nsxlib_exceptions.ManagerError as e:
             LOG.error(_LE("Failed to clear certificate on backend: %s"), e)
             ok = False
 
         try:
             self._storage_driver.delete_cert(self._identity)
-        except Exception as e:
-            LOG.error(_LE("Failed to clear certificate on storage: %s"), e)
+        except Exception:
+            LOG.error(_LE("Failed to clear certificate in storage: %s"), e)
             ok = False
 
         self._cert = None
@@ -211,12 +200,7 @@ class ClientCertificateManager(object):
         cert_pem, key_pem = self._storage_driver.get_cert(self._identity)
         return cert_pem is not None
 
-    def import_pem(self, filename, node_id=None):
-        """Import and register existing certificate in PEM format"""
-
-        # TODO(annak): support PK import as well
-        self._validate_empty()
-
+    def _get_cert_from_file(self, filename):
         with open(filename, 'r') as f:
             cert_pem = f.read()
 
@@ -231,12 +215,34 @@ class ClientCertificateManager(object):
             raise nsxlib_exceptions.CertificateError(
                 msg=_("Failed to import client certificate"))
 
+        return cert
+
+    def import_pem(self, filename, node_id=None):
+        """Import and register existing certificate in PEM format"""
+
+        # TODO(annak): support PK import as well
+        self._validate_empty()
+
+        cert = self._get_cert_from_file(filename)
         # register on backend
         self._register_cert(cert, node_id or uuid.uuid4())
 
+        cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
         self._storage_driver.store_cert(self._identity, cert_pem, None)
 
         LOG.debug("Client certificate imported successfully")
+
+    def delete_pem(self, filename):
+        """Delete specified client certificate without storage verification"""
+        # This file may contain private key
+        # passing the pem through crypto will perform validation and
+        # stripp off the key
+        cert = self._get_cert_from_file(filename)
+        cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+
+        self._nsx_trust_management.delete_cert_and_identity(self._identity,
+                                                            cert_pem)
+        self._storage_driver.delete_cert(self._identity)
 
     def _load_from_storage(self):
         """Returns certificate and key pair in PEM format"""
@@ -328,11 +334,10 @@ class ClientCertificateManager(object):
 
     def _register_cert(self, cert, node_id):
         cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
-        nsx_cert_id = self._nsx_trust_management.create_cert(cert_pem)
-        self._nsx_trust_management.create_identity(self._identity,
-                                                   nsx_cert_id,
-                                                   node_id,
-                                                   'read_write_api_users')
+
+        self._nsx_trust_management.create_cert_and_identity(self._identity,
+                                                            cert_pem,
+                                                            node_id)
 
 
 class ClientCertProvider(object):
