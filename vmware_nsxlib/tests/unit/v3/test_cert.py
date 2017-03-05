@@ -24,7 +24,7 @@ from vmware_nsxlib.tests.unit.v3 import test_client
 from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import client_cert
 from vmware_nsxlib.v3 import exceptions as nsxlib_exc
-from vmware_nsxlib.v3 import trust_management
+from vmware_nsxlib.v3 import trust_management as tm
 
 
 class DummyStorageDriver(dict):
@@ -67,7 +67,7 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
                              'module_name': 'never mind',
                              'error message': 'bad luck'}))
 
-    def _get_mocked_trust(self, action):
+    def _get_mocked_trust(self, action, storage_driver):
 
         fake_responses = []
         if action == 'create':
@@ -78,6 +78,18 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
             fake_responses.append(self._get_mocked_response(201, []))
 
         elif action == 'delete':
+            cert_pem, key_pem = storage_driver.get_cert(self.identity)
+            nsx_style_pem = tm.NsxLibTrustManagement.remove_newlines_from_pem(
+                cert_pem)
+            # get certs list
+            results = [{'resource_type': 'Certificate',
+                        'id': 'dont care',
+                        'pem_encoded': 'some junk'},
+                       {'resource_type': 'Certificate',
+                        'id': self.cert_id,
+                        'pem_encoded': nsx_style_pem}]
+            fake_responses.append(self._get_mocked_response(200, results))
+
             # get principal identities list
             results = [{'resource_type': 'Principal Identity',
                         'id': 'dont care',
@@ -97,14 +109,14 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
             client.JSONRESTClient,
             url_prefix='api/v1', session_response=fake_responses)
 
-        return trust_management.NsxLibTrustManagement(mock_client, {})
+        return tm.NsxLibTrustManagement(mock_client, {})
 
     def test_generate_cert(self):
         """Test startup without certificate + certificate generation"""
 
         storage_driver = DummyStorageDriver()
         # Prepare fake trust management for "cert create" requests
-        mocked_trust = self._get_mocked_trust('create')
+        mocked_trust = self._get_mocked_trust('create', storage_driver)
         cert = client_cert.ClientCertificateManager(self.identity,
                                                     mocked_trust,
                                                     storage_driver)
@@ -170,7 +182,7 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
 
         # get mocked backend driver for trust management,
         # prepared for get request, that preceeds delete operation
-        mocked_trust = self._get_mocked_trust('delete')
+        mocked_trust = self._get_mocked_trust('delete', storage_driver)
 
         cert = client_cert.ClientCertificateManager(self.identity,
                                                     mocked_trust,

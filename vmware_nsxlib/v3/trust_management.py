@@ -26,12 +26,15 @@ USER_GROUP_TYPES = [
 
 class NsxLibTrustManagement(utils.NsxLibApiBase):
 
-    def remove_newlines_from_pem(self, pem):
+    @staticmethod
+    def remove_newlines_from_pem(pem):
         """NSX expects pem without newlines in certificate body
 
         BEGIN and END sections should be separated with newlines
         """
         lines = pem.split(b'\n')
+        if len(lines) <= 1:
+            return pem
         result = lines[0] + b'\n'
         result += b''.join(lines[1:-2])
         result += b'\n' + lines[-2]
@@ -50,11 +53,14 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         resource = CERT_SECTION + '/' + cert_id
         return self.client.get(resource)
 
+    def get_certs(self):
+        return self.client.get(CERT_SECTION)['results']
+
     def delete_cert(self, cert_id):
         resource = CERT_SECTION + '/' + cert_id
         self.client.delete(resource)
 
-    def create_identity(self, identity, cert_id,
+    def create_identity(self, name, cert_id,
                         node_id, permission_group):
         # Validate permission group before sending to server
         if permission_group not in USER_GROUP_TYPES:
@@ -62,21 +68,50 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
                 operation='create_identity',
                 arg_val=permission_group,
                 arg_name='permission_group')
-        body = {'name': identity, 'certificate_id': cert_id,
+        body = {'name': name, 'certificate_id': cert_id,
                 'node_id': node_id, 'permission_group': permission_group,
                 'is_protected': True}
         self.client.create(ID_SECTION, body)
 
-    def delete_identity(self, identity):
-        resource = ID_SECTION + '/' + identity
+    def get_identities(self, name):
+        ids = self.client.get(ID_SECTION)['results']
+        return [identity for identity in ids if identity['name'] == name]
+
+    def delete_identity(self, identity_id):
+        resource = ID_SECTION + '/' + identity_id
         self.client.delete(resource)
 
-    def get_identity_details(self, identity):
-        results = self.client.get(ID_SECTION)['results']
-        for result in results:
-            if result['name'] == identity:
-                return result
+    def find_cert_and_identity(self, name, cert_pem):
+        nsx_style_pem = self.remove_newlines_from_pem(cert_pem)
+        certs = self.get_certs()
 
-        raise nsxlib_exc.ResourceNotFound(
-            manager=self.client.nsx_api_managers,
-            operation="Principal identity %s not found" % identity)
+        # should be zero or one matching certs
+        cert_ids = [cert['id'] for cert in certs
+                    if cert['pem_encoded'] == nsx_style_pem]
+        if not cert_ids:
+            raise nsxlib_exc.ResourceNotFound(
+                manager=self.client.nsx_api_managers,
+                operation="delete_certificate")
+
+        identities = self.get_identities(name)
+        # should be zero or one matching identities
+        ids = [identity['id'] for identity in identities
+               if identity['certificate_id'] == cert_ids[0]]
+
+        if not ids:
+            raise nsxlib_exc.ResourceNotFound(
+                manager=self.client.nsx_api_managers,
+                operation="delete_identity")
+
+        return cert_ids[0], ids[0]
+
+    def delete_cert_and_identity(self, name, cert_pem):
+        cert_id, identity_id = self.find_cert_and_identity(name, cert_pem)
+        self.delete_cert(cert_id)
+        self.delete_identity(identity_id)
+
+    def create_cert_and_identity(self, name, cert_pem,
+                                 node_id,
+                                 permission_group='read_write_api_users'):
+        nsx_cert_id = self.create_cert(cert_pem)
+        self.create_identity(name, nsx_cert_id, node_id, permission_group)
