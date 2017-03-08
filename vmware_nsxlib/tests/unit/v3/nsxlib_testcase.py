@@ -84,7 +84,8 @@ def _mock_nsxlib():
         side_effect=_mock_add_rules_in_section).start()
 
     mock.patch(
-        "vmware_nsxlib.v3.NsxLibTransportZone.get_id_by_name_or_id",
+        ("vmware_nsxlib.v3.core_resources."
+         "NsxLibTransportZone.get_id_by_name_or_id"),
         side_effect=_return_id_key).start()
 
     mock.patch(
