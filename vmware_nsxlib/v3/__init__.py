@@ -42,9 +42,23 @@ class NsxLib(object):
             nsx_api_managers=nsxlib_config.nsx_api_managers,
             max_attempts=nsxlib_config.max_attempts)
 
-        # init the api object
         self.general_apis = utils.NsxLibApiBase(
             self.client, nsxlib_config)
+        if nsxlib_config.purpose == 'core':
+            self._init_core_api(nsxlib_config)
+        elif nsxlib_config.purpose == 'policy':
+            self._init_policy_api(nsxlib_config)
+        else:
+            raise exceptions.UnknownPurpose(purpose=nsxlib_config.purpose)
+
+        super(NsxLib, self).__init__()
+
+    def get_version(self):
+        node = self.client.get("node")
+        version = node.get('node_version')
+        return version
+
+    def _init_core_api(self, nsxlib_config):
         self.port_mirror = NsxLibPortMirror(
             self.client, nsxlib_config)
         self.bridge_endpoint = NsxLibBridgeEndpoint(
@@ -78,12 +92,8 @@ class NsxLib(object):
         self.ip_set = security.NsxLibIPSet(
             self.client, nsxlib_config)
 
-        super(NsxLib, self).__init__()
-
-    def get_version(self):
-        node = self.client.get("node")
-        version = node.get('node_version')
-        return version
+    def _init_policy_api(self, nsxlib_config):
+        pass
 
     def build_v3_api_version_tag(self):
         return self.general_apis.build_v3_api_version_tag()
