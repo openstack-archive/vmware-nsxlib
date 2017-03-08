@@ -51,6 +51,10 @@ class NsxLibException(Exception):
         return False
 
 
+class UnknownPurpose(NsxLibException):
+    message = _("Unrecognized lib purpose %(purpose)s")
+
+
 class ObjectAlreadyExists(NsxLibException):
     message = _("%(object_type)s already exists")
 

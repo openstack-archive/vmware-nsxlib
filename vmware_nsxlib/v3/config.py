@@ -85,7 +85,8 @@ class NsxLibConfig(object):
                  plugin_ver=None,
                  dns_nameservers=None,
                  dns_domain='openstacklocal',
-                 dhcp_profile_uuid=None):
+                 dhcp_profile_uuid=None,
+                 purpose='core'):
 
         self.nsx_api_managers = nsx_api_managers
         self._username = username
@@ -106,6 +107,7 @@ class NsxLibConfig(object):
         self.dns_nameservers = dns_nameservers or []
         self.dns_domain = dns_domain
         self.dhcp_profile_uuid = dhcp_profile_uuid
+        self.purpose = purpose
 
     def _attribute_by_index(self, scalar_or_list, index):
         if isinstance(scalar_or_list, list):
