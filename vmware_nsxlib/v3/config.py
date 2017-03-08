@@ -107,6 +107,10 @@ class NsxLibConfig(object):
         self.dns_domain = dns_domain
         self.dhcp_profile_uuid = dhcp_profile_uuid
 
+    def extend(self, keepalive_section):
+        """Called by library code to initialize application-specific data"""
+        self.keepalive_section = keepalive_section
+
     def _attribute_by_index(self, scalar_or_list, index):
         if isinstance(scalar_or_list, list):
             if not len(scalar_or_list):
