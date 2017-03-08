@@ -93,7 +93,8 @@ class NsxLibConfig(object):
                  plugin_ver=None,
                  dns_nameservers=None,
                  dns_domain='openstacklocal',
-                 dhcp_profile_uuid=None):
+                 dhcp_profile_uuid=None,
+                 purpose='core'):
 
         self.nsx_api_managers = nsx_api_managers
         self._username = username
@@ -120,6 +121,8 @@ class NsxLibConfig(object):
                 LOG,
                 _LW('dhcp_profile_uuid is not used by the nsxlib, and will '
                     'be removed from its configuration in the future.'))
+
+        self.purpose = purpose
 
     def _attribute_by_index(self, scalar_or_list, index):
         if isinstance(scalar_or_list, list):
