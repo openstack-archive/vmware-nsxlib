@@ -43,6 +43,9 @@ PLUGIN_SCOPE = "plugin scope"
 PLUGIN_TAG = "plugin tag"
 PLUGIN_VER = "plugin ver"
 
+DNS_NAMESERVERS = ['1.1.1.1']
+DNS_DOMAIN = 'openstacklocal'
+
 
 def _mock_nsxlib():
     def _return_id_key(*args, **kwargs):
@@ -107,7 +110,10 @@ def get_default_nsxlib_config():
         nsx_api_managers=[],
         plugin_scope=PLUGIN_SCOPE,
         plugin_tag=PLUGIN_TAG,
-        plugin_ver=PLUGIN_VER)
+        plugin_ver=PLUGIN_VER,
+        dns_nameservers=DNS_NAMESERVERS,
+        dns_domain=DNS_DOMAIN
+    )
 
 
 def get_nsxlib_config_with_client_cert():
