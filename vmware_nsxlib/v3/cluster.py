@@ -151,10 +151,12 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
 
     def validate_connection(self, cluster_api, endpoint, conn):
         client = nsx_client.NSX3Client(conn, url_prefix=endpoint.provider.url)
-        zones = client.get('transport-zones', silent=True)
-        if not zones or zones['result_count'] <= 0:
-            msg = _("No transport zones found "
-                    "for '%s'") % endpoint.provider.url
+        keepalive_section = cluster_api.nsxlib_config.keepalive_section
+        result = client.get(keepalive_section, silent=True)
+        if not result or result['result_count'] <= 0:
+            msg = _("No %(section)s found "
+                    "for '%(url)s'") % {'section': keepalive_section,
+                                        'url': endpoint.provider.url}
             LOG.warning(msg)
             raise exceptions.ResourceNotFound(
                 manager=endpoint.provider.url, operation=msg)
