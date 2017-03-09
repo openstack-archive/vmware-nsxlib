@@ -13,6 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log
+from oslo_log import versionutils
+
+from vmware_nsxlib._i18n import _LW
+
+
+LOG = log.getLogger(__name__)
+
 
 class NsxLibConfig(object):
     """Class holding all the configuration parameters used by the nsxlib code.
@@ -61,8 +69,8 @@ class NsxLibConfig(object):
                             binding entries. These will be used if there are
                             no nameservers defined on the subnet.
     :param dns_domain: Domain to use for building the hostnames.
-    :param dhcp_profile_uuid: The UUID of the NSX DHCP Profile that will be
-                              used to enable native DHCP service.
+    :param dhcp_profile_uuid: Currently unused and deprecated.
+                              Kept for backward compatibility.
 
     """
 
@@ -105,7 +113,13 @@ class NsxLibConfig(object):
         self.plugin_ver = plugin_ver
         self.dns_nameservers = dns_nameservers or []
         self.dns_domain = dns_domain
-        self.dhcp_profile_uuid = dhcp_profile_uuid
+
+        if dhcp_profile_uuid:
+            # this is deprecated, and never used.
+            versionutils.report_deprecated_feature(
+                LOG,
+                _LW('dhcp_profile_uuid is not used by the nsxlib, and will '
+                    'be removed from its configuration in the future.'))
 
     def _attribute_by_index(self, scalar_or_list, index):
         if isinstance(scalar_or_list, list):
