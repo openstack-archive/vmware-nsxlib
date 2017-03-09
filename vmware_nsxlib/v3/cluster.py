@@ -246,6 +246,12 @@ class Endpoint(object):
         self._state = EndpointState.INITIALIZED
         self._last_updated = datetime.datetime.now()
 
+    def regenerate_pool(self):
+        self.pool = pools.Pool(min_size=self.pool.min_size,
+                               max_size=self.pool.max_size,
+                               order_as_stack=True,
+                               create=self.pool.create)
+
     @property
     def last_updated(self):
         return self._last_updated
@@ -404,6 +410,12 @@ class ClusteredAPI(object):
             with endpoint.pool.item() as conn:
                 self._http_provider.validate_connection(self, endpoint, conn)
                 endpoint.set_state(EndpointState.UP)
+        except exceptions.ClientCertificateNotTrusted:
+            LOG.warning(_LW("Failed to validate API cluster endpoint "
+                            "'%(ep)s' due to untrusted client certificate"),
+                        {'ep': endpoint})
+            # regenerate connection pool based on new certificate
+            endpoint.regenerate_pool()
         except Exception as e:
             endpoint.set_state(EndpointState.DOWN)
             LOG.warning(_LW("Failed to validate API cluster endpoint "
