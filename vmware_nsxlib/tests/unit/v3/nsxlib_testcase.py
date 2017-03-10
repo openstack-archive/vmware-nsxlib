@@ -17,6 +17,7 @@ import copy
 import mock
 import unittest
 
+from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 from requests import exceptions as requests_exceptions
 
@@ -366,3 +367,15 @@ class NsxClientTestCase(NsxLibTestCase):
         nsxlib_config.nsx_api_managers = conf_managers
 
         return nsx_cluster.NSXClusteredAPI(nsxlib_config)
+
+    def assert_json_call(self, method, client, url,
+                         headers=nsx_client.JSONRESTClient._DEFAULT_HEADERS,
+                         timeout=(NSX_HTTP_TIMEOUT, NSX_HTTP_READ_TIMEOUT),
+                         data=None):
+        cluster = client._conn
+        if data:
+            data = jsonutils.dumps(data, sort_keys=True)
+        cluster.assert_called_once(
+            method,
+            **{'url': url, 'verify': NSX_CERT, 'body': data,
+               'headers': headers, 'cert': None, 'timeout': timeout})
