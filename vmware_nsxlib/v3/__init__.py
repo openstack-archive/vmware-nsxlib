@@ -24,6 +24,8 @@ from vmware_nsxlib.v3 import cluster
 from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import native_dhcp
+from vmware_nsxlib.v3 import policy_defs
+from vmware_nsxlib.v3 import policy_resources
 from vmware_nsxlib.v3 import security
 from vmware_nsxlib.v3 import utils
 
@@ -164,7 +166,12 @@ class NsxLib(NsxLibBase):
 class NsxPolicyLib(NsxLibBase):
 
     def init_api(self):
-        pass
+        self.policy_api = policy_defs.NsxPolicyApi(self.client)
+        self.domain = policy_resources.NsxPolicyDomainApi(self.policy_api)
+        self.group = policy_resources.NsxPolicyGroupApi(self.policy_api)
+        self.service = policy_resources.NsxPolicyL4ServiceApi(self.policy_api)
+        self.contract = policy_resources.NsxContractApi(self.policy_api)
+        self.contractmap = policy_resources.NsxContractMapApi(self.policy_api)
 
     @property
     def keepalive_section(self):
