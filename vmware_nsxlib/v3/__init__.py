@@ -21,6 +21,7 @@ from vmware_nsxlib.v3 import cluster
 from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import native_dhcp
+from vmware_nsxlib.v3 import policy
 from vmware_nsxlib.v3 import security
 from vmware_nsxlib.v3 import utils
 
@@ -93,7 +94,7 @@ class NsxLib(object):
             self.client, nsxlib_config)
 
     def _init_policy_api(self, nsxlib_config):
-        pass
+        self.policy_api = policy.NsxPolicyApi(self.client)
 
     def build_v3_api_version_tag(self):
         return self.general_apis.build_v3_api_version_tag()
