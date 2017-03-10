@@ -56,7 +56,7 @@ class RESTClient(object):
     _VERB_RESP_CODES = {
         'get': [requests.codes.ok],
         'post': [requests.codes.created, requests.codes.ok],
-        'put': [requests.codes.ok],
+        'put': [requests.codes.created, requests.codes.ok],
         'delete': [requests.codes.ok]
     }
 
