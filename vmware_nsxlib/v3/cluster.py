@@ -152,7 +152,8 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
         client = nsx_client.NSX3Client(conn, url_prefix=endpoint.provider.url)
         keepalive_section = cluster_api.nsxlib_config.keepalive_section
         result = client.get(keepalive_section, silent=True)
-        if not result or result['result_count'] <= 0:
+        # If keeplive section returns a list, it is assumed to be non-empty
+        if not result or result.get('result_count', 1) <= 0:
             msg = _("No %(section)s found "
                     "for '%(url)s'") % {'section': keepalive_section,
                                         'url': endpoint.provider.url}
