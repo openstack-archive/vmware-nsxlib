@@ -416,7 +416,7 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
             body['match_destination_network'] = dest_net
         if rule_priority:
             body['rule_priority'] = rule_priority
-        if match_ports is not None:
+        if match_ports:
             body['match_service'] = {
                 'resource_type': (match_resource_type or
                                   nsx_constants.L4_PORT_SET_NSSERVICE),
