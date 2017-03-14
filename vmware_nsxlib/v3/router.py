@@ -172,7 +172,7 @@ class RouterLib(object):
             translated_network=int_ip,
             dest_net=ext_ip,
             rule_priority=FIP_NAT_PRI,
-            match_ports=match_ports or [])
+            match_ports=match_ports)
 
     def delete_fip_nat_rules_by_internal_ip(self, logical_router_id, int_ip):
         self.nsxlib.logical_router.delete_nat_rule_by_values(
