@@ -160,8 +160,7 @@ class RouterLib(object):
             return self._router_port_client.update(
                 port['id'], subnets=address_groups)
 
-    def add_fip_nat_rules(self, logical_router_id, ext_ip, int_ip,
-                          match_ports=None):
+    def add_fip_nat_rules(self, logical_router_id, ext_ip, int_ip):
         self.nsxlib.logical_router.add_nat_rule(
             logical_router_id, action="SNAT",
             translated_network=ext_ip,
@@ -171,8 +170,7 @@ class RouterLib(object):
             logical_router_id, action="DNAT",
             translated_network=int_ip,
             dest_net=ext_ip,
-            rule_priority=FIP_NAT_PRI,
-            match_ports=match_ports or [])
+            rule_priority=FIP_NAT_PRI)
 
     def delete_fip_nat_rules_by_internal_ip(self, logical_router_id, int_ip):
         self.nsxlib.logical_router.delete_nat_rule_by_values(
