@@ -366,6 +366,10 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
         resource = 'switching-profiles/%s' % profile_id
         return self.client.get(resource)
 
+    def list(self):
+        resource = 'switching-profiles'
+        return self.client.list(resource)
+
     def delete(self, profile_id):
         resource = 'switching-profiles/%s' % profile_id
         self.client.delete(resource)
