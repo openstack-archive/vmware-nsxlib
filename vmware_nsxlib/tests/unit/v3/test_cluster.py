@@ -54,11 +54,11 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
             mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
                                        'nsxuser', 'nsxpassword', None))
 
-        self.assertEqual(session.auth, ('nsxuser', 'nsxpassword'))
-        self.assertEqual(session.verify, False)
+        self.assertEqual(('nsxuser', 'nsxpassword'), session.auth)
+        self.assertFalse(session.verify)
         self.assertIsNone(session.cert)
-        self.assertEqual(session.adapters['https://'].max_retries.total, 100)
-        self.assertEqual(session.timeout, 99)
+        self.assertEqual(100, session.adapters['https://'].max_retries.total)
+        self.assertEqual(99, session.timeout)
 
     def test_new_connection_with_client_auth(self):
         mock_api = mock.Mock()
@@ -76,10 +76,10 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
             mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
                                        None, None, None))
 
-        self.assertEqual(session.auth, None)
-        self.assertEqual(session.verify, False)
-        self.assertEqual(session.cert_provider, cert_provider_inst)
-        self.assertEqual(session.timeout, 99)
+        self.assertIsNone(session.auth)
+        self.assertFalse(session.verify)
+        self.assertEqual(cert_provider_inst, session.cert_provider)
+        self.assertEqual(99, session.timeout)
 
     def test_validate_connection(self):
         self.skipTest("Revist")
@@ -162,7 +162,7 @@ class ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
         conf_managers = ['8.9.10.11', '9.10.11.12']
         api = self.new_mocked_cluster(conf_managers, validate_fn)
 
-        self.assertEqual(api.health, expected_health)
+        self.assertEqual(expected_health, api.health)
 
     def test_orange_health(self):
 
@@ -182,7 +182,7 @@ class ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
         conf_managers = ['8.9.10.11', '9.10.11.12', '10.11.12.13']
         api = self.new_mocked_cluster(conf_managers, _validate_conn_down)
 
-        self.assertEqual(len(api.endpoints), 3)
+        self.assertEqual(3, len(api.endpoints))
         self.assertRaises(nsxlib_exc.ServiceClusterUnavailable,
                           api.get, 'api/v1/transport-zones')
 
