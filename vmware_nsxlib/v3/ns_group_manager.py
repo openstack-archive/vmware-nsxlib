@@ -19,7 +19,7 @@ import uuid
 
 from oslo_log import log
 
-from vmware_nsxlib._i18n import _, _LW
+from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants as consts
 
@@ -72,16 +72,16 @@ class NSGroupManager(object):
         if nested_groups:
             size = max(requested_size, max(nested_groups) + 1)
             if size > requested_size:
-                LOG.warning(_LW("Lowering the value of "
-                                "nsx_v3:number_of_nested_groups isn't "
-                                "supported, '%s' nested-groups will be used."),
+                LOG.warning("Lowering the value of "
+                            "nsx_v3:number_of_nested_groups isn't "
+                            "supported, '%s' nested-groups will be used.",
                             size)
 
         absent_groups = set(range(size)) - set(nested_groups.keys())
         if absent_groups:
             LOG.warning(
-                _LW("Found %(num_present)s Nested Groups, "
-                    "creating %(num_absent)s more."),
+                "Found %(num_present)s Nested Groups, "
+                "creating %(num_absent)s more.",
                 {'num_present': len(nested_groups),
                  'num_absent': len(absent_groups)})
             for i in absent_groups:
@@ -139,11 +139,11 @@ class NSGroupManager(object):
                     nsgroup_id, verify=True)
                 break
             except exceptions.NSGroupMemberNotFound:
-                LOG.warning(_LW("NSGroup %(nsgroup)s was expected to be found "
-                                "in group %(group_id)s, but wasn't. "
-                                "Looking in the next group.."),
+                LOG.warning("NSGroup %(nsgroup)s was expected to be found "
+                            "in group %(group_id)s, but wasn't. "
+                            "Looking in the next group..",
                             {'nsgroup': nsgroup_id, 'group_id': group})
                 continue
         else:
-            LOG.warning(_LW("NSGroup %s was marked for removal, but its "
-                            "reference is missing."), nsgroup_id)
+            LOG.warning("NSGroup %s was marked for removal, but its "
+                        "reference is missing.", nsgroup_id)

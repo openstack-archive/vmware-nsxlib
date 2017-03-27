@@ -22,7 +22,6 @@ from neutron_lib import constants
 from oslo_log import log
 from oslo_utils import excutils
 
-from vmware_nsxlib._i18n import _LE, _LW
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants as consts
 from vmware_nsxlib.v3 import utils
@@ -89,7 +88,7 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
                     sg_id=nsgroup_id)
             except exceptions.ResourceNotFound:
                 with excutils.save_and_reraise_exception():
-                    LOG.error(_LE("NSGroup %s doesn't exists"), nsgroup_id)
+                    LOG.error("NSGroup %s doesn't exists", nsgroup_id)
         for nsgroup_id in removed:
             self.remove_member(
                 nsgroup_id, consts.TARGET_TYPE_LOGICAL_PORT, lport_id)
@@ -183,8 +182,8 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
         except exceptions.ManagerError:
             # REVISIT(roeyc): A ManagerError might have been raised for a
             # different reason, e.g - NSGroup does not exists.
-            LOG.warning(_LW("Failed to add %(target_type)s resources "
-                            "(%(target_ids)s) to NSGroup %(nsgroup_id)s"),
+            LOG.warning("Failed to add %(target_type)s resources "
+                        "(%(target_ids)s) to NSGroup %(nsgroup_id)s",
                         {'target_type': target_type,
                          'target_ids': target_ids,
                          'nsgroup_id': nsgroup_id})

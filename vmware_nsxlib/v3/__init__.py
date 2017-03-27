@@ -15,7 +15,7 @@
 
 from oslo_log import log
 
-from vmware_nsxlib._i18n import _, _LW
+from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import cluster
 from vmware_nsxlib.v3 import exceptions
@@ -389,9 +389,9 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                 matched_num = matched_num + 1
         if matched_num == 0:
             if skip_not_found:
-                LOG.warning(_LW("No resource in %(res)s matched for values: "
-                                "%(values)s"), {'res': resource,
-                                                'values': kwargs})
+                LOG.warning("No resource in %(res)s matched for values: "
+                            "%(values)s", {'res': resource,
+                                           'values': kwargs})
             else:
                 err_msg = (_("No resource in %(res)s matched for values: "
                              "%(values)s") % {'res': resource,
@@ -400,10 +400,10 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                     manager=self.cluster.nsx_api_managers,
                     operation=err_msg)
         elif matched_num > 1:
-            LOG.warning(_LW("%(num)s resources in %(res)s matched for values: "
-                            "%(values)s"), {'num': matched_num,
-                                            'res': resource,
-                                            'values': kwargs})
+            LOG.warning("%(num)s resources in %(res)s matched for values: "
+                        "%(values)s", {'num': matched_num,
+                                       'res': resource,
+                                       'values': kwargs})
 
     def add_nat_rule(self, logical_router_id, action, translated_network,
                      source_net=None, dest_net=None,
