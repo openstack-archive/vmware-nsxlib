@@ -368,8 +368,11 @@ class LogicalRouter(AbstractRESTResource):
             body['description'] = description
         return self._client.create(body=body)
 
-    def delete(self, lrouter_id):
-        return self._client.url_delete(lrouter_id)
+    def delete(self, lrouter_id, force=False):
+        url = lrouter_id
+        if force:
+            url += '?force=%s' % force
+        return self._client.url_delete(url)
 
     def update(self, lrouter_id, *args, **kwargs):
         # Using internal method so we can access max_attempts in the decorator
