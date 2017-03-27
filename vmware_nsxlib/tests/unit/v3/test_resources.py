@@ -458,6 +458,15 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             'delete', router,
             'https://1.2.3.4/api/v1/logical-routers/%s' % uuid)
 
+    def test_force_delete_logical_router(self):
+        """Test force deleting router"""
+        router = self._mocked_lrouter()
+        uuid = test_constants.FAKE_ROUTER['id']
+        router.delete(uuid, True)
+        test_client.assert_json_call(
+            'delete', router,
+            'https://1.2.3.4/api/v1/logical-routers/%s?force=True' % uuid)
+
 
 class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
