@@ -21,7 +21,7 @@ import uuid
 from neutron_lib import exceptions
 from oslo_log import log
 
-from vmware_nsxlib._i18n import _, _LE
+from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions
 
 LOG = log.getLogger(__name__)
@@ -177,13 +177,13 @@ class ClientCertificateManager(object):
             self._nsx_trust_management.delete_cert_and_identity(
                 self._identity, cert_pem)
         except nsxlib_exceptions.ManagerError as e:
-            LOG.error(_LE("Failed to clear certificate on backend: %s"), e)
+            LOG.error("Failed to clear certificate on backend: %s", e)
             ok = False
 
         try:
             self._storage_driver.delete_cert(self._identity)
         except Exception:
-            LOG.error(_LE("Failed to clear certificate in storage: %s"), e)
+            LOG.error("Failed to clear certificate in storage: %s", e)
             ok = False
 
         self._cert = None

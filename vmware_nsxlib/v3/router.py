@@ -21,7 +21,7 @@ import copy
 from neutron_lib import exceptions as n_exc
 from oslo_log import log
 
-from vmware_nsxlib._i18n import _, _LW
+from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import utils
@@ -102,8 +102,8 @@ class RouterLib(object):
             tier1_link_port = (
                 self._router_port_client.get_tier1_link_port(tier1_uuid))
         except exceptions.ResourceNotFound:
-            LOG.warning(_LW("Logical router link port for tier1 router: %s "
-                            "not found at the backend"), tier1_uuid)
+            LOG.warning("Logical router link port for tier1 router: %s "
+                        "not found at the backend", tier1_uuid)
             return
         tier1_link_port_id = tier1_link_port['id']
         tier0_link_port_id = (

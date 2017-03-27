@@ -18,7 +18,7 @@ import six.moves.urllib.parse as urlparse
 
 from oslo_log import log
 from oslo_serialization import jsonutils
-from vmware_nsxlib._i18n import _, _LW
+from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import utils
 
@@ -119,9 +119,9 @@ class RESTClient(object):
     def _validate_result(self, result, expected, operation):
         if result.status_code not in expected:
             result_msg = result.json() if result.content else ''
-            LOG.warning(_LW("The HTTP request returned error code "
-                            "%(result)s, whereas %(expected)s response "
-                            "codes were expected. Response body %(body)s"),
+            LOG.warning("The HTTP request returned error code "
+                        "%(result)s, whereas %(expected)s response "
+                        "codes were expected. Response body %(body)s",
                         {'result': result.status_code,
                          'expected': '/'.join([str(code)
                                                for code in expected]),

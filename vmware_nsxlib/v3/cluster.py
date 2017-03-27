@@ -31,7 +31,7 @@ from oslo_log import log
 from oslo_service import loopingcall
 from requests import adapters
 from requests import exceptions as requests_exceptions
-from vmware_nsxlib._i18n import _, _LI, _LW
+from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import client as nsx_client
 from vmware_nsxlib.v3 import exceptions
 
@@ -117,7 +117,7 @@ class TimeoutSession(requests.Session):
                 # This is most probably "client cert not found" error (this
                 # happens when server closed the connection and requests
                 # reopen it). Try reloading client cert.
-                LOG.warning(_LW("SSL error: %s, retrying..") % e)
+                LOG.warning("SSL error: %s, retrying.." % e)
             except OSError as e:
                 # Lack of client cert file can come in form of OSError,
                 # in this case filename will appear in the error. Try
@@ -125,7 +125,7 @@ class TimeoutSession(requests.Session):
                 if self._cert_provider.filename() not in str(e):
                     raise e
                 # Don't expose cert file name to the logs
-                LOG.warning(_LW("Reloading client certificate.."))
+                LOG.warning("Reloading client certificate..")
 
         # The following with statement allows for preparing certificate and
         # private key file and dispose it once connections are spawned
@@ -262,8 +262,8 @@ class Endpoint(object):
 
     def set_state(self, state):
         if self.state != state:
-            LOG.info(_LI("Endpoint '%(ep)s' changing from state"
-                         " '%(old)s' to '%(new)s'"),
+            LOG.info("Endpoint '%(ep)s' changing from state"
+                     " '%(old)s' to '%(new)s'",
                      {'ep': self.provider,
                       'old': self.state,
                       'new': state})
@@ -411,15 +411,15 @@ class ClusteredAPI(object):
                 self._http_provider.validate_connection(self, endpoint, conn)
                 endpoint.set_state(EndpointState.UP)
         except exceptions.ClientCertificateNotTrusted:
-            LOG.warning(_LW("Failed to validate API cluster endpoint "
-                            "'%(ep)s' due to untrusted client certificate"),
+            LOG.warning("Failed to validate API cluster endpoint "
+                        "'%(ep)s' due to untrusted client certificate",
                         {'ep': endpoint})
             # regenerate connection pool based on new certificate
             endpoint.regenerate_pool()
         except Exception as e:
             endpoint.set_state(EndpointState.DOWN)
-            LOG.warning(_LW("Failed to validate API cluster endpoint "
-                            "'%(ep)s' due to: %(err)s"),
+            LOG.warning("Failed to validate API cluster endpoint "
+                        "'%(ep)s' due to: %(err)s",
                         {'ep': endpoint, 'err': e})
 
     def _select_endpoint(self):
@@ -460,8 +460,8 @@ class ClusteredAPI(object):
                 cluster_id=self.cluster_id)
 
         if endpoint.pool.free() == 0:
-            LOG.info(_LI("API endpoint %(ep)s at connection "
-                         "capacity %(max)s and has %(waiting)s waiting"),
+            LOG.info("API endpoint %(ep)s at connection "
+                     "capacity %(max)s and has %(waiting)s waiting",
                      {'ep': endpoint,
                       'max': endpoint.pool.max_size,
                       'waiting': endpoint.pool.waiting()})
@@ -496,7 +496,7 @@ class ClusteredAPI(object):
 
                 return response
             except Exception as e:
-                LOG.warning(_LW("Request failed due to: %s"), e)
+                LOG.warning("Request failed due to: %s", e)
                 if not self._http_provider.is_connection_exception(e):
                     # only trap and retry connection errors
                     raise e
@@ -541,8 +541,8 @@ class NSXClusteredAPI(ClusteredAPI):
             provider_index += 1
             conf_url = _schemed_url(conf_url)
             if conf_url in urls:
-                LOG.warning(_LW("'%s' already defined in configuration file. "
-                                "Skipping."), urlparse.urlunparse(conf_url))
+                LOG.warning("'%s' already defined in configuration file. "
+                            "Skipping.", urlparse.urlunparse(conf_url))
                 continue
             urls.append(conf_url)
             providers.append(

@@ -16,9 +16,6 @@
 from oslo_log import log
 from oslo_log import versionutils
 
-from vmware_nsxlib._i18n import _LW
-
-
 LOG = log.getLogger(__name__)
 
 
@@ -118,8 +115,8 @@ class NsxLibConfig(object):
             # this is deprecated, and never used.
             versionutils.report_deprecated_feature(
                 LOG,
-                _LW('dhcp_profile_uuid is not used by the nsxlib, and will '
-                    'be removed from its configuration in the future.'))
+                'dhcp_profile_uuid is not used by the nsxlib, and will '
+                'be removed from its configuration in the future.')
 
     def _attribute_by_index(self, scalar_or_list, index):
         if isinstance(scalar_or_list, list):
