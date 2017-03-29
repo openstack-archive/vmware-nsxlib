@@ -336,7 +336,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return self.client.create(resource, body)
 
     def update(self, section_id, display_name=None, description=None,
-               applied_tos=None, rules=None, tags_update=None):
+               applied_tos=None, rules=None, tags_update=None, force=False):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
@@ -358,11 +358,20 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             if tags_update is not None:
                 section['tags'] = utils.update_v3_tags(section.get('tags', []),
                                                        tags_update)
+            headers = None
+            if force:
+                # shared sections (like default section) can serve multiple
+                # openstack deployments. If some operate under protected
+                # identities, force-owerwrite is needed.
+                # REVISIT(annak): find better solution for shared sections
+                headers = {'X-Allow-Overwrite': 'true'}
+
             if rules is not None:
-                return self.client.create(resource, section)
+                return self.client.create(resource, section, headers=headers)
+
             elif any(p is not None for p in (display_name, description,
                                              applied_tos)):
-                return self.client.update(resource, section)
+                return self.client.update(resource, section, headers=headers)
 
         return _do_update()
 
@@ -551,7 +560,8 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                     applied_tos=nested_groups,
                     rules=[dhcp_client_rule_out,
                            dhcp_client_rule_in,
-                           block_rule])
+                           block_rule],
+                    force=True)
         return section['id']
 
 
