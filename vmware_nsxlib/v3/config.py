@@ -118,6 +118,10 @@ class NsxLibConfig(object):
                 'dhcp_profile_uuid is not used by the nsxlib, and will '
                 'be removed from its configuration in the future.')
 
+    def extend(self, keepalive_section):
+        """Called by library code to initialize application-specific data"""
+        self.keepalive_section = keepalive_section
+
     def _attribute_by_index(self, scalar_or_list, index):
         if isinstance(scalar_or_list, list):
             if not len(scalar_or_list):
