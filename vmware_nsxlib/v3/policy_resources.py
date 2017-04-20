@@ -323,7 +323,7 @@ class NsxPolicyCommunicationProfileApi(NsxPolicyResourceBase):
     def create(self, name, profile_id=None, description=None,
                services=None, action=policy_constants.ACTION_ALLOW,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Create a Communication proflie with a single entry.
+        """Create a Communication profile with a single entry.
 
         Services should be a list of service ids
         """
@@ -561,7 +561,7 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
     def update(self, ep_id, name=None, description=None,
                ip_address=None, username=None, password=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Update the enforcment point.
+        """Update the enforcement point.
 
         username & password must be defined
         """
