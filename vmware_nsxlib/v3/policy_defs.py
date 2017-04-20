@@ -89,11 +89,11 @@ class ResourceDef(object):
         entries_path = cls.sub_entries_path()
         if not entries_path:
             # This sub class doesn't support this
-            return None
+            return
 
         if (entries_path not in obj_body or
             len(obj_body[entries_path]) != 1):
-            return None
+            return
 
         return obj_body[entries_path][0]
 
