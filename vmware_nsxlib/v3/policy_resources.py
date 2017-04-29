@@ -103,10 +103,7 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
                tenant=policy_constants.POLICY_INFRA_TENANT):
         domain_def = policy_defs.DomainDef(domain_id=domain_id,
                                            tenant=tenant)
-        # Get the current data, and update it with the new values
-        domain = self.get(domain_id, tenant=tenant)
-        domain_def.update_attributes_in_body(domain,
-                                             name=name,
+        domain_def.update_attributes_in_body(name=name,
                                              description=description)
         # update the backend
         return self.policy_api.update(domain_def)
@@ -180,9 +177,7 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         group_def = policy_defs.GroupDef(domain_id=domain_id,
                                          group_id=group_id,
                                          tenant=tenant)
-        # Get the current data, and update it with the new values
-        group = self.get(domain_id, group_id, tenant=tenant)
-        group_def.update_attributes_in_body(group, name=name,
+        group_def.update_attributes_in_body(name=name,
                                             description=description)
         # update the backend
         return self.policy_api.update(group_def)
@@ -212,8 +207,9 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         else:
             conditions = []
         # Get the current data, and update it with the new values
+        # We need to do that here because of the conditions data
         group = self.get(domain_id, group_id, tenant=tenant)
-        group_def.update_attributes_in_body(group, conditions=conditions)
+        group_def.update_attributes_in_body(body=group, conditions=conditions)
         # update the backend
         return self.policy_api.update(group_def)
 
@@ -266,11 +262,12 @@ class NsxPolicyL4ServiceApi(NsxPolicyResourceBase):
                               name=None, description=None,
                               protocol=None, dest_ports=None,
                               tenant=policy_constants.POLICY_INFRA_TENANT):
+        # TODO(asarfaty): This action fails on backend
         entry_id = srv_entry['id']
         entry_def = policy_defs.L4ServiceEntryDef(service_id=service_id,
                                                   service_entry_id=entry_id,
                                                   tenant=tenant)
-        entry_def.update_attributes_in_body(srv_entry, name=name,
+        entry_def.update_attributes_in_body(body=srv_entry, name=name,
                                             description=description,
                                             protocol=protocol,
                                             dest_ports=dest_ports)
@@ -288,7 +285,7 @@ class NsxPolicyL4ServiceApi(NsxPolicyResourceBase):
             # update the service itself
             service_def = policy_defs.ServiceDef(service_id=service_id,
                                                  tenant=tenant)
-            service_def.update_attributes_in_body(service, name=name,
+            service_def.update_attributes_in_body(name=name,
                                                   description=description)
 
             # update the backend
@@ -371,7 +368,8 @@ class NsxPolicyCommunicationProfileApi(NsxPolicyResourceBase):
             profile_id=profile_id,
             profile_entry_id=entry_id,
             tenant=tenant)
-        entry_def.update_attributes_in_body(profile_entry, name=name,
+        entry_def.update_attributes_in_body(body=profile_entry,
+                                            name=name,
                                             description=description,
                                             services=services,
                                             action=action)
@@ -388,7 +386,7 @@ class NsxPolicyCommunicationProfileApi(NsxPolicyResourceBase):
             # update the profile itself
             profile_def = policy_defs.CommunicationProfileDef(
                 profile_id=profile_id, tenant=tenant)
-            profile_def.update_attributes_in_body(profile, name=name,
+            profile_def.update_attributes_in_body(name=name,
                                                   description=description)
 
             # update the backend
@@ -419,11 +417,13 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def _get_last_seq_num(self, domain_id,
                           tenant=policy_constants.POLICY_INFRA_TENANT):
         # get the current entries, and choose the next unused sequence number
-        communication_maps = self.list(domain_id, tenant=tenant)
-        if not len(communication_maps):
+        try:
+            com_entries = self.list(domain_id, tenant=tenant)
+        except exceptions.ResourceNotFound:
+            return -1
+        if not com_entries:
             return 0
-
-        seq_nums = [int(cm['sequence_number']) for cm in communication_maps]
+        seq_nums = [int(cm['sequence_number']) for cm in com_entries]
         seq_nums.sort()
         return seq_nums[-1]
 
@@ -431,7 +431,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                description=None, sequence_number=None, profile_id=None,
                source_groups=None, dest_groups=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Create a CommunicationtMap.
+        """Create a CommunicationtMapEntry.
 
         source_groups/dest_groups should be a list of group ids belonging
         to the domain.
@@ -447,7 +447,10 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         # get the next available sequence number
         last_sequence = self._get_last_seq_num(domain_id, tenant=tenant)
         if not sequence_number:
-            sequence_number = last_sequence + 1
+            if last_sequence < 0:
+                sequence_number = 1
+            else:
+                sequence_number = last_sequence + 1
 
         entry_def = policy_defs.CommunicationMapEntryDef(
             domain_id=domain_id,
@@ -460,10 +463,12 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             profile_id=profile_id,
             tenant=tenant)
 
-        if last_sequence == 0:
+        if last_sequence < 0:
             # if communication map is absent, we need to create it
             map_def = policy_defs.CommunicationMapDef(domain_id, tenant)
-            return self.policy_api.create_with_parent(map_def, entry_def)
+            map_result = self.policy_api.create_with_parent(map_def, entry_def)
+            # return the created entry
+            return map_result['communication_entries'][0]
 
         return self.policy_api.create(entry_def)
 
@@ -485,14 +490,14 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def get_by_name(self, domain_id, name,
                     tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Return first communication map matched by name of this domain"""
+        """Return first communication map entry matched by name"""
         return super(NsxPolicyCommunicationMapApi, self).get_by_name(
             name, domain_id, tenant=tenant)
 
     def list(self, domain_id,
              tenant=policy_constants.POLICY_INFRA_TENANT):
         """List all the map entries of a specific domain."""
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = policy_defs.CommunicationMapEntryDef(
             domain_id=domain_id,
             tenant=tenant)
         return self.policy_api.list(map_def)['results']
@@ -505,10 +510,17 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
+
         # Get the current data, and update it with the new values
-        comm_map = self.get(domain_id, map_id, tenant=tenant)
+        try:
+            comm_map = self.get(domain_id, map_id, tenant=tenant)
+        except exceptions.ResourceNotFound:
+            return self.create(name, domain_id, map_id, description,
+                               sequence_number, profile_id,
+                               source_groups, dest_groups, tenant)
+
         map_def.update_attributes_in_body(
-            comm_map,
+            body=comm_map,
             name=name,
             description=description,
             sequence_number=sequence_number,
@@ -572,10 +584,7 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
             raise exceptions.ManagerError(details=err_msg)
 
         ep_def = policy_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
-        # Get the current data, and update it with the new values
-        ep = self.get(ep_id, tenant=tenant)
-        ep_def.update_attributes_in_body(ep,
-                                         name=name,
+        ep_def.update_attributes_in_body(name=name,
                                          description=description,
                                          ip_address=ip_address,
                                          username=username,
@@ -621,10 +630,7 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
                tenant=policy_constants.POLICY_INFRA_TENANT):
         map_def = policy_defs.DeploymentMapDef(
             map_id=map_id, tenant=tenant)
-        # Get the current data, and update it with the new values
-        map_obj = self.get(map_id, tenant=tenant)
-        map_def.update_attributes_in_body(map_obj,
-                                          name=name,
+        map_def.update_attributes_in_body(name=name,
                                           description=description,
                                           ep_id=ep_id,
                                           domain_id=domain_id)
