@@ -419,7 +419,10 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def _get_last_seq_num(self, domain_id,
                           tenant=policy_constants.POLICY_INFRA_TENANT):
         # get the current entries, and choose the next unused sequence number
-        communication_maps = self.list(domain_id, tenant=tenant)
+        try:
+            communication_maps = self.list(domain_id, tenant=tenant)
+        except exceptions.ResourceNotFound:
+            return 0
         if not len(communication_maps):
             return 0
 
@@ -492,7 +495,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def list(self, domain_id,
              tenant=policy_constants.POLICY_INFRA_TENANT):
         """List all the map entries of a specific domain."""
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = policy_defs.CommunicationMapEntryDef(
             domain_id=domain_id,
             tenant=tenant)
         return self.policy_api.list(map_def)['results']
@@ -506,7 +509,13 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             map_id=map_id,
             tenant=tenant)
         # Get the current data, and update it with the new values
-        comm_map = self.get(domain_id, map_id, tenant=tenant)
+        try:
+            comm_map = self.get(domain_id, map_id, tenant=tenant)
+        except exceptions.ResourceNotFound:
+            return self.create(name, domain_id, map_id, description,
+                               sequence_number, profile_id,
+                               source_groups, dest_groups, tenant)
+
         map_def.update_attributes_in_body(
             comm_map,
             name=name,

@@ -18,14 +18,14 @@ from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import policy_defs as policy
 
-BASE_POLICY_URI = "https://1.2.3.4/api/v1/"
+BASE_POLICY_URI = "https://1.2.3.4/policy/api/v1/"
 
 
 class TestPolicyApi(nsxlib_testcase.NsxClientTestCase):
 
     def setUp(self):
         self.client = self.new_mocked_client(client.NSX3Client,
-                                             url_prefix='api/v1/')
+                                             url_prefix='policy/api/v1/')
         self.policy_api = policy.NsxPolicyApi(self.client)
 
         super(TestPolicyApi, self).setUp()

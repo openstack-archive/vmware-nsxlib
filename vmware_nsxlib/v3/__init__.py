@@ -46,7 +46,8 @@ class NsxLibBase(object):
         self.client = client.NSX3Client(
             self.cluster,
             nsx_api_managers=self.nsxlib_config.nsx_api_managers,
-            max_attempts=self.nsxlib_config.max_attempts)
+            max_attempts=self.nsxlib_config.max_attempts,
+            url_path_base=self.client_url_prefix)
 
         self.general_apis = utils.NsxLibApiBase(
             self.client, self.nsxlib_config)
@@ -58,7 +59,12 @@ class NsxLibBase(object):
     def set_config(self, nsxlib_config):
         """Set config user provided and extend it according to application"""
         self.nsxlib_config = nsxlib_config
-        self.nsxlib_config.extend(keepalive_section=self.keepalive_section)
+        self.nsxlib_config.extend(keepalive_section=self.keepalive_section,
+                                  url_base=self.client_url_prefix)
+
+    @abc.abstractproperty
+    def client_url_prefix(self):
+        pass
 
     @abc.abstractproperty
     def keepalive_section(self):
@@ -173,6 +179,10 @@ class NsxLib(NsxLibBase):
     def keepalive_section(self):
         return 'transport-zones'
 
+    @property
+    def client_url_prefix(self):
+        return client.NSX3Client.NSX_V1_API_PREFIX
+
 
 class NsxPolicyLib(NsxLibBase):
 
@@ -193,3 +203,7 @@ class NsxPolicyLib(NsxLibBase):
     @property
     def keepalive_section(self):
         return 'infra'
+
+    @property
+    def client_url_prefix(self):
+        return client.NSX3Client.NSX_POLICY_V1_API_PREFIX

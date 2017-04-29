@@ -753,16 +753,18 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(domain_id, name,
                                                tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.CommunicationMapDef(domain_id,
-                                                           tenant=TEST_TENANT)
+            expected_def = policy_defs.CommunicationMapEntryDef(
+                domain_id,
+                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         domain_id = '111'
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(domain_id, tenant=TEST_TENANT)
-            expected_def = policy_defs.CommunicationMapDef(domain_id=domain_id,
-                                                           tenant=TEST_TENANT)
+            expected_def = policy_defs.CommunicationMapEntryDef(
+                domain_id=domain_id,
+                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
