@@ -82,11 +82,12 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
         name = 'd1'
         description = 'desc'
         id = '111'
-        with mock.patch.object(self.policy_api, "create") as api_call:
-            self.resourceApi.create(name,
-                                    domain_id=id,
-                                    description=description,
-                                    tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 domain_id=id,
+                                                 description=description,
+                                                 tenant=TEST_TENANT)
             expected_def = policy_defs.DomainDef(domain_id=id,
                                                  name=name,
                                                  description=description,
@@ -96,9 +97,10 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
     def test_create_without_id(self):
         name = 'd1'
         description = 'desc'
-        with mock.patch.object(self.policy_api, "create") as api_call:
-            self.resourceApi.create(name, description=description,
-                                    tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name, description=description,
+                                                 tenant=TEST_TENANT)
             expected_def = policy_defs.DomainDef(domain_id=mock.ANY,
                                                  name=name,
                                                  description=description,
@@ -141,9 +143,8 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
         id = '111'
         name = 'new name'
         description = 'new desc'
-        with mock.patch.object(self.policy_api, "get",
-                               return_value={}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     name=name,
                                     description=description,
@@ -152,7 +153,6 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
                                                  tenant=TEST_TENANT)
             expected_dict = {'display_name': name,
                              'description': description}
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
 
@@ -168,12 +168,13 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         name = 'g1'
         description = 'desc'
         id = '222'
-        with mock.patch.object(self.policy_api, "create") as api_call:
-            self.resourceApi.create(name,
-                                    domain_id,
-                                    group_id=id,
-                                    description=description,
-                                    tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 domain_id,
+                                                 group_id=id,
+                                                 description=description,
+                                                 tenant=TEST_TENANT)
             expected_def = policy_defs.GroupDef(domain_id=domain_id,
                                                 group_id=id,
                                                 name=name,
@@ -186,9 +187,11 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         domain_id = '111'
         name = 'g1'
         description = 'desc'
-        with mock.patch.object(self.policy_api, "create") as api_call:
-            self.resourceApi.create(name, domain_id, description=description,
-                                    tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name, domain_id,
+                                                 description=description,
+                                                 tenant=TEST_TENANT)
             expected_def = policy_defs.GroupDef(domain_id=domain_id,
                                                 group_id=mock.ANY,
                                                 name=name,
@@ -205,8 +208,9 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         cond_op = policy_constants.CONDITION_OP_EQUALS
         cond_member_type = policy_constants.CONDITION_MEMBER_NET
         cond_key = policy_constants.CONDITION_KEY_TAG
-        with mock.patch.object(self.policy_api, "create") as api_call:
-            self.resourceApi.create(
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
                 name, domain_id, description=description,
                 cond_val=cond_val,
                 cond_op=cond_op,
@@ -270,9 +274,8 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         id = '222'
         name = 'new name'
         description = 'new desc'
-        with mock.patch.object(self.policy_api, "get",
-                               return_value={}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
             self.resourceApi.update(domain_id, id,
                                     name=name,
                                     description=description,
@@ -282,7 +285,6 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             expected_dict = {'display_name': name,
                              'description': description}
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
 
@@ -292,7 +294,8 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         cond_val = '123'
         with mock.patch.object(self.policy_api, "get",
                                return_value={}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update_condition(domain_id, id,
                                               cond_val=cond_val,
                                               tenant=TEST_TENANT)
@@ -319,7 +322,8 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                     'operator': policy_constants.CONDITION_OP_EQUALS}
         with mock.patch.object(self.policy_api, "get",
                                return_value={'expression': [old_cond]}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update_condition(domain_id, id,
                                               cond_val=None,
                                               tenant=TEST_TENANT)
@@ -345,9 +349,11 @@ class TestPolicyService(NsxPolicyLibTestCase):
         dest_ports = [81, 82]
         with mock.patch.object(self.policy_api,
                                "create_with_parent") as api_call:
-            self.resourceApi.create(name, description=description,
-                                    protocol=protocol, dest_ports=dest_ports,
-                                    tenant=TEST_TENANT)
+            self.resourceApi.create_or_overwrite(name,
+                                                 description=description,
+                                                 protocol=protocol,
+                                                 dest_ports=dest_ports,
+                                                 tenant=TEST_TENANT)
             exp_srv_def = policy_defs.ServiceDef(service_id=mock.ANY,
                                                  name=name,
                                                  description=description,
@@ -400,7 +406,8 @@ class TestPolicyService(NsxPolicyLibTestCase):
         description = 'new desc'
         with mock.patch.object(self.policy_api, "get",
                                return_value={}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     name=name,
                                     description=description,
@@ -424,7 +431,8 @@ class TestPolicyService(NsxPolicyLibTestCase):
         with mock.patch.object(
             self.policy_api, "get",
             return_value={'service_entries': [service_entry]}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     protocol=protocol,
                                     dest_ports=dest_ports,
@@ -457,7 +465,8 @@ class TestPolicyService(NsxPolicyLibTestCase):
         with mock.patch.object(
             self.policy_api, "get",
             return_value={'service_entries': [service_entry]}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call,\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call,\
             mock.patch.object(self.policy_api, "list",
                               return_value={'results': []}):
             self.resourceApi.update(id,
@@ -474,7 +483,7 @@ class TestPolicyService(NsxPolicyLibTestCase):
             # update will be called for the service and entry (2 calls)
             expected_dict = {'display_name': name,
                              'description': description,
-                             'service_entries': [service_entry]}
+                             'service_entries': []}
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
 
@@ -505,9 +514,10 @@ class TestPolicyCommunicationProfile(NsxPolicyLibTestCase):
         action = 'DENY'
         with mock.patch.object(self.policy_api,
                                "create_with_parent") as api_call:
-            self.resourceApi.create(name, description=description,
-                                    services=[service_id], action=action,
-                                    tenant=TEST_TENANT)
+            self.resourceApi.create_or_overwrite(name, description=description,
+                                                 services=[service_id],
+                                                 action=action,
+                                                 tenant=TEST_TENANT)
             exp_srv_def = policy_defs.CommunicationProfileDef(
                 profile_id=mock.ANY,
                 name=name,
@@ -563,7 +573,8 @@ class TestPolicyCommunicationProfile(NsxPolicyLibTestCase):
         description = 'new desc'
         with mock.patch.object(self.policy_api, "get",
                                return_value={}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     name=name,
                                     description=description,
@@ -587,7 +598,8 @@ class TestPolicyCommunicationProfile(NsxPolicyLibTestCase):
 
         with mock.patch.object(
             self.policy_api, "get", return_value=entries_dict) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     services=[service_id],
                                     action=action,
@@ -620,7 +632,8 @@ class TestPolicyCommunicationProfile(NsxPolicyLibTestCase):
 
         with mock.patch.object(
             self.policy_api, "get", return_value=entries_dict) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     name=name,
                                     description=description,
@@ -635,7 +648,7 @@ class TestPolicyCommunicationProfile(NsxPolicyLibTestCase):
             # update will be called for the service and entry (2 calls)
             expected_dict = {'display_name': name,
                              'description': description,
-                             'communication_profile_entries': [profile_entry]}
+                             'communication_profile_entries': []}
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
 
@@ -668,15 +681,17 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         seq_num = 7
         profile_id = 'c1'
         list_return_value = {'results': [{'sequence_number': 1}]}
-        with mock.patch.object(self.policy_api, "create") as api_call,\
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call,\
             mock.patch.object(self.policy_api, "list",
                               return_value=list_return_value):
-            self.resourceApi.create(name, domain_id, description=description,
-                                    sequence_number=seq_num,
-                                    profile_id=profile_id,
-                                    source_groups=[source_group],
-                                    dest_groups=[dest_group],
-                                    tenant=TEST_TENANT)
+            self.resourceApi.create_or_overwrite(name, domain_id,
+                                                 description=description,
+                                                 sequence_number=seq_num,
+                                                 profile_id=profile_id,
+                                                 source_groups=[source_group],
+                                                 dest_groups=[dest_group],
+                                                 tenant=TEST_TENANT)
             expected_def = policy_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=mock.ANY,
@@ -689,6 +704,36 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
+    def test_create_first_seqnum(self):
+        domain_id = '111'
+        name = 'cm1'
+        description = 'desc'
+        source_group = 'g1'
+        dest_group = 'g2'
+        profile_id = 'c1'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call, \
+            mock.patch.object(self.resourceApi, "list", return_value=[]):
+            self.resourceApi.create_or_overwrite(name, domain_id,
+                                                 description=description,
+                                                 profile_id=profile_id,
+                                                 source_groups=[source_group],
+                                                 dest_groups=[dest_group],
+                                                 tenant=TEST_TENANT)
+
+            expected_def = policy_defs.CommunicationMapEntryDef(
+                domain_id=domain_id,
+                map_id=mock.ANY,
+                name=name,
+                description=description,
+                sequence_number=1,
+                profile_id=profile_id,
+                source_groups=[source_group],
+                dest_groups=[dest_group],
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, expected_def)
+
     def test_create_without_seqnum(self):
         domain_id = '111'
         name = 'cm1'
@@ -698,12 +743,14 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         profile_id = 'c1'
         with mock.patch.object(self.policy_api,
                                "create_with_parent") as api_call, \
-            mock.patch.object(self.resourceApi, "list", return_value=[]):
-            self.resourceApi.create(name, domain_id, description=description,
-                                    profile_id=profile_id,
-                                    source_groups=[source_group],
-                                    dest_groups=[dest_group],
-                                    tenant=TEST_TENANT)
+            mock.patch.object(self.resourceApi, "_get_last_seq_num",
+                              return_value=-1):
+            self.resourceApi.create_or_overwrite(name, domain_id,
+                                                 description=description,
+                                                 profile_id=profile_id,
+                                                 source_groups=[source_group],
+                                                 dest_groups=[dest_group],
+                                                 tenant=TEST_TENANT)
 
             expected_map_def = policy_defs.CommunicationMapDef(
                 domain_id=domain_id,
@@ -755,16 +802,18 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(domain_id, name,
                                                tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.CommunicationMapDef(domain_id,
-                                                           tenant=TEST_TENANT)
+            expected_def = policy_defs.CommunicationMapEntryDef(
+                domain_id,
+                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         domain_id = '111'
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(domain_id, tenant=TEST_TENANT)
-            expected_def = policy_defs.CommunicationMapDef(domain_id=domain_id,
-                                                           tenant=TEST_TENANT)
+            expected_def = policy_defs.CommunicationMapEntryDef(
+                domain_id=domain_id,
+                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -777,7 +826,8 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         profile_id = 'nc1'
         with mock.patch.object(self.policy_api, "get",
                                return_value={}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(domain_id, id,
                                     name=name,
                                     description=description,
@@ -817,12 +867,15 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
         ip_address = '1.1.1.1'
         username = 'admin'
         password = 'zzz'
-        with mock.patch.object(self.policy_api, "create") as api_call:
-            self.resourceApi.create(name, description=description,
-                                    ip_address=ip_address,
-                                    username=username,
-                                    password=password,
-                                    tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, description=description,
+                ip_address=ip_address,
+                username=username,
+                password=password,
+                tenant=TEST_TENANT)
+
             expected_def = policy_defs.EnforcementPointDef(
                 ep_id=mock.ANY,
                 name=name,
@@ -870,9 +923,8 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
         name = 'new name'
         username = 'admin'
         password = 'zzz'
-        with mock.patch.object(self.policy_api, "get",
-                               return_value={}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     name=name,
                                     username=username,
@@ -883,7 +935,6 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
             expected_dict = {'display_name': name,
                              'username': username,
                              'password': password}
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
 
@@ -899,11 +950,13 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
         description = 'desc'
         domain_id = 'domain1'
         ep_id = 'ep1'
-        with mock.patch.object(self.policy_api, "create") as api_call:
-            self.resourceApi.create(name, description=description,
-                                    ep_id=ep_id,
-                                    domain_id=domain_id,
-                                    tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 description=description,
+                                                 ep_id=ep_id,
+                                                 domain_id=domain_id,
+                                                 tenant=TEST_TENANT)
             expected_def = policy_defs.DeploymentMapDef(
                 map_id=mock.ANY,
                 name=name,
@@ -950,9 +1003,8 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
         name = 'new name'
         domain_id = 'domain2'
         ep_id = 'ep2'
-        with mock.patch.object(self.policy_api, "get",
-                               return_value={}) as get_call,\
-            mock.patch.object(self.policy_api, "update") as update_call:
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     name=name,
                                     ep_id=ep_id,
@@ -966,6 +1018,5 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
             expected_dict = {'display_name': name,
                              'enforcement_point_paths': [ep_path],
                              'domain_path': domain_path}
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
