@@ -230,13 +230,15 @@ class JSONRESTClient(RESTClient):
 
 class NSX3Client(JSONRESTClient):
 
-    _NSX_V1_API_PREFIX = 'api/v1/'
+    NSX_V1_API_PREFIX = 'api/v1/'
+    NSX_POLICY_V1_API_PREFIX = 'policy/api/v1/'
 
     def __init__(self, connection, url_prefix=None,
                  default_headers=None,
                  nsx_api_managers=None,
                  max_attempts=utils.DEFAULT_MAX_ATTEMPTS,
-                 client_obj=None):
+                 client_obj=None,
+                 url_path_base=NSX_V1_API_PREFIX):
 
         # If the client obj is defined - copy configuration from it
         if client_obj:
@@ -246,12 +248,12 @@ class NSX3Client(JSONRESTClient):
             self.nsx_api_managers = nsx_api_managers or []
             self.max_attempts = max_attempts
 
-        url_prefix = url_prefix or NSX3Client._NSX_V1_API_PREFIX
-        if url_prefix and NSX3Client._NSX_V1_API_PREFIX not in url_prefix:
+        url_prefix = url_prefix or url_path_base
+        if url_prefix and url_path_base not in url_prefix:
             if url_prefix.startswith('http'):
-                url_prefix += '/' + NSX3Client._NSX_V1_API_PREFIX
+                url_prefix += '/' + url_path_base
             else:
-                url_prefix = "%s/%s" % (NSX3Client._NSX_V1_API_PREFIX,
+                url_prefix = "%s/%s" % (url_path_base,
                                         url_prefix or '')
         self.max_attempts = max_attempts
 
