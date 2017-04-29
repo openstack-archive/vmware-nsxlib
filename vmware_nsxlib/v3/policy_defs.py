@@ -36,8 +36,7 @@ class ResourceDef(object):
         self.body = {}
 
     def get_obj_dict(self):
-        body = {'_revision': 0,
-                'display_name': self.name,
+        body = {'display_name': self.name,
                 'description': self.description}
         if self.id:
             body['id'] = self.id
@@ -67,9 +66,20 @@ class ResourceDef(object):
     def sub_entries_path():
         pass
 
-    def update_attributes_in_body(self, body, **kwargs):
-        self.body = body
+    def _get_body_from_kwargs(self, **kwargs):
+        if 'body' in kwargs:
+            body = kwargs['body']
+        else:
+            body = {}
+        return body
+
+    def update_attributes_in_body(self, **kwargs):
+        self.body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
         for key, value in six.iteritems(kwargs):
+            if key == 'body':
+                continue
             if value is not None:
                 if key == 'name':
                     self.body['display_name'] = value
@@ -164,13 +174,16 @@ class GroupDef(ResourceDef):
                                   for condition in self.conditions]
         return body
 
-    def update_attributes_in_body(self, body, **kwargs):
+    def update_attributes_in_body(self, **kwargs):
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
         # Fix params that need special conversions
         if kwargs.get('conditions') is not None:
             body['expression'] = [cond.get_obj_dict()
                                   for cond in kwargs['conditions']]
             del kwargs['conditions']
-        super(GroupDef, self).update_attributes_in_body(body, **kwargs)
+        super(GroupDef, self).update_attributes_in_body(body=body, **kwargs)
 
 
 class ServiceDef(ResourceDef):
@@ -231,8 +244,12 @@ class L4ServiceEntryDef(ResourceDef):
         body['destination_ports'] = self.dest_ports
         return body
 
-    def update_attributes_in_body(self, body, **kwargs):
+    def update_attributes_in_body(self, **kwargs):
         # Fix params that need special conversions
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
+
         if kwargs.get('protocol') is not None:
             body['l4_protocol'] = kwargs['protocol'].upper()
             del kwargs['protocol']
@@ -240,7 +257,7 @@ class L4ServiceEntryDef(ResourceDef):
             body['destination_ports'] = kwargs['dest_ports']
             del kwargs['dest_ports']
         super(L4ServiceEntryDef, self).update_attributes_in_body(
-            body, **kwargs)
+            body=body, **kwargs)
 
 
 class CommunicationProfileDef(ResourceDef):
@@ -270,9 +287,9 @@ class CommunicationProfileDef(ResourceDef):
         entryDef = CommunicationProfileEntryDef()
         return entryDef.get_last_section_dict_key
 
-    def update_attributes_in_body(self, body, **kwargs):
+    def update_attributes_in_body(self, **kwargs):
         super(CommunicationProfileDef, self).update_attributes_in_body(
-            body, **kwargs)
+            **kwargs)
         # make sure entries are there
         entries_path = self.sub_entries_path()
         if entries_path not in self.body:
@@ -307,12 +324,15 @@ class CommunicationProfileEntryDef(ResourceDef):
         body['action'] = self.action
         return body
 
-    def update_attributes_in_body(self, body, **kwargs):
+    def update_attributes_in_body(self, **kwargs):
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
         if kwargs.get('action') is not None:
             body['action'] = kwargs['action'].upper()
             del kwargs['action']
         super(CommunicationProfileEntryDef, self).update_attributes_in_body(
-            body, **kwargs)
+            body=body, **kwargs)
 
 
 class CommunicationMapDef(ResourceDef):
@@ -380,7 +400,10 @@ class CommunicationMapEntryDef(ResourceDef):
         body['communication_profile_path'] = self.profile_path
         return body
 
-    def update_attributes_in_body(self, body, **kwargs):
+    def update_attributes_in_body(self, **kwargs):
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
         # Fix params that need special conversions
         if kwargs.get('profile_id') is not None:
             profile_path = self.get_profile_path(kwargs['profile_id'])
@@ -400,7 +423,7 @@ class CommunicationMapEntryDef(ResourceDef):
             del kwargs['source_groups']
 
         super(CommunicationMapEntryDef, self).update_attributes_in_body(
-            body, **kwargs)
+            body=body, **kwargs)
 
 
 class EnforcementPointDef(ResourceDef):
@@ -411,6 +434,7 @@ class EnforcementPointDef(ResourceDef):
                  ip_address=None,
                  username=None,
                  password=None,
+                 thumbprint=None,
                  ep_type='NSXT',
                  tenant=policy_constants.POLICY_INFRA_TENANT):
         super(EnforcementPointDef, self).__init__()
@@ -422,6 +446,7 @@ class EnforcementPointDef(ResourceDef):
         self.username = username
         self.password = password
         self.ip_address = ip_address
+        self.thumbprint = thumbprint,
         self.parent_ids = (tenant)
 
     @property
@@ -433,8 +458,7 @@ class EnforcementPointDef(ResourceDef):
         body = super(EnforcementPointDef, self).get_obj_dict()
         body['id'] = self.id
         body['connection_info'] = [{'fqdn': 'abc',
-                                    'thumbprint':
-                                    policy_constants.DEFAULT_THUMBPRINT,
+                                    'thumbprint': self.thumbprint,
                                     'username': self.username,
                                     'password': self.password,
                                     'ip_address': self.ip_address,
@@ -443,24 +467,21 @@ class EnforcementPointDef(ResourceDef):
         body['resource_type'] = 'EnforcementPoint'
         return body
 
-    def update_attributes_in_body(self, body, **kwargs):
+    def update_attributes_in_body(self, **kwargs):
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
         # Fix params that need special conversions
         if body.get('connection_info'):
             body['connection_info'][0]['resource_type'] = 'NSXTConnectionInfo'
-            if kwargs.get('username') is not None:
-                body['connection_info'][0]['username'] = kwargs['username']
-                del kwargs['username']
 
-            if kwargs.get('password') is not None:
-                body['connection_info'][0]['password'] = kwargs['password']
-                del kwargs['password']
-
-            if kwargs.get('ip_address') is not None:
-                body['connection_info'][0]['ip_address'] = kwargs['ip_address']
-                del kwargs['ip_address']
+            for attr in ('username', 'password', 'ip_address', 'thumbprint'):
+                if kwargs.get(attr) is not None:
+                    body['connection_info'][0][attr] = kwargs[attr]
+                    del kwargs[attr]
 
         super(EnforcementPointDef, self).update_attributes_in_body(
-            body, **kwargs)
+            body=body, **kwargs)
 
 
 # Currently assumes one deployment point per id
@@ -497,7 +518,10 @@ class DeploymentMapDef(ResourceDef):
         body['enforcement_point_paths'] = [self.ep_path]
         return body
 
-    def update_attributes_in_body(self, body, **kwargs):
+    def update_attributes_in_body(self, **kwargs):
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
         # Fix params that need special conversions
         if kwargs.get('domain_id') is not None:
             domain_id = kwargs.get('domain_id')
@@ -514,7 +538,7 @@ class DeploymentMapDef(ResourceDef):
             del kwargs['ep_id']
 
         super(DeploymentMapDef, self).update_attributes_in_body(
-            body, **kwargs)
+            body=body, **kwargs)
 
 
 class NsxPolicyApi(object):
@@ -522,9 +546,18 @@ class NsxPolicyApi(object):
     def __init__(self, client):
         self.client = client
 
-    def create(self, resource_def):
+    def create_or_update(self, resource_def):
+        """Create or update a policy object.
+
+        This api will update an existing object, or create a new one if it
+        doesn't exist.
+        The policy API supports POST for update too
+        """
         path = resource_def.get_resource_path()
-        return self.client.update(path, resource_def.get_obj_dict())
+        body = resource_def.body
+        if not body:
+            body = resource_def.get_obj_dict()
+        return self.client.create(path, body)
 
     def create_with_parent(self, parent_def, resource_def):
         path = parent_def.get_resource_path()
@@ -535,7 +568,7 @@ class NsxPolicyApi(object):
         else:
             child_dict_key = resource_def.get_last_section_dict_key
             body[child_dict_key] = [resource_def.get_obj_dict()]
-        return self.client.update(path, body)
+        return self.client.create(path, body)
 
     def delete(self, resource_def):
         path = resource_def.get_resource_path()
@@ -548,8 +581,3 @@ class NsxPolicyApi(object):
     def list(self, resource_def):
         path = resource_def.get_section_path()
         return self.client.list(path)
-
-    def update(self, resource_def):
-        path = resource_def.get_resource_path()
-        body = resource_def.body
-        return self.client.update(path, body)

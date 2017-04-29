@@ -150,7 +150,9 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
         return "%s-%s" % (requests.__title__, requests.__version__)
 
     def validate_connection(self, cluster_api, endpoint, conn):
-        client = nsx_client.NSX3Client(conn, url_prefix=endpoint.provider.url)
+        client = nsx_client.NSX3Client(
+            conn, url_prefix=endpoint.provider.url,
+            url_path_base=cluster_api.nsxlib_config.url_base)
         keepalive_section = cluster_api.nsxlib_config.keepalive_section
         result = client.get(keepalive_section, silent=True)
         # If keeplive section returns a list, it is assumed to be non-empty
