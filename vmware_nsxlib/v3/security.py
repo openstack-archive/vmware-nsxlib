@@ -237,6 +237,9 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                     + target_id)
         self.client.create(resource)
 
+    def get_excludelist(self):
+        return self.client.list('firewall/excludelist')
+
     def _get_direction(self, sg_rule):
         return (
             consts.IN if sg_rule['direction'] == 'ingress'
