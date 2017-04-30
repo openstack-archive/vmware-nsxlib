@@ -86,6 +86,11 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
                 '&action=create_with_rules'
             create.assert_called_with(resource, expected_body)
 
+    def test_get_excludelist(self):
+        with mock.patch.object(self.nsxlib.client, 'list') as clist:
+            self.nsxlib.firewall_section.get_excludelist()
+            clist.assert_called_with('firewall/excludelist')
+
 
 class TestNsxLibIPSet(nsxlib_testcase.NsxClientTestCase):
     """Tests for vmware_nsxlib.v3.security.NsxLibIPSet"""
