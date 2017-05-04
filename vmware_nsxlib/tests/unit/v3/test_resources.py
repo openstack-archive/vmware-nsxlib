@@ -506,7 +506,7 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
         lrport = self._mocked_lrport()
 
         self.assertEqual(nsxlib_testcase.NSX_MAX_ATTEMPTS,
-                         lrport._client.max_attempts)
+                         lrport.client.max_attempts)
 
     def test_delete_logical_router_port(self):
         """Test deleting router port."""
