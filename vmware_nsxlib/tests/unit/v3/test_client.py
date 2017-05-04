@@ -46,8 +46,8 @@ def assert_call(verb, client_or_resource,
                          nsxlib_testcase.NSX_HTTP_READ_TIMEOUT),
                 single_call=True):
     nsx_client = client_or_resource
-    if getattr(nsx_client, '_client', None) is not None:
-        nsx_client = nsx_client._client
+    if getattr(nsx_client, 'client', None) is not None:
+        nsx_client = nsx_client.client
     cluster = nsx_client._conn
     if single_call:
         cluster.assert_called_once(
