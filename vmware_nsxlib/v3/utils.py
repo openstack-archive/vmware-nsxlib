@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import abc
 import tenacity
 
 from neutron_lib import exceptions
@@ -128,10 +129,35 @@ def get_name_and_uuid(name, uuid, tag=None, maxlen=80):
 
 class NsxLibApiBase(object):
     """Base class for nsxlib api """
-    def __init__(self, client, nsxlib_config):
+    def __init__(self, client, nsxlib_config=None):
         self.client = client
         self.nsxlib_config = nsxlib_config
         super(NsxLibApiBase, self).__init__()
+
+    @abc.abstractproperty
+    def uri_segment(self):
+        pass
+
+    def get_path(self, resource=None):
+        if resource:
+            return '%s/%s' % (self.uri_segment, resource)
+        return self.uri_segment
+
+    def list(self):
+        return self.client.list(self.uri_segment)
+
+    def get(self, uuid):
+        return self.client.get(self.get_path(uuid))
+
+    def delete(self, uuid):
+        return self.client.delete(self.get_path(uuid))
+
+    def find_by_display_name(self, display_name):
+        found = []
+        for resource in self.list()['results']:
+            if resource['display_name'] == display_name:
+                found.append(resource)
+        return found
 
     def _update_resource_with_retry(self, resource, payload):
         # Using internal method so we can access max_attempts in the decorator
@@ -169,6 +195,16 @@ class NsxLibApiBase(object):
             raise nsxlib_exceptions.ManagerError(details=err_msg)
 
         return matched_results[0].get('id')
+
+    def get_id_by_name_or_id(self, name_or_id):
+        """Get a resource by it's display name or uuid
+
+        Return the resource data, or raise an exception if not found or
+        not unique
+        """
+
+        return self._get_resource_by_name_or_id(name_or_id,
+                                                self.get_path())
 
     def build_v3_api_version_tag(self):
         """Some resources are created on the manager

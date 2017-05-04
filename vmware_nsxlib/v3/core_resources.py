@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 from oslo_log import log
 
 from vmware_nsxlib._i18n import _
@@ -22,8 +24,18 @@ from vmware_nsxlib.v3 import utils
 
 LOG = log.getLogger(__name__)
 
+SwitchingProfileTypeId = collections.namedtuple(
+    'SwitchingProfileTypeId', 'profile_type, profile_id')
+
+PacketAddressClassifier = collections.namedtuple(
+    'PacketAddressClassifier', 'ip_address, mac_address, vlan')
+
 
 class NsxLibPortMirror(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'mirror-sessions'
 
     def create_session(self, source_ports, dest_ports, direction,
                        description, name, tags):
@@ -40,14 +52,13 @@ class NsxLibPortMirror(utils.NsxLibApiBase):
         :param tags: nsx backend specific tags.
         """
 
-        resource = 'mirror-sessions'
         body = {'direction': direction,
                 'tags': tags,
                 'display_name': name,
                 'description': description,
                 'mirror_sources': source_ports,
                 'mirror_destination': dest_ports}
-        return self.client.create(resource, body)
+        return self.client.create(self.get_path(), body)
 
     def delete_session(self, mirror_session_id):
         """Delete a PortMirror session on the backend.
@@ -55,11 +66,14 @@ class NsxLibPortMirror(utils.NsxLibApiBase):
         :param mirror_session_id: string representing the UUID of the port
                                   mirror session to be deleted.
         """
-        resource = 'mirror-sessions/%s' % mirror_session_id
-        self.client.delete(resource)
+        self.client.delete(self.get_path(mirror_session_id))
 
 
 class NsxLibBridgeEndpoint(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'bridge-endpoints'
 
     def create(self, device_name, seg_id, tags):
         """Create a bridge endpoint on the backend.
@@ -71,11 +85,10 @@ class NsxLibBridgeEndpoint(utils.NsxLibApiBase):
         :param seg_id: integer representing the VLAN segmentation ID.
         :param tags: nsx backend specific tags.
         """
-        resource = 'bridge-endpoints'
         body = {'bridge_cluster_id': device_name,
                 'tags': tags,
                 'vlan': seg_id}
-        return self.client.create(resource, body)
+        return self.client.create(self.get_path(), body)
 
     def delete(self, bridge_endpoint_id):
         """Delete a bridge endpoint on the backend.
@@ -83,11 +96,14 @@ class NsxLibBridgeEndpoint(utils.NsxLibApiBase):
         :param bridge_endpoint_id: string representing the UUID of the bridge
                                    endpoint to be deleted.
         """
-        resource = 'bridge-endpoints/%s' % bridge_endpoint_id
-        self.client.delete(resource)
+        self.client.delete(self.get_path(bridge_endpoint_id))
 
 
 class NsxLibLogicalSwitch(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'logical-switches'
 
     def create(self, display_name, transport_zone_id, tags,
                replication_mode=nsx_constants.MTEP,
@@ -96,8 +112,6 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
         # TODO(salv-orlando): Validate Replication mode and admin_state
         # NOTE: These checks might be moved to the API client library if one
         # that performs such checks in the client is available
-
-        resource = 'logical-switches'
         body = {'transport_zone_id': transport_zone_id,
                 'replication_mode': replication_mode,
                 'display_name': display_name,
@@ -117,7 +131,7 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
         if mac_pool_id:
             body['mac_pool_id'] = mac_pool_id
 
-        return self.client.create(resource, body)
+        return self.client.create(self.get_path(), body)
 
     def delete(self, lswitch_id):
         # Using internal method so we can access max_attempts in the decorator
@@ -125,15 +139,10 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)
         def _do_delete():
-            resource = ('logical-switches/%s?detach=true&cascade=true' %
-                        lswitch_id)
-            self.client.delete(resource)
+            resource = '%s?detach=true&cascade=true' % lswitch_id
+            self.client.delete(self.get_path(resource))
 
         _do_delete()
-
-    def get(self, logical_switch_id):
-        resource = "logical-switches/%s" % logical_switch_id
-        return self.client.get(resource)
 
     def update(self, lswitch_id, name=None, admin_state=None, tags=None):
         # Using internal method so we can access max_attempts in the decorator
@@ -141,7 +150,6 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)
         def _do_update():
-            resource = "logical-switches/%s" % lswitch_id
             lswitch = self.get(lswitch_id)
             # Assign name to a local variable since 'name' is out of scope
             ls_name = name or lswitch.get('display_name')
@@ -153,12 +161,133 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
                     lswitch['admin_state'] = nsx_constants.ADMIN_STATE_DOWN
             if tags is not None:
                 lswitch['tags'] = tags
-            return self.client.update(resource, lswitch)
+            return self.client.update(self.get_path(lswitch_id), lswitch)
 
         return _do_update()
 
 
-class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
+class SwitchingProfileTypes(object):
+    IP_DISCOVERY = 'IpDiscoverySwitchingProfile'
+    MAC_LEARNING = 'MacManagementSwitchingProfile'
+    PORT_MIRRORING = 'PortMirroringSwitchingProfile'
+    QOS = 'QosSwitchingProfile'
+    SPOOF_GUARD = 'SpoofGuardSwitchingProfile'
+    SWITCH_SECURITY = 'SwitchSecuritySwitchingProfile'
+
+
+class WhiteListAddressTypes(object):
+    PORT = 'LPORT_BINDINGS'
+    SWITCH = 'LSWITCH_BINDINGS'
+
+
+class NsxLibSwitchingProfile(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'switching-profiles'
+
+    def list(self):
+        return self.client.list(
+            self.get_path('?include_system_owned=True'))
+
+    def create(self, profile_type, display_name=None,
+               description=None, **api_args):
+        body = {
+            'resource_type': profile_type,
+            'display_name': display_name or '',
+            'description': description or ''
+        }
+        body.update(api_args)
+
+        return self.client.create(self.get_path(), body=body)
+
+    def update(self, uuid, profile_type, **api_args):
+        body = {
+            'resource_type': profile_type
+        }
+        body.update(api_args)
+
+        return self.client.update(self.get_path(uuid), body=body)
+
+    def create_spoofguard_profile(self, display_name,
+                                  description,
+                                  whitelist_ports=False,
+                                  whitelist_switches=False,
+                                  tags=None):
+        whitelist_providers = []
+        if whitelist_ports:
+            whitelist_providers.append(WhiteListAddressTypes.PORT)
+        if whitelist_switches:
+            whitelist_providers.append(WhiteListAddressTypes.SWITCH)
+
+        return self.create(SwitchingProfileTypes.SPOOF_GUARD,
+                           display_name=display_name,
+                           description=description,
+                           white_list_providers=whitelist_providers,
+                           tags=tags or [])
+
+    def create_dhcp_profile(self, display_name,
+                            description, tags=None):
+        dhcp_filter = {
+            'client_block_enabled': True,
+            'server_block_enabled': False
+        }
+        rate_limits = {
+            'enabled': False,
+            'rx_broadcast': 0,
+            'tx_broadcast': 0,
+            'rx_multicast': 0,
+            'tx_multicast': 0
+        }
+        bpdu_filter = {
+            'enabled': True,
+            'white_list': []
+        }
+        return self.create(SwitchingProfileTypes.SWITCH_SECURITY,
+                           display_name=display_name,
+                           description=description,
+                           tags=tags or [],
+                           dhcp_filter=dhcp_filter,
+                           rate_limits=rate_limits,
+                           bpdu_filter=bpdu_filter,
+                           block_non_ip_traffic=True)
+
+    def create_mac_learning_profile(self, display_name,
+                                    description, tags=None):
+        mac_learning = {
+            'enabled': True,
+        }
+        return self.create(SwitchingProfileTypes.MAC_LEARNING,
+                           display_name=display_name,
+                           description=description,
+                           tags=tags or [],
+                           mac_learning=mac_learning,
+                           mac_change_allowed=True)
+
+    def create_port_mirror_profile(self, display_name, description,
+                                   direction, destinations, tags=None):
+        return self.create(SwitchingProfileTypes.PORT_MIRRORING,
+                           display_name=display_name,
+                           description=description,
+                           tags=tags or [],
+                           direction=direction,
+                           destinations=destinations)
+
+    @classmethod
+    def build_switch_profile_ids(cls, client, *profiles):
+        ids = []
+        for profile in profiles:
+            if isinstance(profile, str):
+                profile = client.get(profile)
+            if not isinstance(profile, SwitchingProfileTypeId):
+                profile = SwitchingProfileTypeId(
+                    profile.get('key', profile.get('resource_type')),
+                    profile.get('value', profile.get('id')))
+            ids.append(profile)
+        return ids
+
+
+class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
 
     def _build_args(self, tags, name=None, description=None):
         body = {"resource_type": "QosSwitchingProfile",
@@ -216,17 +345,17 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
         return body
 
     def create(self, tags, name=None, description=None):
-        resource = 'switching-profiles'
         body = self._build_args(tags, name, description)
-        return self.client.create(resource, body)
+        return self.client.create(self.get_path(), body)
 
     def update(self, profile_id, tags, name=None, description=None):
-        resource = 'switching-profiles/%s' % profile_id
+        # TODO(asarfaty): tags are never used here
         # get the current configuration
         body = self.get(profile_id)
         # update the relevant fields
         body = self._update_args(body, name, description)
-        return self._update_resource_with_retry(resource, body)
+        return self._update_resource_with_retry(
+            self.get_path(profile_id), body)
 
     def update_shaping(self, profile_id,
                        shaping_enabled=False,
@@ -235,7 +364,6 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
                        average_bandwidth=None,
                        qos_marking=None, dscp=None,
                        direction=nsx_constants.INGRESS):
-        resource = 'switching-profiles/%s' % profile_id
         # get the current configuration
         body = self.get(profile_id)
         # update the relevant fields
@@ -248,22 +376,15 @@ class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
         else:
             body = self._disable_shaping_in_args(body, direction=direction)
         body = self._update_dscp_in_args(body, qos_marking, dscp)
-        return self._update_resource_with_retry(resource, body)
-
-    def get(self, profile_id):
-        resource = 'switching-profiles/%s' % profile_id
-        return self.client.get(resource)
-
-    def list(self):
-        resource = 'switching-profiles'
-        return self.client.list(resource)
-
-    def delete(self, profile_id):
-        resource = 'switching-profiles/%s' % profile_id
-        self.client.delete(resource)
+        return self._update_resource_with_retry(
+            self.get_path(profile_id), body)
 
 
 class NsxLibLogicalRouter(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'logical-routers'
 
     def _delete_resource_by_values(self, resource,
                                    skip_not_found=True, **kwargs):
@@ -356,95 +477,103 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                     logical_router_id)
         return self._update_resource_with_retry(resource, kwargs)
 
-    def get_id_by_name_or_id(self, name_or_id):
-        """Get a logical router by it's display name or uuid
+    def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
+               description=None):
+        # TODO(salv-orlando): If possible do not manage edge clusters
+        # in the main plugin logic.
+        router_type = (nsx_constants.ROUTER_TYPE_TIER0 if tier_0 else
+                       nsx_constants.ROUTER_TYPE_TIER1)
+        body = {'display_name': display_name,
+                'router_type': router_type,
+                'tags': tags}
+        if edge_cluster_uuid:
+            body['edge_cluster_id'] = edge_cluster_uuid
+        if description:
+            body['description'] = description
+        return self.client.create(self.get_path(), body=body)
 
-        Return the logical router data, or raise an exception if not found or
-        not unique
-        """
+    def delete(self, lrouter_id, force=False):
+        url = lrouter_id
+        if force:
+            url += '?force=%s' % force
+        return self.client.delete(self.get_path(url))
 
-        return self._get_resource_by_name_or_id(name_or_id,
-                                                'logical-routers')
+    def update(self, lrouter_id, *args, **kwargs):
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def _do_update():
+            lrouter = self.get(lrouter_id)
+            for k in kwargs:
+                lrouter[k] = kwargs[k]
+            # If revision_id of the payload that we send is older than what
+            # NSX has, we will get a 412: Precondition Failed.
+            # In that case we need to re-fetch, patch the response and send
+            # it again with the new revision_id
+            return self.client.update(self.get_path(lrouter_id), body=lrouter)
+
+        return _do_update()
 
 
 class NsxLibEdgeCluster(utils.NsxLibApiBase):
 
-    def get(self, edge_cluster_uuid):
-        resource = "edge-clusters/%s" % edge_cluster_uuid
-        return self.client.get(resource)
+    @property
+    def uri_segment(self):
+        return 'edge-clusters'
 
 
 class NsxLibTransportZone(utils.NsxLibApiBase):
 
-    def get_id_by_name_or_id(self, name_or_id):
-        """Get a transport zone by it's display name or uuid
-
-        Return the transport zone data, or raise an exception if not found or
-        not unique
-        """
-
-        return self._get_resource_by_name_or_id(name_or_id,
-                                                'transport-zones')
+    @property
+    def uri_segment(self):
+        return 'transport-zones'
 
 
 class NsxLibDhcpProfile(utils.NsxLibApiBase):
 
-    def get_id_by_name_or_id(self, name_or_id):
-        """Get a dhcp profile by it's display name or uuid
-
-        Return the dhcp profile data, or raise an exception if not found or
-        not unique
-        """
-
-        return self._get_resource_by_name_or_id(name_or_id,
-                                                'dhcp/server-profiles')
+    @property
+    def uri_segment(self):
+        return 'dhcp/server-profiles'
 
 
 class NsxLibMetadataProxy(utils.NsxLibApiBase):
 
-    def get_id_by_name_or_id(self, name_or_id):
-        """Get a metadata proxy by it's display name or uuid
-
-        Return the metadata proxy data, or raise an exception if not found or
-        not unique
-        """
-
-        return self._get_resource_by_name_or_id(name_or_id,
-                                                'md-proxies')
+    @property
+    def uri_segment(self):
+        return 'md-proxies'
 
 
 class NsxLibBridgeCluster(utils.NsxLibApiBase):
 
-    def get_id_by_name_or_id(self, name_or_id):
-        """Get a bridge cluster by it's display name or uuid
-
-        Return the bridge cluster data, or raise an exception if not found or
-        not unique
-        """
-
-        return self._get_resource_by_name_or_id(name_or_id,
-                                                'bridge-clusters')
+    @property
+    def uri_segment(self):
+        return 'bridge-clusters'
 
 
 class NsxLibIpBlockSubnet(utils.NsxLibApiBase):
 
+    @property
+    def uri_segment(self):
+        return 'pools/ip-subnets'
+
     def create(self, ip_block_id, subnet_size):
         """Create a IP block subnet on the backend."""
-        resource = 'pools/ip-subnets'
         body = {'size': subnet_size,
                 'block_id': ip_block_id}
-        return self.client.create(resource, body)
+        return self.client.create(self.get_path(), body)
 
     def delete(self, subnet_id):
         """Delete a IP block subnet on the backend."""
-        resource = 'pools/ip-subnets/%s' % subnet_id
-        self.client.delete(resource)
+        self.client.delete(self.get_path(subnet_id))
 
     def list(self, ip_block_id):
-        resource = 'pools/ip-subnets?block_id=%s' % ip_block_id
+        resource = '%s?block_id=%s' % (self.get_path(), ip_block_id)
         return self.client.get(resource)
 
 
 class NsxLibIpBlock(utils.NsxLibApiBase):
-    def list(self):
-        return self.client.get('pools/ip-blocks')
+
+    @property
+    def uri_segment(self):
+        return 'pools/ip-blocks'
