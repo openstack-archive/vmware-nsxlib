@@ -24,6 +24,7 @@ from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import test_client
 from vmware_nsxlib.tests.unit.v3 import test_constants
 from vmware_nsxlib.v3 import exceptions
+from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import resources
 
 
@@ -375,6 +376,17 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'delete', mocked_resource,
             'https://1.2.3.4/api/v1/logical-ports/%s?detach=true' % uuid)
+
+    def test_get_logical_port_by_attachment(self):
+        """Test deleting port."""
+        mocked_resource = self._mocked_lport()
+        attachment_type = nsx_constants.ATTACHMENT_DHCP
+        attachment_id = '1234'
+        mocked_resource.get_by_attachment(attachment_type, attachment_id)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            "https://1.2.3.4/api/v1/logical-ports/?attachment_type=%s"
+            "&attachment_id=%s" % (attachment_type, attachment_id))
 
     def test_clear_port_bindings(self):
         fake_port = copy.copy(test_constants.FAKE_PORT)

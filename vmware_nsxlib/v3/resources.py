@@ -225,6 +225,12 @@ class LogicalPort(utils.NsxLibApiBase):
             return self.client.update(self.get_path(lport_id), body=lport)
         return do_update()
 
+    def get_by_attachment(self, attachment_type, attachment_id):
+        """Return all logical port matching the attachment type and Id"""
+        url_suffix = ('?attachment_type=%s&attachment_id=%s' %
+                      (attachment_type, attachment_id))
+        return self.client.get(self.get_path(url_suffix))
+
 
 class LogicalRouter(core_resources.NsxLibLogicalRouter):
     # TODO(asarfaty): keeping this for backwards compatibility.
