@@ -24,7 +24,7 @@ class NsxLibConfig(object):
 
     :param nsx_api_managers: List of IP addresses of the NSX managers.
                              Each IP address should be of the form:
-                             [<scheme>://]<ip_adress>[:<port>]
+                             [<scheme>://]<ip_address>[:<port>]
                              If scheme is not provided https is used.
                              If port is not provided port 80 is used for http
                              and port 443 for https.
