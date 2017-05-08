@@ -83,6 +83,11 @@ class ResourceNotFound(ManagerError):
                 "%(operation)s")
 
 
+class BackendResourceNotFound(ResourceNotFound):
+    message = _("%(details)s On backend (%(manager)s) with Operation: "
+                "%(operation)s")
+
+
 class InvalidInput(ManagerError):
     message = _("%(operation)s failed: Invalid input %(arg_val)s "
                 "for %(arg_name)s")
