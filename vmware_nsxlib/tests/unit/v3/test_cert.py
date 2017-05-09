@@ -67,7 +67,7 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
             jsonutils.dumps({'httpStatus': 'go away',
                              'error_code': error_code,
                              'module_name': 'never mind',
-                             'error message': 'bad luck'}))
+                             'error_message': 'bad luck'}))
 
     def _get_mocked_trust(self, action, cert_pem):
 
