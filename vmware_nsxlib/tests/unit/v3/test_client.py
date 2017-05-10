@@ -14,6 +14,7 @@
 #    under the License.
 #
 import copy
+import requests
 
 from oslo_log import log
 from oslo_serialization import jsonutils
@@ -228,9 +229,15 @@ class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def test_client_validate_result(self):
 
-        def _verb_response_code(http_verb, status_code):
+        def _verb_response_code(http_verb, status_code, error_code=None):
+            content = None
+            if error_code:
+                content = jsonutils.dumps({'httpStatus': 'dummy',
+                                           'error_code': error_code,
+                                           'module_name': 'dummy',
+                                           'error_message': 'bad'})
             response = mocks.MockRequestsResponse(
-                status_code, None)
+                status_code, content)
 
             client_api = self.new_mocked_client(
                 client.RESTClient, mock_validate=False,
@@ -244,7 +251,16 @@ class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
                 _verb_response_code(verb, code)
             self.assertRaises(
                 nsxlib_exc.ManagerError,
-                _verb_response_code, verb, 500)
+                _verb_response_code, verb,
+                requests.codes.INTERNAL_SERVER_ERROR)
+            self.assertRaises(
+                nsxlib_exc.ResourceNotFound,
+                _verb_response_code, verb,
+                requests.codes.NOT_FOUND)
+            self.assertRaises(
+                nsxlib_exc.BackendResourceNotFound,
+                _verb_response_code, verb,
+                requests.codes.NOT_FOUND, 202)
 
 
 class NsxV3JSONClientTestCase(nsxlib_testcase.NsxClientTestCase):
