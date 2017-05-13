@@ -23,6 +23,7 @@ from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import cluster
 from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
+from vmware_nsxlib.v3 import load_balancer
 from vmware_nsxlib.v3 import native_dhcp
 from vmware_nsxlib.v3 import policy_defs
 from vmware_nsxlib.v3 import policy_resources
@@ -167,6 +168,8 @@ class NsxLib(NsxLibBase):
         self.dhcp_server = resources.LogicalDhcpServer(
             self.client, self.nsxlib_config)
         self.ip_pool = resources.IpPool(
+            self.client, self.nsxlib_config)
+        self.load_balancer = load_balancer.LoadBalancer(
             self.client, self.nsxlib_config)
 
     @property

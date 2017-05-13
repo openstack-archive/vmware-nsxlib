@@ -202,3 +202,37 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
                     {'scope': 'os-project-name', 'tag': 'Z' * 40}]
         self.assertEqual(sorted(expected, key=lambda x: x.get('tag')),
                          sorted(tags, key=lambda x: x.get('tag')))
+
+    def test_build_extra_args_positive(self):
+        extra_args = ['fall_count', 'interval', 'monitor_port',
+                      'request_body', 'request_method', 'request_url',
+                      'request_version', 'response_body',
+                      'response_status', 'rise_count', 'timeout']
+        body = {'display_name': 'httpmonitor1',
+                'description': 'my http monitor'}
+        expected = {'display_name': 'httpmonitor1',
+                    'description': 'my http monitor',
+                    'interval': 5,
+                    'rise_count': 3,
+                    'fall_count': 3}
+        resp = utils.build_extra_args(body, extra_args, interval=5,
+                                      rise_count=3, fall_count=3)
+        self.assertEqual(resp, expected)
+
+    def test_build_extra_args_negative(self):
+        extra_args = ['cookie_domain', 'cookie_fallback', 'cookie_garble',
+                      'cookie_mode', 'cookie_name', 'cookie_path',
+                      'cookie_time']
+        body = {'display_name': 'persistenceprofile1',
+                'description': 'my persistence profile',
+                'resource_type': 'LoadBalancerCookiePersistenceProfile'}
+        expected = {'display_name': 'persistenceprofile1',
+                    'description': 'my persistence profile',
+                    'resource_type': 'LoadBalancerCookiePersistenceProfile',
+                    'cookie_mode': 'INSERT',
+                    'cookie_name': 'ABC',
+                    'cookie_fallback': True}
+        resp = utils.build_extra_args(body, extra_args, cookie_mode='INSERT',
+                                      cookie_name='ABC', cookie_fallback=True,
+                                      bogus='bogus')
+        self.assertEqual(resp, expected)
