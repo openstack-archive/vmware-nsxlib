@@ -192,3 +192,103 @@ FAKE_IP_SET = {
         "192.168.1.8",
         "192.168.4.8/24"]
 }
+
+FAKE_APPLICATION_PROFILE_UUID = uuidutils.generate_uuid()
+FAKE_APPLICATION_PROFILE = {
+    "resource_type": "LoadBalancerHttpProfile",
+    "description": "my http profile",
+    "id": FAKE_APPLICATION_PROFILE_UUID,
+    "display_name": "httpprofile1",
+    "ntlm": False,
+    "request_header_size": 1024,
+    "http_redirect_to_https": False,
+    "idle_timeout": 1800,
+    "x_forwarded_for": "INSERT",
+    "_create_user": "admin",
+    "_create_time": 1493834124218,
+    "_last_modified_user": "admin",
+    "_last_modified_time": 1493834124218,
+    "_system_owned": False,
+    "_revision": 0
+}
+
+FAKE_PERSISTENCE_PROFILE_UUID = uuidutils.generate_uuid()
+FAKE_PERSISTENCE_PROFILE = {
+    "resource_type": "LoadBalancerCookiePersistenceProfile",
+    "description": "cookie persistence",
+    "id": FAKE_PERSISTENCE_PROFILE_UUID,
+    "display_name": "cookiePersistence",
+    "cookie_mode": "INSERT",
+    "cookie_garble": True,
+    "cookie_fallback": True,
+    "cookie_name": "ABC",
+    "_create_user": "admin",
+    "_create_time": 1493837413804,
+    "_last_modified_user": "admin",
+    "_last_modified_time": 1493837413804,
+    "_system_owned": False,
+    "_revision": 0
+}
+
+FAKE_CLIENT_SSL_PROFILE_UUID = uuidutils.generate_uuid()
+FAKE_CLIENT_SSL_PROFILE = {
+    "display_name": "clientSslProfile1",
+    "description": "client ssl profile",
+    "id": FAKE_CLIENT_SSL_PROFILE_UUID,
+    "prefer_server_ciphers": False,
+    "session_cache_enabled": False,
+    "session_cache_timeout": 300
+}
+
+FAKE_SERVER_SSL_PROFILE_UUID = uuidutils.generate_uuid()
+FAKE_SERVER_SSL_PROFILE = {
+    "display_name": "serverSslProfile1",
+    "description": "server ssl profile",
+    "id": FAKE_SERVER_SSL_PROFILE_UUID,
+    "session_cache_enabled": False
+}
+
+FAKE_MONITOR_UUID = uuidutils.generate_uuid()
+FAKE_MONITOR = {
+    "display_name": "httpmonitor1",
+    "description": "my http monitor",
+    "id": FAKE_MONITOR_UUID,
+    "resource_type": "LoadBalancerHttpMonitor",
+    "interval": 5,
+    "rise_count": 3,
+    "fall_count": 3,
+    "timeout": 15,
+    "request_url": "/",
+    "request_method": "GET",
+    "monitor_port": "80"
+}
+
+FAKE_POOL_UUID = uuidutils.generate_uuid()
+FAKE_POOL = {
+    "display_name": "httppool1",
+    "description": "my http pool",
+    "id": FAKE_POOL_UUID,
+    "algorithm": "ROUND_ROBIN",
+}
+
+FAKE_VIRTUAL_SERVER_UUID = uuidutils.generate_uuid()
+FAKE_VIRTUAL_SERVER = {
+    "display_name": "httpvirtualserver1",
+    "description": "my http virtual server",
+    "id": FAKE_VIRTUAL_SERVER_UUID,
+    "enabled": True,
+    "port": "80",
+    "ip_protocol": "TCP",
+}
+
+FAKE_SERVICE_UUID = uuidutils.generate_uuid()
+FAKE_SERVICE = {
+    "display_name": "my LB web service1",
+    "description": "my LB web service",
+    "id": FAKE_SERVICE_UUID,
+    "enabled": True,
+    "attachment": {
+        "target_id": FAKE_ROUTER_UUID,
+        "target_type": "LogicalRouter"
+    }
+}
