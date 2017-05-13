@@ -127,6 +127,13 @@ def get_name_and_uuid(name, uuid, tag=None, maxlen=80):
         return name[:maxlen] + short_uuid
 
 
+def build_extra_args(body, extra_args, **kwargs):
+    for arg in extra_args:
+        if arg in kwargs:
+            body[arg] = kwargs[arg]
+    return body
+
+
 class NsxLibApiBase(object):
     """Base class for nsxlib api """
     def __init__(self, client, nsxlib_config=None):

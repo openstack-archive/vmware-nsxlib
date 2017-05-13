@@ -23,6 +23,7 @@ from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import cluster
 from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
+from vmware_nsxlib.v3 import load_balancer
 from vmware_nsxlib.v3 import native_dhcp
 from vmware_nsxlib.v3 import policy_defs
 from vmware_nsxlib.v3 import policy_resources
@@ -167,6 +168,22 @@ class NsxLib(NsxLibBase):
         self.dhcp_server = resources.LogicalDhcpServer(
             self.client, self.nsxlib_config)
         self.ip_pool = resources.IpPool(
+            self.client, self.nsxlib_config)
+        self.lb_service = load_balancer.Service(
+            self.client, self.nsxlib_config)
+        self.lb_virtual_server = load_balancer.VirtualServer(
+            self.client, self.nsxlib_config)
+        self.lb_pool = load_balancer.Pool(
+            self.client, self.nsxlib_config)
+        self.lb_monitor = load_balancer.Monitor(
+            self.client, self.nsxlib_config)
+        self.lb_application_profile = load_balancer.ApplicationProfile(
+            self.client, self.nsxlib_config)
+        self.lb_persistence_profile = load_balancer.PersistenceProfile(
+            self.client, self.nsxlib_config)
+        self.lb_client_ssl_profile = load_balancer.ClientSslProfile(
+            self.client, self.nsxlib_config)
+        self.lb_server_ssl_profile = load_balancer.ServerSslProfile(
             self.client, self.nsxlib_config)
 
     @property
