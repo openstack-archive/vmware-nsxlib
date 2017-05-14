@@ -13,181 +13,59 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import abc
-import collections
 import netaddr
-import six
+
+from oslo_log import log
+from oslo_log import versionutils
 
 from vmware_nsxlib._i18n import _
+from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import utils
 
+LOG = log.getLogger(__name__)
 
-SwitchingProfileTypeId = collections.namedtuple(
-    'SwitchingProfileTypeId', 'profile_type, profile_id')
+# TODO(asarfaty): keeping this for backwards compatibility.
+# core_resources.SwitchingProfileTypeId and
+# core_resources.PacketAddressClassifier should be used.
+# This code will be removed in the future.
+SwitchingProfileTypeId = core_resources.SwitchingProfileTypeId
+PacketAddressClassifier = core_resources.PacketAddressClassifier
 
 
-PacketAddressClassifier = collections.namedtuple(
-    'PacketAddressClassifier', 'ip_address, mac_address, vlan')
+class SwitchingProfileTypes(core_resources.SwitchingProfileTypes):
+    # TODO(asarfaty): keeping this for backwards compatibility.
+    # This code will be removed in the future.
+    def __init__(self):
+        versionutils.report_deprecated_feature(
+            LOG,
+            'resources.SwitchingProfileTypes is deprecated. '
+            'Please use core_resources.SwitchingProfileTypes instead.')
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractRESTResource(object):
+class WhiteListAddressTypes(core_resources.WhiteListAddressTypes):
+    # TODO(asarfaty): keeping this for backwards compatibility.
+    # This code will be removed in the future.
+    def __init__(self):
+        versionutils.report_deprecated_feature(
+            LOG,
+            'resources.WhiteListAddressTypes is deprecated. '
+            'Please use core_resources.WhiteListAddressTypes instead.')
 
+
+class SwitchingProfile(core_resources.NsxLibSwitchingProfile):
+    # TODO(asarfaty): keeping this for backwards compatibility.
+    # This code will be removed in the future.
     def __init__(self, rest_client, *args, **kwargs):
-        self._client = rest_client.new_client_for(self.uri_segment)
-
-    @abc.abstractproperty
-    def uri_segment(self):
-        pass
-
-    def list(self):
-        return self._client.list()
-
-    def get(self, uuid):
-        return self._client.get(uuid)
-
-    def delete(self, uuid):
-        return self._client.delete(uuid)
-
-    @abc.abstractmethod
-    def create(self, *args, **kwargs):
-        pass
-
-    @abc.abstractmethod
-    def update(self, uuid, *args, **kwargs):
-        pass
-
-    def find_by_display_name(self, display_name):
-        found = []
-        for resource in self.list()['results']:
-            if resource['display_name'] == display_name:
-                found.append(resource)
-        return found
+        versionutils.report_deprecated_feature(
+            LOG,
+            'resources.SwitchingProfile is deprecated. '
+            'Please use core_resources.NsxLibSwitchingProfile instead.')
+        super(SwitchingProfile, self).__init__(rest_client)
 
 
-class SwitchingProfileTypes(object):
-    IP_DISCOVERY = 'IpDiscoverySwitchingProfile'
-    MAC_LEARNING = 'MacManagementSwitchingProfile'
-    PORT_MIRRORING = 'PortMirroringSwitchingProfile'
-    QOS = 'QosSwitchingProfile'
-    SPOOF_GUARD = 'SpoofGuardSwitchingProfile'
-    SWITCH_SECURITY = 'SwitchSecuritySwitchingProfile'
-
-
-class WhiteListAddressTypes(object):
-    PORT = 'LPORT_BINDINGS'
-    SWITCH = 'LSWITCH_BINDINGS'
-
-
-class SwitchingProfile(AbstractRESTResource):
-
-    @property
-    def uri_segment(self):
-        return 'switching-profiles'
-
-    def list(self):
-        return self._client.url_get('?include_system_owned=True')
-
-    def create(self, profile_type, display_name=None,
-               description=None, **api_args):
-        body = {
-            'resource_type': profile_type,
-            'display_name': display_name or '',
-            'description': description or ''
-        }
-        body.update(api_args)
-
-        return self._client.create(body=body)
-
-    def update(self, uuid, profile_type, **api_args):
-        body = {
-            'resource_type': profile_type
-        }
-        body.update(api_args)
-
-        return self._client.update(uuid, body=body)
-
-    def create_spoofguard_profile(self, display_name,
-                                  description,
-                                  whitelist_ports=False,
-                                  whitelist_switches=False,
-                                  tags=None):
-        whitelist_providers = []
-        if whitelist_ports:
-            whitelist_providers.append(WhiteListAddressTypes.PORT)
-        if whitelist_switches:
-            whitelist_providers.append(WhiteListAddressTypes.SWITCH)
-
-        return self.create(SwitchingProfileTypes.SPOOF_GUARD,
-                           display_name=display_name,
-                           description=description,
-                           white_list_providers=whitelist_providers,
-                           tags=tags or [])
-
-    def create_dhcp_profile(self, display_name,
-                            description, tags=None):
-        dhcp_filter = {
-            'client_block_enabled': True,
-            'server_block_enabled': False
-        }
-        rate_limits = {
-            'enabled': False,
-            'rx_broadcast': 0,
-            'tx_broadcast': 0,
-            'rx_multicast': 0,
-            'tx_multicast': 0
-        }
-        bpdu_filter = {
-            'enabled': True,
-            'white_list': []
-        }
-        return self.create(SwitchingProfileTypes.SWITCH_SECURITY,
-                           display_name=display_name,
-                           description=description,
-                           tags=tags or [],
-                           dhcp_filter=dhcp_filter,
-                           rate_limits=rate_limits,
-                           bpdu_filter=bpdu_filter,
-                           block_non_ip_traffic=True)
-
-    def create_mac_learning_profile(self, display_name,
-                                    description, tags=None):
-        mac_learning = {
-            'enabled': True,
-        }
-        return self.create(SwitchingProfileTypes.MAC_LEARNING,
-                           display_name=display_name,
-                           description=description,
-                           tags=tags or [],
-                           mac_learning=mac_learning,
-                           mac_change_allowed=True)
-
-    def create_port_mirror_profile(self, display_name, description,
-                                   direction, destinations, tags=None):
-        return self.create(SwitchingProfileTypes.PORT_MIRRORING,
-                           display_name=display_name,
-                           description=description,
-                           tags=tags or [],
-                           direction=direction,
-                           destinations=destinations)
-
-    @classmethod
-    def build_switch_profile_ids(cls, client, *profiles):
-        ids = []
-        for profile in profiles:
-            if isinstance(profile, str):
-                profile = client.get(profile)
-            if not isinstance(profile, SwitchingProfileTypeId):
-                profile = SwitchingProfileTypeId(
-                    profile.get('key', profile.get('resource_type')),
-                    profile.get('value', profile.get('id')))
-            ids.append(profile)
-        return ids
-
-
-class LogicalPort(AbstractRESTResource):
+class LogicalPort(utils.NsxLibApiBase):
 
     @property
     def uri_segment(self):
@@ -294,15 +172,16 @@ class LogicalPort(AbstractRESTResource):
             address_bindings=address_bindings,
             switch_profile_ids=switch_profile_ids,
             attachment=attachment))
-        return self._client.create(body=body)
+        return self.client.create(self.get_path(), body=body)
 
     def delete(self, lport_id):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
-            max_attempts=self._client.max_attempts)
+            max_attempts=self.client.max_attempts)
         def _do_delete():
-            return self._client.url_delete('%s?detach=true' % lport_id)
+            return self.client.url_delete(
+                self.get_path('%s?detach=true' % lport_id))
 
         return _do_delete()
 
@@ -317,7 +196,7 @@ class LogicalPort(AbstractRESTResource):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
-            max_attempts=self._client.max_attempts)
+            max_attempts=self.client.max_attempts)
         def do_update():
             lport = self.get(lport_id)
             tags = lport.get('tags', [])
@@ -343,56 +222,22 @@ class LogicalPort(AbstractRESTResource):
             # NSX has, we will get a 412: Precondition Failed.
             # In that case we need to re-fetch, patch the response and send
             # it again with the new revision_id
-            return self._client.update(lport_id, body=lport)
+            return self.client.update(self.get_path(lport_id), body=lport)
         return do_update()
 
 
-class LogicalRouter(AbstractRESTResource):
-
-    @property
-    def uri_segment(self):
-        return 'logical-routers'
-
-    def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
-               description=None):
-        # TODO(salv-orlando): If possible do not manage edge clusters
-        # in the main plugin logic.
-        router_type = (nsx_constants.ROUTER_TYPE_TIER0 if tier_0 else
-                       nsx_constants.ROUTER_TYPE_TIER1)
-        body = {'display_name': display_name,
-                'router_type': router_type,
-                'tags': tags}
-        if edge_cluster_uuid:
-            body['edge_cluster_id'] = edge_cluster_uuid
-        if description:
-            body['description'] = description
-        return self._client.create(body=body)
-
-    def delete(self, lrouter_id, force=False):
-        url = lrouter_id
-        if force:
-            url += '?force=%s' % force
-        return self._client.url_delete(url)
-
-    def update(self, lrouter_id, *args, **kwargs):
-        # Using internal method so we can access max_attempts in the decorator
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self._client.max_attempts)
-        def _do_update():
-            lrouter = self.get(lrouter_id)
-            for k in kwargs:
-                lrouter[k] = kwargs[k]
-            # If revision_id of the payload that we send is older than what
-            # NSX has, we will get a 412: Precondition Failed.
-            # In that case we need to re-fetch, patch the response and send
-            # it again with the new revision_id
-            return self._client.update(lrouter_id, body=lrouter)
-
-        return _do_update()
+class LogicalRouter(core_resources.NsxLibLogicalRouter):
+    # TODO(asarfaty): keeping this for backwards compatibility.
+    # This code will be removed in the future.
+    def __init__(self, rest_client, *args, **kwargs):
+        versionutils.report_deprecated_feature(
+            LOG,
+            'resources.LogicalRouter is deprecated. '
+            'Please use core_resources.NsxLibLogicalRouter instead.')
+        super(LogicalRouter, self).__init__(rest_client)
 
 
-class LogicalRouterPort(AbstractRESTResource):
+class LogicalRouterPort(utils.NsxLibApiBase):
 
     @property
     def uri_segment(self):
@@ -426,13 +271,13 @@ class LogicalRouterPort(AbstractRESTResource):
         if urpf_mode:
             body['urpf_mode'] = urpf_mode
 
-        return self._client.create(body=body)
+        return self.client.create(self.get_path(), body=body)
 
     def update(self, logical_port_id, **kwargs):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
-            max_attempts=self._client.max_attempts)
+            max_attempts=self.client.max_attempts)
         def _do_update():
             logical_router_port = self.get(logical_port_id)
             for k in kwargs:
@@ -441,23 +286,23 @@ class LogicalRouterPort(AbstractRESTResource):
             # NSX has, we will get a 412: Precondition Failed.
             # In that case we need to re-fetch, patch the response and send
             # it again with the new revision_id
-            return self._client.update(logical_port_id,
-                                       body=logical_router_port)
+            return self.client.update(self.get_path(logical_port_id),
+                                      body=logical_router_port)
         return _do_update()
 
     def delete(self, logical_port_id):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
-            max_attempts=self._client.max_attempts)
+            max_attempts=self.client.max_attempts)
         def _do_delete():
-            return self._client.url_delete(logical_port_id)
+            return self.client.url_delete(self.get_path(logical_port_id))
 
         return _do_delete()
 
     def get_by_lswitch_id(self, logical_switch_id):
         resource = '?logical_switch_id=%s' % logical_switch_id
-        router_ports = self._client.url_get(resource)
+        router_ports = self.client.url_get(self.get_path(resource))
         result_count = int(router_ports.get('result_count', "0"))
         if result_count >= 2:
             raise exceptions.ManagerError(
@@ -469,7 +314,7 @@ class LogicalRouterPort(AbstractRESTResource):
             err_msg = (_("Logical router link port not found on logical "
                          "switch %s") % logical_switch_id)
             raise exceptions.ResourceNotFound(
-                manager=self._client.nsx_api_managers,
+                manager=self.client.nsx_api_managers,
                 operation=err_msg)
 
     def update_by_lswitch_id(self, logical_router_id, ls_id, **payload):
@@ -482,7 +327,7 @@ class LogicalRouterPort(AbstractRESTResource):
 
     def get_by_router_id(self, logical_router_id):
         resource = '?logical_router_id=%s' % logical_router_id
-        logical_router_ports = self._client.url_get(resource)
+        logical_router_ports = self.client.url_get(self.get_path(resource))
         return logical_router_ports['results']
 
     def get_tier1_link_port(self, logical_router_id):
@@ -491,37 +336,33 @@ class LogicalRouterPort(AbstractRESTResource):
             if port['resource_type'] == nsx_constants.LROUTERPORT_LINKONTIER1:
                 return port
         raise exceptions.ResourceNotFound(
-            manager=self._client.nsx_api_managers,
+            manager=self.client.nsx_api_managers,
             operation="get router link port")
 
 
-class MetaDataProxy(AbstractRESTResource):
-
-    @property
-    def uri_segment(self):
-        return 'md-proxies'
-
-    def create(self, *args, **kwargs):
-        pass
-
-    def update(self, uuid, *args, **kwargs):
-        pass
+class MetaDataProxy(core_resources.NsxLibMetadataProxy):
+    # TODO(asarfaty): keeping this for backwards compatibility.
+    # This code will be removed in the future.
+    def __init__(self, rest_client, *args, **kwargs):
+        versionutils.report_deprecated_feature(
+            LOG,
+            'resources.MetaDataProxy is deprecated. '
+            'Please use core_resources.NsxLibMetadataProxy instead.')
+        super(MetaDataProxy, self).__init__(rest_client)
 
 
-class DhcpProfile(AbstractRESTResource):
-
-    @property
-    def uri_segment(self):
-        return 'dhcp/server-profiles'
-
-    def create(self, *args, **kwargs):
-        pass
-
-    def update(self, uuid, *args, **kwargs):
-        pass
+class DhcpProfile(core_resources.NsxLibDhcpProfile):
+    # TODO(asarfaty): keeping this for backwards compatibility.
+    # This code will be removed in the future.
+    def __init__(self, rest_client, *args, **kwargs):
+        versionutils.report_deprecated_feature(
+            LOG,
+            'resources.DhcpProfile is deprecated. '
+            'Please use core_resources.NsxLibDhcpProfile instead.')
+        super(DhcpProfile, self).__init__(rest_client)
 
 
-class LogicalDhcpServer(AbstractRESTResource):
+class LogicalDhcpServer(utils.NsxLibApiBase):
 
     def get_dhcp_opt_code(self, name):
         _supported_options = {
@@ -599,7 +440,7 @@ class LogicalDhcpServer(AbstractRESTResource):
         self._construct_server(body, dhcp_profile_id, server_ip, name,
                                dns_nameservers, domain_name, gateway_ip,
                                options, tags)
-        return self._client.create(body=body)
+        return self.client.create(self.get_path(), body=body)
 
     def update(self, uuid, dhcp_profile_id=None, server_ip=None, name=None,
                dns_nameservers=None, domain_name=None, gateway_ip=False,
@@ -607,13 +448,13 @@ class LogicalDhcpServer(AbstractRESTResource):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
-            max_attempts=self._client.max_attempts)
+            max_attempts=self.client.max_attempts)
         def _do_update():
-            body = self._client.get(uuid)
+            body = self.get(uuid)
             self._construct_server(body, dhcp_profile_id, server_ip, name,
                                    dns_nameservers, domain_name, gateway_ip,
                                    options, tags)
-            return self._client.update(uuid, body=body)
+            return self.client.update(self.get_path(uuid), body=body)
 
         return _do_update()
 
@@ -630,32 +471,31 @@ class LogicalDhcpServer(AbstractRESTResource):
             # Note that None is valid for gateway_ip, means deleting it.
             body['gateway_ip'] = gateway_ip
         url = "%s/static-bindings" % server_uuid
-        return self._client.url_post(url, body)
+        return self.client.url_post(self.get_path(url), body)
 
     def get_binding(self, server_uuid, binding_uuid):
         url = "%s/static-bindings/%s" % (server_uuid, binding_uuid)
-        return self._client.url_get(url)
+        return self.get(url)
 
     def update_binding(self, server_uuid, binding_uuid, **kwargs):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
-            max_attempts=self._client.max_attempts)
+            max_attempts=self.client.max_attempts)
         def _do_update():
             body = self.get_binding(server_uuid, binding_uuid)
             body.update(kwargs)
             url = "%s/static-bindings/%s" % (server_uuid, binding_uuid)
-            return self._client.url_put(url, body)
+            return self.client.url_put(self.get_path(url), body)
 
         return _do_update()
 
     def delete_binding(self, server_uuid, binding_uuid):
         url = "%s/static-bindings/%s" % (server_uuid, binding_uuid)
-        return self._client.url_delete(url)
+        return self.delete(url)
 
 
-class IpPool(AbstractRESTResource):
-    # TODO(asarfaty): Check the DK api - could be different
+class IpPool(utils.NsxLibApiBase):
     @property
     def uri_segment(self):
         return 'pools/ip-pools'
@@ -709,11 +549,7 @@ class IpPool(AbstractRESTResource):
         if tags:
             body['tags'] = tags
 
-        return self._client.create(body=body)
-
-    def delete(self, pool_id):
-        """Delete an IPPool by its ID."""
-        return self._client.delete(pool_id)
+        return self.client.create(self.get_path(), body=body)
 
     def _update_param_in_pool(self, args_dict, key, pool_data):
         # update the arg only if it exists in the args dictionary
@@ -744,10 +580,7 @@ class IpPool(AbstractRESTResource):
                                    pool["subnets"][0])
         self._update_param_in_pool(kwargs, 'cidr',
                                    pool["subnets"][0])
-        return self._client.update(pool_id, pool)
-
-    def get(self, pool_id):
-        return self._client.get(pool_id)
+        return self.client.update(self.get_path(pool_id), pool)
 
     def allocate(self, pool_id, ip_addr=None, display_name=None, tags=None):
         """Allocate an IP from a pool."""
@@ -760,15 +593,15 @@ class IpPool(AbstractRESTResource):
             body['tags'] = tags
         if display_name is not None:
             body['display_name'] = display_name
-        return self._client.url_post(url, body=body)
+        return self.client.url_post(self.get_path(url), body=body)
 
     def release(self, pool_id, ip_addr):
         """Release an IP back to a pool."""
         url = "%s?action=RELEASE" % pool_id
         body = {"allocation_id": ip_addr}
-        return self._client.url_post(url, body=body)
+        return self.client.url_post(self.get_path(url), body=body)
 
     def get_allocations(self, pool_id):
         """Return information about the allocated IPs in the pool."""
         url = "%s/allocations" % pool_id
-        return self._client.url_get(url)
+        return self.client.url_get(self.get_path(url))

@@ -329,7 +329,7 @@ class NsxClientTestCase(NsxLibTestCase):
             nsx_api_managers=[NSX_MANAGER],
             max_attempts=NSX_MAX_ATTEMPTS))
         if mock_validate:
-            mock.patch.object(mocked._client, '_validate_result').start()
+            mock.patch.object(mocked.client, '_validate_result').start()
 
         return mocked
 
