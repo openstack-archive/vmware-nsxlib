@@ -396,6 +396,7 @@ class LogicalDhcpServer(utils.NsxLibApiBase):
             'dhcp-client-identifier': 61,
             'nisplus-domain': 64,
             'nisplus-servers': 65,
+            'tftp-server': 66,
             'tftp-server-name': 66,
             'bootfile-name': 67,
             'system-architecture': 93,
