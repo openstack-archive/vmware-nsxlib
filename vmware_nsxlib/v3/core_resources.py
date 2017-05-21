@@ -515,6 +515,21 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
 
         return _do_update()
 
+    def get_firewall_section_id(self, lrouter_id, router_body=None):
+        """Return the id of the auto created firewall section of the router
+
+        If the router was already retrieved from the backend it is possible
+        to give it as an input to avoid another backend call.
+        """
+        if not router_body:
+            router_body = self.get(lrouter_id)
+        if 'firewall_sections' in router_body:
+            firewall_sections = router_body['firewall_sections']
+            for sec in firewall_sections:
+                if (sec.get('is_valid') and
+                    sec.get('target_type') == "FirewallSection"):
+                    return firewall_sections[0].get('target_id')
+
 
 class NsxLibEdgeCluster(utils.NsxLibApiBase):
 

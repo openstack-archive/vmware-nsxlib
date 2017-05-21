@@ -23,6 +23,7 @@ from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import test_client
 from vmware_nsxlib.tests.unit.v3 import test_constants
+from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import resources
@@ -434,7 +435,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def _mocked_lrouter(self, session_response=None):
         return self.mocked_resource(
-            resources.LogicalRouter, session_response=session_response)
+            core_resources.NsxLibLogicalRouter,
+            session_response=session_response)
 
     def test_create_logical_router(self):
         """Test creating a router returns the correct response and 201 status.
@@ -478,6 +480,14 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'delete', router,
             'https://1.2.3.4/api/v1/logical-routers/%s?force=True' % uuid)
+
+    def test_get_logical_router_fw_section(self):
+        fake_router = test_constants.FAKE_ROUTER.copy()
+
+        router = self._mocked_lrouter()
+        section_id = router.get_firewall_section_id(
+            test_constants.FAKE_ROUTER_UUID, router_body=fake_router)
+        self.assertEqual(test_constants.FAKE_ROUTER_FW_SEC_UUID, section_id)
 
 
 class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
