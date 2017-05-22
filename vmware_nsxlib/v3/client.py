@@ -169,7 +169,7 @@ class RESTClient(object):
 
         do_request = getattr(self._conn, method.lower())
         if not silent:
-            LOG.debug("REST call: %s %s\nHeaders: %s\nBody: %s",
+            LOG.debug("REST call: %s %s. Headers: %s. Body: %s",
                       method, request_url, request_headers, body)
 
         result = do_request(
@@ -178,7 +178,7 @@ class RESTClient(object):
             headers=request_headers)
 
         if not silent:
-            LOG.debug("REST call: %s %s\nResponse: %s",
+            LOG.debug("REST call: %s %s. Response: %s",
                       method, request_url, result.json()
                       if result.content else '')
 
