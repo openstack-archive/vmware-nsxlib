@@ -106,11 +106,17 @@ FAKE_CONTAINER_PORT = {
 
 
 FAKE_ROUTER_UUID = uuidutils.generate_uuid()
+FAKE_ROUTER_FW_SEC_UUID = uuidutils.generate_uuid()
 FAKE_ROUTER = {
     "resource_type": "LogicalRouter",
     "revision": 0,
     "id": FAKE_ROUTER_UUID,
-    "display_name": FAKE_NAME
+    "display_name": FAKE_NAME,
+    "firewall_sections": [{
+        "is_valid": True,
+        "target_type": "FirewallSection",
+        "target_id": FAKE_ROUTER_FW_SEC_UUID
+    }],
 }
 
 FAKE_ROUTER_PORT_UUID = uuidutils.generate_uuid()
