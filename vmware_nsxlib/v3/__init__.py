@@ -16,6 +16,7 @@
 import abc
 import six
 
+from distutils import version
 from oslo_log import log
 
 from vmware_nsxlib._i18n import _
@@ -25,6 +26,7 @@ from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import load_balancer
 from vmware_nsxlib.v3 import native_dhcp
+from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_defs
 from vmware_nsxlib.v3 import policy_resources
 from vmware_nsxlib.v3 import resources
@@ -56,6 +58,8 @@ class NsxLibBase(object):
 
         super(NsxLibBase, self).__init__()
 
+        self.nsx_version = self.get_version()
+
     def set_config(self, nsxlib_config):
         """Set config user provided and extend it according to application"""
         self.nsxlib_config = nsxlib_config
@@ -73,6 +77,10 @@ class NsxLibBase(object):
         node = self.client.get("node")
         version = node.get('node_version')
         return version
+
+    @abc.abstractmethod
+    def feature_supported(self, feature):
+        pass
 
     def build_v3_api_version_tag(self):
         return self.general_apis.build_v3_api_version_tag()
@@ -176,6 +184,23 @@ class NsxLib(NsxLibBase):
     def keepalive_section(self):
         return 'transport-zones'
 
+    def feature_supported(self, feature):
+        if (version.LooseVersion(self.nsx_version) >=
+            version.LooseVersion(nsx_constants.NSX_VERSION_2_0_0)):
+            # Features available since 2.0
+            if (feature == nsx_constants.FEATURE_EXCLUDE_PORT_BY_TAG or
+                feature == nsx_constants.FEATURE_ROUTER_FIREWALL):
+                return True
+
+        if (version.LooseVersion(self.nsx_version) >=
+            version.LooseVersion(nsx_constants.NSX_VERSION_1_1_0)):
+            # Features available since 1.1
+            if (feature == nsx_constants.FEATURE_MAC_LEARNING or
+                feature == nsx_constants.FEATURE_DYNAMIC_CRITERIA):
+                return True
+
+        return False
+
 
 class NsxPolicyLib(NsxLibBase):
 
@@ -196,3 +221,12 @@ class NsxPolicyLib(NsxLibBase):
     @property
     def keepalive_section(self):
         return 'infra'
+
+    def feature_supported(self, feature):
+        if (version.LooseVersion(self.nsx_version) >=
+            version.LooseVersion(nsx_constants.NSX_VERSION_2_0_0)):
+            # NSX policy is available since 2.0
+            if feature == nsx_constants.FEATURE_NSX_POLICY:
+                return True
+
+        return False
