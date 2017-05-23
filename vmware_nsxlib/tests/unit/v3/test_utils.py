@@ -16,6 +16,7 @@
 from neutron_lib import exceptions as n_exc
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
+from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import utils
 
 
@@ -236,3 +237,25 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
                                       cookie_name='ABC', cookie_fallback=True,
                                       bogus='bogus')
         self.assertEqual(resp, expected)
+
+
+class NsxFeaturesTestCase(nsxlib_testcase.NsxLibTestCase):
+
+    def test_v2_feautres(self, current_version='2.0.0'):
+        self.nsxlib.nsx_version = current_version
+        self.assertTrue(self.nsxlib.feature_supported(
+            nsx_constants.FEATURE_ROUTER_FIREWALL))
+        self.assertTrue(self.nsxlib.feature_supported(
+            nsx_constants.FEATURE_EXCLUDE_PORT_BY_TAG))
+
+    def test_v2_feautres_plus(self):
+        self.test_v2_feautres(current_version='2.0.1')
+
+    def test_v2_feautres_minus(self):
+        self.nsxlib.nsx_version = '1.9.9'
+        self.assertFalse(self.nsxlib.feature_supported(
+            nsx_constants.FEATURE_ROUTER_FIREWALL))
+        self.assertFalse(self.nsxlib.feature_supported(
+            nsx_constants.FEATURE_EXCLUDE_PORT_BY_TAG))
+        self.assertTrue(self.nsxlib.feature_supported(
+            nsx_constants.FEATURE_MAC_LEARNING))
