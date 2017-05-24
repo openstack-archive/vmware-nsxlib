@@ -257,6 +257,14 @@ class Service(LoadBalancerBase):
                               'target_type': 'LogicalRouter'}
         return self.client.update(object_url, body)
 
+    def get_status(self, service_id):
+        object_url = '%s/%s/%s' % (self.resource, service_id, 'status')
+        return self.client.get(object_url)
+
+    def get_stats(self, service_id):
+        object_url = '%s/%s/%s' % (self.resource, service_id, 'statistics')
+        return self.client.get(object_url)
+
 
 class LoadBalancer(object):
     """This is the class that have all load balancer resource clients"""
