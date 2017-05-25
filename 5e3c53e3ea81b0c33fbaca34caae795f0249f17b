@@ -1,0 +1,10 @@
+Code-Review+2: garyk <gkotton@vmware.com>
+Verified+1: VMware NSX CI
+Code-Review+2: Anna Khmelnitsky <akhmelnitsky@vmware.com>
+Workflow+1: Anna Khmelnitsky <akhmelnitsky@vmware.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 25 May 2017 22:54:09 +0000
+Reviewed-on: https://review.openstack.org/467123
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
