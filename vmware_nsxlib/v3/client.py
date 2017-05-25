@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import re
 import requests
 import six.moves.urllib.parse as urlparse
 import time
@@ -162,6 +163,14 @@ class RESTClient(object):
             uri = "%s://%s" % (prefix.scheme, uri)
         return uri
 
+    def _mask_password(self, json):
+        '''Mask password value in json format'''
+        if not json:
+            return json
+
+        pattern = r'\"password\": [^,}]*'
+        return re.sub(pattern, '"password": "********"', json)
+
     def _rest_call(self, url, method='GET', body=None, headers=None,
                    silent=False):
         request_headers = headers.copy() if headers else {}
@@ -170,8 +179,10 @@ class RESTClient(object):
 
         do_request = getattr(self._conn, method.lower())
         if not silent:
+
             LOG.debug("REST call: %s %s. Headers: %s. Body: %s",
-                      method, request_url, request_headers, body)
+                      method, request_url, request_headers,
+                      self._mask_password(body))
 
         ts = time.time()
         result = do_request(
