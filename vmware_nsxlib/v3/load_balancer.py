@@ -20,27 +20,27 @@ from vmware_nsxlib.v3 import utils
 class ApplicationProfileTypes(object):
     """LoadBalancer Application Profile types"""
 
-    HTTP = "LoadBalancerHttpProfile"
-    FAST_TCP = "LoadBalancerFastTcpProfile"
-    FAST_UDP = "LoadBalancerFastUdpProfile"
+    HTTP = "LbHttpProfile"
+    FAST_TCP = "LbFastTcpProfile"
+    FAST_UDP = "LbFastUdpProfile"
 
 
 class PersistenceProfileTypes(object):
     """LoadBalancer Persistence Profile types"""
 
-    COOKIE = "LoadBalancerCookiePersistenceProfile"
-    SOURCE_IP = "LoadBalancerSourceIpPersistenceProfile"
+    COOKIE = "LbCookiePersistenceProfile"
+    SOURCE_IP = "LbSourceIpPersistenceProfile"
 
 
 class MonitorTypes(object):
     """LoadBalancer Monitor types"""
 
-    HTTP = "LoadBalancerHttpMonitor"
-    HTTPS = "LoadBalancerHttpsMonitor"
-    ICMP = "LoadBalancerIcmpMonitor"
-    PASSIVE = "LoadBalancerPassiveMonitor"
-    TCP = "LoadBalancerTcpMonitor"
-    UDP = "LoadBalancerUdpMonitor"
+    HTTP = "LbHttpMonitor"
+    HTTPS = "LbHttpsMonitor"
+    ICMP = "LbIcmpMonitor"
+    PASSIVE = "LbPassiveMonitor"
+    TCP = "LbTcpMonitor"
+    UDP = "LbUdpMonitor"
 
 
 class LoadBalancerBase(utils.NsxLibApiBase):

@@ -201,7 +201,7 @@ FAKE_IP_SET = {
 
 FAKE_APPLICATION_PROFILE_UUID = uuidutils.generate_uuid()
 FAKE_APPLICATION_PROFILE = {
-    "resource_type": "LoadBalancerHttpProfile",
+    "resource_type": "LbHttpProfile",
     "description": "my http profile",
     "id": FAKE_APPLICATION_PROFILE_UUID,
     "display_name": "httpprofile1",
@@ -220,7 +220,7 @@ FAKE_APPLICATION_PROFILE = {
 
 FAKE_PERSISTENCE_PROFILE_UUID = uuidutils.generate_uuid()
 FAKE_PERSISTENCE_PROFILE = {
-    "resource_type": "LoadBalancerCookiePersistenceProfile",
+    "resource_type": "LbCookiePersistenceProfile",
     "description": "cookie persistence",
     "id": FAKE_PERSISTENCE_PROFILE_UUID,
     "display_name": "cookiePersistence",
@@ -259,7 +259,7 @@ FAKE_MONITOR = {
     "display_name": "httpmonitor1",
     "description": "my http monitor",
     "id": FAKE_MONITOR_UUID,
-    "resource_type": "LoadBalancerHttpMonitor",
+    "resource_type": "LbHttpMonitor",
     "interval": 5,
     "rise_count": 3,
     "fall_count": 3,
