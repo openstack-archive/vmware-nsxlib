@@ -117,7 +117,7 @@ class TimeoutSession(requests.Session):
                 # This is most probably "client cert not found" error (this
                 # happens when server closed the connection and requests
                 # reopen it). Try reloading client cert.
-                LOG.warning("SSL error: %s, retrying.." % e)
+                LOG.debug("SSL error: %s, retrying.." % e)
             except OSError as e:
                 # Lack of client cert file can come in form of OSError,
                 # in this case filename will appear in the error. Try
@@ -125,7 +125,7 @@ class TimeoutSession(requests.Session):
                 if self._cert_provider.filename() not in str(e):
                     raise e
                 # Don't expose cert file name to the logs
-                LOG.warning("Reloading client certificate..")
+                LOG.info("Reloading client certificate..")
 
         # The following with statement allows for preparing certificate and
         # private key file and dispose it once connections are spawned
