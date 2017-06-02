@@ -89,10 +89,6 @@ def _mock_nsxlib():
          "NsxLibTransportZone.get_id_by_name_or_id"),
         side_effect=_return_id_key).start()
 
-    mock.patch(
-        "vmware_nsxlib.v3.NsxLib.get_version",
-        return_value='1.1.0').start()
-
 
 def get_default_nsxlib_config():
     return config.NsxLibConfig(
