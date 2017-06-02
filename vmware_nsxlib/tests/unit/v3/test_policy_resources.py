@@ -29,8 +29,6 @@ class NsxPolicyLibTestCase(unittest.TestCase):
     def setUp(self, *args, **kwargs):
         super(NsxPolicyLibTestCase, self).setUp()
 
-        mock.patch.object(v3.NsxPolicyLib, "get_version",
-                          return_value='2.0.0').start()
         nsxlib_config = nsxlib_testcase.get_default_nsxlib_config()
         self.policy_lib = v3.NsxPolicyLib(nsxlib_config)
         self.policy_api = self.policy_lib.policy_api
