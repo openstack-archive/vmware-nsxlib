@@ -56,6 +56,8 @@ class NsxLibBase(object):
 
         super(NsxLibBase, self).__init__()
 
+        self.nsx_version = None
+
     def set_config(self, nsxlib_config):
         """Set config user provided and extend it according to application"""
         self.nsxlib_config = nsxlib_config
@@ -73,11 +75,6 @@ class NsxLibBase(object):
     @abc.abstractmethod
     def init_api(self):
         pass
-
-    def get_version(self):
-        node = self.client.get("node")
-        version = node.get('node_version')
-        return version
 
     def build_v3_api_version_tag(self):
         return self.general_apis.build_v3_api_version_tag()
@@ -598,6 +595,14 @@ class NsxLib(NsxLibBase):
     @property
     def keepalive_section(self):
         return 'transport-zones'
+
+    def get_version(self):
+        if self.nsx_version:
+            return self.nsx_version
+
+        node = self.client.get("node")
+        self.nsx_version = node.get('node_version')
+        return self.nsx_version
 
     @property
     def client_url_prefix(self):
