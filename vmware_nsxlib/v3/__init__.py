@@ -58,7 +58,7 @@ class NsxLibBase(object):
 
         super(NsxLibBase, self).__init__()
 
-        self.nsx_version = self.get_version()
+        self.nsx_version = None
 
     def set_config(self, nsxlib_config):
         """Set config user provided and extend it according to application"""
@@ -72,11 +72,6 @@ class NsxLibBase(object):
     @abc.abstractmethod
     def init_api(self):
         pass
-
-    def get_version(self):
-        node = self.client.get("node")
-        version = node.get('node_version')
-        return version
 
     @abc.abstractmethod
     def feature_supported(self, feature):
@@ -184,8 +179,16 @@ class NsxLib(NsxLibBase):
     def keepalive_section(self):
         return 'transport-zones'
 
+    def get_version(self):
+        if self.nsx_version:
+            return self.nsx_version
+
+        node = self.client.get("node")
+        self.nsx_version = node.get('node_version')
+        return self.nsx_version
+
     def feature_supported(self, feature):
-        if (version.LooseVersion(self.nsx_version) >=
+        if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_2_0_0)):
             # Features available since 2.0
             if (feature == nsx_constants.FEATURE_EXCLUDE_PORT_BY_TAG or
@@ -193,7 +196,7 @@ class NsxLib(NsxLibBase):
                 feature == nsx_constants.FEATURE_LOAD_BALANCER):
                 return True
 
-        if (version.LooseVersion(self.nsx_version) >=
+        if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_1_1_0)):
             # Features available since 1.1
             if (feature == nsx_constants.FEATURE_MAC_LEARNING or
@@ -224,10 +227,4 @@ class NsxPolicyLib(NsxLibBase):
         return 'infra'
 
     def feature_supported(self, feature):
-        if (version.LooseVersion(self.nsx_version) >=
-            version.LooseVersion(nsx_constants.NSX_VERSION_2_0_0)):
-            # NSX policy is available since 2.0
-            if feature == nsx_constants.FEATURE_NSX_POLICY:
-                return True
-
-        return False
+        return (feature == nsx_constants.FEATURE_NSX_POLICY)
