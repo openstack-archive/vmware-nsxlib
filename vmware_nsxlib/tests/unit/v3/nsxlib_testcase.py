@@ -280,6 +280,7 @@ class NsxClientTestCase(NsxLibTestCase):
                 # record calls at the requests HTTP adapter level
                 mock_response = mock.Mock()
                 mock_response.history = None
+                mock_response.headers = {'location': ''}
                 # needed to bypass requests internal checks for mock
                 mock_response.raw._original_response = {}
 
