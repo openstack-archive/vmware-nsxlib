@@ -16,6 +16,7 @@
 import re
 import requests
 import six.moves.urllib.parse as urlparse
+import time
 
 from oslo_log import log
 from oslo_serialization import jsonutils
@@ -183,15 +184,18 @@ class RESTClient(object):
                       method, request_url, request_headers,
                       self._mask_password(body))
 
+        ts = time.time()
         result = do_request(
             request_url,
             data=body,
             headers=request_headers)
+        te = time.time()
 
         if not silent:
-            LOG.debug("REST call: %s %s. Response: %s",
-                      method, request_url, result.json()
-                      if result.content else '')
+            LOG.debug("REST call: %s %s. Response: %s. Took %2.4f",
+                      method, request_url,
+                      result.json() if result.content else '',
+                      te - ts)
 
         self._validate_result(
             result, RESTClient._VERB_RESP_CODES[method.lower()],
