@@ -460,6 +460,12 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         resource = 'firewall/sections/%s/rules' % section_id
         return self.client.get(resource)
 
+    def get_default_rule(self, section_id):
+        rules = self.get_rules(section_id)['results']
+        last_rule = rules[-1]
+        if last_rule['is_default']:
+            return last_rule
+
     def _get_fw_rule_from_sg_rule(self, sg_rule, nsgroup_id, rmt_nsgroup_id,
                                   logged, action):
         # IPV4 or IPV6
