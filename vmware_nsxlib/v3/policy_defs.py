@@ -470,17 +470,17 @@ class EnforcementPointDef(ResourceDef):
     @property
     def path_pattern(self):
         return (TENANTS_PATH_PATTERN +
-                'deploymentzones/default-deployment-zone/enforcementpoints/')
+                'deploymentzones/default/enforcementpoints/')
 
     def get_obj_dict(self):
         body = super(EnforcementPointDef, self).get_obj_dict()
         body['id'] = self.id
-        body['connection_info'] = [{'fqdn': 'abc',
-                                    'thumbprint': self.thumbprint,
-                                    'username': self.username,
-                                    'password': self.password,
-                                    'ip_address': self.ip_address,
-                                    'resource_type': 'NSXTConnectionInfo'}]
+        body['connection_info'] = [
+            {'thumbprint': self.thumbprint,
+             'username': self.username,
+             'password': self.password,
+             'enforcement_point_address': self.ip_address,
+             'resource_type': 'NSXTConnectionInfo'}]
         body['enforcement_type'] = self.type
         body['resource_type'] = 'EnforcementPoint'
         return body
@@ -530,7 +530,7 @@ class DeploymentMapDef(ResourceDef):
 
     @property
     def path_pattern(self):
-        return (TENANTS_PATH_PATTERN + 'domaindeploymentmap/')
+        return (TENANTS_PATH_PATTERN + 'domaindeploymentmaps/')
 
     def get_obj_dict(self):
         body = super(DeploymentMapDef, self).get_obj_dict()
