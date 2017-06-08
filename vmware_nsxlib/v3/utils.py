@@ -153,8 +153,8 @@ class NsxLibApiBase(object):
     def list(self):
         return self.client.list(self.uri_segment)
 
-    def get(self, uuid):
-        return self.client.get(self.get_path(uuid))
+    def get(self, uuid, silent=False):
+        return self.client.get(self.get_path(uuid), silent=silent)
 
     def delete(self, uuid):
         return self.client.delete(self.get_path(uuid))
