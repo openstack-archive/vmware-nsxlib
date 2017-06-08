@@ -131,9 +131,9 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
 
         _do_delete()
 
-    def get(self, logical_switch_id):
+    def get(self, logical_switch_id, silent=False):
         resource = "logical-switches/%s" % logical_switch_id
-        return self.client.get(resource)
+        return self.client.get(resource, silent=silent)
 
     def update(self, lswitch_id, name=None, admin_state=None, tags=None):
         # Using internal method so we can access max_attempts in the decorator

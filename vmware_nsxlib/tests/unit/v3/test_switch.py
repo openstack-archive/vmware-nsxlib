@@ -81,3 +81,12 @@ class NsxLibSwitchTestCase(nsxlib_testcase.NsxClientTestCase):
             delete.assert_called_with(
                 'logical-switches/%s'
                 '?detach=true&cascade=true' % fake_switch['id'])
+
+    def test_get_logical_switch(self):
+        """Test getting a switch"""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as get:
+            fake_switch = nsx_v3_mocks.make_fake_switch()
+            self.nsxlib.logical_switch.get(fake_switch['id'], silent=True)
+            get.assert_called_with(
+                'logical-switches/%s' % fake_switch['id'],
+                headers=None, silent=True)

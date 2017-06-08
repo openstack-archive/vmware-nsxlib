@@ -123,16 +123,17 @@ class RESTClient(object):
         raise error(manager='', operation=operation, details=result_msg,
                     error_code=error_code)
 
-    def _validate_result(self, result, expected, operation):
+    def _validate_result(self, result, expected, operation, silent=False):
         if result.status_code not in expected:
             result_msg = result.json() if result.content else ''
-            LOG.warning(_LW("The HTTP request returned error code "
-                            "%(result)s, whereas %(expected)s response "
-                            "codes were expected. Response body %(body)s"),
-                        {'result': result.status_code,
-                         'expected': '/'.join([str(code)
-                                               for code in expected]),
-                         'body': result_msg})
+            if not silent:
+                LOG.warning(_LW("The HTTP request returned error code "
+                                "%(result)s, whereas %(expected)s response "
+                                "codes were expected. Response body %(body)s"),
+                            {'result': result.status_code,
+                             'expected': '/'.join([str(code)
+                                                   for code in expected]),
+                             'body': result_msg})
 
             error_code = None
             if isinstance(result_msg, dict) and 'error_message' in result_msg:
@@ -199,7 +200,8 @@ class RESTClient(object):
 
         self._validate_result(
             result, RESTClient._VERB_RESP_CODES[method.lower()],
-            _("%(verb)s %(url)s") % {'verb': method, 'url': request_url})
+            _("%(verb)s %(url)s") % {'verb': method, 'url': request_url},
+            silent=silent)
         return result
 
 
