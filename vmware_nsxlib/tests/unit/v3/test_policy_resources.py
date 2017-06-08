@@ -1011,7 +1011,7 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
             expected_def = policy_defs.DeploymentMapDef(map_id=id,
                                                         tenant=TEST_TENANT)
             domain_path = "/%s/domains/%s" % (TEST_TENANT, domain_id)
-            ep_path = ("/%s/deploymentzones/default-deployment-zone/"
+            ep_path = ("/%s/deploymentzones/default/"
                        "enforcementpoints/%s" % (TEST_TENANT, ep_id))
             expected_dict = {'display_name': name,
                              'enforcement_point_paths': [ep_path],
