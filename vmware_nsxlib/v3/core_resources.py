@@ -418,7 +418,8 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                      source_net=None, dest_net=None,
                      enabled=True, rule_priority=None,
                      match_ports=None, match_protocol=None,
-                     match_resource_type=None):
+                     match_resource_type=None,
+                     bypass_firewall=True):
         resource = 'logical-routers/%s/nat/rules' % logical_router_id
         body = {'action': action,
                 'enabled': enabled,
@@ -435,6 +436,16 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                                   nsx_constants.L4_PORT_SET_NSSERVICE),
                 'destination_ports': match_ports,
                 'l4_protocol': match_protocol or nsx_constants.TCP}
+
+        # nat_pass parameter is supported with the router firewall feature
+        if (self.nsxlib and
+            self.nsxlib.feature_supported(
+                nsx_constants.FEATURE_ROUTER_FIREWALL)):
+            body['nat_pass'] = bypass_firewall
+        elif not bypass_firewall:
+            LOG.error("Ignoring bypass_firewall for router %s nat rule: "
+                      "this feature is not supported.", logical_router_id)
+
         return self.client.create(resource, body)
 
     def add_static_route(self, logical_router_id, dest_cidr, nexthop):

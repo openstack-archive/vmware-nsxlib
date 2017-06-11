@@ -137,27 +137,27 @@ class NsxLib(NsxLibBase):
 
     def init_api(self):
         self.port_mirror = core_resources.NsxLibPortMirror(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.bridge_endpoint = core_resources.NsxLibBridgeEndpoint(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.logical_switch = core_resources.NsxLibLogicalSwitch(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.logical_router = core_resources.NsxLibLogicalRouter(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.switching_profile = core_resources.NsxLibSwitchingProfile(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.qos_switching_profile = core_resources.NsxLibQosSwitchingProfile(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.edge_cluster = core_resources.NsxLibEdgeCluster(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.bridge_cluster = core_resources.NsxLibBridgeCluster(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.transport_zone = core_resources.NsxLibTransportZone(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.native_dhcp_profile = core_resources.NsxLibDhcpProfile(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.native_md_proxy = core_resources.NsxLibMetadataProxy(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.firewall_section = security.NsxLibFirewallSection(
             self.client, self.nsxlib_config)
         self.ns_group = security.NsxLibNsGroup(
@@ -165,9 +165,9 @@ class NsxLib(NsxLibBase):
         self.native_dhcp = native_dhcp.NsxLibNativeDhcp(
             self.client, self.nsxlib_config)
         self.ip_block_subnet = core_resources.NsxLibIpBlockSubnet(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.ip_block = core_resources.NsxLibIpBlock(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.ip_set = security.NsxLibIPSet(
             self.client, self.nsxlib_config)
         self.logical_port = resources.LogicalPort(

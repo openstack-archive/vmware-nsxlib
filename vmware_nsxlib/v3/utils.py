@@ -136,9 +136,10 @@ def build_extra_args(body, extra_args, **kwargs):
 
 class NsxLibApiBase(object):
     """Base class for nsxlib api """
-    def __init__(self, client, nsxlib_config=None):
+    def __init__(self, client, nsxlib_config=None, nsxlib=None):
         self.client = client
         self.nsxlib_config = nsxlib_config
+        self.nsxlib = nsxlib
         super(NsxLibApiBase, self).__init__()
 
     @abc.abstractproperty
