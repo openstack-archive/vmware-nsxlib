@@ -118,13 +118,12 @@ class TimeoutSession(requests.Session):
                 # happens when server closed the connection and requests
                 # reopen it). Try reloading client cert.
                 LOG.debug("SSL error: %s, retrying.." % e)
-            except OSError as e:
-                # Lack of client cert file can come in form of OSError,
-                # in this case filename will appear in the error. Try
-                # reloading client cert.
-                if self._cert_provider.filename() not in str(e):
-                    raise e
-                # Don't expose cert file name to the logs
+            except (OSError, IOError) as e:
+                # Lack of client cert file can come in form of OSError/IOError.
+                # Try reloading client cert. No good way to narrow the error
+                # based on text since they come in different flavors.
+                # We don't print the error to avoid exposing cert file name in
+                # the logs
                 LOG.info("Reloading client certificate..")
 
         # The following with statement allows for preparing certificate and
