@@ -64,9 +64,10 @@ class TestApplicationProfile(nsxlib_testcase.NsxClientTestCase):
                                           body)
 
     def test_list_application_profiles(self):
-        with mock.patch.object(self.nsxlib.client, 'get') as get:
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
             self.nsxlib.load_balancer.application_profile.list()
-            get.assert_called_with('loadbalancer/application-profiles')
+            list_call.assert_called_with(
+                resource='loadbalancer/application-profiles')
 
     def test_get_application_profile(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
@@ -104,9 +105,10 @@ class TestPersistenceProfile(nsxlib_testcase.NsxClientTestCase):
                                           body)
 
     def test_list_persistence_profiles(self):
-        with mock.patch.object(self.nsxlib.client, 'get') as get:
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
             self.nsxlib.load_balancer.persistence_profile.list()
-            get.assert_called_with('loadbalancer/persistence-profiles')
+            list_call.assert_called_with(
+                resource='loadbalancer/persistence-profiles')
 
     def test_get_persistence_profile(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
@@ -141,9 +143,10 @@ class TestClientSslProfile(nsxlib_testcase.NsxClientTestCase):
                                           body)
 
     def test_list_client_ssl_profiles(self):
-        with mock.patch.object(self.nsxlib.client, 'get') as get:
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
             self.nsxlib.load_balancer.client_ssl_profile.list()
-            get.assert_called_with('loadbalancer/client-ssl-profiles')
+            list_call.assert_called_with(
+                resource='loadbalancer/client-ssl-profiles')
 
     def test_get_client_ssl_profile(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
@@ -178,9 +181,10 @@ class TestServerSslProfile(nsxlib_testcase.NsxClientTestCase):
                                           body)
 
     def test_list_server_ssl_profiles(self):
-        with mock.patch.object(self.nsxlib.client, 'get') as get:
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
             self.nsxlib.load_balancer.server_ssh_profile.list()
-            get.assert_called_with('loadbalancer/server-ssl-profiles')
+            list_call.assert_called_with(
+                resource='loadbalancer/server-ssl-profiles')
 
     def test_get_server_ssl_profile(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
@@ -218,9 +222,9 @@ class TestMonitor(nsxlib_testcase.NsxClientTestCase):
                                           body)
 
     def test_list_monitors(self):
-        with mock.patch.object(self.nsxlib.client, 'get') as get:
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
             self.nsxlib.load_balancer.monitor.list()
-            get.assert_called_with('loadbalancer/monitors')
+            list_call.assert_called_with(resource='loadbalancer/monitors')
 
     def test_get_monitor(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
@@ -255,9 +259,9 @@ class TestPool(nsxlib_testcase.NsxClientTestCase):
                                           body)
 
     def test_list_pools(self):
-        with mock.patch.object(self.nsxlib.client, 'get') as get:
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
             self.nsxlib.load_balancer.pool.list()
-            get.assert_called_with('loadbalancer/pools')
+            list_call.assert_called_with(resource='loadbalancer/pools')
 
     def test_get_pool(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
@@ -295,9 +299,10 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                                           body)
 
     def test_list_virtual_servers(self):
-        with mock.patch.object(self.nsxlib.client, 'get') as get:
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
             self.nsxlib.load_balancer.virtual_server.list()
-            get.assert_called_with('loadbalancer/virtual-servers')
+            list_call.assert_called_with(
+                resource='loadbalancer/virtual-servers')
 
     def test_get_virtual_server(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
@@ -335,9 +340,9 @@ class TestService(nsxlib_testcase.NsxClientTestCase):
                                           body)
 
     def test_list_services(self):
-        with mock.patch.object(self.nsxlib.client, 'get') as get:
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
             self.nsxlib.load_balancer.service.list()
-            get.assert_called_with('loadbalancer/services')
+            list_call.assert_called_with(resource='loadbalancer/services')
 
     def test_get_service(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
