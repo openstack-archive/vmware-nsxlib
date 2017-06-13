@@ -489,6 +489,44 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             test_constants.FAKE_ROUTER_UUID, router_body=fake_router)
         self.assertEqual(test_constants.FAKE_ROUTER_FW_SEC_UUID, section_id)
 
+    def _test_nat_rule_create(self, nsx_version, add_bypas_arg):
+        router = self._mocked_lrouter()
+        action = 'SNAT'
+        translated_net = '1.1.1.1'
+        priority = 10
+
+        data = {
+            'action': action,
+            'enabled': True,
+            'translated_network': translated_net,
+            'rule_priority': priority
+        }
+        if add_bypas_arg:
+            # Expect nat_pass to be sent to the backend
+            data['nat_pass'] = False
+
+        # Ignoring 'bypass_firewall' with version 1.1
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value=nsx_version):
+            router.add_nat_rule(test_constants.FAKE_ROUTER_UUID,
+                                action=action,
+                                translated_network=translated_net,
+                                rule_priority=priority,
+                                bypass_firewall=False)
+            test_client.assert_json_call(
+                'post', router,
+                ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules' %
+                    test_constants.FAKE_ROUTER_UUID),
+                data=jsonutils.dumps(data, sort_keys=True))
+
+    def test_nat_rule_create_v1(self):
+        # Ignoring 'bypass_firewall' with version 1.1
+        self._test_nat_rule_create('1.1.0', False)
+
+    def test_nat_rule_create_v2(self):
+        # Sending 'bypass_firewall' with version 1.1
+        self._test_nat_rule_create('2.0.0', True)
+
 
 class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
