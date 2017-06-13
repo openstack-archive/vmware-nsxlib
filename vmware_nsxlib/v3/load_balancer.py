@@ -68,7 +68,7 @@ class LoadBalancerBase(utils.NsxLibApiBase):
         return self.client.create(self.resource, body)
 
     def list(self):
-        return self.client.get(self.resource)
+        return self.client.list(resource=self.resource)
 
     def get(self, object_id):
         object_url = self.resource + '/' + object_id
@@ -256,6 +256,24 @@ class Service(LoadBalancerBase):
         body['attachment'] = {'target_id': logical_router_id,
                               'target_type': 'LogicalRouter'}
         return self.client.update(object_url, body)
+
+    def add_virtual_server_to_service(self, service_id, vs_id):
+        object_url = self.resource + '/' + service_id
+        body = self.client.get(object_url)
+        if 'virtual_server_ids' in body:
+            vs_list = body['virtual_server_ids']
+            vs_list.append(vs_id)
+        else:
+            vs_list = [vs_id]
+        body['virtual_server_ids'] = vs_list
+        return self.client.update(object_url, body)
+
+    def get_router_lb_service(self, nsx_router_id):
+        lb_services = self.list()['results']
+        for service in lb_services:
+            if service.get('attachment'):
+                if service['attachment']['target_id'] == nsx_router_id:
+                    return service
 
     def get_status(self, service_id):
         object_url = '%s/%s/%s' % (self.resource, service_id, 'status')
