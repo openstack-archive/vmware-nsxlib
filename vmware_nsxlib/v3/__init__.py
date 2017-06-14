@@ -93,7 +93,7 @@ class NsxLibBase(object):
         return self.general_apis.build_v3_tags_payload(
             resource, resource_type, project_name)
 
-    def reinitialize_cluster(self, resource, event, trigger, **kwargs):
+    def reinitialize_cluster(self, resource, event, trigger, payload=None):
         self.cluster._reinit_cluster()
 
     def subscribe(self, callback, event):
