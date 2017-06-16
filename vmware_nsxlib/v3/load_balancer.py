@@ -13,8 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
+
 from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3 import utils
+
+LOG = logging.getLogger(__name__)
 
 
 class ApplicationProfileTypes(object):
@@ -213,6 +217,35 @@ class Pool(LoadBalancerBase):
         body = self.client.get(object_url)
         body['members'] = members
         return self.client.update(object_url, body)
+
+    def add_monitor_to_pool(self, pool_id, monitor_id):
+        object_url = self.resource + '/' + pool_id
+        body = self.client.get(object_url)
+        if 'active_monitor_ids' in body:
+            monitor_list = body['active_monitor_ids']
+            if monitor_id not in monitor_list:
+                monitor_list.append(monitor_id)
+            else:
+                LOG.error('Monitor %s is already in pool', monitor_id)
+                return body
+        else:
+            monitor_list = [monitor_id]
+        body['active_monitor_ids'] = monitor_list
+        return self.client.update(object_url, body)
+
+    def remove_monitor_from_pool(self, pool_id, monitor_id):
+        object_url = self.resource + '/' + pool_id
+        body = self.client.get(object_url)
+        monitor_list = body.get('active_monitor_ids')
+        if monitor_list and monitor_id in monitor_list:
+            monitor_list.remove(monitor_id)
+            body['active_monitor_ids'] = monitor_list
+            return self.client.update(object_url, body)
+        else:
+            ops = ('removing monitor %s from pool active_monitor_ids %s'
+                   'as it is not in the list', monitor_id, monitor_list)
+            raise nsxlib_exc.ResourceNotFound(
+                manager=self.client.nsx_api_managers, operation=ops)
 
 
 class VirtualServer(LoadBalancerBase):

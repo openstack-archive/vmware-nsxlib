@@ -18,6 +18,7 @@ import mock
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import test_constants as consts
+from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3 import load_balancer
 
 
@@ -276,6 +277,48 @@ class TestPool(nsxlib_testcase.NsxClientTestCase):
             self.nsxlib.load_balancer.pool.delete(fake_profile['id'])
             delete.assert_called_with(
                 'loadbalancer/pools/%s' % fake_profile['id'])
+
+    def test_remove_monitor_from_pool(self):
+        fake_pool = consts.FAKE_POOL.copy()
+        fake_pool['active_monitor_ids'] = [consts.FAKE_MONITOR_UUID]
+        body = {'display_name': fake_pool['display_name'],
+                'description': fake_pool['description'],
+                'id': fake_pool['id'],
+                'algorithm': fake_pool['algorithm'],
+                'active_monitor_ids': []}
+        with mock.patch.object(self.nsxlib.client, 'get',
+                               return_value=fake_pool):
+            with mock.patch.object(self.nsxlib.client, 'update') as update:
+                self.nsxlib.load_balancer.pool.remove_monitor_from_pool(
+                    fake_pool['id'], consts.FAKE_MONITOR_UUID)
+                resource = 'loadbalancer/pools/%s' % fake_pool['id']
+                update.assert_called_with(resource, body)
+
+    def test_remove_non_exist_monitor_from_pool(self):
+        fake_pool = consts.FAKE_POOL.copy()
+        fake_pool['active_monitor_ids'] = [consts.FAKE_MONITOR_UUID]
+        with mock.patch.object(self.nsxlib.client, 'get',
+                               return_value=fake_pool):
+            self.assertRaises(
+                nsxlib_exc.ResourceNotFound,
+                self.nsxlib.load_balancer.pool.remove_monitor_from_pool,
+                fake_pool['id'],
+                'xxx-yyy')
+
+    def test_add_monitor_to_pool(self):
+        fake_pool = consts.FAKE_POOL.copy()
+        body = {'display_name': fake_pool['display_name'],
+                'description': fake_pool['description'],
+                'id': fake_pool['id'],
+                'algorithm': fake_pool['algorithm'],
+                'active_monitor_ids': [consts.FAKE_MONITOR_UUID]}
+        with mock.patch.object(self.nsxlib.client, 'get',
+                               return_value=fake_pool):
+            with mock.patch.object(self.nsxlib.client, 'update') as update:
+                self.nsxlib.load_balancer.pool.add_monitor_to_pool(
+                    fake_pool['id'], consts.FAKE_MONITOR_UUID)
+                resource = 'loadbalancer/pools/%s' % fake_pool['id']
+                update.assert_called_with(resource, body)
 
 
 class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
