@@ -118,6 +118,7 @@ ERR_CODE_IPAM_RANGE_SHRUNK = 5016
 # backend versions
 NSX_VERSION_1_1_0 = '1.1.0'
 NSX_VERSION_2_0_0 = '2.0.0'
+NSX_VERSION_2_1_0 = '2.1.0'
 
 # Features available depending on the backend version
 FEATURE_MAC_LEARNING = 'MAC Learning'
