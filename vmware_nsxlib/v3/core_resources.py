@@ -16,6 +16,7 @@
 import collections
 
 from oslo_log import log
+from oslo_log import versionutils
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
@@ -349,11 +350,12 @@ class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
         return self.client.create(self.get_path(), body)
 
     def update(self, profile_id, tags, name=None, description=None):
-        # TODO(asarfaty): tags are never used here
         # get the current configuration
         body = self.get(profile_id)
         # update the relevant fields
         body = self._update_args(body, name, description)
+        if tags is not None:
+            body['tags'] = tags
         return self._update_resource_with_retry(
             self.get_path(profile_id), body)
 
@@ -364,6 +366,10 @@ class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
                        average_bandwidth=None,
                        qos_marking=None, dscp=None,
                        direction=nsx_constants.INGRESS):
+        versionutils.report_deprecated_feature(
+            LOG,
+            'NsxLibQosSwitchingProfile.update_shaping is deprecated. '
+            'Please use set_profile_shaping instead.')
         # get the current configuration
         body = self.get(profile_id)
         # update the relevant fields
@@ -376,6 +382,49 @@ class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
         else:
             body = self._disable_shaping_in_args(body, direction=direction)
         body = self._update_dscp_in_args(body, qos_marking, dscp)
+        return self._update_resource_with_retry(
+            self.get_path(profile_id), body)
+
+    def set_profile_shaping(self, profile_id,
+                            ingress_bw_enabled=False,
+                            ingress_burst_size=None,
+                            ingress_peak_bandwidth=None,
+                            ingress_average_bandwidth=None,
+                            egress_bw_enabled=False,
+                            egress_burst_size=None,
+                            egress_peak_bandwidth=None,
+                            egress_average_bandwidth=None,
+                            qos_marking='trusted', dscp=None):
+        """Set all shaping parameters in the QoS switch profile"""
+        # get the current configuration
+        body = self.get(profile_id)
+
+        # update the ingress shaping
+        if ingress_bw_enabled:
+            body = self._enable_shaping_in_args(
+                body, burst_size=ingress_burst_size,
+                peak_bandwidth=ingress_peak_bandwidth,
+                average_bandwidth=ingress_average_bandwidth,
+                direction=nsx_constants.INGRESS)
+        else:
+            body = self._disable_shaping_in_args(
+                body, direction=nsx_constants.INGRESS)
+
+        # update the egress shaping
+        if egress_bw_enabled:
+            body = self._enable_shaping_in_args(
+                body, burst_size=egress_burst_size,
+                peak_bandwidth=egress_peak_bandwidth,
+                average_bandwidth=egress_average_bandwidth,
+                direction=nsx_constants.EGRESS)
+        else:
+            body = self._disable_shaping_in_args(
+                body, direction=nsx_constants.EGRESS)
+
+        # update dscp marking
+        body = self._update_dscp_in_args(body, qos_marking, dscp)
+
+        # update the profile in the backend
         return self._update_resource_with_retry(
             self.get_path(profile_id), body)
 
