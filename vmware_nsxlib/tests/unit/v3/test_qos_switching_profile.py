@@ -48,8 +48,10 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
                            average_bandwidth=None,
                            description=test_constants.FAKE_NAME,
                            qos_marking=None,
-                           dscp=0, direction=nsx_constants.EGRESS):
-        body = copy.deepcopy(test_constants.FAKE_QOS_PROFILE)
+                           dscp=0, direction=nsx_constants.EGRESS,
+                           body=None):
+        if body is None:
+            body = copy.deepcopy(test_constants.FAKE_QOS_PROFILE)
         body["display_name"] = test_constants.FAKE_NAME
         body["description"] = description
 
@@ -221,3 +223,58 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
             delete.assert_called_with(
                 'switching-profiles/%s'
                 % test_constants.FAKE_QOS_PROFILE['id'])
+
+    def test_qos_switching_profile_set_shaping(self):
+        """Test updating a qos-switching profile
+
+        returns the correct response
+        """
+        egress_peak_bandwidth = 200
+        egress_average_bandwidth = 300
+        egress_burst_size = 500
+        ingress_peak_bandwidth = 100
+        ingress_average_bandwidth = 400
+        ingress_burst_size = 600
+        qos_marking = "untrusted"
+        dscp = 10
+
+        original_profile = self._body_with_shaping()
+        with mock.patch.object(self.nsxlib.client, 'get',
+                               return_value=original_profile):
+            with mock.patch.object(self.nsxlib.client, 'update') as update:
+                # update the bw shaping of the profile
+                self.nsxlib.qos_switching_profile.set_profile_shaping(
+                    test_constants.FAKE_QOS_PROFILE['id'],
+                    ingress_bw_enabled=True,
+                    ingress_burst_size=ingress_burst_size,
+                    ingress_peak_bandwidth=ingress_peak_bandwidth,
+                    ingress_average_bandwidth=ingress_average_bandwidth,
+                    egress_bw_enabled=True,
+                    egress_burst_size=egress_burst_size,
+                    egress_peak_bandwidth=egress_peak_bandwidth,
+                    egress_average_bandwidth=egress_average_bandwidth,
+                    qos_marking=qos_marking,
+                    dscp=dscp)
+
+                actual_body = copy.deepcopy(update.call_args[0][1])
+                actual_path = update.call_args[0][0]
+                expected_path = ('switching-profiles/%s' %
+                                 test_constants.FAKE_QOS_PROFILE['id'])
+                expected_body = self._body_with_shaping(
+                    shaping_enabled=True,
+                    burst_size=egress_burst_size,
+                    peak_bandwidth=egress_peak_bandwidth,
+                    average_bandwidth=egress_average_bandwidth,
+                    qos_marking="untrusted", dscp=10,
+                    direction=nsx_constants.EGRESS)
+                # Add the other direction to the body
+                expected_body = self._body_with_shaping(
+                    shaping_enabled=True,
+                    burst_size=ingress_burst_size,
+                    peak_bandwidth=ingress_peak_bandwidth,
+                    average_bandwidth=ingress_average_bandwidth,
+                    direction=nsx_constants.INGRESS,
+                    body=expected_body)
+
+                self.assertEqual(expected_path, actual_path)
+                self.assertEqual(expected_body, actual_body)
