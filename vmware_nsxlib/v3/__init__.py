@@ -269,6 +269,10 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
 
         return _do_update()
 
+    def list(self):
+        resource = 'logical-switches'
+        return self.client.list(resource)
+
 
 class NsxLibQosSwitchingProfile(utils.NsxLibApiBase):
 
