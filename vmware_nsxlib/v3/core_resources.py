@@ -483,6 +483,15 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         resource = 'logical-routers/%s/nat/rules' % logical_router_id
         return self._delete_resource_by_values(resource, **kwargs)
 
+    def list_nat_rules(self, logical_router_id):
+        resource = 'logical-routers/%s/nat/rules' % logical_router_id
+        return self.client.list(resource)
+
+    def update_nat_rule(self, logical_router_id, nat_rule_id, **kwargs):
+        resource = 'logical-routers/%s/nat/rules/%s' % (
+            logical_router_id, nat_rule_id)
+        return self._update_resource_with_retry(resource, kwargs)
+
     def update_advertisement(self, logical_router_id, **kwargs):
         resource = ('logical-routers/%s/routing/advertisement' %
                     logical_router_id)
