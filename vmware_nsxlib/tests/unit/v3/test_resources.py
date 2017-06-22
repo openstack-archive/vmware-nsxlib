@@ -527,6 +527,28 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
         # Sending 'bypass_firewall' with version 1.1
         self._test_nat_rule_create('2.0.0', True)
 
+    def test_nat_rule_list(self):
+        router = self._mocked_lrouter()
+        router.list_nat_rules(test_constants.FAKE_ROUTER_UUID)
+        test_client.assert_json_call(
+            'get', router,
+            ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules' %
+                test_constants.FAKE_ROUTER_UUID))
+
+    def test_nat_rule_update(self):
+        router = self._mocked_lrouter()
+        rule_id = '123'
+        with mock.patch.object(router.client, 'get',
+                               return_value={'id': rule_id}):
+            router.update_nat_rule(test_constants.FAKE_ROUTER_UUID,
+                                   rule_id, nat_pass=False)
+            data = {'id': rule_id, 'nat_pass': False}
+            test_client.assert_json_call(
+                'put', router,
+                ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules' %
+                    test_constants.FAKE_ROUTER_UUID),
+                data=jsonutils.dumps(data, sort_keys=True))
+
 
 class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
