@@ -128,10 +128,12 @@ class RouterLib(object):
             logical_router_id,
             translated_network=gw_ip)
 
-    def add_gw_snat_rule(self, logical_router_id, gw_ip, bypass_firewall=True):
+    def add_gw_snat_rule(self, logical_router_id, gw_ip, source_net=None,
+                         bypass_firewall=True):
         return self.nsxlib.logical_router.add_nat_rule(
             logical_router_id, action="SNAT",
             translated_network=gw_ip,
+            source_net=source_net,
             rule_priority=GW_NAT_PRI,
             bypass_firewall=bypass_firewall)
 
