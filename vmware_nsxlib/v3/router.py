@@ -124,9 +124,31 @@ class RouterLib(object):
             enabled=enabled)
 
     def delete_gw_snat_rule(self, logical_router_id, gw_ip):
+        """Delete router snat rule matching the gw ip
+
+        assuming there is only one
+        """
         return self.nsxlib.logical_router.delete_nat_rule_by_values(
             logical_router_id,
             translated_network=gw_ip)
+
+    def delete_gw_snat_rule_by_source(self, logical_router_id, gw_ip,
+                                      source_net, skip_not_found=False):
+        """Delete router snat rule matching the gw ip & source"""
+        return self.nsxlib.logical_router.delete_nat_rule_by_values(
+            logical_router_id,
+            translated_network=gw_ip,
+            match_source_network=source_net,
+            # Do not fail or warn if not found, unless asked for
+            skip_not_found=skip_not_found, strict_mode=(not skip_not_found))
+
+    def delete_gw_snat_rules(self, logical_router_id, gw_ip):
+        """Delete all the snat rules on the router with a specific gw ip"""
+        return self.nsxlib.logical_router.delete_nat_rule_by_values(
+            logical_router_id,
+            translated_network=gw_ip,
+            # Do not fail or warn if not found
+            skip_not_found=True, strict_mode=False)
 
     def add_gw_snat_rule(self, logical_router_id, gw_ip, source_net=None,
                          bypass_firewall=True):

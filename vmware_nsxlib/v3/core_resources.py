@@ -436,10 +436,19 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         return 'logical-routers'
 
     def _delete_resource_by_values(self, resource,
-                                   skip_not_found=True, **kwargs):
-        resources_get = self.client.get(resource)
+                                   skip_not_found=True,
+                                   strict_mode=True,
+                                   **kwargs):
+        """Delete resource objects matching the values in kwargs
+
+        If skip_not_found is True - do not raise an exception if no object was
+        found.
+        If strict_mode is True - warnings will be issued if 0 or >1 objects
+        where deleted.
+        """
+        resources_list = self.client.list(resource)
         matched_num = 0
-        for res in resources_get['results']:
+        for res in resources_list['results']:
             if utils.dict_match(kwargs, res):
                 LOG.debug("Deleting %s from resource %s", res, resource)
                 delete_resource = resource + "/" + str(res['id'])
@@ -447,17 +456,18 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                 matched_num = matched_num + 1
         if matched_num == 0:
             if skip_not_found:
-                LOG.warning("No resource in %(res)s matched for values: "
-                            "%(values)s", {'res': resource,
-                                           'values': kwargs})
+                if strict_mode:
+                    LOG.warning("No resource in %(res)s matched for values: "
+                                "%(values)s", {'res': resource,
+                                               'values': kwargs})
             else:
                 err_msg = (_("No resource in %(res)s matched for values: "
                              "%(values)s") % {'res': resource,
                                               'values': kwargs})
                 raise exceptions.ResourceNotFound(
-                    manager=self.cluster.nsx_api_managers,
+                    manager=self.client.nsx_api_managers,
                     operation=err_msg)
-        elif matched_num > 1:
+        elif matched_num > 1 and strict_mode:
             LOG.warning("%(num)s resources in %(res)s matched for values: "
                         "%(values)s", {'num': matched_num,
                                        'res': resource,
@@ -528,9 +538,16 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                                                         nat_rule_id)
         self.client.delete(resource)
 
-    def delete_nat_rule_by_values(self, logical_router_id, **kwargs):
+    def delete_nat_rule_by_values(self, logical_router_id,
+                                  strict_mode=True,
+                                  skip_not_found=True,
+                                  **kwargs):
         resource = 'logical-routers/%s/nat/rules' % logical_router_id
-        return self._delete_resource_by_values(resource, **kwargs)
+        return self._delete_resource_by_values(
+            resource,
+            skip_not_found=skip_not_found,
+            strict_mode=strict_mode,
+            **kwargs)
 
     def list_nat_rules(self, logical_router_id):
         resource = 'logical-routers/%s/nat/rules' % logical_router_id

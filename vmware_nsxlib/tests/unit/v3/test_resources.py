@@ -549,6 +549,47 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
                     (test_constants.FAKE_ROUTER_UUID, rule_id)),
                 data=jsonutils.dumps(data, sort_keys=True))
 
+    def test_delete_nat_rule_by_gw(self):
+        router = self._mocked_lrouter()
+        rule_id = '123'
+        gw_ip = '3.3.3.3'
+        existing_rules = [{
+            'translated_network': gw_ip,
+            'logical_router_id': test_constants.FAKE_ROUTER_UUID,
+            'id': rule_id,
+            'action': 'SNAT',
+            'resource_type': 'NatRule'}]
+        with mock.patch.object(router.client, 'list',
+                               return_value={'results': existing_rules}):
+            router.delete_nat_rule_by_values(test_constants.FAKE_ROUTER_UUID,
+                                             translated_network=gw_ip)
+            test_client.assert_json_call(
+                'delete', router,
+                ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules/%s' %
+                    (test_constants.FAKE_ROUTER_UUID, rule_id)))
+
+    def test_delete_nat_rule_by_gw_and_source(self):
+        router = self._mocked_lrouter()
+        rule_id = '123'
+        gw_ip = '3.3.3.3'
+        source_net = '4.4.4.4'
+        existing_rules = [{
+            'translated_network': gw_ip,
+            'logical_router_id': test_constants.FAKE_ROUTER_UUID,
+            'id': rule_id,
+            'match_source_network': source_net,
+            'action': 'SNAT',
+            'resource_type': 'NatRule'}]
+        with mock.patch.object(router.client, 'list',
+                               return_value={'results': existing_rules}):
+            router.delete_nat_rule_by_values(test_constants.FAKE_ROUTER_UUID,
+                                             translated_network=gw_ip,
+                                             match_source_network=source_net)
+            test_client.assert_json_call(
+                'delete', router,
+                ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules/%s' %
+                    (test_constants.FAKE_ROUTER_UUID, rule_id)))
+
 
 class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
