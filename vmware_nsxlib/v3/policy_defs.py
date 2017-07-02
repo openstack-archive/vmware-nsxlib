@@ -23,6 +23,11 @@ TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
 COMM_PROF_PATH_PATTERN = TENANTS_PATH_PATTERN + "communication-profiles/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
+REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
+                     "realized-state/enforcement-points/%s/")
+REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/%s-%s"
+REALIZED_STATE_COMM_MAP = REALIZED_STATE_EF + "firewalls/firewall-sections/%s"
+REALIZED_STATE_SERVICE = REALIZED_STATE_EF + "services/nsservices/services:%s"
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -157,6 +162,7 @@ class GroupDef(ResourceDef):
         self.id = group_id
         self.name = name
         self.description = description
+        self.domain_id = domain_id
         self.parent_ids = (tenant, domain_id)
         if conditions and isinstance(conditions, Condition):
             self.conditions = [conditions]
@@ -184,6 +190,10 @@ class GroupDef(ResourceDef):
                                   for cond in kwargs['conditions']]
             del kwargs['conditions']
         super(GroupDef, self).update_attributes_in_body(body=body, **kwargs)
+
+    def get_realized_state_path(self, ef_id):
+        return REALIZED_STATE_GROUP % (self.tenant, ef_id,
+                                       self.domain_id, self.id)
 
 
 class ServiceDef(ResourceDef):
@@ -213,6 +223,10 @@ class ServiceDef(ResourceDef):
     @staticmethod
     def sub_entries_path():
         return L4ServiceEntryDef().get_last_section_dict_key
+
+    def get_realized_state_path(self, ef_id):
+        return REALIZED_STATE_SERVICE % (self.tenant, ef_id,
+                                         self.id)
 
 
 class L4ServiceEntryDef(ResourceDef):
@@ -341,11 +355,15 @@ class CommunicationMapDef(ResourceDef):
                  tenant=policy_constants.POLICY_INFRA_TENANT):
         super(CommunicationMapDef, self).__init__()
         self.tenant = tenant
+        self.domain_id = domain_id
         self.parent_ids = (tenant, domain_id)
 
     @property
     def path_pattern(self):
         return (DOMAINS_PATH_PATTERN + "%s/communication-map/")
+
+    def get_realized_state_path(self, ef_id):
+        return REALIZED_STATE_COMM_MAP % (self.tenant, ef_id, self.domain_id)
 
 
 class CommunicationMapEntryDef(ResourceDef):
@@ -483,6 +501,9 @@ class EnforcementPointDef(ResourceDef):
         super(EnforcementPointDef, self).update_attributes_in_body(
             body=body, **kwargs)
 
+    def get_realized_state_path(self):
+        return REALIZED_STATE_EF % (self.tenant, self.id)
+
 
 # Currently assumes one deployment point per id
 class DeploymentMapDef(ResourceDef):
@@ -581,3 +602,6 @@ class NsxPolicyApi(object):
     def list(self, resource_def):
         path = resource_def.get_section_path()
         return self.client.list(path)
+
+    def get_by_path(self, path):
+        return self.client.get(path)
