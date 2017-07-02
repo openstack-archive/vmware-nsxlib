@@ -75,6 +75,15 @@ class NsxPolicyResourceBase(object):
             if obj.get('display_name') == name:
                 return obj
 
+    def _get_realized_state(self, path):
+        try:
+            result = self.policy_api.get_by_path(path)
+            if result and result.get('state'):
+                return result['state']
+        except exceptions.BackendResourceNotFound:
+            # resource not deployed yet
+            LOG.warning("No realized state found for %s", path)
+
 
 class NsxPolicyDomainApi(NsxPolicyResourceBase):
     """NSX Policy Domain."""
@@ -214,6 +223,14 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         # update the backend
         return self.policy_api.create_or_update(group_def)
 
+    def get_realized_state(self, domain_id, group_id, ep_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        group_def = policy_defs.GroupDef(domain_id=domain_id,
+                                         group_id=group_id,
+                                         tenant=tenant)
+        path = group_def.get_realized_state_path(ep_id)
+        return self._get_realized_state(path)
+
 
 class NsxPolicyL4ServiceApi(NsxPolicyResourceBase):
     """NSX Policy Service (with a single L4 service entry).
@@ -309,6 +326,13 @@ class NsxPolicyL4ServiceApi(NsxPolicyResourceBase):
 
         # re-read the service from the backend to return the current data
         return self.get(service_id, tenant=tenant)
+
+    def get_realized_state(self, service_id, ep_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        service_def = policy_defs.ServiceDef(service_id=service_id,
+                                             tenant=tenant)
+        path = service_def.get_realized_state_path(ep_id)
+        return self._get_realized_state(path)
 
 
 class NsxPolicyCommunicationProfileApi(NsxPolicyResourceBase):
@@ -538,6 +562,12 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         # update the backend
         return self.policy_api.create_or_update(map_def)
 
+    def get_realized_state(self, domain_id, ep_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        map_def = policy_defs.CommunicationMapDef(domain_id, tenant)
+        path = map_def.get_realized_state_path(ep_id)
+        return self._get_realized_state(path)
+
 
 class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
     """NSX Policy Enforcement Point."""
@@ -601,6 +631,12 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
                                          thumbprint=thumbprint)
         # update the backend
         return self.policy_api.create_or_update(ep_def)
+
+    def get_realized_state(self, ep_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        ep_def = policy_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
+        path = ep_def.get_realized_state_path()
+        return self._get_realized_state(path)
 
 
 class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
