@@ -147,6 +147,43 @@ class NsxLibBase(object):
             if cursor >= result_count:
                 return results
 
+    def get_id_by_resource_and_tag(self, resource_type, scope, tag,
+                                   alert_not_found=False,
+                                   alert_multiple=False):
+        """Search a resource type by 1 scope&tag.
+
+        Return the id of the result only if it is single.
+        """
+        query_tags = [{'scope': utils.escape_tag_data(scope),
+                       'tag': utils.escape_tag_data(tag)}]
+        query_result = self.search_by_tags(
+            tags=query_tags, resource_type=resource_type)
+        if not query_result['result_count']:
+            if alert_not_found:
+                msg = _("No %(type)s found for tag '%(scope)s:%(tag)s'") % {
+                    'type': resource_type,
+                    'scope': scope,
+                    'tag': tag}
+                LOG.warning(msg)
+                raise exceptions.ResourceNotFound(
+                    manager=self.nsxlib_config.nsx_api_managers,
+                    operation=msg)
+        elif query_result['result_count'] == 1:
+            return query_result['results'][0]['id']
+        else:
+            # multiple results
+            if alert_multiple:
+                msg = _("Multiple %(type)s found for tag '%(scope)s:"
+                        "%(tag)s'") % {
+                    'type': resource_type,
+                    'scope': scope,
+                    'tag': tag}
+                LOG.warning(msg)
+                raise exceptions.ManagerError(
+                    manager=self.nsxlib_config.nsx_api_managers,
+                    operation=msg,
+                    details='')
+
     def _build_query(self, tags):
         try:
             return " AND ".join(['tags.scope:%(scope)s AND '

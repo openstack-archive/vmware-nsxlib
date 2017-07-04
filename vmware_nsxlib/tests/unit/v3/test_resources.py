@@ -979,3 +979,37 @@ class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
                 mock.call('search?query=%s' % query),
                 mock.call('search?query=%s&cursor=2' % query)])
             self.assertEqual(3, len(results))
+
+    def test_get_id_by_resource_and_tag(self):
+        id = 'test'
+        scope = 'user'
+        tag = 'k8s'
+        res_type = 'LogicalPort'
+        results = {'result_count': 1, 'results': [{'id': id}]}
+        with mock.patch.object(self.nsxlib.client, 'url_get',
+                               return_value=results):
+            actual_id = self.nsxlib.get_id_by_resource_and_tag(
+                res_type, scope, tag)
+            self.assertEqual(id, actual_id)
+
+    def test_get_id_by_resource_and_tag_not_found(self):
+        scope = 'user'
+        tag = 'k8s'
+        res_type = 'LogicalPort'
+        results = {'result_count': 0, 'results': []}
+        with mock.patch.object(self.nsxlib.client, 'url_get',
+                               return_value=results):
+            self.assertRaises(exceptions.ResourceNotFound,
+                              self.nsxlib.get_id_by_resource_and_tag,
+                              res_type, scope, tag, alert_not_found=True)
+
+    def test_get_id_by_resource_and_tag_multiple(self):
+        scope = 'user'
+        tag = 'k8s'
+        res_type = 'LogicalPort'
+        results = {'result_count': 2, 'results': [{'id': '1'}, {'id': '2'}]}
+        with mock.patch.object(self.nsxlib.client, 'url_get',
+                               return_value=results):
+            self.assertRaises(exceptions.ManagerError,
+                              self.nsxlib.get_id_by_resource_and_tag,
+                              res_type, scope, tag, alert_multiple=True)
