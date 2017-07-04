@@ -932,6 +932,22 @@ class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
             self.nsxlib.search_by_tags(tags=user_tags, resource_type=res_type)
             search.assert_called_with('search?query=%s' % query)
 
+    def test_nsx_search_tags_and_cursor(self):
+        """Test search of resources with the specified tag and cursor."""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            user_tags = [{'scope': 'user', 'tag': 'k8s'}]
+            query = self.nsxlib._build_query(tags=user_tags)
+            self.nsxlib.search_by_tags(tags=user_tags, cursor=50)
+            search.assert_called_with('search?query=%s&cursor=50' % query)
+
+    def test_nsx_search_tags_and_page_size(self):
+        """Test search of resources with the specified tag and page size."""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            user_tags = [{'scope': 'user', 'tag': 'k8s'}]
+            query = self.nsxlib._build_query(tags=user_tags)
+            self.nsxlib.search_by_tags(tags=user_tags, page_size=100)
+            search.assert_called_with('search?query=%s&page_size=100' % query)
+
     def test_nsx_search_invalid_query_fail(self):
         """Test search query failure for missing tag argument."""
         self.assertRaises(exceptions.NsxSearchInvalidQuery,
