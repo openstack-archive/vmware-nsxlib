@@ -101,7 +101,8 @@ class NsxLibBase(object):
 
     # TODO(abhiraut): Revisit this method to generate complex boolean
     #                 queries to search resources.
-    def search_by_tags(self, tags, resource_type=None):
+    def search_by_tags(self, tags, resource_type=None, cursor=None,
+                       page_size=None):
         """Return the list of resources searched based on tags.
 
         Currently the query only supports AND boolean operator.
@@ -110,6 +111,9 @@ class NsxLibBase(object):
                      {'scope': <scope_key>, 'tag': <tag_value>}
         :param resource_type: Optional string parameter to limit the
                               scope of the search to the given ResourceType.
+        :param cursor: Opaque cursor to be used for getting next page of
+                       records (supplied by current result page).
+        :param page_size: Maximum number of results to return in this page.
         """
         if not tags:
             reason = _("Missing required argument 'tags'")
@@ -122,7 +126,27 @@ class NsxLibBase(object):
         else:
             query = query_tags
         url = "search?query=%s" % query
+        if cursor:
+            url += "&cursor=%d" % cursor
+        if page_size:
+            url += "&page_size=%d" % page_size
         return self.client.url_get(url)
+
+    def search_all_by_tags(self, tags, resource_type=None):
+        """Return all the results searched based on tags."""
+        results = []
+        cursor = 0
+        while True:
+            response = self.search_by_tags(resource_type=resource_type,
+                                           tags=tags, cursor=cursor)
+            if response['results']:
+                results.extend(response['results'])
+            # cursor would be missing if no result is found
+            if 'cursor' in response:
+                cursor = int(response['cursor'])
+            result_count = int(response['result_count'])
+            if not response['results'] or cursor >= result_count:
+                return results
 
     def _build_query(self, tags):
         try:
