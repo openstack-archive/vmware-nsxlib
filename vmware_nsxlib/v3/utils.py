@@ -134,6 +134,13 @@ def build_extra_args(body, extra_args, **kwargs):
     return body
 
 
+def escape_tag_data(data):
+    # ElasticSearch query_string requires slashes and dashes to
+    # be escaped. We assume no other reserved characters will be
+    # used in tag scopes or values
+    return data.replace('/', '\\/').replace('-', '\\-')
+
+
 class NsxLibApiBase(object):
     """Base class for nsxlib api """
     def __init__(self, client, nsxlib_config=None, nsxlib=None):
