@@ -14,10 +14,10 @@
 #    under the License.
 
 import abc
-import tenacity
 
 from neutron_lib import exceptions
 from oslo_log import log
+import tenacity
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions

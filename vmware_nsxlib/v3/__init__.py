@@ -14,10 +14,10 @@
 #    under the License.
 
 import abc
-import six
-
 from distutils import version
+
 from oslo_log import log
+import six
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import client

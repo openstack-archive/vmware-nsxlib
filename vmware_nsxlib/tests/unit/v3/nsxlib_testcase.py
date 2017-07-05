@@ -14,9 +14,9 @@
 # limitations under the License.
 #
 import copy
-import mock
 import unittest
 
+import mock
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 from requests import exceptions as requests_exceptions

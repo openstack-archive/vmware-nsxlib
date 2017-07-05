@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import mock
-import six.moves.urllib.parse as urlparse
 import unittest
 
+import mock
 from oslo_serialization import jsonutils
 from requests import exceptions as requests_exceptions
+import six.moves.urllib.parse as urlparse
 
 from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase

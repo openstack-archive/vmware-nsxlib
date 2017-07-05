@@ -14,11 +14,11 @@
 #    under the License.
 
 import datetime
-from OpenSSL import crypto
 from time import time
 import uuid
 
 from neutron_lib import exceptions
+from OpenSSL import crypto
 from oslo_log import log
 
 from vmware_nsxlib._i18n import _
