@@ -17,20 +17,21 @@ import abc
 import contextlib
 import copy
 import datetime
-import eventlet
 import itertools
 import logging
+
+import eventlet
+from eventlet import greenpool
+from eventlet import pools
 import OpenSSL
+from oslo_log import log
+from oslo_service import loopingcall
 import requests
+from requests import adapters
+from requests import exceptions as requests_exceptions
 import six
 import six.moves.urllib.parse as urlparse
 
-from eventlet import greenpool
-from eventlet import pools
-from oslo_log import log
-from oslo_service import loopingcall
-from requests import adapters
-from requests import exceptions as requests_exceptions
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import client as nsx_client
 from vmware_nsxlib.v3 import exceptions

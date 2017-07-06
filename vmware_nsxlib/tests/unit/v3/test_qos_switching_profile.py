@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 import copy
-import mock
 
+import mock
 from oslo_log import log
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase

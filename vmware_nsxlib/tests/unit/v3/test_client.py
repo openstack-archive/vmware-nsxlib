@@ -14,10 +14,10 @@
 #    under the License.
 #
 import copy
-import requests
 
 from oslo_log import log
 from oslo_serialization import jsonutils
+import requests
 
 from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase

@@ -15,10 +15,10 @@
 #
 
 import abc
-import six
 import uuid
 
 from oslo_log import log as logging
+import six
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions

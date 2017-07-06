@@ -14,12 +14,12 @@
 #    under the License.
 #
 import re
-import requests
-import six.moves.urllib.parse as urlparse
 import time
 
 from oslo_log import log
 from oslo_serialization import jsonutils
+import requests
+import six.moves.urllib.parse as urlparse
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import utils
