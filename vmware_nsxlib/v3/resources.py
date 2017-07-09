@@ -249,6 +249,11 @@ class LogicalRouterPort(utils.NsxLibApiBase):
     def uri_segment(self):
         return 'logical-router-ports'
 
+    @staticmethod
+    def _get_relay_binding(relay_service_uuid):
+        return {'service_id': {'target_type': 'LogicalService',
+                               'target_id': relay_service_uuid}}
+
     def create(self, logical_router_id,
                display_name,
                tags,
@@ -256,7 +261,8 @@ class LogicalRouterPort(utils.NsxLibApiBase):
                logical_port_id,
                address_groups,
                edge_cluster_member_index=None,
-               urpf_mode=None):
+               urpf_mode=None,
+               relay_service_uuid=None):
         body = {'display_name': display_name,
                 'resource_type': resource_type,
                 'logical_router_id': logical_router_id,
@@ -276,6 +282,15 @@ class LogicalRouterPort(utils.NsxLibApiBase):
             body['edge_cluster_member_index'] = edge_cluster_member_index
         if urpf_mode:
             body['urpf_mode'] = urpf_mode
+        if relay_service_uuid:
+            if (self.nsxlib and
+                self.nsxlib.feature_supported(
+                    nsx_constants.FEATURE_DHCP_RELAY)):
+                body['service_bindings'] = [self._get_relay_binding(
+                    relay_service_uuid)]
+            else:
+                LOG.error("Ignoring relay_service_uuid for router %s port: "
+                          "This feature is not supported.", logical_router_id)
 
         return self.client.create(self.get_path(), body=body)
 
@@ -286,6 +301,25 @@ class LogicalRouterPort(utils.NsxLibApiBase):
             max_attempts=self.client.max_attempts)
         def _do_update():
             logical_router_port = self.get(logical_port_id)
+            # special treatment for updating/removing the relay service
+            if 'relay_service_uuid' in kwargs:
+                if kwargs['relay_service_uuid']:
+                    if (self.nsxlib and
+                        self.nsxlib.feature_supported(
+                            nsx_constants.FEATURE_DHCP_RELAY)):
+                        logical_router_port['service_bindings'] = [
+                            self._get_relay_binding(
+                                kwargs['relay_service_uuid'])]
+                    else:
+                        LOG.error("Ignoring relay_service_uuid for router "
+                                  "port %s: This feature is not supported.",
+                                  logical_port_id)
+                else:
+                    # delete the current one
+                    if 'service_bindings' in logical_router_port:
+                        logical_router_port['service_bindings'] = []
+                del kwargs['relay_service_uuid']
+
             for k in kwargs:
                 logical_router_port[k] = kwargs[k]
             # If revision_id of the payload that we send is older than what
