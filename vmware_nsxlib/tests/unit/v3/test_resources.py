@@ -18,6 +18,7 @@ import copy
 import mock
 
 from oslo_serialization import jsonutils
+from oslo_utils import uuidutils
 
 from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
@@ -603,26 +604,32 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
         returns the correct response and 201 status
         """
         fake_router_port = test_constants.FAKE_ROUTER_PORT.copy()
-
+        fake_relay_uuid = uuidutils.generate_uuid()
         lrport = self._mocked_lrport()
-
-        lrport.create(fake_router_port['logical_router_id'],
-                      fake_router_port['display_name'],
-                      None,
-                      fake_router_port['resource_type'],
-                      None, None, None)
 
         data = {
             'display_name': fake_router_port['display_name'],
             'logical_router_id': fake_router_port['logical_router_id'],
             'resource_type': fake_router_port['resource_type'],
-            'tags': []
+            'tags': [],
+            'service_bindings': [{'service_id': {
+                'target_type': 'LogicalService',
+                'target_id': fake_relay_uuid}}]
         }
 
-        test_client.assert_json_call(
-            'post', lrport,
-            'https://1.2.3.4/api/v1/logical-router-ports',
-            data=jsonutils.dumps(data, sort_keys=True))
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.0.0'):
+            lrport.create(fake_router_port['logical_router_id'],
+                          fake_router_port['display_name'],
+                          None,
+                          fake_router_port['resource_type'],
+                          None, None, None,
+                          relay_service_uuid=fake_relay_uuid)
+
+            test_client.assert_json_call(
+                'post', lrport,
+                'https://1.2.3.4/api/v1/logical-router-ports',
+                data=jsonutils.dumps(data, sort_keys=True))
 
     def test_logical_router_port_max_attempts(self):
         """Test a router port api has the configured retries."""
@@ -640,6 +647,32 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'delete', lrport,
             'https://1.2.3.4/api/v1/logical-router-ports/%s' % uuid)
+
+    def test_update_logical_router_port(self):
+        fake_router_port = test_constants.FAKE_ROUTER_PORT.copy()
+        uuid = fake_router_port['id']
+        fake_relay_uuid = uuidutils.generate_uuid()
+        lrport = self._mocked_lrport()
+        with mock.patch.object(lrport, 'get', return_value=fake_router_port),\
+            mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.0.0'):
+            lrport.update(uuid,
+                          relay_service_uuid=fake_relay_uuid)
+            data = {
+                'id': uuid,
+                'display_name': fake_router_port['display_name'],
+                'logical_router_id': fake_router_port['logical_router_id'],
+                'resource_type': fake_router_port['resource_type'],
+                "revision": 0,
+                'service_bindings': [{'service_id': {
+                    'target_type': 'LogicalService',
+                    'target_id': fake_relay_uuid}}]
+            }
+
+            test_client.assert_json_call(
+                'put', lrport,
+                'https://1.2.3.4/api/v1/logical-router-ports/%s' % uuid,
+                data=jsonutils.dumps(data, sort_keys=True))
 
     def test_get_logical_router_port_by_router_id(self):
         """Test getting a router port by router id."""
