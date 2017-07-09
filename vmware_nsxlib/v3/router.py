@@ -169,7 +169,8 @@ class RouterLib(object):
                                                  ls_id,
                                                  logical_switch_port_id,
                                                  address_groups,
-                                                 urpf_mode=None):
+                                                 urpf_mode=None,
+                                                 relay_service_uuid=None):
         try:
             port = self._router_port_client.get_by_lswitch_id(ls_id)
         except exceptions.ResourceNotFound:
@@ -180,10 +181,12 @@ class RouterLib(object):
                 nsx_constants.LROUTERPORT_DOWNLINK,
                 logical_switch_port_id,
                 address_groups,
-                urpf_mode=urpf_mode)
+                urpf_mode=urpf_mode,
+                relay_service_uuid=relay_service_uuid)
         else:
             return self._router_port_client.update(
-                port['id'], subnets=address_groups)
+                port['id'], subnets=address_groups,
+                relay_service_uuid=relay_service_uuid)
 
     def add_fip_nat_rules(self, logical_router_id, ext_ip, int_ip,
                           match_ports=None, bypass_firewall=True):

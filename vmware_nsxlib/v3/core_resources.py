@@ -670,6 +670,17 @@ class NsxLibDhcpProfile(utils.NsxLibApiBase):
         return 'DhcpProfile'
 
 
+class NsxLibDhcpRelayService(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'dhcp/relays'
+
+    @property
+    def resource_type(self):
+        return 'DhcpRelayService'
+
+
 class NsxLibMetadataProxy(utils.NsxLibApiBase):
 
     @property
