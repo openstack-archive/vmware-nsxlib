@@ -177,6 +177,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config, nsxlib=self)
         self.transport_zone = core_resources.NsxLibTransportZone(
             self.client, self.nsxlib_config, nsxlib=self)
+        self.relay_service = core_resources.NsxLibDhcpRelayService(
+            self.client, self.nsxlib_config, nsxlib=self)
         self.native_dhcp_profile = core_resources.NsxLibDhcpProfile(
             self.client, self.nsxlib_config, nsxlib=self)
         self.native_md_proxy = core_resources.NsxLibMetadataProxy(
@@ -225,7 +227,8 @@ class NsxLib(NsxLibBase):
             # when the actual version of NSX has been decided.
             if (feature == nsx_constants.FEATURE_EXCLUDE_PORT_BY_TAG or
                 feature == nsx_constants.FEATURE_ROUTER_FIREWALL or
-                feature == nsx_constants.FEATURE_LOAD_BALANCER):
+                feature == nsx_constants.FEATURE_LOAD_BALANCER or
+                feature == nsx_constants.FEATURE_DHCP_RELAY):
                 return True
 
         if (version.LooseVersion(self.get_version()) >=

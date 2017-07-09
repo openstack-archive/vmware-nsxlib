@@ -638,6 +638,13 @@ class NsxLibDhcpProfile(utils.NsxLibApiBase):
         return 'dhcp/server-profiles'
 
 
+class NsxLibDhcpRelayService(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'dhcp/relays'
+
+
 class NsxLibMetadataProxy(utils.NsxLibApiBase):
 
     @property
