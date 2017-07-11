@@ -38,6 +38,10 @@ class NsxLibPortMirror(utils.NsxLibApiBase):
     def uri_segment(self):
         return 'mirror-sessions'
 
+    @property
+    def resource_type(self):
+        return 'PortMirroringSession'
+
     def create_session(self, source_ports, dest_ports, direction,
                        description, name, tags):
         """Create a PortMirror Session on the backend.
@@ -76,6 +80,10 @@ class NsxLibBridgeEndpoint(utils.NsxLibApiBase):
     def uri_segment(self):
         return 'bridge-endpoints'
 
+    @property
+    def resource_type(self):
+        return 'BridgeEndpoint'
+
     def create(self, device_name, seg_id, tags):
         """Create a bridge endpoint on the backend.
 
@@ -105,6 +113,10 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
     @property
     def uri_segment(self):
         return 'logical-switches'
+
+    @property
+    def resource_type(self):
+        return 'LogicalSwitch'
 
     def create(self, display_name, transport_zone_id, tags,
                replication_mode=nsx_constants.MTEP,
@@ -290,6 +302,10 @@ class NsxLibSwitchingProfile(utils.NsxLibApiBase):
 
 class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
 
+    @property
+    def resource_type(self):
+        return 'QosSwitchingProfile'
+
     def _build_args(self, tags, name=None, description=None):
         body = {"resource_type": "QosSwitchingProfile",
                 "tags": tags}
@@ -434,6 +450,10 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
     @property
     def uri_segment(self):
         return 'logical-routers'
+
+    @property
+    def resource_type(self):
+        return 'LogicalRouter'
 
     def _delete_resource_by_values(self, resource,
                                    skip_not_found=True,
@@ -623,12 +643,20 @@ class NsxLibEdgeCluster(utils.NsxLibApiBase):
     def uri_segment(self):
         return 'edge-clusters'
 
+    @property
+    def resource_type(self):
+        return 'EdgeCluster'
+
 
 class NsxLibTransportZone(utils.NsxLibApiBase):
 
     @property
     def uri_segment(self):
         return 'transport-zones'
+
+    @property
+    def resource_type(self):
+        return 'TransportZone'
 
 
 class NsxLibDhcpProfile(utils.NsxLibApiBase):
@@ -637,12 +665,20 @@ class NsxLibDhcpProfile(utils.NsxLibApiBase):
     def uri_segment(self):
         return 'dhcp/server-profiles'
 
+    @property
+    def resource_type(self):
+        return 'DhcpProfile'
+
 
 class NsxLibMetadataProxy(utils.NsxLibApiBase):
 
     @property
     def uri_segment(self):
         return 'md-proxies'
+
+    @property
+    def resource_type(self):
+        return 'MetadataProxy'
 
 
 class NsxLibBridgeCluster(utils.NsxLibApiBase):
@@ -651,12 +687,20 @@ class NsxLibBridgeCluster(utils.NsxLibApiBase):
     def uri_segment(self):
         return 'bridge-clusters'
 
+    @property
+    def resource_type(self):
+        return 'BridgeCluster'
+
 
 class NsxLibIpBlockSubnet(utils.NsxLibApiBase):
 
     @property
     def uri_segment(self):
         return 'pools/ip-subnets'
+
+    @property
+    def resource_type(self):
+        return 'IpBlockSubnet'
 
     def create(self, ip_block_id, subnet_size):
         """Create a IP block subnet on the backend."""
@@ -678,3 +722,7 @@ class NsxLibIpBlock(utils.NsxLibApiBase):
     @property
     def uri_segment(self):
         return 'pools/ip-blocks'
+
+    @property
+    def resource_type(self):
+        return 'IpBlock'

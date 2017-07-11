@@ -71,6 +71,10 @@ class LogicalPort(utils.NsxLibApiBase):
     def uri_segment(self):
         return 'logical-ports'
 
+    @property
+    def resource_type(self):
+        return 'LogicalPort'
+
     def _build_body_attrs(
             self, display_name=None,
             admin_state=True, tags=None,
@@ -418,6 +422,10 @@ class LogicalDhcpServer(utils.NsxLibApiBase):
     def uri_segment(self):
         return 'dhcp/servers'
 
+    @property
+    def resource_type(self):
+        return 'LogicalDhcpServer'
+
     def _construct_server(self, body, dhcp_profile_id=None, server_ip=None,
                           name=None, dns_nameservers=None, domain_name=None,
                           gateway_ip=False, options=None, tags=None):
@@ -506,6 +514,10 @@ class IpPool(utils.NsxLibApiBase):
     @property
     def uri_segment(self):
         return 'pools/ip-pools'
+
+    @property
+    def resource_type(self):
+        return 'IpPool'
 
     def _generate_ranges(self, cidr, gateway_ip):
         """Create list of ranges from the given cidr.
