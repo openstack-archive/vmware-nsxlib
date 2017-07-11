@@ -146,6 +146,10 @@ class NsxLibApiBase(object):
     def uri_segment(self):
         pass
 
+    @abc.abstractproperty
+    def resource_type(self):
+        pass
+
     def get_path(self, resource=None):
         if resource:
             return '%s/%s' % (self.uri_segment, resource)
