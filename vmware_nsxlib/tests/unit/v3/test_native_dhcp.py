@@ -86,3 +86,36 @@ class TestNativeDhcp(nsxlib_testcase.NsxLibTestCase):
         self.assertEqual(nsxlib_testcase.DNS_DOMAIN, result['domain_name'])
         self.assertEqual(nsxlib_testcase.DNS_NAMESERVERS,
                          result['dns_nameservers'])
+
+    def test_build_static_routes(self):
+        gateway_ip = '2.2.2.2'
+        cidr = '5.5.0.0/24'
+        host_routes = [{'nexthop': '81.0.200.254',
+                        'destination': '91.255.255.0/24'}]
+        result = self.handler.build_static_routes(
+            gateway_ip, cidr, host_routes)
+        expected = [{'network': '5.5.0.0/24', 'next_hop': '0.0.0.0'},
+                    {'network': '91.255.255.0/24', 'next_hop': '81.0.200.254'},
+                    {'network': '0.0.0.0/0', 'next_hop': '2.2.2.2'}]
+        self.assertEqual(expected, result)
+
+    def test_build_static_routes_gw_none(self):
+        gateway_ip = None
+        cidr = '5.5.0.0/24'
+        host_routes = [{'nexthop': '81.0.200.254',
+                        'destination': '91.255.255.0/24'}]
+        result = self.handler.build_static_routes(
+            gateway_ip, cidr, host_routes)
+        expected = [{'network': '5.5.0.0/24', 'next_hop': '0.0.0.0'},
+                    {'network': '91.255.255.0/24', 'next_hop': '81.0.200.254'}]
+        self.assertEqual(expected, result)
+
+    def test_build_static_routes_no_host_routes(self):
+        gateway_ip = '2.2.2.2'
+        cidr = '5.5.0.0/24'
+        host_routes = []
+        result = self.handler.build_static_routes(
+            gateway_ip, cidr, host_routes)
+        expected = [{'network': '5.5.0.0/24', 'next_hop': '0.0.0.0'},
+                    {'network': '0.0.0.0/0', 'next_hop': '2.2.2.2'}]
+        self.assertEqual(expected, result)
