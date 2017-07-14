@@ -22,6 +22,26 @@ from vmware_nsxlib.v3 import utils
 
 class NsxLibNativeDhcp(utils.NsxLibApiBase):
 
+    def build_static_routes(self, gateway_ip, cidr, host_routes):
+        # The following code is based on _generate_opts_per_subnet() in
+        # neutron/agent/linux/dhcp.py. It prepares DHCP options for a subnet.
+
+        # Add route for directly connected network.
+        static_routes = [{'network': cidr, 'next_hop': '0.0.0.0'}]
+        # Copy routes from subnet host_routes attribute.
+        for hr in host_routes:
+            if hr['destination'] == constants.IPv4_ANY:
+                if not gateway_ip:
+                    gateway_ip = hr['nexthop']
+            else:
+                static_routes.append({'network': hr['destination'],
+                                      'next_hop': hr['nexthop']})
+        # If gateway_ip is defined, add default route via this gateway.
+        if gateway_ip:
+            static_routes.append({'network': constants.IPv4_ANY,
+                                  'next_hop': gateway_ip})
+        return static_routes, gateway_ip
+
     def build_server_config(self, network, subnet, port, tags,
                             default_dns_nameservers=None,
                             default_dns_domain=None):
@@ -38,26 +58,9 @@ class NsxLibNativeDhcp(utils.NsxLibApiBase):
         gateway_ip = subnet['gateway_ip']
         if not validators.is_attr_set(gateway_ip):
             gateway_ip = None
-
-        # The following code is based on _generate_opts_per_subnet() in
-        # neutron/agent/linux/dhcp.py. It prepares DHCP options for a subnet.
-
-        # Add route for directly connected network.
-        host_routes = [{'network': subnet['cidr'], 'next_hop': '0.0.0.0'}]
-        # Copy routes from subnet host_routes attribute.
-        for hr in subnet['host_routes']:
-            if hr['destination'] == constants.IPv4_ANY:
-                if not gateway_ip:
-                    gateway_ip = hr['nexthop']
-            else:
-                host_routes.append({'network': hr['destination'],
-                                    'next_hop': hr['nexthop']})
-        # If gateway_ip is defined, add default route via this gateway.
-        if gateway_ip:
-            host_routes.append({'network': constants.IPv4_ANY,
-                                'next_hop': gateway_ip})
-
-        options = {'option121': {'static_routes': host_routes}}
+        static_routes, gateway_ip = self.build_static_routes(
+            gateway_ip, subnet['cidr'], subnet['host_routes'])
+        options = {'option121': {'static_routes': static_routes}}
         name = utils.get_name_and_uuid(network['name'] or 'dhcpserver',
                                        network['id'])
         dns_domain = network.get('dns_domain')
