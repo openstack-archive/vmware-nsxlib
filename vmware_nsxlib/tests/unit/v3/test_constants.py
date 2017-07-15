@@ -236,6 +236,28 @@ FAKE_PERSISTENCE_PROFILE = {
     "_revision": 0
 }
 
+FAKE_RULE_UUID = uuidutils.generate_uuid()
+FAKE_RULE = {
+    "resource_type": "LbRule",
+    "description": "LbRule to route login requests to dedicated pool",
+    "id": FAKE_RULE_UUID,
+    "display_name": "LoginRouteRule",
+    "phase": "HTTP_FORWARDING",
+    "match_strategy": "ALL",
+    "match_conditions": [
+        {
+            "type": "LbHttpRequestUriCondition",
+            "uri": "/login"
+        }
+    ],
+    "actions": [
+        {
+            "type": "LbSelectPoolAction",
+            "pool_id": "54411c58-046c-4236-8ff1-e1e1aad3e873"
+        }
+    ]
+}
+
 FAKE_CLIENT_SSL_PROFILE_UUID = uuidutils.generate_uuid()
 FAKE_CLIENT_SSL_PROFILE = {
     "display_name": "clientSslProfile1",

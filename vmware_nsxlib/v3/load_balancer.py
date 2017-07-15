@@ -150,6 +150,10 @@ class PersistenceProfile(LoadBalancerBase):
                 arg_name='resource_type')
 
 
+class Rule(LoadBalancerBase):
+    resource = 'loadbalancer/rules'
+
+
 class ClientSslProfile(LoadBalancerBase):
     resource = 'loadbalancer/client-ssl-profiles'
 
@@ -272,6 +276,17 @@ class VirtualServer(LoadBalancerBase):
         body['ip_address'] = vip
         return self.client.update(object_url, body)
 
+    def add_rule(self, vs_id, rule_id):
+        object_url = self.resource + '/' + vs_id
+        body = self.client.get(object_url)
+        if 'rule_ids' in body:
+            rule_list = body['rule_ids']
+            rule_list.append(rule_id)
+        else:
+            rule_list = [rule_id]
+        body['rule_ids'] = rule_list
+        return self.client.update(object_url, body)
+
 
 class Service(LoadBalancerBase):
     resource = 'loadbalancer/services'
@@ -329,3 +344,4 @@ class LoadBalancer(object):
         self.persistence_profile = PersistenceProfile(client, nsxlib_config)
         self.client_ssl_profile = ClientSslProfile(client, nsxlib_config)
         self.server_ssh_profile = ServerSslProfile(client, nsxlib_config)
+        self.rule = Rule(client, nsxlib_config)

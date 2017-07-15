@@ -128,6 +128,40 @@ class TestPersistenceProfile(nsxlib_testcase.NsxClientTestCase):
                 'loadbalancer/persistence-profiles/%s' % fake_profile['id'])
 
 
+class TestRule(nsxlib_testcase.NsxClientTestCase):
+    def test_create_rule(self):
+        fake_rule = consts.FAKE_RULE.copy()
+        body = {
+            'display_name': fake_rule['display_name'],
+            'description': fake_rule['description'],
+            'resource_type': fake_rule['resource_type'],
+            'phase': fake_rule['phase'],
+            'match_strategy': fake_rule['match_strategy'],
+            'tags': tags
+        }
+        with mock.patch.object(self.nsxlib.client, 'create') as create:
+            self.nsxlib.load_balancer.rule.create(**body)
+            create.assert_called_with('loadbalancer/rules', body)
+
+    def test_list_rules(self):
+        with mock.patch.object(self.nsxlib.client, 'list') as list_call:
+            self.nsxlib.load_balancer.rule.list()
+            list_call.assert_called_with(resource='loadbalancer/rules')
+
+    def test_get_rule(self):
+        with mock.patch.object(self.nsxlib.client, 'get') as get:
+            fake_rule = consts.FAKE_RULE.copy()
+            self.nsxlib.load_balancer.rule.get(fake_rule['id'])
+            get.assert_called_with('loadbalancer/rules/%s' % fake_rule['id'])
+
+    def test_delete_rule(self):
+        with mock.patch.object(self.nsxlib.client, 'delete') as delete:
+            fake_rule = consts.FAKE_RULE.copy()
+            self.nsxlib.load_balancer.rule.delete(fake_rule['id'])
+            delete.assert_called_with(
+                'loadbalancer/rules/%s' % fake_rule['id'])
+
+
 class TestClientSslProfile(nsxlib_testcase.NsxClientTestCase):
 
     def test_create_client_ssl_profiles(self):
