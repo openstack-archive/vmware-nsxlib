@@ -444,6 +444,7 @@ class CommunicationMapEntryDef(ResourceDef):
             body=body, **kwargs)
 
 
+# Currently supports only NSXT
 class EnforcementPointDef(ResourceDef):
 
     def __init__(self, ep_id=None,
@@ -453,14 +454,12 @@ class EnforcementPointDef(ResourceDef):
                  username=None,
                  password=None,
                  thumbprint=None,
-                 ep_type='NSXT',
                  tenant=policy_constants.POLICY_INFRA_TENANT):
         super(EnforcementPointDef, self).__init__()
         self.id = ep_id
         self.name = name
         self.description = description
         self.tenant = tenant
-        self.type = ep_type
         self.username = username
         self.password = password
         self.ip_address = ip_address
@@ -475,13 +474,12 @@ class EnforcementPointDef(ResourceDef):
     def get_obj_dict(self):
         body = super(EnforcementPointDef, self).get_obj_dict()
         body['id'] = self.id
-        body['connection_info'] = [
-            {'thumbprint': self.thumbprint,
-             'username': self.username,
-             'password': self.password,
-             'enforcement_point_address': self.ip_address,
-             'resource_type': 'NSXTConnectionInfo'}]
-        body['enforcement_type'] = self.type
+        body['connection_info'] = {
+            'thumbprint': self.thumbprint,
+            'username': self.username,
+            'password': self.password,
+            'enforcement_point_address': self.ip_address,
+            'resource_type': 'NSXTConnectionInfo'}
         body['resource_type'] = 'EnforcementPoint'
         return body
 
@@ -522,21 +520,17 @@ class DeploymentMapDef(ResourceDef):
         self.ep_path = EnforcementPointDef(
             ep_id,
             tenant=tenant).get_resource_full_path() if ep_id else None
-        self.domain_path = DomainDef(
-            domain_id,
-            tenant=tenant).get_resource_full_path() if domain_id else None
         self.tenant = tenant
-        self.parent_ids = (tenant)
+        self.parent_ids = (tenant, domain_id)
 
     @property
     def path_pattern(self):
-        return (TENANTS_PATH_PATTERN + 'domaindeploymentmaps/')
+        return (DOMAINS_PATH_PATTERN + '%s/domaindeploymentmaps/')
 
     def get_obj_dict(self):
         body = super(DeploymentMapDef, self).get_obj_dict()
         body['id'] = self.id
-        body['domain_path'] = self.domain_path
-        body['enforcement_point_paths'] = [self.ep_path]
+        body['enforcement_point_path'] = self.ep_path
         return body
 
     def update_attributes_in_body(self, **kwargs):
