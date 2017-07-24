@@ -64,6 +64,36 @@ class LoadBalancerBase(utils.NsxLibApiBase):
         body.update(kwargs)
         return body
 
+    def add_to_list(self, resource_id, item_id, item_key):
+        object_url = self.resource + '/' + resource_id
+        body = self.client.get(object_url)
+        if item_key in body:
+            item_list = body[item_key]
+            if item_id not in item_list:
+                item_list.append(item_list)
+            else:
+                LOG.error('Item %s is already in resource %s',
+                          item_id, item_key)
+                return body
+        else:
+            item_list = [item_id]
+        body[item_key] = item_list
+        return self.client.update(object_url, body)
+
+    def remove_from_list(self, resource_id, item_id, item_key):
+        object_url = self.resource + '/' + resource_id
+        body = self.client.get(object_url)
+        item_list = body.get(item_key)
+        if item_list and item_id in item_list:
+            item_list.remove(item_id)
+            body[item_key] = item_list
+            return self.client.update(object_url, body)
+        else:
+            ops = ('removing item %s from resource %s %s as it is not in '
+                   'the list', item_id, item_key, item_list)
+            raise nsxlib_exc.ResourceNotFound(
+                manager=self.client.nsx_api_managers, operation=ops)
+
     def create(self, display_name=None, description=None, tags=None,
                resource_type=None, **kwargs):
         orig_body = {}
@@ -223,33 +253,10 @@ class Pool(LoadBalancerBase):
         return self.client.update(object_url, body)
 
     def add_monitor_to_pool(self, pool_id, monitor_id):
-        object_url = self.resource + '/' + pool_id
-        body = self.client.get(object_url)
-        if 'active_monitor_ids' in body:
-            monitor_list = body['active_monitor_ids']
-            if monitor_id not in monitor_list:
-                monitor_list.append(monitor_id)
-            else:
-                LOG.error('Monitor %s is already in pool', monitor_id)
-                return body
-        else:
-            monitor_list = [monitor_id]
-        body['active_monitor_ids'] = monitor_list
-        return self.client.update(object_url, body)
+        self.add_to_list(pool_id, monitor_id, 'active_monitor_ids')
 
     def remove_monitor_from_pool(self, pool_id, monitor_id):
-        object_url = self.resource + '/' + pool_id
-        body = self.client.get(object_url)
-        monitor_list = body.get('active_monitor_ids')
-        if monitor_list and monitor_id in monitor_list:
-            monitor_list.remove(monitor_id)
-            body['active_monitor_ids'] = monitor_list
-            return self.client.update(object_url, body)
-        else:
-            ops = ('removing monitor %s from pool active_monitor_ids %s'
-                   'as it is not in the list', monitor_id, monitor_list)
-            raise nsxlib_exc.ResourceNotFound(
-                manager=self.client.nsx_api_managers, operation=ops)
+        self.remove_from_list(pool_id, monitor_id, 'active_monitor_ids')
 
 
 class VirtualServer(LoadBalancerBase):
@@ -277,15 +284,10 @@ class VirtualServer(LoadBalancerBase):
         return self.client.update(object_url, body)
 
     def add_rule(self, vs_id, rule_id):
-        object_url = self.resource + '/' + vs_id
-        body = self.client.get(object_url)
-        if 'rule_ids' in body:
-            rule_list = body['rule_ids']
-            rule_list.append(rule_id)
-        else:
-            rule_list = [rule_id]
-        body['rule_ids'] = rule_list
-        return self.client.update(object_url, body)
+        self.add_to_list(vs_id, rule_id, 'rule_ids')
+
+    def remove_rule(self, vs_id, rule_id):
+        self.remove_from_list(vs_id, rule_id, 'rule_ids')
 
 
 class Service(LoadBalancerBase):
@@ -305,16 +307,11 @@ class Service(LoadBalancerBase):
                               'target_type': 'LogicalRouter'}
         return self.client.update(object_url, body)
 
-    def add_virtual_server_to_service(self, service_id, vs_id):
-        object_url = self.resource + '/' + service_id
-        body = self.client.get(object_url)
-        if 'virtual_server_ids' in body:
-            vs_list = body['virtual_server_ids']
-            vs_list.append(vs_id)
-        else:
-            vs_list = [vs_id]
-        body['virtual_server_ids'] = vs_list
-        return self.client.update(object_url, body)
+    def add_virtual_server(self, service_id, vs_id):
+        self.add_to_list(service_id, vs_id, 'virtual_server_ids')
+
+    def remove_virtual_server(self, service_id, vs_id):
+        self.remove_from_list(service_id, vs_id, 'virtual_server_ids')
 
     def get_router_lb_service(self, nsx_router_id):
         lb_services = self.list()['results']
