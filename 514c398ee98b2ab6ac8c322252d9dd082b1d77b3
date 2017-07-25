@@ -1,0 +1,10 @@
+Code-Review+2: Shih-Hao Li <shihli@vmware.com>
+Verified+1: VMware NSX CI
+Code-Review+2: Kobi Samoray <ksamoray@vmware.com>
+Workflow+1: Kobi Samoray <ksamoray@vmware.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 25 Jul 2017 09:23:04 +0000
+Reviewed-on: https://review.openstack.org/485498
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
