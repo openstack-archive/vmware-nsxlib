@@ -470,7 +470,7 @@ class EnforcementPointDef(ResourceDef):
     @property
     def path_pattern(self):
         return (TENANTS_PATH_PATTERN +
-                'deploymentzones/default/enforcementpoints/')
+                'deployment-zones/default/enforcement-points/')
 
     def get_obj_dict(self):
         body = super(EnforcementPointDef, self).get_obj_dict()
@@ -526,7 +526,7 @@ class DeploymentMapDef(ResourceDef):
 
     @property
     def path_pattern(self):
-        return (DOMAINS_PATH_PATTERN + '%s/domaindeploymentmaps/')
+        return (DOMAINS_PATH_PATTERN + '%s/domain-deployment-maps/')
 
     def get_obj_dict(self):
         body = super(DeploymentMapDef, self).get_obj_dict()
