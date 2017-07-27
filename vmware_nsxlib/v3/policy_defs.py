@@ -222,14 +222,24 @@ class ServiceDef(ResourceDef):
 
     @staticmethod
     def sub_entries_path():
-        return L4ServiceEntryDef().get_last_section_dict_key
+        return ServiceEntryDef().get_last_section_dict_key
 
     def get_realized_state_path(self, ep_id):
         return REALIZED_STATE_SERVICE % (self.tenant, ep_id,
                                          self.id)
 
 
-class L4ServiceEntryDef(ResourceDef):
+class ServiceEntryDef(ResourceDef):
+
+    def __init__(self):
+        super(ServiceEntryDef, self).__init__()
+
+    @property
+    def path_pattern(self):
+        return SERVICES_PATH_PATTERN + "%s/service-entries/"
+
+
+class L4ServiceEntryDef(ServiceEntryDef):
     def __init__(self,
                  service_id=None,
                  service_entry_id=None,
@@ -246,10 +256,6 @@ class L4ServiceEntryDef(ResourceDef):
         self.protocol = protocol.upper()
         self.dest_ports = dest_ports
         self.parent_ids = (tenant, service_id)
-
-    @property
-    def path_pattern(self):
-        return SERVICES_PATH_PATTERN + "%s/service-entries/"
 
     def get_obj_dict(self):
         body = super(L4ServiceEntryDef, self).get_obj_dict()
@@ -271,6 +277,49 @@ class L4ServiceEntryDef(ResourceDef):
             body['destination_ports'] = kwargs['dest_ports']
             del kwargs['dest_ports']
         super(L4ServiceEntryDef, self).update_attributes_in_body(
+            body=body, **kwargs)
+
+
+class IcmpServiceEntryDef(ServiceEntryDef):
+    def __init__(self,
+                 service_id=None,
+                 service_entry_id=None,
+                 name=None,
+                 description=None,
+                 version=4,
+                 icmp_type=None,
+                 icmp_code=None,
+                 tenant=policy_constants.POLICY_INFRA_TENANT):
+        super(IcmpServiceEntryDef, self).__init__()
+        self.tenant = tenant
+        self.id = service_entry_id
+        self.name = name
+        self.description = description
+        self.version = version
+        self.icmp_type = icmp_type
+        self.icmp_code = icmp_code
+        self.parent_ids = (tenant, service_id)
+
+    def get_obj_dict(self):
+        body = super(IcmpServiceEntryDef, self).get_obj_dict()
+        body['resource_type'] = 'ICMPTypeServiceEntry'
+        body['protocol'] = 'ICMPv' + str(self.version)
+        if self.icmp_type:
+            body['icmp_type'] = self.icmp_type
+        if self.icmp_code:
+            body['icmp_code'] = self.icmp_code
+        return body
+
+    def update_attributes_in_body(self, **kwargs):
+        # Fix params that need special conversions
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
+
+        if kwargs.get('version') is not None:
+            body['protocol'] = 'ICMPv' + str(kwargs.get('version'))
+            del kwargs['version']
+        super(IcmpServiceEntryDef, self).update_attributes_in_body(
             body=body, **kwargs)
 
 
