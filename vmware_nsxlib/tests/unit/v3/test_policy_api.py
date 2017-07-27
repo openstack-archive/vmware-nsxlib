@@ -152,7 +152,7 @@ class TestPolicyService(TestPolicyApi):
                               'infra/services/roomservice',
                               data=service_def.get_obj_dict())
 
-    def test_create_with_parent(self):
+    def test_create_l4_with_parent(self):
         service_def = policy.ServiceDef('roomservice')
         entry_def = policy.L4ServiceEntryDef('roomservice',
                                              'http',
@@ -172,6 +172,26 @@ class TestPolicyService(TestPolicyApi):
                          'service_entries': [expected_entry]}
         self.assert_json_call('POST', self.client,
                               'infra/services/roomservice',
+                              data=expected_data)
+
+    def test_create_icmp_with_parent(self):
+        service_def = policy.ServiceDef('icmpservice')
+        entry_def = policy.IcmpServiceEntryDef('icmpservice',
+                                               'icmp',
+                                               name='icmpv4')
+
+        self.policy_api.create_with_parent(service_def, entry_def)
+        expected_entry = {'id': 'icmp',
+                          'resource_type': 'ICMPTypeServiceEntry',
+                          'display_name': 'icmpv4',
+                          'description': None,
+                          'protocol': 'ICMPv4'}
+        expected_data = {'id': 'icmpservice',
+                         'display_name': None,
+                         'description': None,
+                         'service_entries': [expected_entry]}
+        self.assert_json_call('POST', self.client,
+                              'infra/services/icmpservice',
                               data=expected_data)
 
 

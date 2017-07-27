@@ -232,11 +232,40 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         return self._get_realized_state(path)
 
 
-class NsxPolicyL4ServiceApi(NsxPolicyResourceBase):
-    """NSX Policy Service (with a single L4 service entry).
+class NsxPolicyServiceBase(NsxPolicyResourceBase):
+    """Base class for NSX Policy Service with a single entry.
 
-    Note the nsx-policy backend supports different types of service entries,
-    and multiple service entries per service.
+    Note the nsx-policy backend supports multiple service entries per service.
+    At this point this is not supported here.
+    """
+    def delete(self, service_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        service_def = policy_defs.ServiceDef(service_id=service_id,
+                                             tenant=tenant)
+        self.policy_api.delete(service_def)
+
+    def get(self, service_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        service_def = policy_defs.ServiceDef(service_id=service_id,
+                                             tenant=tenant)
+        return self.policy_api.get(service_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        service_def = policy_defs.ServiceDef(tenant=tenant)
+        return self.policy_api.list(service_def)['results']
+
+    def get_realized_state(self, service_id, ep_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        service_def = policy_defs.ServiceDef(service_id=service_id,
+                                             tenant=tenant)
+        path = service_def.get_realized_state_path(ep_id)
+        return self._get_realized_state(path)
+
+
+class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
+    """NSX Policy Service with a single L4 service entry.
+
+    Note the nsx-policy backend supports multiple service entries per service.
     At this point this is not supported here.
     """
     def create_or_overwrite(self, name, service_id=None, description=None,
@@ -260,27 +289,10 @@ class NsxPolicyL4ServiceApi(NsxPolicyResourceBase):
 
         return self.policy_api.create_with_parent(service_def, entry_def)
 
-    def delete(self, service_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             tenant=tenant)
-        self.policy_api.delete(service_def)
-
-    def get(self, service_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             tenant=tenant)
-        return self.policy_api.get(service_def)
-
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
-        service_def = policy_defs.ServiceDef(tenant=tenant)
-        return self.policy_api.list(service_def)['results']
-
     def _update_service_entry(self, service_id, srv_entry,
                               name=None, description=None,
                               protocol=None, dest_ports=None,
                               tenant=policy_constants.POLICY_INFRA_TENANT):
-        # TODO(asarfaty): This action fails on backend
         entry_id = srv_entry['id']
         entry_def = policy_defs.L4ServiceEntryDef(service_id=service_id,
                                                   service_entry_id=entry_id,
@@ -327,12 +339,85 @@ class NsxPolicyL4ServiceApi(NsxPolicyResourceBase):
         # re-read the service from the backend to return the current data
         return self.get(service_id, tenant=tenant)
 
-    def get_realized_state(self, service_id, ep_id,
-                           tenant=policy_constants.POLICY_INFRA_TENANT):
+
+class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
+    """NSX Policy Service with a single ICMP service entry.
+
+    Note the nsx-policy backend supports multiple service entries per service.
+    At this point this is not supported here.
+    """
+    def create_or_overwrite(self, name, service_id=None, description=None,
+                            version=4, icmp_type=None, icmp_code=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        service_id = self._init_obj_uuid(service_id)
         service_def = policy_defs.ServiceDef(service_id=service_id,
+                                             name=name,
+                                             description=description,
                                              tenant=tenant)
-        path = service_def.get_realized_state_path(ep_id)
-        return self._get_realized_state(path)
+        # NOTE(asarfaty) We set the service entry display name (which is also
+        # used as the id) to be the same as the service name. In case we
+        # support multiple service entries, we need the name to be unique.
+        entry_def = policy_defs.IcmpServiceEntryDef(
+            service_id=service_id,
+            name=name,
+            description=description,
+            version=version,
+            icmp_type=icmp_type,
+            icmp_code=icmp_code,
+            tenant=tenant)
+
+        return self.policy_api.create_with_parent(service_def, entry_def)
+
+    def _update_service_entry(self, service_id, srv_entry,
+                              name=None, description=None,
+                              version=None, icmp_type=None, icmp_code=None,
+                              tenant=policy_constants.POLICY_INFRA_TENANT):
+        entry_id = srv_entry['id']
+        entry_def = policy_defs.IcmpServiceEntryDef(service_id=service_id,
+                                                    service_entry_id=entry_id,
+                                                    tenant=tenant)
+        entry_def.update_attributes_in_body(body=srv_entry, name=name,
+                                            description=description,
+                                            version=version,
+                                            icmp_type=icmp_type,
+                                            icmp_code=icmp_code)
+
+        self.policy_api.create_or_update(entry_def)
+
+    def update(self, service_id, name=None, description=None,
+               version=None, icmp_type=None, icmp_code=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        # Get the current data of service & its' service entry
+        service = self.get(service_id, tenant=tenant)
+
+        # update the service itself:
+        if name is not None or description is not None:
+            # update the service itself
+            service_def = policy_defs.ServiceDef(service_id=service_id,
+                                                 tenant=tenant)
+            service_def.update_attributes_in_body(name=name,
+                                                  description=description)
+
+            # update the backend
+            updated_service = self.policy_api.create_or_update(service_def)
+        else:
+            updated_service = service
+
+        # update the service entry if it exists
+        service_entry = policy_defs.ServiceDef.get_single_entry(service)
+        if not service_entry:
+            LOG.error("Cannot update service %s - expected 1 service "
+                      "entry", service_id)
+            return updated_service
+
+        self._update_service_entry(
+            service_id, service_entry,
+            name=name, description=description,
+            version=version, icmp_type=icmp_type, icmp_code=icmp_code,
+            tenant=tenant)
+
+        # re-read the service from the backend to return the current data
+        return self.get(service_id, tenant=tenant)
 
 
 class NsxPolicyCommunicationProfileApi(NsxPolicyResourceBase):
