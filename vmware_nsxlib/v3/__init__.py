@@ -289,6 +289,8 @@ class NsxPolicyLib(NsxLibBase):
         self.domain = policy_resources.NsxPolicyDomainApi(self.policy_api)
         self.group = policy_resources.NsxPolicyGroupApi(self.policy_api)
         self.service = policy_resources.NsxPolicyL4ServiceApi(self.policy_api)
+        self.icmp_service = policy_resources.NsxPolicyIcmpServiceApi(
+            self.policy_api)
         self.comm_profile = policy_resources.NsxPolicyCommunicationProfileApi(
             self.policy_api)
         self.comm_map = policy_resources.NsxPolicyCommunicationMapApi(
