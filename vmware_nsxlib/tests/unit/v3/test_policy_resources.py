@@ -514,6 +514,168 @@ class TestPolicyService(NsxPolicyLibTestCase):
                 call_num=1)
 
 
+class TestPolicyIcmpService(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyIcmpService, self).setUp()
+        self.resourceApi = self.policy_lib.icmp_service
+
+    def test_create(self):
+        name = 's1'
+        description = 'desc'
+        icmp_type = 2
+        with mock.patch.object(self.policy_api,
+                               "create_with_parent") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 description=description,
+                                                 icmp_type=icmp_type,
+                                                 tenant=TEST_TENANT)
+            exp_srv_def = policy_defs.ServiceDef(service_id=mock.ANY,
+                                                 name=name,
+                                                 description=description,
+                                                 tenant=TEST_TENANT)
+            exp_entry_def = policy_defs.IcmpServiceEntryDef(
+                service_id=mock.ANY,
+                name=name,
+                description=description,
+                icmp_type=icmp_type,
+                tenant=TEST_TENANT)
+            self.assert_called_with_defs(
+                api_call, [exp_srv_def, exp_entry_def])
+
+    def test_delete(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.ServiceDef(service_id=id,
+                                                  tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.ServiceDef(service_id=id,
+                                                  tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 's1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = policy_defs.ServiceDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.ServiceDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        id = '111'
+        name = 'new name'
+        description = 'new desc'
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={}) as get_call,\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    description=description,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.ServiceDef(service_id=id,
+                                                  tenant=TEST_TENANT)
+            expected_dict = {'display_name': name,
+                             'description': description,
+                             'service_entries': []}
+            self.assert_called_with_def(get_call, expected_def)
+            self.assert_called_with_def_and_dict(
+                update_call, expected_def, expected_dict)
+
+    def test_update_entry(self):
+        id = '111'
+        icmp_code = 12
+        service_entry_id = '222'
+        service_entry = {'id': service_entry_id}
+
+        with mock.patch.object(
+            self.policy_api, "get",
+            return_value={'service_entries': [service_entry]}) as get_call,\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    icmp_code=icmp_code,
+                                    tenant=TEST_TENANT)
+            # get will be called for the entire service
+            expected_def = policy_defs.ServiceDef(service_id=id,
+                                                  tenant=TEST_TENANT)
+            self.assert_called_with_def(get_call, expected_def)
+
+            # update will be called for the service entry only
+            expected_entry_def = policy_defs.IcmpServiceEntryDef(
+                service_id=id,
+                service_entry_id=service_entry_id,
+                tenant=TEST_TENANT)
+            expected_entry_dict = {'id': service_entry_id,
+                                   'icmp_code': icmp_code}
+            self.assert_called_with_def_and_dict(
+                update_call, expected_entry_def, expected_entry_dict)
+
+    def test_update_all(self):
+        id = '111'
+        name = 'new name'
+        description = 'new desc'
+        version = 6
+        icmp_type = 3
+        icmp_code = 3
+        service_entry_id = '222'
+        service_entry = {'id': service_entry_id}
+
+        with mock.patch.object(
+            self.policy_api, "get",
+            return_value={'service_entries': [service_entry]}) as get_call,\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call,\
+            mock.patch.object(self.policy_api, "list",
+                              return_value={'results': []}):
+            self.resourceApi.update(id,
+                                    name=name,
+                                    description=description,
+                                    version=version,
+                                    icmp_type=icmp_type,
+                                    icmp_code=icmp_code,
+                                    tenant=TEST_TENANT)
+            # get will be called for the entire service
+            expected_def = policy_defs.ServiceDef(service_id=id,
+                                                  tenant=TEST_TENANT)
+            self.assert_called_with_def(get_call, expected_def)
+
+            # update will be called for the service and entry (2 calls)
+            expected_dict = {'display_name': name,
+                             'description': description,
+                             'service_entries': []}
+            self.assert_called_with_def_and_dict(
+                update_call, expected_def, expected_dict)
+
+            expected_entry_def = policy_defs.IcmpServiceEntryDef(
+                service_id=id,
+                service_entry_id=service_entry_id,
+                tenant=TEST_TENANT)
+            expected_entry_dict = {'id': service_entry_id,
+                                   'display_name': name,
+                                   'description': description,
+                                   'protocol': 'ICMPv6',
+                                   'icmp_type': icmp_type,
+                                   'icmp_code': icmp_code}
+            self.assert_called_with_def_and_dict(
+                update_call, expected_entry_def, expected_entry_dict,
+                call_num=1)
+
+
 class TestPolicyCommunicationProfile(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
