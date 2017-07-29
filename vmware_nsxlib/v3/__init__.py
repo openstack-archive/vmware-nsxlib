@@ -200,8 +200,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config, nsxlib=self)
         self.bridge_endpoint = core_resources.NsxLibBridgeEndpoint(
             self.client, self.nsxlib_config, nsxlib=self)
-        self.logical_switch = core_resources.NsxLibLogicalSwitch(
-            self.client, self.nsxlib_config, nsxlib=self)
+#        self.logical_switch = core_resources.NsxLibLogicalSwitch(
+#            self.client, self.nsxlib_config, nsxlib=self)
         self.logical_router = core_resources.NsxLibLogicalRouter(
             self.client, self.nsxlib_config, nsxlib=self)
         self.switching_profile = core_resources.NsxLibSwitchingProfile(
