@@ -337,5 +337,5 @@ class TestPolicyDeploymentMap(TestPolicyApi):
                          'enforcement_point_path': ep_path}
 
         self.assert_json_call('POST', self.client,
-                              'infra/domains/d1/domaindeploymentmaps/dm1',
+                              'infra/domains/d1/domain-deployment-maps/dm1',
                               data=expected_data)

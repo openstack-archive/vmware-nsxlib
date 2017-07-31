@@ -205,7 +205,7 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         description = 'desc'
         cond_val = '123'
         cond_op = policy_constants.CONDITION_OP_EQUALS
-        cond_member_type = policy_constants.CONDITION_MEMBER_NET
+        cond_member_type = policy_constants.CONDITION_MEMBER_VM
         cond_key = policy_constants.CONDITION_KEY_TAG
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
@@ -1216,8 +1216,8 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
             expected_def = policy_defs.DeploymentMapDef(map_id=id,
                                                         tenant=TEST_TENANT)
             domain_path = "/%s/domains/%s" % (TEST_TENANT, domain_id)
-            ep_path = ("/%s/deploymentzones/default/"
-                       "enforcementpoints/%s" % (TEST_TENANT, ep_id))
+            ep_path = ("/%s/deployment-zones/default/"
+                       "enforcement-points/%s" % (TEST_TENANT, ep_id))
             expected_dict = {'display_name': name,
                              'enforcement_point_paths': [ep_path],
                              'domain_path': domain_path}
