@@ -53,7 +53,8 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
                 'resource_type': profile_types.PORT_MIRRORING,
                 'display_name': 'pm-profile',
                 'description': 'port mirror prof'
-            }, sort_keys=True))
+            }, sort_keys=True),
+            headers=self.default_headers())
 
     def test_switching_profile_update(self):
 
@@ -79,7 +80,8 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
             data=jsonutils.dumps({
                 'resource_type': profile_types.PORT_MIRRORING,
                 'tags': tags
-            }, sort_keys=True))
+            }, sort_keys=True),
+            headers=self.default_headers())
 
     def test_spoofgaurd_profile_create(self):
 
@@ -109,7 +111,8 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
                 'description': 'spoofguard-for-plugin',
                 'white_list_providers': ['LPORT_BINDINGS'],
                 'tags': tags
-            }, sort_keys=True))
+            }, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_dhcp_profile(self):
 
@@ -154,7 +157,8 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
                     'tx_multicast': 0
                 },
                 'block_non_ip_traffic': True
-            }, sort_keys=True))
+            }, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_mac_learning_profile(self):
 
@@ -187,7 +191,8 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
                 'description': 'mac-learning-for-plugin',
                 'tags': tags,
                 'mac_change_allowed': True,
-            }, sort_keys=True))
+            }, sort_keys=True),
+            headers=self.default_headers())
 
     def test_find_by_display_name(self):
         resp_resources = {
@@ -230,7 +235,8 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
             'get', mocked_resource,
             'https://1.2.3.4/api/v1/switching-profiles/'
             '?include_system_owned=True',
-            data=None)
+            data=None,
+            headers=self.default_headers())
 
 
 class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
@@ -298,7 +304,8 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', mocked_resource,
             'https://1.2.3.4/api/v1/logical-ports',
-            data=jsonutils.dumps(resp_body, sort_keys=True))
+            data=jsonutils.dumps(resp_body, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_logical_port_with_attachtype_cif(self):
         """Test creating a port returns the correct response and 200 status
@@ -351,7 +358,8 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', mocked_resource,
             'https://1.2.3.4/api/v1/logical-ports',
-            data=jsonutils.dumps(resp_body, sort_keys=True))
+            data=jsonutils.dumps(resp_body, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_logical_port_admin_down(self):
         """Test creating port with admin_state down."""
@@ -377,7 +385,8 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         mocked_resource.delete(uuid)
         test_client.assert_json_call(
             'delete', mocked_resource,
-            'https://1.2.3.4/api/v1/logical-ports/%s?detach=true' % uuid)
+            'https://1.2.3.4/api/v1/logical-ports/%s?detach=true' % uuid,
+            headers=self.default_headers())
 
     def test_get_logical_port_by_attachment(self):
         """Test deleting port."""
@@ -388,7 +397,8 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'get', mocked_resource,
             "https://1.2.3.4/api/v1/logical-ports/?attachment_type=%s"
-            "&attachment_id=%s" % (attachment_type, attachment_id))
+            "&attachment_id=%s" % (attachment_type, attachment_id),
+            headers=self.default_headers())
 
     def test_clear_port_bindings(self):
         fake_port = copy.copy(test_constants.FAKE_PORT)
@@ -406,7 +416,8 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'put', mocked_resource,
             'https://1.2.3.4/api/v1/logical-ports/%s' % fake_port['id'],
-            data=jsonutils.dumps(fake_port, sort_keys=True))
+            data=jsonutils.dumps(fake_port, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_logical_port_fail(self):
         """Test the failure of port creation."""
@@ -462,7 +473,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', router,
             'https://1.2.3.4/api/v1/logical-routers',
-            data=jsonutils.dumps(data, sort_keys=True))
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
 
     def test_delete_logical_router(self):
         """Test deleting router"""
@@ -471,7 +483,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
         router.delete(uuid)
         test_client.assert_json_call(
             'delete', router,
-            'https://1.2.3.4/api/v1/logical-routers/%s' % uuid)
+            'https://1.2.3.4/api/v1/logical-routers/%s' % uuid,
+            headers=self.default_headers())
 
     def test_force_delete_logical_router(self):
         """Test force deleting router"""
@@ -480,7 +493,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
         router.delete(uuid, True)
         test_client.assert_json_call(
             'delete', router,
-            'https://1.2.3.4/api/v1/logical-routers/%s?force=True' % uuid)
+            'https://1.2.3.4/api/v1/logical-routers/%s?force=True' % uuid,
+            headers=self.default_headers())
 
     def test_get_logical_router_fw_section(self):
         fake_router = test_constants.FAKE_ROUTER.copy()
@@ -518,7 +532,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
                 'post', router,
                 ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules' %
                     test_constants.FAKE_ROUTER_UUID),
-                data=jsonutils.dumps(data, sort_keys=True))
+                data=jsonutils.dumps(data, sort_keys=True),
+                headers=self.default_headers())
 
     def test_nat_rule_create_v1(self):
         # Ignoring 'bypass_firewall' with version 1.1
@@ -534,7 +549,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'get', router,
             ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules' %
-                test_constants.FAKE_ROUTER_UUID))
+                test_constants.FAKE_ROUTER_UUID),
+            headers=self.default_headers())
 
     def test_nat_rule_update(self):
         router = self._mocked_lrouter()
@@ -548,7 +564,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
                 'put', router,
                 ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules/%s' %
                     (test_constants.FAKE_ROUTER_UUID, rule_id)),
-                data=jsonutils.dumps(data, sort_keys=True))
+                data=jsonutils.dumps(data, sort_keys=True),
+                headers=self.default_headers())
 
     def test_delete_nat_rule_by_gw(self):
         router = self._mocked_lrouter()
@@ -567,7 +584,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             test_client.assert_json_call(
                 'delete', router,
                 ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules/%s' %
-                    (test_constants.FAKE_ROUTER_UUID, rule_id)))
+                    (test_constants.FAKE_ROUTER_UUID, rule_id)),
+                headers=self.default_headers())
 
     def test_delete_nat_rule_by_gw_and_source(self):
         router = self._mocked_lrouter()
@@ -589,7 +607,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             test_client.assert_json_call(
                 'delete', router,
                 ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules/%s' %
-                    (test_constants.FAKE_ROUTER_UUID, rule_id)))
+                    (test_constants.FAKE_ROUTER_UUID, rule_id)),
+                headers=self.default_headers())
 
 
 class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
@@ -629,7 +648,8 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             test_client.assert_json_call(
                 'post', lrport,
                 'https://1.2.3.4/api/v1/logical-router-ports',
-                data=jsonutils.dumps(data, sort_keys=True))
+                data=jsonutils.dumps(data, sort_keys=True),
+                headers=self.default_headers())
 
     def test_logical_router_port_max_attempts(self):
         """Test a router port api has the configured retries."""
@@ -646,7 +666,8 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
         lrport.delete(uuid)
         test_client.assert_json_call(
             'delete', lrport,
-            'https://1.2.3.4/api/v1/logical-router-ports/%s' % uuid)
+            'https://1.2.3.4/api/v1/logical-router-ports/%s' % uuid,
+            headers=self.default_headers())
 
     def test_update_logical_router_port(self):
         fake_router_port = test_constants.FAKE_ROUTER_PORT.copy()
@@ -672,7 +693,8 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             test_client.assert_json_call(
                 'put', lrport,
                 'https://1.2.3.4/api/v1/logical-router-ports/%s' % uuid,
-                data=jsonutils.dumps(data, sort_keys=True))
+                data=jsonutils.dumps(data, sort_keys=True),
+                headers=self.default_headers())
 
     def test_get_logical_router_port_by_router_id(self):
         """Test getting a router port by router id."""
@@ -689,7 +711,8 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'get', lrport,
             'https://1.2.3.4/api/v1/logical-router-ports/?'
-            'logical_router_id=%s' % router_id)
+            'logical_router_id=%s' % router_id,
+            headers=self.default_headers())
 
     def test_get_logical_router_port_by_switch_id(self):
         """Test getting a router port by switch id."""
@@ -708,7 +731,8 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'get', lrport,
             'https://1.2.3.4/api/v1/logical-router-ports/?'
-            'logical_switch_id=%s' % switch_id)
+            'logical_switch_id=%s' % switch_id,
+            headers=self.default_headers())
 
 
 class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
@@ -751,7 +775,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools',
-            data=jsonutils.dumps(data, sort_keys=True))
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_ip_pool_minimal_args(self):
         pool = self._mocked_pool()
@@ -771,7 +796,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools',
-            data=jsonutils.dumps(data, sort_keys=True))
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_ip_pool_no_ranges_with_gateway(self):
         pool = self._mocked_pool()
@@ -792,7 +818,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools',
-            data=jsonutils.dumps(data, sort_keys=True))
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_ip_pool_no_ranges_no_gateway(self):
         pool = self._mocked_pool()
@@ -810,7 +837,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools',
-            data=jsonutils.dumps(data, sort_keys=True))
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
 
     def test_create_ip_pool_no_cidr(self):
         pool = self._mocked_pool()
@@ -842,7 +870,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'put', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
-            data=jsonutils.dumps(fake_ip_pool, sort_keys=True))
+            data=jsonutils.dumps(fake_ip_pool, sort_keys=True),
+            headers=self.default_headers())
 
     def test_update_ip_pool_gateway(self):
         fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
@@ -858,7 +887,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'put', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
-            data=jsonutils.dumps(fake_ip_pool, sort_keys=True))
+            data=jsonutils.dumps(fake_ip_pool, sort_keys=True),
+            headers=self.default_headers())
 
     def test_update_ip_pool_delete_gateway(self):
         fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
@@ -873,7 +903,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'put', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
-            data=jsonutils.dumps(fake_ip_pool, sort_keys=True))
+            data=jsonutils.dumps(fake_ip_pool, sort_keys=True),
+            headers=self.default_headers())
 
     def test_get_ip_pool(self):
         """Test getting a router port by router id"""
@@ -889,7 +920,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         self.assertEqual(fake_ip_pool, result)
         test_client.assert_json_call(
             'get', pool,
-            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid)
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
+            headers=self.default_headers())
 
     def test_delete_ip_pool(self):
         """Test deleting router port"""
@@ -899,7 +931,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         pool.delete(uuid)
         test_client.assert_json_call(
             'delete', pool,
-            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid)
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
+            headers=self.default_headers())
 
     def test_allocate_ip_from_pool(self):
         pool = self._mocked_pool()
@@ -912,7 +945,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools/%s?action=ALLOCATE' % uuid,
-            data=jsonutils.dumps(data, sort_keys=True))
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
 
     def test_release_ip_to_pool(self):
         pool = self._mocked_pool()
@@ -925,7 +959,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         test_client.assert_json_call(
             'post', pool,
             'https://1.2.3.4/api/v1/pools/ip-pools/%s?action=RELEASE' % uuid,
-            data=jsonutils.dumps(data, sort_keys=True))
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
 
     def test_get_ip_pool_allocations(self):
         """Test getting a router port by router id"""
@@ -941,7 +976,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
         self.assertEqual(fake_ip_pool, result)
         test_client.assert_json_call(
             'get', pool,
-            'https://1.2.3.4/api/v1/pools/ip-pools/%s/allocations' % uuid)
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s/allocations' % uuid,
+            headers=self.default_headers())
 
 
 class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
