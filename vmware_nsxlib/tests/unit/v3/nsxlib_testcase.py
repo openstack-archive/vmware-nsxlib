@@ -20,6 +20,7 @@ import unittest
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 from requests import exceptions as requests_exceptions
+from requests import models
 
 from vmware_nsxlib import v3
 from vmware_nsxlib.v3 import client as nsx_client
@@ -43,6 +44,8 @@ NSX_MAX_ATTEMPTS = 10
 PLUGIN_SCOPE = "plugin scope"
 PLUGIN_TAG = "plugin tag"
 PLUGIN_VER = "plugin ver"
+
+JSESSIONID = 'my_sess_id'
 
 
 def _mock_nsxlib():
@@ -309,8 +312,28 @@ class NsxClientTestCase(NsxLibTestCase):
             assert conn is not None
 
     def mock_nsx_clustered_api(self, session_response=None, **kwargs):
-        return NsxClientTestCase.MockNSXClusteredAPI(
-            session_response=session_response, **kwargs)
+        orig_request = nsx_cluster.TimeoutSession.request
+
+        def mocked_request(*args, **kwargs):
+            if args[2].endswith('api/session/create'):
+                response = models.Response()
+                response.status_code = 200
+                response.headers = {
+                    'Set-Cookie': 'JSESSIONID=%s;junk' % JSESSIONID}
+                return response
+            return orig_request(*args, **kwargs)
+
+        with mock.patch.object(nsx_cluster.TimeoutSession, 'request',
+                               new=mocked_request):
+            cluster = NsxClientTestCase.MockNSXClusteredAPI(
+                session_response=session_response, **kwargs)
+        return cluster
+
+    @staticmethod
+    def default_headers():
+        return {'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Cookie': 'JSESSIONID=%s;' % JSESSIONID}
 
     def mocked_resource(self, resource_class, mock_validate=True,
                         session_response=None):
@@ -359,12 +382,14 @@ class NsxClientTestCase(NsxLibTestCase):
         return nsx_cluster.NSXClusteredAPI(nsxlib_config)
 
     def assert_json_call(self, method, client, url,
-                         headers=nsx_client.JSONRESTClient._DEFAULT_HEADERS,
+                         headers=None,
                          timeout=(NSX_HTTP_TIMEOUT, NSX_HTTP_READ_TIMEOUT),
                          data=None):
         cluster = client._conn
         if data:
             data = jsonutils.dumps(data, sort_keys=True)
+        if not headers:
+            headers = self.default_headers()
         cluster.assert_called_once(
             method,
             **{'url': url, 'verify': NSX_CERT, 'body': data,

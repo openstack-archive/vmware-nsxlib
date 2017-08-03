@@ -112,6 +112,7 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
         mock_client = self.new_mocked_client(
             client.JSONRESTClient,
             url_prefix='api/v1', session_response=fake_responses)
+        mock_client.nsx_api_managers = []
 
         return tm.NsxLibTrustManagement(mock_client, {})
 

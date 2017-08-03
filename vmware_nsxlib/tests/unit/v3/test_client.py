@@ -30,7 +30,14 @@ LOG = log.getLogger(__name__)
 CLIENT_PKG = 'vmware_nsxlib.v3.client'
 
 DFT_ACCEPT_HEADERS = {
-    'Accept': '*/*'
+    'Accept': '*/*',
+    'Cookie': 'JSESSIONID=%s;' % nsxlib_testcase.JSESSIONID
+}
+
+JSON_DFT_ACCEPT_HEADERS = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'Cookie': 'JSESSIONID=%s;' % nsxlib_testcase.JSESSIONID
 }
 
 
@@ -65,7 +72,7 @@ def assert_call(verb, client_or_resource,
 def assert_json_call(verb, client_or_resource, url,
                      verify=nsxlib_testcase.NSX_CERT,
                      data=None,
-                     headers=client.JSONRESTClient._DEFAULT_HEADERS,
+                     headers=JSON_DFT_ACCEPT_HEADERS,
                      single_call=True):
     return assert_call(verb, client_or_resource, url,
                        verify=verify, data=data,
