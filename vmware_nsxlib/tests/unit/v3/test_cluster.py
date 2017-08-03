@@ -19,6 +19,7 @@ import unittest
 
 from oslo_serialization import jsonutils
 from requests import exceptions as requests_exceptions
+from requests import models
 
 from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
@@ -36,6 +37,13 @@ def _validate_conn_down(*args, **kwargs):
     raise requests_exceptions.ConnectionError()
 
 
+def get_sess_create_resp():
+    sess_create_response = models.Response()
+    sess_create_response.status_code = 200
+    sess_create_response.headers = {'Set-Cookie': 'JSESSIONID=abc;'}
+    return sess_create_response
+
+
 class RequestsHTTPProviderTestCase(unittest.TestCase):
 
     def test_new_connection(self):
@@ -50,15 +58,19 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
         mock_api.nsxlib_config.conn_idle_timeout = 39
         mock_api.nsxlib_config.client_cert_provider = None
         provider = cluster.NSXRequestsHTTPProvider()
-        session = provider.new_connection(
-            mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
-                                       'nsxuser', 'nsxpassword', None))
 
-        self.assertEqual(session.auth, ('nsxuser', 'nsxpassword'))
-        self.assertEqual(session.verify, False)
-        self.assertIsNone(session.cert)
-        self.assertEqual(session.adapters['https://'].max_retries.total, 100)
-        self.assertEqual(session.timeout, 99)
+        with mock.patch.object(cluster.TimeoutSession, 'request',
+                               return_value=get_sess_create_resp()):
+            session = provider.new_connection(
+                mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
+                                           'nsxuser', 'nsxpassword', None))
+
+            self.assertEqual(('nsxuser', 'nsxpassword'), session.auth)
+            self.assertFalse(session.verify)
+            self.assertIsNone(session.cert)
+            self.assertEqual(100,
+                             session.adapters['https://'].max_retries.total)
+            self.assertEqual(session.timeout, 99)
 
     def test_new_connection_with_client_auth(self):
         mock_api = mock.Mock()
@@ -72,14 +84,15 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
             '/etc/cert.pem')
         mock_api.nsxlib_config.client_cert_provider = cert_provider_inst
         provider = cluster.NSXRequestsHTTPProvider()
-        session = provider.new_connection(
-            mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
-                                       None, None, None))
-
-        self.assertEqual(session.auth, None)
-        self.assertEqual(session.verify, False)
-        self.assertEqual(session.cert_provider, cert_provider_inst)
-        self.assertEqual(session.timeout, 99)
+        with mock.patch.object(cluster.TimeoutSession, 'request',
+                               return_value=get_sess_create_resp()):
+            session = provider.new_connection(
+                mock_api, cluster.Provider('9.8.7.6', 'https://9.8.7.6',
+                                           None, None, None))
+            self.assertEqual(session.auth, None)
+            self.assertEqual(session.verify, False)
+            self.assertEqual(session.cert_provider, cert_provider_inst)
+            self.assertEqual(session.timeout, 99)
 
     def test_validate_connection(self):
         self.skipTest("Revist")
@@ -231,6 +244,8 @@ class ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
         self.assertEqual(_get_schedule(4), [eps[0], eps[2], eps[0], eps[2]])
 
     def test_reinitialize_cluster(self):
-        api = self.mock_nsx_clustered_api()
-        # just make sure this api is defined, and does not crash
-        api._reinit_cluster()
+        with mock.patch.object(cluster.TimeoutSession, 'request',
+                               return_value=get_sess_create_resp()):
+            api = self.mock_nsx_clustered_api()
+            # just make sure this api is defined, and does not crash
+            api._reinit_cluster()

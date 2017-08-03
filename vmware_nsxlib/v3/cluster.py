@@ -21,6 +21,7 @@ import eventlet
 import itertools
 import logging
 import OpenSSL
+import re
 import requests
 import six
 import six.moves.urllib.parse as urlparse
@@ -31,7 +32,7 @@ from oslo_log import log
 from oslo_service import loopingcall
 from requests import adapters
 from requests import exceptions as requests_exceptions
-from vmware_nsxlib._i18n import _, _LI, _LW
+from vmware_nsxlib._i18n import _, _LE, _LI, _LW
 from vmware_nsxlib.v3 import client as nsx_client
 from vmware_nsxlib.v3 import exceptions
 
@@ -104,8 +105,8 @@ class TimeoutSession(requests.Session):
     def request(self, *args, **kwargs):
         if 'timeout' not in kwargs:
             kwargs['timeout'] = (self.timeout, self.read_timeout)
-
-        if not self._cert_provider:
+        skip_cert = kwargs.pop('skip_cert', False)
+        if not self._cert_provider or skip_cert:
             return super(TimeoutSession, self).request(*args, **kwargs)
 
         if self.cert is not None:
@@ -144,6 +145,12 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
     using requests.Session() as the underlying connection.
     """
 
+    SESSION_CREATE_URL = '/api/session/create'
+    COOKIE_FIELD = 'Cookie'
+    SET_COOKIE_FIELD = 'Set-Cookie'
+    XSRF_TOKEN = 'X-XSRF-TOKEN'
+    JSESSIONID = 'JSESSIONID'
+
     @property
     def provider_id(self):
         return "%s-%s" % (requests.__title__, requests.__version__)
@@ -151,7 +158,8 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
     def validate_connection(self, cluster_api, endpoint, conn):
         client = nsx_client.NSX3Client(
             conn, url_prefix=endpoint.provider.url,
-            url_path_base=cluster_api.nsxlib_config.url_base)
+            url_path_base=cluster_api.nsxlib_config.url_base,
+            default_headers=conn.default_headers)
         keepalive_section = cluster_api.nsxlib_config.keepalive_section
         result = client.get(keepalive_section, silent=True)
         # If keeplive section returns a list, it is assumed to be non-empty
@@ -188,10 +196,45 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
         session.mount('http://', adapter)
         session.mount('https://', adapter)
 
+        self.get_default_headers(session, provider)
+
         return session
 
     def is_connection_exception(self, exception):
         return isinstance(exception, requests_exceptions.ConnectionError)
+
+    def get_default_headers(self, session, provider):
+        """Get the default headers that should be added to future requests"""
+        session.default_headers = {}
+
+        # Perform the initial session create and get the relevant jsessionid &
+        # X-XSRF-TOKEN for future requests
+        req_data = 'j_username=%s&j_password=%s' % (provider.username,
+                                                    provider.password)
+        req_headers = {'Accept': 'application/json',
+                       'Content-Type': 'application/x-www-form-urlencoded'}
+        # Cannot use the certificate at this stage, because it is used for
+        # the certificate generation
+        resp = session.request('post', provider.url + self.SESSION_CREATE_URL,
+                               data=req_data, headers=req_headers,
+                               skip_cert=True)
+        if resp.status_code != 200:
+            LOG.error(_LE("Session create failed for endpoint %s"),
+                      provider.url)
+            # this will later cause the endpoint to be Down
+        else:
+            for header_name in resp.headers:
+                if self.SET_COOKIE_FIELD.lower() == header_name.lower():
+                    m = re.match('%s=.*?\;' % self.JSESSIONID,
+                                 resp.headers[header_name])
+                    if m:
+                        session.default_headers[self.COOKIE_FIELD] = m.group()
+                if self.XSRF_TOKEN.lower() == header_name.lower():
+                    session.default_headers[self.XSRF_TOKEN] = resp.headers[
+                        header_name]
+            LOG.info(_LI("Session create succeeded for endpoint %(url)s with "
+                         "headers %(hdr)s"),
+                     {'url': provider.url, 'hdr': session.default_headers})
 
 
 class ClusterHealth(object):
@@ -493,6 +536,11 @@ class ClusteredAPI(object):
             try:
                 LOG.debug("API cluster proxy %s %s to %s",
                           proxy_for.upper(), uri, url)
+                # Add the connection default headers
+                if conn.default_headers:
+                    kwargs['headers'] = kwargs.get('headers', {})
+                    kwargs['headers'].update(conn.default_headers)
+
                 # call the actual connection method to do the
                 # http request/response over the wire
                 response = do_request(url, *args, **kwargs)
