@@ -19,6 +19,7 @@ import copy
 import datetime
 import itertools
 import logging
+import re
 
 import eventlet
 from eventlet import greenpool
@@ -145,6 +146,12 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
     using requests.Session() as the underlying connection.
     """
 
+    SESSION_CREATE_URL = '/api/session/create'
+    COOKIE_FIELD = 'Cookie'
+    SET_COOKIE_FIELD = 'Set-Cookie'
+    XSRF_TOKEN = 'X-XSRF-TOKEN'
+    JSESSIONID = 'JSESSIONID'
+
     @property
     def provider_id(self):
         return "%s-%s" % (requests.__title__, requests.__version__)
@@ -189,10 +196,40 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
         session.mount('http://', adapter)
         session.mount('https://', adapter)
 
+        self.get_default_headers(session, provider)
+
         return session
 
     def is_connection_exception(self, exception):
         return isinstance(exception, requests_exceptions.ConnectionError)
+
+    def get_default_headers(self, session, provider):
+        """Get the default headers that should be added to future requests"""
+        session.default_headers = {}
+
+        # DEBUG ADIT will work with cert?
+        # DEBUG ADIT - depends on version? (which we do not know yet)
+
+        # Perform the initial session create and get the relevant jsessionid &
+        # X-XSRF-TOKEN for future requests
+        req_data = 'j_username=%s&j_password=%s' % (provider.username,
+                                                    provider.password)
+        req_headers = {'Accept': 'application/json',
+                       'Content-Type': 'application/x-www-form-urlencoded'}
+        resp = session.request('post', provider.url + self.SESSION_CREATE_URL,
+                               data=req_data, headers=req_headers)
+        if resp.status_code != 200:
+            LOG.error("Session create failed for endpoint %s", provider.url)
+            # DEBUG ADIT - to fail??
+        else:
+            if self.SET_COOKIE_FIELD in resp.headers:
+                m = re.match('%s=.*?\;' % self.JSESSIONID,
+                             resp.headers[self.SET_COOKIE_FIELD])
+                if m:
+                    session.default_headers[self.COOKIE_FIELD] = m.group()
+            if self.XSRF_TOKEN in resp.headers:
+                session.default_headers[self.XSRF_TOKEN] = resp.headers[
+                    self.XSRF_TOKEN]
 
 
 class ClusterHealth(object):
@@ -494,6 +531,11 @@ class ClusteredAPI(object):
             try:
                 LOG.debug("API cluster proxy %s %s to %s",
                           proxy_for.upper(), uri, url)
+                # Add the connection default headers
+                if conn.default_headers:
+                    kwargs['headers'] = kwargs.get('headers', {})
+                    kwargs['headers'].update(conn.default_headers)
+
                 # call the actual connection method to do the
                 # http request/response over the wire
                 response = do_request(url, *args, **kwargs)
