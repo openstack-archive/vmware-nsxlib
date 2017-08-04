@@ -78,7 +78,7 @@ class LoadBalancerBase(utils.NsxLibApiBase):
         if item_key in body:
             item_list = body[item_key]
             if item_id not in item_list:
-                item_list.append(item_list)
+                item_list.append(item_id)
             else:
                 LOG.error('Item %s is already in resource %s',
                           item_id, item_key)
