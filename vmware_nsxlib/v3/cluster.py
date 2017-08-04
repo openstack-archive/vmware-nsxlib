@@ -109,32 +109,18 @@ class TimeoutSession(requests.Session):
         if not self._cert_provider:
             return super(TimeoutSession, self).request(*args, **kwargs)
 
-        if self.cert is not None:
-            # connection should be open (unless server closed it),
-            # in which case cert is not needed
-            try:
-                return super(TimeoutSession, self).request(*args, **kwargs)
-            except OpenSSL.SSL.Error as e:
-                # This is most probably "client cert not found" error (this
-                # happens when server closed the connection and requests
-                # reopen it). Try reloading client cert.
-                LOG.debug("SSL error: %s, retrying.." % e)
-            except (OSError, IOError) as e:
-                # Lack of client cert file can come in form of OSError/IOError.
-                # Try reloading client cert. No good way to narrow the error
-                # based on text since they come in different flavors.
-                # We don't print the error to avoid exposing cert file name in
-                # the logs
-                LOG.info("Reloading client certificate..")
-
         # The following with statement allows for preparing certificate and
         # private key file and dispose it once connections are spawned
         # (since PK is sensitive information, immediate disposal is
-        # important). This is done of first request of the session or when
-        # above exceptions indicate cert is missing.
+        # important).
+        # It would be optimal to populate certificate once per connection,
+        # and not once per request. Unfortunately requests library verifies
+        # cert file existance regardless if certificate is actually going to
+        # be used for this request.
         with self._cert_provider:
             self.cert = self._cert_provider.filename()
             ret = super(TimeoutSession, self).request(*args, **kwargs)
+            self.cert = None
 
         return ret
 
