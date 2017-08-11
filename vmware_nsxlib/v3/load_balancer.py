@@ -158,7 +158,7 @@ class ApplicationProfile(LoadBalancerBase):
         elif (resource_type == ApplicationProfileTypes.FAST_TCP or
               resource_type == ApplicationProfileTypes.FAST_UDP):
             body['resource_type'] = resource_type
-            extra_args = ['flow_mirroring_enabled', 'idle_timeout']
+            extra_args = ['ha_flow_mirroring_enabled', 'idle_timeout']
             return utils.build_extra_args(body, extra_args, **kwargs)
         else:
             raise nsxlib_exc.InvalidInput(
@@ -187,7 +187,8 @@ class PersistenceProfile(LoadBalancerBase):
             return utils.build_extra_args(body, extra_args, **kwargs)
         elif resource_type == PersistenceProfileTypes.SOURCE_IP:
             body['resource_type'] = resource_type
-            extra_args = ['persistence_mirroring_enabled', 'purge', 'timeout']
+            extra_args = ['ha_persistence_mirroring_enabled', 'purge',
+                          'timeout']
             return utils.build_extra_args(body, extra_args, **kwargs)
         else:
             raise nsxlib_exc.InvalidInput(
@@ -229,7 +230,7 @@ class Monitor(LoadBalancerBase):
             return utils.build_extra_args(body, extra_args, **kwargs)
         elif resource_type == MonitorTypes.HTTPS:
             body['resource_type'] = resource_type
-            extra_args = ['authentication_depth', 'ciphers',
+            extra_args = ['certificate_chain_depth', 'ciphers',
                           'client_certificate_id', 'fall_count', 'interval',
                           'monitor_port', 'protocols', 'request_body',
                           'request_method', 'request_url', 'request_version',
