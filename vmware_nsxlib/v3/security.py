@@ -227,15 +227,27 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
 class NsxLibFirewallSection(utils.NsxLibApiBase):
 
     def add_member_to_fw_exclude_list(self, target_id, target_type):
-        resource = 'firewall/excludelist?action=add_member'
-        body = {"target_id": target_id,
-                "target_type": target_type}
-        self.client.create(resource, body)
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _add_member_to_fw_exclude_list():
+            resource = 'firewall/excludelist?action=add_member'
+            body = {"target_id": target_id,
+                    "target_type": target_type}
+            self.client.create(resource, body)
+
+        _add_member_to_fw_exclude_list()
 
     def remove_member_from_fw_exclude_list(self, target_id, target_type):
-        resource = ('firewall/excludelist?action=remove_member&object_id='
-                    + target_id)
-        self.client.create(resource)
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _remove_member_from_fw_exclude_list():
+            resource = ('firewall/excludelist?action=remove_member&object_id='
+                        + target_id)
+            self.client.create(resource)
+
+        _remove_member_from_fw_exclude_list()
 
     def get_excludelist(self):
         return self.client.list('firewall/excludelist')
