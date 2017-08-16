@@ -1171,34 +1171,44 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
 
     def test_delete(self):
         id = '111'
+        domain_id = 'domain1'
         with mock.patch.object(self.policy_api, "delete") as api_call:
-            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            self.resourceApi.delete(id, domain_id=domain_id,
+                                    tenant=TEST_TENANT)
             expected_def = policy_defs.DeploymentMapDef(map_id=id,
+                                                        domain_id=domain_id,
                                                         tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         id = '111'
+        domain_id = 'domain1'
         with mock.patch.object(self.policy_api, "get") as api_call:
-            self.resourceApi.get(id, tenant=TEST_TENANT)
+            self.resourceApi.get(id, domain_id=domain_id, tenant=TEST_TENANT)
             expected_def = policy_defs.DeploymentMapDef(map_id=id,
+                                                        domain_id=domain_id,
                                                         tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
         name = 'ep1'
+        domain_id = 'domain1'
         with mock.patch.object(
             self.policy_api, "list",
             return_value={'results': [{'display_name': name}]}) as api_call:
-            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            obj = self.resourceApi.get_by_name(name, domain_id=domain_id,
+                                               tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.DeploymentMapDef(tenant=TEST_TENANT)
+            expected_def = policy_defs.DeploymentMapDef(domain_id=domain_id,
+                                                        tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
+        domain_id = 'domain1'
         with mock.patch.object(self.policy_api, "list") as api_call:
-            self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.DeploymentMapDef(tenant=TEST_TENANT)
+            self.resourceApi.list(domain_id=domain_id, tenant=TEST_TENANT)
+            expected_def = policy_defs.DeploymentMapDef(domain_id=domain_id,
+                                                        tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
