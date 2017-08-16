@@ -741,20 +741,35 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
             tenant=tenant)
         return self.policy_api.create_or_update(map_def)
 
-    def delete(self, map_id,
+    def delete(self, map_id, domain_id=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
+        if not domain_id:
+            # domain_id must be provided
+            err_msg = (_("Cannot delete deployment maps without a domain"))
+            raise exceptions.ManagerError(details=err_msg)
+
         map_def = policy_defs.DeploymentMapDef(
-            map_id=map_id, tenant=tenant)
+            map_id=map_id, domain_id=domain_id, tenant=tenant)
         self.policy_api.delete(map_def)
 
-    def get(self, map_id,
+    def get(self, map_id, domain_id=None,
             tenant=policy_constants.POLICY_INFRA_TENANT):
+        if not domain_id:
+            # domain_id must be provided
+            err_msg = (_("Cannot get deployment maps without a domain"))
+            raise exceptions.ManagerError(details=err_msg)
         map_def = policy_defs.DeploymentMapDef(
-            map_id=map_id, tenant=tenant)
+            map_id=map_id, domain_id=domain_id, tenant=tenant)
         return self.policy_api.get(map_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.DeploymentMapDef(tenant=tenant)
+    def list(self, domain_id=None,
+             tenant=policy_constants.POLICY_INFRA_TENANT):
+        if not domain_id:
+            # domain_id must be provided
+            err_msg = (_("Cannot list deployment maps without a domain"))
+            raise exceptions.ManagerError(details=err_msg)
+        map_def = policy_defs.DeploymentMapDef(domain_id=domain_id,
+                                               tenant=tenant)
         return self.policy_api.list(map_def)['results']
 
     def update(self, map_id, name=None, description=None,
