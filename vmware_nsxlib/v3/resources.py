@@ -80,7 +80,8 @@ class LogicalPort(utils.NsxLibApiBase):
             admin_state=True, tags=None,
             address_bindings=None,
             switch_profile_ids=None,
-            attachment=None):
+            attachment=None,
+            description=None):
         tags = tags or []
         address_bindings = address_bindings or []
         switch_profile_ids = switch_profile_ids or []
@@ -124,6 +125,9 @@ class LogicalPort(utils.NsxLibApiBase):
         if attachment is not False:
             body['attachment'] = attachment
 
+        if description is not None:
+            body['description'] = description
+
         return body
 
     def _prepare_attachment(self, attachment_type, vif_uuid,
@@ -160,9 +164,9 @@ class LogicalPort(utils.NsxLibApiBase):
                admin_state=True, name=None, address_bindings=None,
                parent_vif_id=None, traffic_tag=None,
                switch_profile_ids=None, vif_type=None, app_id=None,
-               allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE):
+               allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE,
+               description=None):
         tags = tags or []
-
         body = {'logical_switch_id': lswitch_id}
         # NOTE(arosen): If parent_vif_id is specified we need to use
         # CIF attachment type.
@@ -175,7 +179,8 @@ class LogicalPort(utils.NsxLibApiBase):
             admin_state=admin_state, tags=tags,
             address_bindings=address_bindings,
             switch_profile_ids=switch_profile_ids,
-            attachment=attachment))
+            attachment=attachment,
+            description=description))
         return self.client.create(self.get_path(), body=body)
 
     def delete(self, lport_id):
@@ -196,7 +201,8 @@ class LogicalPort(utils.NsxLibApiBase):
                attachment_type=nsx_constants.ATTACHMENT_VIF,
                parent_vif_id=None, traffic_tag=None,
                vif_type=None, app_id=None,
-               allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE):
+               allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE,
+               description=None):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
@@ -220,7 +226,8 @@ class LogicalPort(utils.NsxLibApiBase):
                 admin_state=admin_state, tags=tags,
                 address_bindings=addr_bindings,
                 switch_profile_ids=switch_profile_ids,
-                attachment=attachment))
+                attachment=attachment,
+                description=description))
 
             # If revision_id of the payload that we send is older than what
             # NSX has, we will get a 412: Precondition Failed.
