@@ -275,14 +275,15 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         fake_port['address_bindings'] = binding_repr
 
         mocked_resource = self._mocked_lport()
-
+        description = 'dummy'
         switch_profile = resources.SwitchingProfile
         mocked_resource.create(
             fake_port['logical_switch_id'],
             fake_port['attachment']['id'],
             address_bindings=pkt_classifiers,
             switch_profile_ids=switch_profile.build_switch_profile_ids(
-                mock.Mock(), *profile_dicts))
+                mock.Mock(), *profile_dicts),
+            description=description)
 
         resp_body = {
             'logical_switch_id': fake_port['logical_switch_id'],
@@ -292,7 +293,8 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
                 'id': fake_port['attachment']['id']
             },
             'admin_state': 'UP',
-            'address_bindings': fake_port['address_bindings']
+            'address_bindings': fake_port['address_bindings'],
+            'description': description
         }
 
         test_client.assert_json_call(
