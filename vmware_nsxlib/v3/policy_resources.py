@@ -456,8 +456,18 @@ class NsxPolicyCommunicationProfileApi(NsxPolicyResourceBase):
 
     def delete(self, profile_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Delete the Communication profile with all the entries"""
+        # first delete the entries, or else the profile deletion will fail
         profile_def = policy_defs.CommunicationProfileDef(
             profile_id=profile_id, tenant=tenant)
+        prof = self.policy_api.get(profile_def)
+        if 'communication_profile_entries' in prof:
+            for entry in prof['communication_profile_entries']:
+                entry_def = policy_defs.CommunicationProfileEntryDef(
+                    profile_id=profile_id,
+                    profile_entry_id=entry['id'],
+                    tenant=tenant)
+                self.policy_api.delete(entry_def)
         self.policy_api.delete(profile_def)
 
     def get(self, profile_id,
