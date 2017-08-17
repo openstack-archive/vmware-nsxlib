@@ -710,10 +710,12 @@ class TestPolicyCommunicationProfile(NsxPolicyLibTestCase):
 
     def test_delete(self):
         id = '111'
-        with mock.patch.object(self.policy_api, "delete") as api_call:
+        with mock.patch.object(self.policy_api, "delete") as api_call,\
+            mock.patch.object(self.policy_api, "get") as get_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
             expected_def = policy_defs.CommunicationProfileDef(
                 profile_id=id, tenant=TEST_TENANT)
+            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
