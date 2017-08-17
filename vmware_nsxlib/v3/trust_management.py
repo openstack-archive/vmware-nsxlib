@@ -81,17 +81,6 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         resource = ID_SECTION + '/' + identity_id
         self.client.delete(resource)
 
-    # TODO(annak): kept for sake of short-term stability, remove this
-    def get_identity_details(self, identity):
-        results = self.client.get(ID_SECTION)['results']
-        for result in results:
-            if result['name'] == identity:
-                return result
-
-        raise nsxlib_exc.ResourceNotFound(
-            manager=self.client.nsx_api_managers,
-            operation="Principal identity %s not found" % identity)
-
     def find_cert_and_identity(self, name, cert_pem):
         nsx_style_pem = self.remove_newlines_from_pem(cert_pem)
         certs = self.get_certs()
