@@ -656,6 +656,9 @@ class NsxLibEdgeCluster(utils.NsxLibApiBase):
 
 class NsxLibTransportZone(utils.NsxLibApiBase):
 
+    TRANSPORT_TYPE_VLAN = 'VLAN'
+    TRANSPORT_TYPE_OVERLAY = 'OVERLAY'
+
     @property
     def uri_segment(self):
         return 'transport-zones'
@@ -663,6 +666,10 @@ class NsxLibTransportZone(utils.NsxLibApiBase):
     @property
     def resource_type(self):
         return 'TransportZone'
+
+    def get_transport_type(self, uuid):
+        tz = self.get(uuid)
+        return tz['transport_type']
 
 
 class NsxLibDhcpProfile(utils.NsxLibApiBase):

@@ -1048,3 +1048,26 @@ class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
             self.assertRaises(exceptions.ManagerError,
                               self.nsxlib.get_id_by_resource_and_tag,
                               res_type, scope, tag, alert_multiple=True)
+
+
+class TransportZone(nsxlib_testcase.NsxClientTestCase):
+
+    def _mocked_tz(self, session_response=None):
+        return self.mocked_resource(
+            core_resources.NsxLibTransportZone,
+            session_response=session_response)
+
+    def test_get_transport_zone(self):
+        fake_tz = test_constants.FAKE_TZ.copy()
+        tz = self._mocked_tz()
+        tz.get(fake_tz['id'])
+        test_client.assert_json_call(
+            'get', tz,
+            'https://1.2.3.4/api/v1/transport-zones/%s' % fake_tz['id'])
+
+    def test_get_transport_zone_type(self):
+        fake_tz = test_constants.FAKE_TZ.copy()
+        tz = self._mocked_tz()
+        with mock.patch.object(tz.client, 'url_get', return_value=fake_tz):
+            tz_type = tz.get_transport_type(fake_tz['id'])
+            self.assertEqual(tz.TRANSPORT_TYPE_OVERLAY, tz_type)

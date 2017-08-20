@@ -320,3 +320,12 @@ FAKE_SERVICE = {
         "target_type": "LogicalRouter"
     }
 }
+
+FAKE_TZ_UUID = uuidutils.generate_uuid()
+FAKE_TZ = {
+    "resource_type": "TransportZone",
+    "revision": 0,
+    "id": FAKE_TZ_UUID,
+    "display_name": FAKE_NAME,
+    "transport_type": "OVERLAY"
+}
