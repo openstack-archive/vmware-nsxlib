@@ -121,7 +121,7 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
     def create(self, display_name, transport_zone_id, tags,
                replication_mode=nsx_constants.MTEP,
                admin_state=True, vlan_id=None, ip_pool_id=None,
-               mac_pool_id=None):
+               mac_pool_id=None, description=None):
         # TODO(salv-orlando): Validate Replication mode and admin_state
         # NOTE: These checks might be moved to the API client library if one
         # that performs such checks in the client is available
@@ -144,6 +144,9 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
         if mac_pool_id:
             body['mac_pool_id'] = mac_pool_id
 
+        if description is not None:
+            body['description'] = description
+
         return self.client.create(self.get_path(), body)
 
     def delete(self, lswitch_id):
@@ -157,7 +160,8 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
 
         _do_delete()
 
-    def update(self, lswitch_id, name=None, admin_state=None, tags=None):
+    def update(self, lswitch_id, name=None, admin_state=None, tags=None,
+               description=None):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
@@ -174,6 +178,8 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
                     lswitch['admin_state'] = nsx_constants.ADMIN_STATE_DOWN
             if tags is not None:
                 lswitch['tags'] = tags
+            if description is not None:
+                lswitch['description'] = description
             return self.client.update(self.get_path(lswitch_id), lswitch)
 
         return _do_update()

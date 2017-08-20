@@ -29,7 +29,7 @@ class NsxLibSwitchTestCase(nsxlib_testcase.NsxClientTestCase):
     _tz_id = "8f602f97-ee3e-46b0-9d9f-358955f03608"
 
     def _create_body(self, admin_state=nsx_constants.ADMIN_STATE_UP,
-                     vlan_id=None):
+                     vlan_id=None, description=None):
         body = {
             "transport_zone_id": NsxLibSwitchTestCase._tz_id,
             "replication_mode": "MTEP",
@@ -39,16 +39,21 @@ class NsxLibSwitchTestCase(nsxlib_testcase.NsxClientTestCase):
         }
         if vlan_id:
             body['vlan'] = vlan_id
+        if description is not None:
+            body['description'] = description
         return body
 
     def test_create_logical_switch(self):
         """Test creating a switch returns the correct response and 200 status
 
         """
+        desc = 'dummy'
         with mock.patch.object(self.nsxlib.client, 'create') as create:
             self.nsxlib.logical_switch.create(
-                nsx_v3_mocks.FAKE_NAME, NsxLibSwitchTestCase._tz_id, [])
-            create.assert_called_with('logical-switches', self._create_body())
+                nsx_v3_mocks.FAKE_NAME, NsxLibSwitchTestCase._tz_id, [],
+                description=desc)
+            create.assert_called_with('logical-switches',
+                                      self._create_body(description=desc))
 
     def test_create_logical_switch_admin_down(self):
         """Test creating switch with admin_state down"""
