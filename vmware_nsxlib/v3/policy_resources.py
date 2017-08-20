@@ -240,8 +240,18 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
     """
     def delete(self, service_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Delete the service with all its entries"""
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              tenant=tenant)
+        service = self.policy_api.get(service_def)
+        # first delete all the service entries
+        if 'service_entries' in service:
+            for entry in service['service_entries']:
+                entry_def = self.entry_def(
+                    service_id=service_id,
+                    service_entry_id=entry['id'],
+                    tenant=tenant)
+                self.policy_api.delete(entry_def)
         self.policy_api.delete(service_def)
 
     def get(self, service_id,
@@ -261,6 +271,10 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
         path = service_def.get_realized_state_path(ep_id)
         return self._get_realized_state(path)
 
+    @property
+    def entry_def(self):
+        pass
+
 
 class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     """NSX Policy Service with a single L4 service entry.
@@ -268,6 +282,10 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     Note the nsx-policy backend supports multiple service entries per service.
     At this point this is not supported here.
     """
+    @property
+    def entry_def(self):
+        return policy_defs.L4ServiceEntryDef
+
     def create_or_overwrite(self, name, service_id=None, description=None,
                             protocol=policy_constants.TCP, dest_ports=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -346,6 +364,10 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
     Note the nsx-policy backend supports multiple service entries per service.
     At this point this is not supported here.
     """
+    @property
+    def entry_def(self):
+        return policy_defs.IcmpServiceEntryDef
+
     def create_or_overwrite(self, name, service_id=None, description=None,
                             version=4, icmp_type=None, icmp_code=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
