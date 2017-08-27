@@ -455,18 +455,33 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return rule_dict
 
     def add_rule(self, rule, section_id):
-        resource = 'firewall/sections/%s/rules' % section_id
-        params = '?operation=insert_bottom'
-        return self.client.create(resource + params, rule)
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _add_rule():
+            resource = 'firewall/sections/%s/rules' % section_id
+            params = '?operation=insert_bottom'
+            return self.client.create(resource + params, rule)
+        return _add_rule()
 
     def add_rules(self, rules, section_id):
-        resource = 'firewall/sections/%s/rules' % section_id
-        params = '?action=create_multiple&operation=insert_bottom'
-        return self.client.create(resource + params, {'rules': rules})
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _add_rules():
+            resource = 'firewall/sections/%s/rules' % section_id
+            params = '?action=create_multiple&operation=insert_bottom'
+            return self.client.create(resource + params, {'rules': rules})
+        return _add_rules()
 
     def delete_rule(self, section_id, rule_id):
-        resource = 'firewall/sections/%s/rules/%s' % (section_id, rule_id)
-        return self.client.delete(resource)
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _delete_rule():
+            resource = 'firewall/sections/%s/rules/%s' % (section_id, rule_id)
+            return self.client.delete(resource)
+        return _delete_rule()
 
     def get_rules(self, section_id):
         resource = 'firewall/sections/%s/rules' % section_id
