@@ -496,6 +496,22 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             'https://1.2.3.4/api/v1/logical-routers/%s?force=True' % uuid,
             headers=self.default_headers())
 
+    def test_list_logical_router(self):
+        router = self._mocked_lrouter()
+        router.list()
+        test_client.assert_json_call(
+            'get', router,
+            'https://1.2.3.4/api/v1/logical-routers')
+
+    def test_list_logical_router_by_type(self):
+        router = self._mocked_lrouter()
+        router_type = 'TIER0'
+        router.list(router_type=router_type)
+        test_client.assert_json_call(
+            'get', router,
+            'https://1.2.3.4/api/v1/logical-routers?router_type=%s' %
+            router_type)
+
     def test_get_logical_router_fw_section(self):
         fake_router = test_constants.FAKE_ROUTER.copy()
 
