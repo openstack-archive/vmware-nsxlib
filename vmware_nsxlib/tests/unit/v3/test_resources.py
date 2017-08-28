@@ -23,6 +23,7 @@ from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import test_client
 from vmware_nsxlib.tests.unit.v3 import test_constants
+from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import resources
 
@@ -479,6 +480,13 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             'delete', router,
             'https://1.2.3.4/api/v1/logical-routers/%s?force=True' % uuid,
             headers=self.default_headers())
+
+    def test_list_logical_router(self):
+        router = self._mocked_lrouter()
+        router.list()
+        test_client.assert_json_call(
+            'get', router,
+            'https://1.2.3.4/api/v1/logical-routers')
 
 
 class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):

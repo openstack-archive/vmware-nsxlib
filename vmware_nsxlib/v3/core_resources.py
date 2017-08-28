@@ -370,6 +370,14 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         return self._get_resource_by_name_or_id(name_or_id,
                                                 'logical-routers')
 
+    def list(self, router_type=None):
+        """List all/by type logical routers."""
+        if router_type:
+            resource = '%s?router_type=%s' % (self.get_path(), router_type)
+        else:
+            resource = self.get_path()
+        return self.client.list(resource)
+
 
 class NsxLibEdgeCluster(utils.NsxLibApiBase):
 
