@@ -480,6 +480,13 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             'https://1.2.3.4/api/v1/logical-routers/%s?force=True' % uuid,
             headers=self.default_headers())
 
+    def test_list_logical_router(self):
+        router = self._mocked_lrouter()
+        router.list()
+        test_client.assert_json_call(
+            'get', router,
+            'https://1.2.3.4/api/v1/logical-routers')
+
 
 class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
