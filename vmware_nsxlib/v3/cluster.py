@@ -214,14 +214,15 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
         session.mount('http://', adapter)
         session.mount('https://', adapter)
 
-        self.get_default_headers(session, provider)
+        self.get_default_headers(session, provider,
+                                 config.allow_overwrite_header)
 
         return session
 
     def is_connection_exception(self, exception):
         return isinstance(exception, requests_exceptions.ConnectionError)
 
-    def get_default_headers(self, session, provider):
+    def get_default_headers(self, session, provider, allow_overwrite_header):
         """Get the default headers that should be added to future requests"""
         session.default_headers = {}
 
@@ -252,6 +253,10 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
             LOG.info("Session create succeeded for endpoint %(url)s with "
                      "headers %(hdr)s",
                      {'url': provider.url, 'hdr': session.default_headers})
+
+        # Add allow-overwrite if configured
+        if allow_overwrite_header:
+            session.default_headers['X-Allow-Overwrite'] = 'true'
 
 
 class ClusterHealth(object):

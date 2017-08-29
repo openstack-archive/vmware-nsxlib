@@ -68,7 +68,10 @@ class NsxLibConfig(object):
     :param dns_domain: Domain to use for building the hostnames.
     :param dhcp_profile_uuid: Currently unused and deprecated.
                               Kept for backward compatibility.
-
+    :param allow_overwrite_header: If True, a default header of
+                                   X-Allow-Overwrite:true will be added to all
+                                   the requests, to allow admin user to update/
+                                   delete all entries.
     """
 
     def __init__(self,
@@ -90,7 +93,8 @@ class NsxLibConfig(object):
                  plugin_ver=None,
                  dns_nameservers=None,
                  dns_domain='openstacklocal',
-                 dhcp_profile_uuid=None):
+                 dhcp_profile_uuid=None,
+                 allow_overwrite_header=False):
 
         self.nsx_api_managers = nsx_api_managers
         self._username = username
@@ -110,6 +114,7 @@ class NsxLibConfig(object):
         self.plugin_ver = plugin_ver
         self.dns_nameservers = dns_nameservers or []
         self.dns_domain = dns_domain
+        self.allow_overwrite_header = allow_overwrite_header
 
         if dhcp_profile_uuid:
             # this is deprecated, and never used.
