@@ -101,6 +101,10 @@ class ClientCertificateNotTrusted(ManagerError):
     message = _("Certificate not trusted")
 
 
+class BadXSRFToken(ManagerError):
+    message = _("Bad or expired XSRF token")
+
+
 class ServiceClusterUnavailable(ManagerError):
     message = _("Service cluster: '%(cluster_id)s' is unavailable. Please, "
                 "check NSX setup and/or configuration")
