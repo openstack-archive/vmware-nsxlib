@@ -36,7 +36,9 @@ def http_error_to_exception(status_code, error_code):
              'default': exceptions.ResourceNotFound},
         requests.codes.PRECONDITION_FAILED: exceptions.StaleRevision,
         requests.codes.INTERNAL_SERVER_ERROR:
-            {'99': exceptions.ClientCertificateNotTrusted}}
+            {'99': exceptions.ClientCertificateNotTrusted},
+        requests.codes.FORBIDDEN:
+            {'98': exceptions.BadXSRFToken}}
 
     if status_code in errors:
         if isinstance(errors[status_code], dict):
