@@ -358,7 +358,6 @@ class ClusteredAPI(object):
 
         self._http_provider = http_provider
         self._keepalive_interval = keepalive_interval
-
         def _init_cluster(*args, **kwargs):
             self._init_endpoints(providers,
                                  min_conns_per_pool, max_conns_per_pool)
@@ -467,6 +466,12 @@ class ClusteredAPI(object):
                         "'%(ep)s' due to untrusted client certificate",
                         {'ep': endpoint})
             # regenerate connection pool based on new certificate
+            endpoint.regenerate_pool()
+        except exceptions.BadXSRFToken:
+            LOG.warning("Failed to validate API cluster endpoint "
+                        "'%(ep)s' due to expired XSRF token",
+                        {'ep': endpoint})
+            # regenerate connection pool based on token
             endpoint.regenerate_pool()
         except Exception as e:
             endpoint.set_state(EndpointState.DOWN)
