@@ -18,6 +18,7 @@ import contextlib
 import copy
 import datetime
 import eventlet
+import inspect
 import itertools
 import logging
 import OpenSSL
@@ -103,38 +104,54 @@ class TimeoutSession(requests.Session):
     # wrapper timeouts at the session level
     # see: https://goo.gl/xNk7aM
     def request(self, *args, **kwargs):
+        def request_with_retry_on_ssl_error(self, *args, **kwargs):
+            try:
+                return super(TimeoutSession, self).request(*args, **kwargs)
+            except OpenSSL.SSL.Error:
+                # This can happen when connection tries to access certificate
+                # file it was opened with (renegotiation?)
+                # Proper way to solve this would be to pass in-memory cert
+                # to ssl C code.
+                # Retrying here works around the problem
+                return super(TimeoutSession, self).request(*args, **kwargs)
+
+        def get_cert_provider():
+            if inspect.isclass(self.cert_provider):
+                # If client provided certificate provider as a class,
+                # we spawn an instance here
+                return self.cert_provider()
+            return self.cert_provider
+
         if 'timeout' not in kwargs:
             kwargs['timeout'] = (self.timeout, self.read_timeout)
         skip_cert = kwargs.pop('skip_cert', False)
         if not self._cert_provider or skip_cert:
+            # No client certificate needed
             return super(TimeoutSession, self).request(*args, **kwargs)
 
         if self.cert is not None:
-            # connection should be open (unless server closed it),
-            # in which case cert is not needed
-            try:
-                return super(TimeoutSession, self).request(*args, **kwargs)
-            except OpenSSL.SSL.Error as e:
-                # This is most probably "client cert not found" error (this
-                # happens when server closed the connection and requests
-                # reopen it). Try reloading client cert.
-                LOG.debug("SSL error: %s, retrying.." % e)
-            except (OSError, IOError):
-                # Lack of client cert file can come in form of OSError/IOError.
-                # Try reloading client cert. No good way to narrow the error
-                # based on text since they come in different flavors.
-                # We don't print the error to avoid exposing cert file name in
-                # the logs
-                LOG.info(_LI("Reloading client certificate.."))
+            # Recursive call - shouldn't happen
+            return request_with_retry_on_ssl_error(*args, **kwargs)
 
         # The following with statement allows for preparing certificate and
-        # private key file and dispose it once connections are spawned
+        # private key file and dispose it at the end of request
         # (since PK is sensitive information, immediate disposal is
-        # important). This is done of first request of the session or when
-        # above exceptions indicate cert is missing.
-        with self._cert_provider:
-            self.cert = self._cert_provider.filename()
-            ret = super(TimeoutSession, self).request(*args, **kwargs)
+        # important).
+        # It would be optimal to populate certificate once per connection,
+        # per request. Unfortunately requests library verifies cert file
+        # existance regardless of whether certificate is going to be used
+        # for this request.
+        # Optimal solution for this would be to expose certificate as variable
+        # and not as a file to the SSL library
+        with get_cert_provider() as provider:
+            self.cert = provider.filename()
+            try:
+                ret = request_with_retry_on_ssl_error(*args, **kwargs)
+            except Exception as e:
+                self.cert = None
+                raise e
+
+            self.cert = None
 
         return ret
 
@@ -464,8 +481,8 @@ class ClusteredAPI(object):
             # regenerate connection pool based on new certificate
             endpoint.regenerate_pool()
         except exceptions.BadXSRFToken:
-            LOG.warning("Failed to validate API cluster endpoint "
-                        "'%(ep)s' due to expired XSRF token",
+            LOG.warning(_LW("Failed to validate API cluster endpoint "
+                            "'%(ep)s' due to expired XSRF token"),
                         {'ep': endpoint})
             # regenerate connection pool based on token
             endpoint.regenerate_pool()
