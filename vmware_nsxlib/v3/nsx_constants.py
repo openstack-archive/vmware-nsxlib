@@ -58,6 +58,7 @@ EXCLUDE_PORT = 'Exclude-Port'
 
 # Firewall rule position
 FW_INSERT_BEFORE = 'insert_before'
+FW_INSERT_AFTER = 'insert_after'
 FW_INSERT_BOTTOM = 'insert_bottom'
 FW_INSERT_TOP = 'insert_top'
 
