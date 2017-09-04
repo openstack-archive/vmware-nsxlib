@@ -329,3 +329,12 @@ FAKE_TZ = {
     "display_name": FAKE_NAME,
     "transport_type": "OVERLAY"
 }
+
+FAKE_MD_UUID = uuidutils.generate_uuid()
+FAKE_URL = "http://7.7.7.70:3500/abc"
+FAKE_MD = {
+    "resource_type": "MetadataProxy",
+    "revision": 0,
+    "id": FAKE_MD_UUID,
+    "metadata_server_url": FAKE_URL
+}
