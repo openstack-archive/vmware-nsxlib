@@ -238,6 +238,19 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
                                       bogus='bogus')
         self.assertEqual(resp, expected)
 
+    def test_retry(self):
+        max_retries = 5
+        total_count = {'val': 0}
+
+        @utils.retry_upon_exception(n_exc.InvalidInput,
+                                    max_attempts=max_retries)
+        def func_to_fail(x):
+            total_count['val'] = total_count['val'] + 1
+            raise n_exc.InvalidInput()
+
+        self.assertRaises(n_exc.InvalidInput, func_to_fail, 99)
+        self.assertEqual(max_retries, total_count['val'])
+
 
 class NsxFeaturesTestCase(nsxlib_testcase.NsxLibTestCase):
 
