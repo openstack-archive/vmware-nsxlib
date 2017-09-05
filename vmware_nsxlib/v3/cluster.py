@@ -105,7 +105,7 @@ class TimeoutSession(requests.Session):
     # wrapper timeouts at the session level
     # see: https://goo.gl/xNk7aM
     def request(self, *args, **kwargs):
-        def request_with_retry_on_ssl_error(self, *args, **kwargs):
+        def request_with_retry_on_ssl_error(*args, **kwargs):
             try:
                 return super(TimeoutSession, self).request(*args, **kwargs)
             except OpenSSL.SSL.Error:
