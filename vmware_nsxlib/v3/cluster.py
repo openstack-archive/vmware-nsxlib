@@ -463,6 +463,12 @@ class ClusteredAPI(object):
                         {'ep': endpoint})
             # regenerate connection pool based on new certificate
             endpoint.regenerate_pool()
+        except exceptions.BadXSRFToken:
+            LOG.warning("Failed to validate API cluster endpoint "
+                        "'%(ep)s' due to expired XSRF token",
+                        {'ep': endpoint})
+            # regenerate connection pool based on token
+            endpoint.regenerate_pool()
         except Exception as e:
             endpoint.set_state(EndpointState.DOWN)
             LOG.warning("Failed to validate API cluster endpoint "
