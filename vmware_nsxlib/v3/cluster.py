@@ -132,7 +132,7 @@ class TimeoutSession(requests.Session):
 
         if self.cert is not None:
             # Recursive call - shouldn't happen
-            return request_with_retry_on_ssl_error(*args, **kwargs)
+            return request_with_retry_on_ssl_error(self, *args, **kwargs)
 
         # The following with statement allows for preparing certificate and
         # private key file and dispose it at the end of request
@@ -147,7 +147,7 @@ class TimeoutSession(requests.Session):
         with get_cert_provider() as provider:
             self.cert = provider.filename()
             try:
-                ret = request_with_retry_on_ssl_error(*args, **kwargs)
+                ret = request_with_retry_on_ssl_error(self, *args, **kwargs)
             except Exception as e:
                 self.cert = None
                 raise e
