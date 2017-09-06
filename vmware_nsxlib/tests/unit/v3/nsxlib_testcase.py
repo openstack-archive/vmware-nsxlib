@@ -93,7 +93,7 @@ def _mock_nsxlib():
     mock.patch(
         ("vmware_nsxlib.v3.core_resources."
          "NsxLibTransportZone.get_id_by_name_or_id"),
-        side_effect=_return_id_key).start()
+        return_value=uuidutils.generate_uuid()).start()
 
 
 def get_default_nsxlib_config():
