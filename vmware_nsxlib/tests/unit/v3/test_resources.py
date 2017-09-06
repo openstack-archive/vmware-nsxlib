@@ -1123,3 +1123,37 @@ class TransportZone(nsxlib_testcase.NsxClientTestCase):
         with mock.patch.object(tz.client, 'url_get', return_value=fake_tz):
             tz_type = tz.get_transport_type(fake_tz['id'])
             self.assertEqual(tz.TRANSPORT_TYPE_OVERLAY, tz_type)
+
+
+class MetadataProxy(nsxlib_testcase.NsxClientTestCase):
+
+    def _mocked_md(self, session_response=None):
+        return self.mocked_resource(
+            core_resources.NsxLibMetadataProxy,
+            session_response=session_response)
+
+    def test_get_metadata_proxy(self):
+        uuid = uuidutils.generate_uuid()
+        md = self._mocked_md()
+        md.get(uuid)
+        test_client.assert_json_call(
+            'get', md,
+            'https://1.2.3.4/api/v1/md-proxies/%s' % uuid)
+
+    def test_update_metadata_proxy(self):
+        fake_md = test_constants.FAKE_MD.copy()
+        md = self._mocked_md()
+        new_url = "http://2.2.2.20:3500/xyz"
+        new_secret = 'abc'
+        new_edge = uuidutils.generate_uuid()
+        with mock.patch.object(md.client, 'url_get', return_value=fake_md):
+            md.update(fake_md['id'], server_url=new_url, secret=new_secret,
+                      edge_cluster_id=new_edge)
+            fake_md.update({'metadata_server_url': new_url,
+                            'secret': new_secret,
+                            'edge_cluster_id': new_edge})
+            test_client.assert_json_call(
+                'put', md,
+                'https://1.2.3.4/api/v1/md-proxies/%s' % fake_md['id'],
+                data=jsonutils.dumps(fake_md, sort_keys=True),
+                headers=self.default_headers())

@@ -712,6 +712,19 @@ class NsxLibMetadataProxy(utils.NsxLibApiBase):
     def resource_type(self):
         return 'MetadataProxy'
 
+    def update(self, uuid, server_url=None, secret=None, edge_cluster_id=None):
+        # get the current configuration
+        body = self.get(uuid)
+        # update the relevant fields
+        if server_url is not None:
+            body['metadata_server_url'] = server_url
+        if secret is not None:
+            body['secret'] = secret
+        if edge_cluster_id is not None:
+            body['edge_cluster_id'] = edge_cluster_id
+        return self._update_resource_with_retry(
+            self.get_path(uuid), body)
+
 
 class NsxLibBridgeCluster(utils.NsxLibApiBase):
 
