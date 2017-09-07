@@ -373,9 +373,9 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
     def list(self, router_type=None):
         """List all/by type logical routers."""
         if router_type:
-            resource = '%s?router_type=%s' % (self.get_path(), router_type)
+            resource = 'logical-routers?router_type=%s' % router_type
         else:
-            resource = self.get_path()
+            resource = 'logical-routers'
         return self.client.list(resource)
 
 
