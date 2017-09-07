@@ -14,10 +14,13 @@
 #    under the License.
 
 import abc
+import inspect
+import re
 
 from neutron_lib import exceptions
 from oslo_log import log
 import tenacity
+from tenacity import _utils as tenacity_utils
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions
@@ -68,13 +71,50 @@ def update_v3_tags(current_tags, tags_update):
     return tags
 
 
+def _log_before_retry(func, trial_number):
+    """Before call strategy that logs to some logger the attempt."""
+    if trial_number > 1:
+        LOG.warning("Retrying call to '%(func)s' for the %(num)s time",
+                    {'func': tenacity_utils.get_callback_name(func),
+                     'num': tenacity_utils.to_ordinal(trial_number)})
+
+
+def _get_args_from_frame(frames, frame_num):
+    if len(frames) > frame_num and frames[frame_num] and frames[frame_num][0]:
+        argvalues = inspect.getargvalues(frames[frame_num][0])
+        formated_args = inspect.formatargvalues(*argvalues)
+        # remove the first 'self' arg from the log as it adds no information
+        formated_args = re.sub(r'\(self=.*?, ', "(", formated_args)
+        return formated_args
+
+
+def _log_after_retry(func, trial_number, trial_time_taken):
+    """After call strategy that logs to some logger the finished attempt."""
+    # Using inspect to get arguments of the relevant call
+    frames = inspect.trace()
+    # Look at frame #2 first because of the internal functions _do_X
+    formated_args = _get_args_from_frame(frames, 2)
+    if not formated_args:
+        formated_args = _get_args_from_frame(frames, 1)
+    if not formated_args:
+        formated_args = "Unknown"
+
+    LOG.warning("Finished retry of %(func)s for the %(num)s time after "
+                "%(time)0.3f(s) with args: %(args)s",
+                {'func': tenacity_utils.get_callback_name(func),
+                 'num': tenacity_utils.to_ordinal(trial_number),
+                 'time': trial_time_taken,
+                 'args': formated_args})
+
+
 def retry_upon_exception(exc, delay=0.5, max_delay=2,
                          max_attempts=DEFAULT_MAX_ATTEMPTS):
     return tenacity.retry(reraise=True,
                           retry=tenacity.retry_if_exception_type(exc),
                           wait=tenacity.wait_exponential(
                               multiplier=delay, max=max_delay),
-                          stop=tenacity.stop_after_attempt(max_attempts))
+                          stop=tenacity.stop_after_attempt(max_attempts),
+                          before=_log_before_retry, after=_log_after_retry)
 
 
 def list_match(list1, list2):
