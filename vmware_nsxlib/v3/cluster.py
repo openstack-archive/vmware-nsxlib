@@ -117,16 +117,15 @@ class TimeoutSession(requests.Session):
                 return super(TimeoutSession, self).request(*args, **kwargs)
 
         def get_cert_provider():
-            if inspect.isclass(self.cert_provider):
+            if inspect.isclass(self._cert_provider):
                 # If client provided certificate provider as a class,
                 # we spawn an instance here
-                return self.cert_provider()
-            return self.cert_provider
+                return self._cert_provider()
+            return self._cert_provider
 
         if 'timeout' not in kwargs:
             kwargs['timeout'] = (self.timeout, self.read_timeout)
-        skip_cert = kwargs.pop('skip_cert', False)
-        if not self._cert_provider or skip_cert:
+        if not self.cert_provider:
             # No client certificate needed
             return super(TimeoutSession, self).request(*args, **kwargs)
 
@@ -228,15 +227,20 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
 
         # Perform the initial session create and get the relevant jsessionid &
         # X-XSRF-TOKEN for future requests
-        req_data = 'j_username=%s&j_password=%s' % (provider.username,
-                                                    provider.password)
+        req_data = ''
+        if not session.cert_provider:
+            # With client certificate authentication, username and password
+            # may not be provided.
+            # If provided, backend treats these credentials as authentication
+            # and ignores client cert as principal identity indication.
+            req_data = 'j_username=%s&j_password=%s' % (provider.username,
+                                                        provider.password)
         req_headers = {'Accept': 'application/json',
                        'Content-Type': 'application/x-www-form-urlencoded'}
         # Cannot use the certificate at this stage, because it is used for
         # the certificate generation
         resp = session.request('post', provider.url + self.SESSION_CREATE_URL,
-                               data=req_data, headers=req_headers,
-                               skip_cert=True)
+                               data=req_data, headers=req_headers)
         if resp.status_code != 200:
             LOG.error("Session create failed for endpoint %s", provider.url)
             # this will later cause the endpoint to be Down
