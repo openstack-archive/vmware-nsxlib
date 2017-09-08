@@ -1,0 +1,9 @@
+Verified-1: VMware NSX CI
+Code-Review+2: Tong Liu <tongl@vmware.com>
+Workflow+1: Anna Khmelnitsky <akhmelnitsky@vmware.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 08 Sep 2017 20:26:02 +0000
+Reviewed-on: https://review.openstack.org/501809
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/stable/ocata
