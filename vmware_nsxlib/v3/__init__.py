@@ -221,25 +221,26 @@ class NsxLib(NsxLibBase):
         self.native_md_proxy = core_resources.NsxLibMetadataProxy(
             self.client, self.nsxlib_config, nsxlib=self)
         self.firewall_section = security.NsxLibFirewallSection(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.ns_group = security.NsxLibNsGroup(
-            self.client, self.nsxlib_config, self.firewall_section)
+            self.client, self.nsxlib_config, self.firewall_section,
+            nsxlib=self)
         self.native_dhcp = native_dhcp.NsxLibNativeDhcp(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.ip_block_subnet = core_resources.NsxLibIpBlockSubnet(
             self.client, self.nsxlib_config, nsxlib=self)
         self.ip_block = core_resources.NsxLibIpBlock(
             self.client, self.nsxlib_config, nsxlib=self)
         self.ip_set = security.NsxLibIPSet(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.logical_port = resources.LogicalPort(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.logical_router_port = resources.LogicalRouterPort(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.dhcp_server = resources.LogicalDhcpServer(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.ip_pool = resources.IpPool(
-            self.client, self.nsxlib_config)
+            self.client, self.nsxlib_config, nsxlib=self)
         self.load_balancer = load_balancer.LoadBalancer(
             self.client, self.nsxlib_config)
 

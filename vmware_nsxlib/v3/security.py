@@ -35,9 +35,11 @@ MAX_NSGROUPS_CRITERIA_TAGS = 10
 
 class NsxLibNsGroup(utils.NsxLibApiBase):
 
-    def __init__(self, client, max_attempts, firewall_section_handler):
+    def __init__(self, client, nsxlib_config, firewall_section_handler,
+                 nsxlib=None):
         self.firewall_section = firewall_section_handler
-        super(NsxLibNsGroup, self).__init__(client, max_attempts)
+        super(NsxLibNsGroup, self).__init__(client, nsxlib_config,
+                                            nsxlib=nsxlib)
 
     def update_on_backend(self, context, security_group,
                           nsgroup_id, section_id,
