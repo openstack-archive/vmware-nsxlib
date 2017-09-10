@@ -30,27 +30,82 @@ from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import resources
 
 
-CLIENT_PKG = test_client.CLIENT_PKG
-profile_types = resources.SwitchingProfileTypes
+class BaseTestResource(nsxlib_testcase.NsxClientTestCase):
+    """Base class for resources tests
 
+    Contains tests for the simple get/list/delete apis
+    and an api to get the mocked resource
+    """
+    def setUp(self, resource=None):
+        self.resource = resource
+        super(BaseTestResource, self).setUp()
 
-class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
+    def get_mocked_resource(self, mock_validate=True, response=None,
+                            response_repeate=1):
+        session_response = None
+        if response:
+            session_response = mocks.MockRequestsResponse(
+                200, jsonutils.dumps(response))
+            if response_repeate > 1:
+                session_response = [session_response] * response_repeate
 
-    def _mocked_switching_profile(self, session_response=None):
         return self.mocked_resource(
-            resources.SwitchingProfile, session_response=session_response)
+            self.resource, mock_validate=mock_validate,
+            session_response=session_response)
+
+    def test_get_resource(self):
+        if not self.resource:
+            return
+        mocked_resource = self.get_mocked_resource()
+        fake_uuid = uuidutils.generate_uuid()
+        mocked_resource.get(fake_uuid)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s' % (mocked_resource.uri_segment,
+                                              fake_uuid),
+            headers=self.default_headers())
+
+    def test_list_all(self):
+        if not self.resource:
+            return
+        mocked_resource = self.get_mocked_resource()
+        mocked_resource.list()
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            'https://1.2.3.4/api/v1/%s' % mocked_resource.uri_segment,
+            headers=self.default_headers())
+
+    def test_delete_resource(self):
+        if not self.resource:
+            return
+        mocked_resource = self.get_mocked_resource()
+        fake_uuid = uuidutils.generate_uuid()
+        mocked_resource.delete(fake_uuid)
+        test_client.assert_json_call(
+            'delete', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s' % (mocked_resource.uri_segment,
+                                              fake_uuid),
+            headers=self.default_headers())
+
+
+class TestSwitchingProfileTestCase(BaseTestResource):
+
+    def setUp(self):
+        self.types = resources.SwitchingProfileTypes
+        super(TestSwitchingProfileTestCase, self).setUp(
+            resources.SwitchingProfile)
 
     def test_switching_profile_create(self):
-        mocked_resource = self._mocked_switching_profile()
+        mocked_resource = self.get_mocked_resource()
 
-        mocked_resource.create(profile_types.PORT_MIRRORING,
+        mocked_resource.create(self.types.PORT_MIRRORING,
                                'pm-profile', 'port mirror prof')
 
         test_client.assert_json_call(
             'post', mocked_resource,
             'https://1.2.3.4/api/v1/switching-profiles',
             data=jsonutils.dumps({
-                'resource_type': profile_types.PORT_MIRRORING,
+                'resource_type': self.types.PORT_MIRRORING,
                 'display_name': 'pm-profile',
                 'description': 'port mirror prof'
             }, sort_keys=True),
@@ -69,16 +124,17 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
             }
         ]
 
-        mocked_resource = self._mocked_switching_profile()
+        mocked_resource = self.get_mocked_resource()
+        fake_uuid = uuidutils.generate_uuid()
 
         mocked_resource.update(
-            'a12bc1', profile_types.PORT_MIRRORING, tags=tags)
+            fake_uuid, self.types.PORT_MIRRORING, tags=tags)
 
         test_client.assert_json_call(
             'put', mocked_resource,
-            'https://1.2.3.4/api/v1/switching-profiles/a12bc1',
+            'https://1.2.3.4/api/v1/switching-profiles/%s' % fake_uuid,
             data=jsonutils.dumps({
-                'resource_type': profile_types.PORT_MIRRORING,
+                'resource_type': self.types.PORT_MIRRORING,
                 'tags': tags
             }, sort_keys=True),
             headers=self.default_headers())
@@ -96,7 +152,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
             }
         ]
 
-        mocked_resource = self._mocked_switching_profile()
+        mocked_resource = self.get_mocked_resource()
 
         mocked_resource.create_spoofguard_profile(
             'plugin-spoof', 'spoofguard-for-plugin',
@@ -106,7 +162,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
             'post', mocked_resource,
             'https://1.2.3.4/api/v1/switching-profiles',
             data=jsonutils.dumps({
-                'resource_type': profile_types.SPOOF_GUARD,
+                'resource_type': self.types.SPOOF_GUARD,
                 'display_name': 'plugin-spoof',
                 'description': 'spoofguard-for-plugin',
                 'white_list_providers': ['LPORT_BINDINGS'],
@@ -127,7 +183,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
             }
         ]
 
-        mocked_resource = self._mocked_switching_profile()
+        mocked_resource = self.get_mocked_resource()
 
         mocked_resource.create_dhcp_profile(
             'plugin-dhcp', 'dhcp-for-plugin',
@@ -141,7 +197,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
                     'enabled': True,
                     'white_list': []
                 },
-                'resource_type': profile_types.SWITCH_SECURITY,
+                'resource_type': self.types.SWITCH_SECURITY,
                 'display_name': 'plugin-dhcp',
                 'description': 'dhcp-for-plugin',
                 'tags': tags,
@@ -173,7 +229,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
             }
         ]
 
-        mocked_resource = self._mocked_switching_profile()
+        mocked_resource = self.get_mocked_resource()
 
         mocked_resource.create_mac_learning_profile(
             'plugin-mac-learning', 'mac-learning-for-plugin',
@@ -186,7 +242,7 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
                 'mac_learning': {
                     'enabled': True,
                 },
-                'resource_type': profile_types.MAC_LEARNING,
+                'resource_type': self.types.MAC_LEARNING,
                 'display_name': 'plugin-mac-learning',
                 'description': 'mac-learning-for-plugin',
                 'tags': tags,
@@ -202,10 +258,8 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
                 {'display_name': 'resource-3'}
             ]
         }
-        session_response = mocks.MockRequestsResponse(
-            200, jsonutils.dumps(resp_resources))
-        mocked_resource = self._mocked_switching_profile(
-            session_response=[session_response] * 3)
+        mocked_resource = self.get_mocked_resource(response=resp_resources,
+                                                   response_repeate=3)
 
         self.assertEqual([{'display_name': 'resource-1'}],
                          mocked_resource.find_by_display_name('resource-1'))
@@ -221,15 +275,12 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
                 {'display_name': 'resource-1'}
             ]
         }
-        session_response = mocks.MockRequestsResponse(
-            200, jsonutils.dumps(resp_resources))
-        mocked_resource = self._mocked_switching_profile(
-            session_response=session_response)
+        mocked_resource = self.get_mocked_resource(response=resp_resources)
         self.assertEqual(resp_resources['results'],
                          mocked_resource.find_by_display_name('resource-1'))
 
-    def test_list_all_profiles(self):
-        mocked_resource = self._mocked_switching_profile()
+    def test_list_all(self):
+        mocked_resource = self.get_mocked_resource()
         mocked_resource.list()
         test_client.assert_json_call(
             'get', mocked_resource,
@@ -239,12 +290,10 @@ class TestSwitchingProfileTestCase(nsxlib_testcase.NsxClientTestCase):
             headers=self.default_headers())
 
 
-class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
+class LogicalPortTestCase(BaseTestResource):
 
-    def _mocked_lport(self, mock_validate=True, session_response=None):
-        return self.mocked_resource(
-            resources.LogicalPort, mock_validate=True,
-            session_response=session_response)
+    def setUp(self):
+        super(LogicalPortTestCase, self).setUp(resources.LogicalPort)
 
     def _get_profile_dicts(self, fake_port):
         fake_profile_dicts = []
@@ -280,7 +329,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
         fake_port['address_bindings'] = binding_repr
 
-        mocked_resource = self._mocked_lport()
+        mocked_resource = self.get_mocked_resource()
         description = 'dummy'
         switch_profile = resources.SwitchingProfile
         mocked_resource.create(
@@ -321,7 +370,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
         fake_port['address_bindings'] = binding_repr
 
-        mocked_resource = self._mocked_lport()
+        mocked_resource = self.get_mocked_resource()
         switch_profile = resources.SwitchingProfile
         fake_port_ctx = fake_port['attachment']['context']
 
@@ -367,10 +416,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
         """Test creating port with admin_state down."""
         fake_port = test_constants.FAKE_PORT
         fake_port['admin_state'] = "DOWN"
-
-        mocked_resource = self._mocked_lport(
-            session_response=mocks.MockRequestsResponse(
-                200, jsonutils.dumps(fake_port)))
+        mocked_resource = self.get_mocked_resource(response=fake_port)
 
         result = mocked_resource.create(
             test_constants.FAKE_PORT['logical_switch_id'],
@@ -379,9 +425,9 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
         self.assertEqual(fake_port, result)
 
-    def test_delete_logical_port(self):
+    def test_delete_resource(self):
         """Test deleting port."""
-        mocked_resource = self._mocked_lport()
+        mocked_resource = self.get_mocked_resource()
 
         uuid = test_constants.FAKE_PORT['id']
         mocked_resource.delete(uuid)
@@ -392,7 +438,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def test_get_logical_port_by_attachment(self):
         """Test deleting port."""
-        mocked_resource = self._mocked_lport()
+        mocked_resource = self.get_mocked_resource()
         attachment_type = nsx_constants.ATTACHMENT_DHCP
         attachment_id = '1234'
         mocked_resource.get_by_attachment(attachment_type, attachment_id)
@@ -405,7 +451,7 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
     def test_clear_port_bindings(self):
         fake_port = copy.copy(test_constants.FAKE_PORT)
         fake_port['address_bindings'] = ['a', 'b']
-        mocked_resource = self._mocked_lport()
+        mocked_resource = self.get_mocked_resource()
 
         def get_fake_port(*args):
             return fake_port
@@ -424,15 +470,10 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
     def test_create_logical_port_fail(self):
         """Test the failure of port creation."""
         fake_port = test_constants.FAKE_PORT.copy()
-
         profile_dicts = self._get_profile_dicts(fake_port)
-
         pkt_classifiers, binding_repr = self._get_pktcls_bindings()
-
         fake_port['address_bindings'] = binding_repr
-
-        mocked_resource = self._mocked_lport(mock_validate=False)
-
+        mocked_resource = self.get_mocked_resource(mock_validate=False)
         switch_profile = resources.SwitchingProfile
         try:
             mocked_resource.create(
@@ -445,21 +486,18 @@ class LogicalPortTestCase(nsxlib_testcase.NsxClientTestCase):
             self.assertIn(nsxlib_testcase.NSX_MANAGER, e.msg)
 
 
-class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
+class LogicalRouterTestCase(BaseTestResource):
 
-    def _mocked_lrouter(self, session_response=None):
-        return self.mocked_resource(
-            core_resources.NsxLibLogicalRouter,
-            session_response=session_response)
+    def setUp(self):
+        super(LogicalRouterTestCase, self).setUp(
+            core_resources.NsxLibLogicalRouter)
 
     def test_create_logical_router(self):
         """Test creating a router returns the correct response and 201 status.
 
         """
         fake_router = test_constants.FAKE_ROUTER.copy()
-
-        router = self._mocked_lrouter()
-
+        router = self.get_mocked_resource()
         tier0_router = True
         description = 'dummy'
         router.create(fake_router['display_name'], None, None, tier0_router,
@@ -478,19 +516,9 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             data=jsonutils.dumps(data, sort_keys=True),
             headers=self.default_headers())
 
-    def test_delete_logical_router(self):
-        """Test deleting router"""
-        router = self._mocked_lrouter()
-        uuid = test_constants.FAKE_ROUTER['id']
-        router.delete(uuid)
-        test_client.assert_json_call(
-            'delete', router,
-            'https://1.2.3.4/api/v1/logical-routers/%s' % uuid,
-            headers=self.default_headers())
-
     def test_force_delete_logical_router(self):
         """Test force deleting router"""
-        router = self._mocked_lrouter()
+        router = self.get_mocked_resource()
         uuid = test_constants.FAKE_ROUTER['id']
         router.delete(uuid, True)
         test_client.assert_json_call(
@@ -498,15 +526,8 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             'https://1.2.3.4/api/v1/logical-routers/%s?force=True' % uuid,
             headers=self.default_headers())
 
-    def test_list_logical_router(self):
-        router = self._mocked_lrouter()
-        router.list()
-        test_client.assert_json_call(
-            'get', router,
-            'https://1.2.3.4/api/v1/logical-routers')
-
     def test_list_logical_router_by_type(self):
-        router = self._mocked_lrouter()
+        router = self.get_mocked_resource()
         router_type = 'TIER0'
         router.list(router_type=router_type)
         test_client.assert_json_call(
@@ -516,14 +537,13 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def test_get_logical_router_fw_section(self):
         fake_router = test_constants.FAKE_ROUTER.copy()
-
-        router = self._mocked_lrouter()
+        router = self.get_mocked_resource()
         section_id = router.get_firewall_section_id(
             test_constants.FAKE_ROUTER_UUID, router_body=fake_router)
         self.assertEqual(test_constants.FAKE_ROUTER_FW_SEC_UUID, section_id)
 
     def _test_nat_rule_create(self, nsx_version, add_bypas_arg):
-        router = self._mocked_lrouter()
+        router = self.get_mocked_resource()
         action = 'SNAT'
         translated_net = '1.1.1.1'
         priority = 10
@@ -562,7 +582,7 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
         self._test_nat_rule_create('2.0.0', True)
 
     def test_nat_rule_list(self):
-        router = self._mocked_lrouter()
+        router = self.get_mocked_resource()
         router.list_nat_rules(test_constants.FAKE_ROUTER_UUID)
         test_client.assert_json_call(
             'get', router,
@@ -571,7 +591,7 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
             headers=self.default_headers())
 
     def test_nat_rule_update(self):
-        router = self._mocked_lrouter()
+        router = self.get_mocked_resource()
         rule_id = '123'
         with mock.patch.object(router.client, 'get',
                                return_value={'id': rule_id}):
@@ -586,54 +606,56 @@ class LogicalRouterTestCase(nsxlib_testcase.NsxClientTestCase):
                 headers=self.default_headers())
 
     def test_delete_nat_rule_by_gw(self):
-        router = self._mocked_lrouter()
+        router = self.get_mocked_resource()
         rule_id = '123'
+        router_id = test_constants.FAKE_ROUTER_UUID
         gw_ip = '3.3.3.3'
         existing_rules = [{
             'translated_network': gw_ip,
-            'logical_router_id': test_constants.FAKE_ROUTER_UUID,
+            'logical_router_id': router_id,
             'id': rule_id,
             'action': 'SNAT',
             'resource_type': 'NatRule'}]
         with mock.patch.object(router.client, 'list',
                                return_value={'results': existing_rules}):
-            router.delete_nat_rule_by_values(test_constants.FAKE_ROUTER_UUID,
+            router.delete_nat_rule_by_values(router_id,
                                              translated_network=gw_ip)
             test_client.assert_json_call(
                 'delete', router,
                 ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules/%s' %
-                    (test_constants.FAKE_ROUTER_UUID, rule_id)),
+                    (router_id, rule_id)),
                 headers=self.default_headers())
 
     def test_delete_nat_rule_by_gw_and_source(self):
-        router = self._mocked_lrouter()
+        router = self.get_mocked_resource()
         rule_id = '123'
+        router_id = test_constants.FAKE_ROUTER_UUID
         gw_ip = '3.3.3.3'
         source_net = '4.4.4.4'
         existing_rules = [{
             'translated_network': gw_ip,
-            'logical_router_id': test_constants.FAKE_ROUTER_UUID,
+            'logical_router_id': router_id,
             'id': rule_id,
             'match_source_network': source_net,
             'action': 'SNAT',
             'resource_type': 'NatRule'}]
         with mock.patch.object(router.client, 'list',
                                return_value={'results': existing_rules}):
-            router.delete_nat_rule_by_values(test_constants.FAKE_ROUTER_UUID,
+            router.delete_nat_rule_by_values(router_id,
                                              translated_network=gw_ip,
                                              match_source_network=source_net)
             test_client.assert_json_call(
                 'delete', router,
                 ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules/%s' %
-                    (test_constants.FAKE_ROUTER_UUID, rule_id)),
+                    (router_id, rule_id)),
                 headers=self.default_headers())
 
 
-class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
+class LogicalRouterPortTestCase(BaseTestResource):
 
-    def _mocked_lrport(self, session_response=None):
-        return self.mocked_resource(
-            resources.LogicalRouterPort, session_response=session_response)
+    def setUp(self):
+        super(LogicalRouterPortTestCase, self).setUp(
+            resources.LogicalRouterPort)
 
     def test_create_logical_router_port(self):
         """Test creating a router port.
@@ -642,7 +664,7 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
         """
         fake_router_port = test_constants.FAKE_ROUTER_PORT.copy()
         fake_relay_uuid = uuidutils.generate_uuid()
-        lrport = self._mocked_lrport()
+        lrport = self.get_mocked_resource()
 
         data = {
             'display_name': fake_router_port['display_name'],
@@ -671,32 +693,20 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def test_logical_router_port_max_attempts(self):
         """Test a router port api has the configured retries."""
-        lrport = self._mocked_lrport()
+        lrport = self.get_mocked_resource()
 
         self.assertEqual(nsxlib_testcase.NSX_MAX_ATTEMPTS,
                          lrport.client.max_attempts)
-
-    def test_delete_logical_router_port(self):
-        """Test deleting router port."""
-        lrport = self._mocked_lrport()
-
-        uuid = test_constants.FAKE_ROUTER_PORT['id']
-        lrport.delete(uuid)
-        test_client.assert_json_call(
-            'delete', lrport,
-            'https://1.2.3.4/api/v1/logical-router-ports/%s' % uuid,
-            headers=self.default_headers())
 
     def test_update_logical_router_port(self):
         fake_router_port = test_constants.FAKE_ROUTER_PORT.copy()
         uuid = fake_router_port['id']
         fake_relay_uuid = uuidutils.generate_uuid()
-        lrport = self._mocked_lrport()
+        lrport = self.get_mocked_resource()
         with mock.patch.object(lrport, 'get', return_value=fake_router_port),\
             mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
                        return_value='2.0.0'):
-            lrport.update(uuid,
-                          relay_service_uuid=fake_relay_uuid)
+            lrport.update(uuid, relay_service_uuid=fake_relay_uuid)
             data = {
                 'id': uuid,
                 'display_name': fake_router_port['display_name'],
@@ -718,10 +728,7 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
         """Test getting a router port by router id."""
         fake_router_port = test_constants.FAKE_ROUTER_PORT.copy()
         resp_resources = {'results': [fake_router_port]}
-
-        lrport = self._mocked_lrport(
-            session_response=mocks.MockRequestsResponse(
-                200, jsonutils.dumps(resp_resources)))
+        lrport = self.get_mocked_resource(response=resp_resources)
 
         router_id = fake_router_port['logical_router_id']
         result = lrport.get_by_router_id(router_id)
@@ -739,10 +746,7 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             'result_count': 1,
             'results': [fake_router_port]
         }
-
-        lrport = self._mocked_lrport(
-            session_response=mocks.MockRequestsResponse(
-                200, jsonutils.dumps(resp_resources)))
+        lrport = self.get_mocked_resource(response=resp_resources)
 
         switch_id = test_constants.FAKE_SWITCH_UUID
         lrport.get_by_lswitch_id(switch_id)
@@ -753,18 +757,17 @@ class LogicalRouterPortTestCase(nsxlib_testcase.NsxClientTestCase):
             headers=self.default_headers())
 
 
-class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
+class IpPoolTestCase(BaseTestResource):
 
-    def _mocked_pool(self, session_response=None):
-        return self.mocked_resource(
-            resources.IpPool, session_response=session_response)
+    def setUp(self):
+        super(IpPoolTestCase, self).setUp(resources.IpPool)
 
     def test_create_ip_pool_all_args(self):
         """Test creating an IP pool
 
         returns the correct response and 201 status
         """
-        pool = self._mocked_pool()
+        pool = self.get_mocked_resource()
 
         display_name = 'dummy'
         gateway_ip = '1.1.1.1'
@@ -797,7 +800,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
             headers=self.default_headers())
 
     def test_create_ip_pool_minimal_args(self):
-        pool = self._mocked_pool()
+        pool = self.get_mocked_resource()
 
         ranges = [{'start': '2.2.2.0', 'end': '2.2.2.255'},
                   {'start': '3.2.2.0', 'end': '3.2.2.255'}]
@@ -818,7 +821,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
             headers=self.default_headers())
 
     def test_create_ip_pool_no_ranges_with_gateway(self):
-        pool = self._mocked_pool()
+        pool = self.get_mocked_resource()
         cidr = '2.2.2.0/30'
         gateway_ip = '2.2.2.1'
         pool.create(cidr, allocation_ranges=None, gateway_ip=gateway_ip)
@@ -840,7 +843,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
             headers=self.default_headers())
 
     def test_create_ip_pool_no_ranges_no_gateway(self):
-        pool = self._mocked_pool()
+        pool = self.get_mocked_resource()
         cidr = '2.2.2.0/30'
         pool.create(cidr, allocation_ranges=None)
         exp_ranges = [{'start': '2.2.2.0', 'end': '2.2.2.3'}]
@@ -859,7 +862,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
             headers=self.default_headers())
 
     def test_create_ip_pool_no_cidr(self):
-        pool = self._mocked_pool()
+        pool = self.get_mocked_resource()
         gateway_ip = '1.1.1.1'
         ranges = [{'start': '2.2.2.0', 'end': '2.2.2.255'},
                   {'start': '3.2.2.0', 'end': '3.2.2.255'}]
@@ -876,10 +879,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def test_update_ip_pool_name(self):
         fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
-        resp_resources = fake_ip_pool
-        pool = self._mocked_pool(
-            session_response=mocks.MockRequestsResponse(
-                200, jsonutils.dumps(resp_resources)))
+        pool = self.get_mocked_resource(response=fake_ip_pool)
 
         uuid = fake_ip_pool['id']
         new_name = 'new_name'
@@ -893,10 +893,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def test_update_ip_pool_gateway(self):
         fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
-        resp_resources = fake_ip_pool
-        pool = self._mocked_pool(
-            session_response=mocks.MockRequestsResponse(
-                200, jsonutils.dumps(resp_resources)))
+        pool = self.get_mocked_resource(response=fake_ip_pool)
 
         uuid = fake_ip_pool['id']
         new_gateway = '1.0.0.1'
@@ -910,10 +907,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
 
     def test_update_ip_pool_delete_gateway(self):
         fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
-        resp_resources = fake_ip_pool
-        pool = self._mocked_pool(
-            session_response=mocks.MockRequestsResponse(
-                200, jsonutils.dumps(resp_resources)))
+        pool = self.get_mocked_resource(response=fake_ip_pool)
 
         uuid = fake_ip_pool['id']
         pool.update(uuid, gateway_ip=None)
@@ -924,36 +918,8 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
             data=jsonutils.dumps(fake_ip_pool, sort_keys=True),
             headers=self.default_headers())
 
-    def test_get_ip_pool(self):
-        """Test getting a router port by router id"""
-        fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
-        resp_resources = fake_ip_pool
-
-        pool = self._mocked_pool(
-            session_response=mocks.MockRequestsResponse(
-                200, jsonutils.dumps(resp_resources)))
-
-        uuid = fake_ip_pool['id']
-        result = pool.get(uuid)
-        self.assertEqual(fake_ip_pool, result)
-        test_client.assert_json_call(
-            'get', pool,
-            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
-            headers=self.default_headers())
-
-    def test_delete_ip_pool(self):
-        """Test deleting router port"""
-        pool = self._mocked_pool()
-
-        uuid = test_constants.FAKE_IP_POOL['id']
-        pool.delete(uuid)
-        test_client.assert_json_call(
-            'delete', pool,
-            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
-            headers=self.default_headers())
-
     def test_allocate_ip_from_pool(self):
-        pool = self._mocked_pool()
+        pool = self.get_mocked_resource()
 
         uuid = test_constants.FAKE_IP_POOL['id']
         addr = '1.1.1.1'
@@ -967,7 +933,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
             headers=self.default_headers())
 
     def test_release_ip_to_pool(self):
-        pool = self._mocked_pool()
+        pool = self.get_mocked_resource()
 
         uuid = test_constants.FAKE_IP_POOL['id']
         addr = '1.1.1.1'
@@ -983,11 +949,7 @@ class IpPoolTestCase(nsxlib_testcase.NsxClientTestCase):
     def test_get_ip_pool_allocations(self):
         """Test getting a router port by router id"""
         fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
-        resp_resources = fake_ip_pool
-
-        pool = self._mocked_pool(
-            session_response=mocks.MockRequestsResponse(
-                200, jsonutils.dumps(resp_resources)))
+        pool = self.get_mocked_resource(response=fake_ip_pool)
 
         uuid = fake_ip_pool['id']
         result = pool.get_allocations(uuid)
@@ -1102,47 +1064,27 @@ class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
                               res_type, scope, tag, alert_multiple=True)
 
 
-class TransportZone(nsxlib_testcase.NsxClientTestCase):
+class TransportZone(BaseTestResource):
 
-    def _mocked_tz(self, session_response=None):
-        return self.mocked_resource(
-            core_resources.NsxLibTransportZone,
-            session_response=session_response)
-
-    def test_get_transport_zone(self):
-        fake_tz = test_constants.FAKE_TZ.copy()
-        tz = self._mocked_tz()
-        tz.get(fake_tz['id'])
-        test_client.assert_json_call(
-            'get', tz,
-            'https://1.2.3.4/api/v1/transport-zones/%s' % fake_tz['id'])
+    def setUp(self):
+        super(TransportZone, self).setUp(core_resources.NsxLibTransportZone)
 
     def test_get_transport_zone_type(self):
         fake_tz = test_constants.FAKE_TZ.copy()
-        tz = self._mocked_tz()
+        tz = self.get_mocked_resource()
         with mock.patch.object(tz.client, 'url_get', return_value=fake_tz):
             tz_type = tz.get_transport_type(fake_tz['id'])
             self.assertEqual(tz.TRANSPORT_TYPE_OVERLAY, tz_type)
 
 
-class MetadataProxy(nsxlib_testcase.NsxClientTestCase):
+class MetadataProxy(BaseTestResource):
 
-    def _mocked_md(self, session_response=None):
-        return self.mocked_resource(
-            core_resources.NsxLibMetadataProxy,
-            session_response=session_response)
-
-    def test_get_metadata_proxy(self):
-        uuid = uuidutils.generate_uuid()
-        md = self._mocked_md()
-        md.get(uuid)
-        test_client.assert_json_call(
-            'get', md,
-            'https://1.2.3.4/api/v1/md-proxies/%s' % uuid)
+    def setUp(self):
+        super(MetadataProxy, self).setUp(core_resources.NsxLibMetadataProxy)
 
     def test_update_metadata_proxy(self):
         fake_md = test_constants.FAKE_MD.copy()
-        md = self._mocked_md()
+        md = self.get_mocked_resource()
         new_url = "http://2.2.2.20:3500/xyz"
         new_secret = 'abc'
         new_edge = uuidutils.generate_uuid()
@@ -1157,3 +1099,151 @@ class MetadataProxy(nsxlib_testcase.NsxClientTestCase):
                 'https://1.2.3.4/api/v1/md-proxies/%s' % fake_md['id'],
                 data=jsonutils.dumps(fake_md, sort_keys=True),
                 headers=self.default_headers())
+
+
+class NsxLibSwitchTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibSwitchTestCase, self).setUp(
+            core_resources.NsxLibLogicalSwitch)
+        self._tz_id = uuidutils.generate_uuid()
+
+    def _create_body(self, admin_state=nsx_constants.ADMIN_STATE_UP,
+                     vlan_id=None, description=None):
+        body = {
+            "transport_zone_id": self._tz_id,
+            "replication_mode": "MTEP",
+            "display_name": "fake_name",
+            "tags": [],
+            "admin_state": admin_state
+        }
+        if vlan_id:
+            body['vlan'] = vlan_id
+        if description is not None:
+            body['description'] = description
+        return body
+
+    def test_create_logical_switch(self):
+        """Test creating a switch returns the correct response and 200 status
+
+        """
+        desc = 'dummy'
+        ls = self.get_mocked_resource()
+        ls.create(mocks.FAKE_NAME, self._tz_id, [],
+                  description=desc)
+        data = self._create_body(description=desc)
+        test_client.assert_json_call(
+            'post', ls,
+            'https://1.2.3.4/api/v1/logical-switches',
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_create_logical_switch_admin_down(self):
+        """Test creating switch with admin_state down"""
+        ls = self.get_mocked_resource()
+        ls.create(mocks.FAKE_NAME, self._tz_id, [],
+                  admin_state=False)
+        data = self._create_body(admin_state=nsx_constants.ADMIN_STATE_DOWN)
+        test_client.assert_json_call(
+            'post', ls,
+            'https://1.2.3.4/api/v1/logical-switches',
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_create_logical_switch_vlan(self):
+        """Test creating switch with provider:network_type VLAN"""
+        ls = self.get_mocked_resource()
+        vlan_id = '123'
+        ls.create(mocks.FAKE_NAME, self._tz_id, [],
+                  vlan_id=vlan_id)
+        data = self._create_body(vlan_id=vlan_id)
+        test_client.assert_json_call(
+            'post', ls,
+            'https://1.2.3.4/api/v1/logical-switches',
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_delete_resource(self):
+        """Test deleting switch"""
+        ls = self.get_mocked_resource()
+        fake_switch = mocks.make_fake_switch()
+        ls.delete(fake_switch['id'])
+        test_client.assert_json_call(
+            'delete', ls,
+            'https://1.2.3.4/api/v1/logical-switches/%s'
+            '?detach=true&cascade=true' % fake_switch['id'])
+
+
+class NsxLibPortMirrorTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibPortMirrorTestCase, self).setUp(
+            core_resources.NsxLibPortMirror)
+
+
+class NsxLibBridgeEndpointTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibBridgeEndpointTestCase, self).setUp(
+            core_resources.NsxLibBridgeEndpoint)
+
+
+class NsxLibEdgeClusterTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibEdgeClusterTestCase, self).setUp(
+            core_resources.NsxLibEdgeCluster)
+
+
+class NsxLibDhcpProfileTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibDhcpProfileTestCase, self).setUp(
+            core_resources.NsxLibDhcpProfile)
+
+
+class NsxLibDhcpRelayServiceTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibDhcpRelayServiceTestCase, self).setUp(
+            core_resources.NsxLibDhcpRelayService)
+
+
+class NsxLibBridgeClusterTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibBridgeClusterTestCase, self).setUp(
+            core_resources.NsxLibBridgeCluster)
+
+
+class NsxLibIpBlockSubnetTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibIpBlockSubnetTestCase, self).setUp(
+            core_resources.NsxLibIpBlockSubnet)
+
+    def test_list_all(self):
+        if not self.resource:
+            return
+        mocked_resource = self.get_mocked_resource()
+        block_id = '7'
+        mocked_resource.list(block_id)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            'https://1.2.3.4/api/v1/%s?block_id=%s' %
+            (mocked_resource.uri_segment, block_id),
+            headers=self.default_headers())
+
+
+class NsxLibIpBlockTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibIpBlockTestCase, self).setUp(
+            core_resources.NsxLibIpBlock)
+
+
+class LogicalDhcpServerTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(LogicalDhcpServerTestCase, self).setUp(
+            resources.LogicalDhcpServer)

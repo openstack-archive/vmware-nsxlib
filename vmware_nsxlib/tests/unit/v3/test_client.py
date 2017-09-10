@@ -27,8 +27,6 @@ from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 
 LOG = log.getLogger(__name__)
 
-CLIENT_PKG = 'vmware_nsxlib.v3.client'
-
 DFT_ACCEPT_HEADERS = {
     'Accept': '*/*',
     'Cookie': 'JSESSIONID=%s;' % nsxlib_testcase.JSESSIONID
