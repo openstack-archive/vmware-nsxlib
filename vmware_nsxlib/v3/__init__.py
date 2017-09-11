@@ -22,6 +22,7 @@ from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import cluster
 from vmware_nsxlib.v3 import core_resources
+from vmware_nsxlib.v3 import resources
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import native_dhcp
 from vmware_nsxlib.v3 import policy_defs
@@ -136,7 +137,7 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config)
         self.logical_router = core_resources.NsxLibLogicalRouter(
             self.client, self.nsxlib_config)
-        self.qos_switching_profile = core_resources.NsxLibQosSwitchingProfile(
+        self.qos_switching_profile = resources.SwitchingProfile(
             self.client, self.nsxlib_config)
         self.edge_cluster = core_resources.NsxLibEdgeCluster(
             self.client, self.nsxlib_config)
@@ -159,6 +160,14 @@ class NsxLib(NsxLibBase):
         self.ip_block = core_resources.NsxLibIpBlock(
             self.client, self.nsxlib_config)
         self.ip_set = security.NsxLibIPSet(
+            self.client, self.nsxlib_config)
+        self.logical_port = resources.LogicalPort(
+            self.client, self.nsxlib_config)
+        self.logical_router_port = resources.LogicalRouterPort(
+            self.client, self.nsxlib_config)
+        self.dhcp_server = resources.LogicalDhcpServer(
+            self.client, self.nsxlib_config)
+        self.ip_pool = resources.IpPool(
             self.client, self.nsxlib_config)
 
     @property
