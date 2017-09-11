@@ -136,6 +136,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config)
         self.logical_router = core_resources.NsxLibLogicalRouter(
             self.client, self.nsxlib_config)
+        self.switching_profile = core_resources.NsxLibSwitchingProfile(
+            self.client, self.nsxlib_config)
         self.qos_switching_profile = core_resources.NsxLibQosSwitchingProfile(
             self.client, self.nsxlib_config)
         self.edge_cluster = core_resources.NsxLibEdgeCluster(
@@ -159,6 +161,14 @@ class NsxLib(NsxLibBase):
         self.ip_block = core_resources.NsxLibIpBlock(
             self.client, self.nsxlib_config)
         self.ip_set = security.NsxLibIPSet(
+            self.client, self.nsxlib_config)
+        self.logical_port = core_resources.LogicalPort(
+            self.client, self.nsxlib_config)
+        self.logical_router_port = core_resources.LogicalRouterPort(
+            self.client, self.nsxlib_config)
+        self.dhcp_server = core_resources.LogicalDhcpServer(
+            self.client, self.nsxlib_config)
+        self.ip_pool = core_resources.IpPool(
             self.client, self.nsxlib_config)
 
     @property
