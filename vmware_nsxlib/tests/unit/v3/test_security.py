@@ -174,3 +174,13 @@ class TestNsxLibNSGroup(nsxlib_testcase.NsxClientTestCase):
         expected_exp = {'resource_type': const.NSGROUP_COMPLEX_EXP,
                         'expressions': port_exp}
         self.assertEqual(expected_exp, complex_exp)
+
+    def test_update(self):
+        nsg_tags = [{"scope": "name", "tag": "new_name"}]
+        with mock.patch.object(self.nsxlib.client, 'update') as update:
+            with mock.patch.object(self.nsxlib.client, 'get') as get:
+                get.return_value = {}
+                self.nsxlib.ns_group.update('nsgroupid', tags_update=nsg_tags)
+                resource = 'ns-groups/nsgroupid'
+                data = {'tags': nsg_tags}
+                update.assert_called_with(resource, data)

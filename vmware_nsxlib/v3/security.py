@@ -137,7 +137,7 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
             'ns-groups?populate_references=false').get('results', [])
 
     def update(self, nsgroup_id, display_name=None, description=None,
-               membership_criteria=None, members=None):
+               membership_criteria=None, members=None, tags_update=None):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
@@ -152,6 +152,9 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
                 nsgroup['members'] = members
             if membership_criteria is not None:
                 nsgroup['membership_criteria'] = [membership_criteria]
+            if tags_update is not None:
+                nsgroup['tags'] = utils.update_v3_tags(nsgroup.get('tags', []),
+                                                       tags_update)
             return self.client.update(
                 'ns-groups/%s' % nsgroup_id, nsgroup)
 
