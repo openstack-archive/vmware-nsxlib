@@ -701,6 +701,28 @@ class NsxLibDhcpRelayService(utils.NsxLibApiBase):
     def resource_type(self):
         return 'DhcpRelayService'
 
+    def get_server_ips(self, uuid):
+        # Return the server ips of the relay profile attached to this service
+        service = self.get(uuid)
+        profile_id = service.get('dhcp_relay_profile_id')
+        if profile_id and self.nsxlib:
+            return self.nsxlib.relay_profile.get_server_ips(profile_id)
+
+
+class NsxLibDhcpRelayProfile(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'dhcp/relay-profiles'
+
+    @property
+    def resource_type(self):
+        return 'DhcpRelayProfile'
+
+    def get_server_ips(self, uuid):
+        profile = self.get(uuid)
+        return profile.get('server_addresses')
+
 
 class NsxLibMetadataProxy(utils.NsxLibApiBase):
 

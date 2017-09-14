@@ -338,3 +338,20 @@ FAKE_MD = {
     "id": FAKE_MD_UUID,
     "metadata_server_url": FAKE_URL
 }
+
+FAKE_RELAY_UUID = uuidutils.generate_uuid()
+FAKE_RELAY_SERVER = "6.6.6.6"
+FAKE_RELAY_PROFILE = {
+    "id": FAKE_RELAY_UUID,
+    "display_name": "dummy",
+    "server_addresses": [FAKE_RELAY_SERVER],
+    "resource_type": "DhcpRelayProfile"
+}
+
+FAKE_RELAY_SERVICE_UUID = uuidutils.generate_uuid()
+FAKE_RELAY_SERVICE = {
+    "id": FAKE_RELAY_SERVICE_UUID,
+    "display_name": "dummy",
+    "dhcp_relay_profile_id": FAKE_RELAY_UUID,
+    "resource_type": "DhcpRelayService"
+}

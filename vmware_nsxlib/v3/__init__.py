@@ -216,6 +216,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config, nsxlib=self)
         self.relay_service = core_resources.NsxLibDhcpRelayService(
             self.client, self.nsxlib_config, nsxlib=self)
+        self.relay_profile = core_resources.NsxLibDhcpRelayProfile(
+            self.client, self.nsxlib_config, nsxlib=self)
         self.native_dhcp_profile = core_resources.NsxLibDhcpProfile(
             self.client, self.nsxlib_config, nsxlib=self)
         self.native_md_proxy = core_resources.NsxLibMetadataProxy(

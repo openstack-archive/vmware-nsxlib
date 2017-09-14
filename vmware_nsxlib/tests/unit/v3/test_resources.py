@@ -1199,6 +1199,35 @@ class NsxLibDhcpRelayServiceTestCase(BaseTestResource):
         super(NsxLibDhcpRelayServiceTestCase, self).setUp(
             core_resources.NsxLibDhcpRelayService)
 
+    def test_server_ips(self):
+        fake_srv = test_constants.FAKE_RELAY_SERVICE.copy()
+        relay_service = self.get_mocked_resource()
+        with mock.patch.object(relay_service.client, 'url_get',
+                               return_value=fake_srv), \
+            mock.patch.object(self.nsxlib.client, 'url_get',
+                              return_value=test_constants.FAKE_RELAY_PROFILE):
+            server_ips = relay_service.get_server_ips(fake_srv['id'])
+            self.assertEqual(1, len(server_ips))
+            self.assertEqual(test_constants.FAKE_RELAY_SERVER,
+                             server_ips[0])
+
+
+class NsxLibDhcpRelayProfileTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibDhcpRelayProfileTestCase, self).setUp(
+            core_resources.NsxLibDhcpRelayProfile)
+
+    def test_server_ips(self):
+        fake_prf = test_constants.FAKE_RELAY_PROFILE.copy()
+        relay_profile = self.get_mocked_resource()
+        with mock.patch.object(relay_profile.client, 'url_get',
+                               return_value=fake_prf):
+            server_ips = relay_profile.get_server_ips(fake_prf['id'])
+            self.assertEqual(1, len(server_ips))
+            self.assertEqual(test_constants.FAKE_RELAY_SERVER,
+                             server_ips[0])
+
 
 class NsxLibBridgeClusterTestCase(BaseTestResource):
 
