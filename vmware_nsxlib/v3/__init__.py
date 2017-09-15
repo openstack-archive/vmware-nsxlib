@@ -260,14 +260,16 @@ class NsxLib(NsxLibBase):
 
     def feature_supported(self, feature):
         if (version.LooseVersion(self.get_version()) >=
+            version.LooseVersion(nsx_constants.NSX_VERSION_2_1_0)):
+            # Features available since 2.1
+            if (feature == nsx_constants.FEATURE_LOAD_BALANCER):
+                return True
+
+        if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_2_0_0)):
             # Features available since 2.0
-            # TODO(tongl) Load balancer is supported in the next version
-            # after 2.0. Move load balancer feature to NSX version 2.x
-            # when the actual version of NSX has been decided.
             if (feature == nsx_constants.FEATURE_EXCLUDE_PORT_BY_TAG or
                 feature == nsx_constants.FEATURE_ROUTER_FIREWALL or
-                feature == nsx_constants.FEATURE_LOAD_BALANCER or
                 feature == nsx_constants.FEATURE_DHCP_RELAY):
                 return True
 
