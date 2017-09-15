@@ -115,13 +115,16 @@ class RouterLib(object):
                              advertise_route_nat,
                              advertise_route_connected,
                              advertise_route_static=False,
-                             enabled=True):
+                             enabled=True,
+                             advertise_lb_vip=False,
+                             advertise_lb_snat_ip=False):
         return self.nsxlib.logical_router.update_advertisement(
             logical_router_id,
             advertise_nat_routes=advertise_route_nat,
             advertise_nsx_connected_routes=advertise_route_connected,
             advertise_static_routes=advertise_route_static,
-            enabled=enabled)
+            enabled=enabled, advertise_lb_vip=advertise_lb_vip,
+            advertise_lb_snat_ip=advertise_lb_snat_ip)
 
     def delete_gw_snat_rule(self, logical_router_id, gw_ip):
         """Delete router snat rule matching the gw ip
