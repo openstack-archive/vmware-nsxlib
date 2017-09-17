@@ -587,6 +587,18 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
     def update_advertisement(self, logical_router_id, **kwargs):
         resource = ('logical-routers/%s/routing/advertisement' %
                     logical_router_id)
+        # ignore load balancing flags if the not supported
+        if (self.nsxlib and
+            not self.nsxlib.feature_supported(
+                nsx_constants.FEATURE_LOAD_BALANCER)):
+            for arg in ('advertise_lb_vip', 'advertise_lb_snat_ip'):
+                if kwargs[arg]:
+                    LOG.error("Ignoring %(arg)s for router %(rtr)s "
+                              "update_advertisement: This feature is not "
+                              "supported.",
+                              {'arg': arg, 'rtr': logical_router_id})
+                del kwargs[arg]
+
         return self._update_resource_with_retry(resource, kwargs)
 
     def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
