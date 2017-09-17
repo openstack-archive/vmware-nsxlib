@@ -646,6 +646,52 @@ class LogicalRouterTestCase(BaseTestResource):
                     (router_id, rule_id)),
                 headers=self.default_headers())
 
+    def test_update_advertisement(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        data = {'advertise_nat_routes': 'a',
+                'advertise_nsx_connected_routes': 'b',
+                'advertise_static_routes': False,
+                'enabled': True,
+                'advertise_lb_vip': False,
+                'advertise_lb_snat_ip': False}
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.1.0'), \
+            mock.patch.object(router.client, 'get',
+                              return_value={}):
+            router.update_advertisement(
+                router_id, **data)
+            test_client.assert_json_call(
+                'put', router,
+                ('https://1.2.3.4/api/v1/logical-routers/%s/routing/'
+                 'advertisement' % router_id),
+                data=jsonutils.dumps(data, sort_keys=True),
+                headers=self.default_headers())
+
+    def test_update_advertisement_no_lb(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        data = {'advertise_nat_routes': 'a',
+                'advertise_nsx_connected_routes': 'b',
+                'advertise_static_routes': False,
+                'enabled': True}
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='1.1.0'), \
+            mock.patch.object(router.client, 'get',
+                              return_value={}):
+            # lb args will be ignored on this nsx version
+            router.update_advertisement(
+                router_id,
+                advertise_lb_vip=False,
+                advertise_lb_snat_ip=False,
+                **data)
+            test_client.assert_json_call(
+                'put', router,
+                ('https://1.2.3.4/api/v1/logical-routers/%s/routing/'
+                 'advertisement' % router_id),
+                data=jsonutils.dumps(data, sort_keys=True),
+                headers=self.default_headers())
+
 
 class LogicalRouterPortTestCase(BaseTestResource):
 
