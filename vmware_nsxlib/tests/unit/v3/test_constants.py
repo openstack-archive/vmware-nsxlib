@@ -327,7 +327,8 @@ FAKE_TZ = {
     "revision": 0,
     "id": FAKE_TZ_UUID,
     "display_name": FAKE_NAME,
-    "transport_type": "OVERLAY"
+    "transport_type": "OVERLAY",
+    "host_switch_mode": "STANDARD"
 }
 
 FAKE_MD_UUID = uuidutils.generate_uuid()
