@@ -286,12 +286,20 @@ class VirtualServer(LoadBalancerBase):
         return self.client.update(object_url, body)
 
     def update_virtual_server_with_profiles(self, virtual_server_id,
-                                            application_profile_id,
-                                            persistence_profile_id):
+                                            application_profile_id=None,
+                                            persistence_profile_id=None,
+                                            ip_protocol=None):
         object_url = self.resource + '/' + virtual_server_id
         body = self.client.get(object_url)
-        body['application_profile_id'] = application_profile_id
-        body['persistence_profile_id'] = persistence_profile_id
+        if application_profile_id:
+            body['application_profile_id'] = application_profile_id
+        if persistence_profile_id:
+            body['persistence_profile_id'] = persistence_profile_id
+        # In case the application profile is updated and its protocol
+        # is updated as well, backend requires us to pass the new
+        # protocol in the virtual server body.
+        if ip_protocol:
+            body['ip_protocol'] = ip_protocol
         return self.client.update(object_url, body)
 
     def update_virtual_server_with_vip(self, virtual_server_id, vip):
