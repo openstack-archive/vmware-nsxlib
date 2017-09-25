@@ -252,6 +252,10 @@ class NsxClientTestCase(NsxLibTestCase):
             mock_call = getattr(self._record, verb.lower())
             mock_call.assert_any_call(**kwargs)
 
+        def call_count(self, verb):
+            mock_call = getattr(self._record, verb.lower())
+            return mock_call.call_count
+
         @property
         def recorded_calls(self):
             return self._record

@@ -67,6 +67,14 @@ def assert_call(verb, client_or_resource,
                'headers': headers, 'cert': None, 'timeout': timeout})
 
 
+def mock_calls_count(verb, client_or_resource):
+    nsx_client = client_or_resource
+    if getattr(nsx_client, 'client', None) is not None:
+        nsx_client = nsx_client.client
+    cluster = nsx_client._conn
+    return cluster.call_count(verb)
+
+
 def assert_json_call(verb, client_or_resource, url,
                      verify=nsxlib_testcase.NSX_CERT,
                      data=None,
