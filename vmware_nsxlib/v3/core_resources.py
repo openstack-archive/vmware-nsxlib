@@ -689,6 +689,10 @@ class NsxLibTransportZone(utils.NsxLibApiBase):
     def resource_type(self):
         return 'TransportZone'
 
+    @property
+    def use_cache_for_get(self):
+        return True
+
     def get_transport_type(self, uuid):
         tz = self.get(uuid)
         return tz['transport_type']
@@ -719,6 +723,10 @@ class NsxLibDhcpRelayService(utils.NsxLibApiBase):
     def resource_type(self):
         return 'DhcpRelayService'
 
+    @property
+    def use_cache_for_get(self):
+        return True
+
     def get_server_ips(self, uuid):
         # Return the server ips of the relay profile attached to this service
         service = self.get(uuid)
@@ -736,6 +744,10 @@ class NsxLibDhcpRelayProfile(utils.NsxLibApiBase):
     @property
     def resource_type(self):
         return 'DhcpRelayProfile'
+
+    @property
+    def use_cache_for_get(self):
+        return True
 
     def get_server_ips(self, uuid):
         profile = self.get(uuid)
