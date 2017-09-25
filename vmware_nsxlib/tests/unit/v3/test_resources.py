@@ -15,6 +15,7 @@
 #
 import copy
 
+import eventlet
 import mock
 
 from oslo_serialization import jsonutils
@@ -28,6 +29,7 @@ from vmware_nsxlib.v3 import core_resources
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import resources
+from vmware_nsxlib.v3 import utils
 
 
 class BaseTestResource(nsxlib_testcase.NsxClientTestCase):
@@ -1118,6 +1120,10 @@ class TransportZone(BaseTestResource):
             tz_type = tz.get_transport_type(fake_tz['id'])
             self.assertEqual(tz.TRANSPORT_TYPE_OVERLAY, tz_type)
 
+            # call it again to test it when cached
+            tz_type = tz.get_transport_type(fake_tz['id'])
+            self.assertEqual(tz.TRANSPORT_TYPE_OVERLAY, tz_type)
+
 
 class MetadataProxy(BaseTestResource):
 
@@ -1313,3 +1319,58 @@ class LogicalDhcpServerTestCase(BaseTestResource):
     def setUp(self):
         super(LogicalDhcpServerTestCase, self).setUp(
             resources.LogicalDhcpServer)
+
+
+class DummyCachedResource(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'XXX'
+
+    @property
+    def resource_type(self):
+        return 'xxx'
+
+    @property
+    def use_cache_for_get(self):
+        return True
+
+    @property
+    def cache_timeout(self):
+        return 2
+
+
+class ResourceCache(BaseTestResource):
+
+    def setUp(self):
+        super(ResourceCache, self).setUp(DummyCachedResource)
+
+    def test_get_with_cache(self):
+        mocked_resource = self.get_mocked_resource()
+        fake_uuid = uuidutils.generate_uuid()
+        # first call -> goes to the client
+        mocked_resource.get(fake_uuid)
+        self.assertEqual(1, test_client.mock_calls_count(
+            'get', mocked_resource))
+
+        # second call -> goes to cache
+        mocked_resource.get(fake_uuid)
+        self.assertEqual(1, test_client.mock_calls_count(
+            'get', mocked_resource))
+
+        # a different call -> goes to the client
+        fake_uuid2 = uuidutils.generate_uuid()
+        mocked_resource.get(fake_uuid2)
+        self.assertEqual(2, test_client.mock_calls_count(
+            'get', mocked_resource))
+
+        # third call -> still goes to cache
+        mocked_resource.get(fake_uuid)
+        self.assertEqual(2, test_client.mock_calls_count(
+            'get', mocked_resource))
+
+        # after timeout -> goes to the client
+        eventlet.sleep(2)
+        mocked_resource.get(fake_uuid)
+        self.assertEqual(3, test_client.mock_calls_count(
+            'get', mocked_resource))
