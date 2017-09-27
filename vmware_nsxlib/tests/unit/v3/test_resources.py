@@ -1118,6 +1118,13 @@ class TransportZone(BaseTestResource):
             tz_type = tz.get_transport_type(fake_tz['id'])
             self.assertEqual(tz.TRANSPORT_TYPE_OVERLAY, tz_type)
 
+    def test_get_host_switch_mode(self):
+        fake_tz = test_constants.FAKE_TZ.copy()
+        tz = self.get_mocked_resource()
+        with mock.patch.object(tz.client, 'url_get', return_value=fake_tz):
+            tz_mode = tz.get_host_switch_mode(fake_tz['id'])
+            self.assertEqual(tz.HOST_SWITCH_MODE_STANDARD, tz_mode)
+
 
 class MetadataProxy(BaseTestResource):
 

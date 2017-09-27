@@ -678,6 +678,8 @@ class NsxLibTransportZone(utils.NsxLibApiBase):
 
     TRANSPORT_TYPE_VLAN = 'VLAN'
     TRANSPORT_TYPE_OVERLAY = 'OVERLAY'
+    HOST_SWITCH_MODE_ENS = 'ENS'
+    HOST_SWITCH_MODE_STANDARD = 'STANDARD'
 
     @property
     def uri_segment(self):
@@ -690,6 +692,10 @@ class NsxLibTransportZone(utils.NsxLibApiBase):
     def get_transport_type(self, uuid):
         tz = self.get(uuid)
         return tz['transport_type']
+
+    def get_host_switch_mode(self, uuid):
+        tz = self.get(uuid)
+        return tz.get('host_switch_mode', self.HOST_SWITCH_MODE_STANDARD)
 
 
 class NsxLibDhcpProfile(utils.NsxLibApiBase):
