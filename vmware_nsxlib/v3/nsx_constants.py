@@ -123,6 +123,7 @@ ERR_CODE_IPAM_RANGE_SHRUNK = 5016
 NSX_VERSION_1_1_0 = '1.1.0'
 NSX_VERSION_2_0_0 = '2.0.0'
 NSX_VERSION_2_1_0 = '2.1.0'
+NSX_VERSION_3_0_0 = '3.0.0'
 
 # Features available depending on the backend version
 FEATURE_MAC_LEARNING = 'MAC Learning'
@@ -132,3 +133,4 @@ FEATURE_ROUTER_FIREWALL = 'Router Firewall'
 FEATURE_LOAD_BALANCER = 'Load Balancer'
 FEATURE_DHCP_RELAY = 'DHCP Relay'
 FEATURE_NSX_POLICY = 'NSX Policy'
+FEATURE_VLAN_ROUTER_INTERFACE = 'VLAN Router Interface'
