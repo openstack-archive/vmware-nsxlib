@@ -16,6 +16,7 @@
 import abc
 import inspect
 import re
+import time
 
 from neutron_lib import exceptions
 from oslo_log import log
@@ -30,6 +31,7 @@ LOG = log.getLogger(__name__)
 MAX_RESOURCE_TYPE_LEN = 20
 MAX_TAG_LEN = 40
 DEFAULT_MAX_ATTEMPTS = 10
+DEFAULT_CACHE_AGE_SEC = 600
 
 
 def _validate_resource_type_length(resource_type):
@@ -181,6 +183,33 @@ def escape_tag_data(data):
     return data.replace('/', '\\/').replace('-', '\\-')
 
 
+class NsxLibCache(object):
+    def __init__(self, timeout):
+        self.timeout = timeout
+        self._cache = {}
+        super(NsxLibCache, self).__init__()
+
+    def expired(self, entry):
+        return (time.time() - entry['time']) > self.timeout
+
+    def get(self, key):
+        if key in self._cache:
+            # check that the value is still valid
+            if self.expired(self._cache[key]):
+                # this entry has expired
+                self.remove(key)
+            else:
+                return self._cache[key]['value']
+
+    def update(self, key, value):
+        self._cache[key] = {'time': time.time(),
+                            'value': value}
+
+    def remove(self, key):
+        if key in self._cache:
+            del self._cache[key]
+
+
 class NsxLibApiBase(object):
     """Base class for nsxlib api """
     def __init__(self, client, nsxlib_config=None, nsxlib=None):
@@ -188,6 +217,7 @@ class NsxLibApiBase(object):
         self.nsxlib_config = nsxlib_config
         self.nsxlib = nsxlib
         super(NsxLibApiBase, self).__init__()
+        self.cache = NsxLibCache(self.cache_timeout)
 
     @abc.abstractproperty
     def uri_segment(self):
@@ -196,6 +226,16 @@ class NsxLibApiBase(object):
     @abc.abstractproperty
     def resource_type(self):
         pass
+
+    @property
+    def use_cache_for_get(self):
+        """By default no caching is used"""
+        return False
+
+    @property
+    def cache_timeout(self):
+        """the default cache aging time in seconds"""
+        return DEFAULT_CACHE_AGE_SEC
 
     def get_path(self, resource=None):
         if resource:
@@ -206,9 +246,23 @@ class NsxLibApiBase(object):
         return self.client.list(self.uri_segment)
 
     def get(self, uuid, silent=False):
-        return self.client.get(self.get_path(uuid), silent=silent)
+        if self.use_cache_for_get:
+            # try to get it from the cache
+            result = self.cache.get(uuid)
+            if result:
+                if not silent:
+                    LOG.debug("Getting %s from cache.", self.get_path(uuid))
+                return result
+        # call the client
+        result = self.client.get(self.get_path(uuid), silent=silent)
+        if result and self.use_cache_for_get:
+            # add the result to the cache
+            self.cache.update(uuid, result)
+        return result
 
     def delete(self, uuid):
+        if self.use_cache_for_get:
+            self.cache.remove(uuid)
         return self.client.delete(self.get_path(uuid))
 
     def find_by_display_name(self, display_name):
@@ -217,6 +271,11 @@ class NsxLibApiBase(object):
             if resource['display_name'] == display_name:
                 found.append(resource)
         return found
+
+    def _update_with_retry(self, uuid, payload):
+        if self.use_cache_for_get:
+            self.cache.remove(uuid)
+        return self._update_resource_with_retry(self.get_path(uuid), payload)
 
     def _update_resource_with_retry(self, resource, payload):
         # Using internal method so we can access max_attempts in the decorator

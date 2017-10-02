@@ -378,8 +378,7 @@ class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
         body = self._update_args(body, name, description)
         if tags is not None:
             body['tags'] = tags
-        return self._update_resource_with_retry(
-            self.get_path(profile_id), body)
+        return self._update_with_retry(profile_id, body)
 
     def update_shaping(self, profile_id,
                        shaping_enabled=False,
@@ -404,8 +403,7 @@ class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
         else:
             body = self._disable_shaping_in_args(body, direction=direction)
         body = self._update_dscp_in_args(body, qos_marking, dscp)
-        return self._update_resource_with_retry(
-            self.get_path(profile_id), body)
+        return self._update_with_retry(profile_id, body)
 
     def set_profile_shaping(self, profile_id,
                             ingress_bw_enabled=False,
@@ -447,8 +445,7 @@ class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
         body = self._update_dscp_in_args(body, qos_marking, dscp)
 
         # update the profile in the backend
-        return self._update_resource_with_retry(
-            self.get_path(profile_id), body)
+        return self._update_with_retry(profile_id, body)
 
 
 class NsxLibLogicalRouter(utils.NsxLibApiBase):
@@ -689,6 +686,10 @@ class NsxLibTransportZone(utils.NsxLibApiBase):
     def resource_type(self):
         return 'TransportZone'
 
+    @property
+    def use_cache_for_get(self):
+        return True
+
     def get_transport_type(self, uuid):
         tz = self.get(uuid)
         return tz['transport_type']
@@ -719,6 +720,10 @@ class NsxLibDhcpRelayService(utils.NsxLibApiBase):
     def resource_type(self):
         return 'DhcpRelayService'
 
+    @property
+    def use_cache_for_get(self):
+        return True
+
     def get_server_ips(self, uuid):
         # Return the server ips of the relay profile attached to this service
         service = self.get(uuid)
@@ -736,6 +741,10 @@ class NsxLibDhcpRelayProfile(utils.NsxLibApiBase):
     @property
     def resource_type(self):
         return 'DhcpRelayProfile'
+
+    @property
+    def use_cache_for_get(self):
+        return True
 
     def get_server_ips(self, uuid):
         profile = self.get(uuid)
@@ -762,8 +771,7 @@ class NsxLibMetadataProxy(utils.NsxLibApiBase):
             body['secret'] = secret
         if edge_cluster_id is not None:
             body['edge_cluster_id'] = edge_cluster_id
-        return self._update_resource_with_retry(
-            self.get_path(uuid), body)
+        return self._update_with_retry(uuid, body)
 
 
 class NsxLibBridgeCluster(utils.NsxLibApiBase):
