@@ -26,23 +26,17 @@ USER_GROUP_TYPES = [
 
 class NsxLibTrustManagement(utils.NsxLibApiBase):
 
-    @staticmethod
-    def remove_newlines_from_pem(pem):
-        """NSX expects pem without newlines in certificate body
-
-        BEGIN and END sections should be separated with newlines
-        """
-        lines = pem.split(b'\n')
-        if len(lines) <= 1:
-            return pem
-        result = lines[0] + b'\n'
-        result += b''.join(lines[1:-2])
-        result += b'\n' + lines[-2]
-        return result
-
-    def create_cert(self, cert_pem):
+    def create_cert(self, cert_pem, private_key=None, passphrase=None,
+                    tags=None):
         resource = CERT_SECTION + '?action=import'
-        body = {'pem_encoded': self.remove_newlines_from_pem(cert_pem)}
+        body = {'pem_encoded': cert_pem}
+        if private_key:
+            body.update(
+                {'private_key': private_key})
+        if passphrase:
+            body.update({'passphrase': passphrase})
+        if tags:
+            body.update({'tags': tags})
 
         results = self.client.create(resource, body)['results']
         if len(results) > 0:
@@ -82,7 +76,7 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         self.client.delete(resource)
 
     def find_cert_and_identity(self, name, cert_pem):
-        nsx_style_pem = self.remove_newlines_from_pem(cert_pem)
+        nsx_style_pem = cert_pem
         certs = self.get_certs()
 
         cert_ids = [cert['id'] for cert in certs
@@ -90,7 +84,7 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         if not cert_ids:
             raise nsxlib_exc.ResourceNotFound(
                 manager=self.client.nsx_api_managers,
-                operation="delete_certificate")
+                operation="find_certificate")
 
         identities = self.get_identities(name)
         # should be zero or one matching identities
