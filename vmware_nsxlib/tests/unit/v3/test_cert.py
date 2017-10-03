@@ -80,8 +80,6 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
             fake_responses.append(self._get_mocked_response(201, []))
 
         if 'delete' in action:
-            nsx_style_pem = tm.NsxLibTrustManagement.remove_newlines_from_pem(
-                cert_pem)
             # get certs list, including same cert imported twice edge case
             results = [{'resource_type': 'Certificate',
                         'id': 'dont care',
@@ -91,7 +89,7 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
                         'pem_encoded': nsx_style_pem},
                        {'resource_type': 'Certificate',
                         'id': self.cert_id,
-                        'pem_encoded': nsx_style_pem}]
+                        'pem_encoded': cert_pem}]
             fake_responses.append(self._get_mocked_response(200, results))
 
             # get principal identities list
@@ -118,7 +116,6 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
     def _verify_backend_create(self, mocked_trust, cert_pem):
         """Verify API calls to create cert and identity on backend"""
         # verify API call to import cert on backend
-        cert_pem = mocked_trust.remove_newlines_from_pem(cert_pem)
         base_uri = 'https://1.2.3.4/api/v1/trust-management'
         uri = base_uri + '/certificates?action=import'
         expected_body = {'pem_encoded': cert_pem}
