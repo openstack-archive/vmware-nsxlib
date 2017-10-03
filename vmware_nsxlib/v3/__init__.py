@@ -31,6 +31,7 @@ from vmware_nsxlib.v3 import policy_defs
 from vmware_nsxlib.v3 import policy_resources
 from vmware_nsxlib.v3 import resources
 from vmware_nsxlib.v3 import security
+from vmware_nsxlib.v3 import trust_management
 from vmware_nsxlib.v3 import utils
 
 LOG = log.getLogger(__name__)
@@ -244,6 +245,8 @@ class NsxLib(NsxLibBase):
         self.ip_pool = resources.IpPool(
             self.client, self.nsxlib_config, nsxlib=self)
         self.load_balancer = load_balancer.LoadBalancer(
+            self.client, self.nsxlib_config)
+        self.trust_management = trust_management.NsxLibTrustManagement(
             self.client, self.nsxlib_config)
 
     @property

@@ -40,9 +40,14 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         result += b'\n' + lines[-2]
         return result
 
-    def create_cert(self, cert_pem):
+    def create_cert(self, cert_pem, private_key=None, passphrase=None):
         resource = CERT_SECTION + '?action=import'
-        body = {'pem_encoded': self.remove_newlines_from_pem(cert_pem)}
+        body = {'pem_encoded': cert_pem}
+        if private_key:
+            body.update(
+                {'private_key': private_key})
+        if passphrase:
+            body.update({'passphrase': passphrase})
 
         results = self.client.create(resource, body)['results']
         if len(results) > 0:
