@@ -320,3 +320,41 @@ FAKE_SERVICE = {
         "target_type": "LogicalRouter"
     }
 }
+
+FAKE_TZ_UUID = uuidutils.generate_uuid()
+FAKE_TZ = {
+    "resource_type": "TransportZone",
+    "revision": 0,
+    "id": FAKE_TZ_UUID,
+    "display_name": FAKE_NAME,
+    "transport_type": "OVERLAY",
+    "host_switch_mode": "STANDARD"
+}
+
+FAKE_MD_UUID = uuidutils.generate_uuid()
+FAKE_URL = "http://7.7.7.70:3500/abc"
+FAKE_MD = {
+    "resource_type": "MetadataProxy",
+    "revision": 0,
+    "id": FAKE_MD_UUID,
+    "metadata_server_url": FAKE_URL
+}
+
+FAKE_RELAY_UUID = uuidutils.generate_uuid()
+FAKE_RELAY_SERVER = "6.6.6.6"
+FAKE_RELAY_PROFILE = {
+    "id": FAKE_RELAY_UUID,
+    "display_name": "dummy",
+    "server_addresses": [FAKE_RELAY_SERVER],
+    "resource_type": "DhcpRelayProfile"
+}
+
+FAKE_RELAY_SERVICE_UUID = uuidutils.generate_uuid()
+FAKE_RELAY_SERVICE = {
+    "id": FAKE_RELAY_SERVICE_UUID,
+    "display_name": "dummy",
+    "dhcp_relay_profile_id": FAKE_RELAY_UUID,
+    "resource_type": "DhcpRelayService"
+}
+
+FAKE_DEFAULT_CERTIFICATE_ID = uuidutils.generate_uuid()
