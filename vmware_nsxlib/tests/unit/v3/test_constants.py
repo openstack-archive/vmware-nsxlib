@@ -320,3 +320,5 @@ FAKE_SERVICE = {
         "target_type": "LogicalRouter"
     }
 }
+
+FAKE_DEFAULT_CERTIFICATE_ID = uuidutils.generate_uuid()
