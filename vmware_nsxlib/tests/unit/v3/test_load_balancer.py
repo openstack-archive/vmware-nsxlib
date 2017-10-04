@@ -210,21 +210,21 @@ class TestServerSslProfile(nsxlib_testcase.NsxClientTestCase):
             'tags': tags
         }
         with mock.patch.object(self.nsxlib.client, 'create') as create:
-                self.nsxlib.load_balancer.server_ssh_profile.create(
+                self.nsxlib.load_balancer.server_ssl_profile.create(
                     body['display_name'], body['description'], tags)
                 create.assert_called_with('loadbalancer/server-ssl-profiles',
                                           body)
 
     def test_list_server_ssl_profiles(self):
         with mock.patch.object(self.nsxlib.client, 'list') as list_call:
-            self.nsxlib.load_balancer.server_ssh_profile.list()
+            self.nsxlib.load_balancer.server_ssl_profile.list()
             list_call.assert_called_with(
                 resource='loadbalancer/server-ssl-profiles')
 
     def test_get_server_ssl_profile(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
             fake_profile = consts.FAKE_SERVER_SSL_PROFILE.copy()
-            self.nsxlib.load_balancer.server_ssh_profile.get(
+            self.nsxlib.load_balancer.server_ssl_profile.get(
                 fake_profile['id'])
             get.assert_called_with(
                 'loadbalancer/server-ssl-profiles/%s' % fake_profile['id'])
@@ -232,7 +232,7 @@ class TestServerSslProfile(nsxlib_testcase.NsxClientTestCase):
     def test_delete_server_ssl_profile(self):
         with mock.patch.object(self.nsxlib.client, 'delete') as delete:
             fake_profile = consts.FAKE_SERVER_SSL_PROFILE.copy()
-            self.nsxlib.load_balancer.server_ssh_profile.delete(
+            self.nsxlib.load_balancer.server_ssl_profile.delete(
                 fake_profile['id'])
             delete.assert_called_with(
                 'loadbalancer/server-ssl-profiles/%s' % fake_profile['id'])
