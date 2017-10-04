@@ -210,21 +210,21 @@ class TestServerSslProfile(nsxlib_testcase.NsxClientTestCase):
             'tags': tags
         }
         with mock.patch.object(self.nsxlib.client, 'create') as create:
-                self.nsxlib.load_balancer.server_ssh_profile.create(
+                self.nsxlib.load_balancer.server_ssl_profile.create(
                     body['display_name'], body['description'], tags)
                 create.assert_called_with('loadbalancer/server-ssl-profiles',
                                           body)
 
     def test_list_server_ssl_profiles(self):
         with mock.patch.object(self.nsxlib.client, 'list') as list_call:
-            self.nsxlib.load_balancer.server_ssh_profile.list()
+            self.nsxlib.load_balancer.server_ssl_profile.list()
             list_call.assert_called_with(
                 resource='loadbalancer/server-ssl-profiles')
 
     def test_get_server_ssl_profile(self):
         with mock.patch.object(self.nsxlib.client, 'get') as get:
             fake_profile = consts.FAKE_SERVER_SSL_PROFILE.copy()
-            self.nsxlib.load_balancer.server_ssh_profile.get(
+            self.nsxlib.load_balancer.server_ssl_profile.get(
                 fake_profile['id'])
             get.assert_called_with(
                 'loadbalancer/server-ssl-profiles/%s' % fake_profile['id'])
@@ -232,7 +232,7 @@ class TestServerSslProfile(nsxlib_testcase.NsxClientTestCase):
     def test_delete_server_ssl_profile(self):
         with mock.patch.object(self.nsxlib.client, 'delete') as delete:
             fake_profile = consts.FAKE_SERVER_SSL_PROFILE.copy()
-            self.nsxlib.load_balancer.server_ssh_profile.delete(
+            self.nsxlib.load_balancer.server_ssl_profile.delete(
                 fake_profile['id'])
             delete.assert_called_with(
                 'loadbalancer/server-ssl-profiles/%s' % fake_profile['id'])
@@ -398,7 +398,7 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                 'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'])
 
     def test_add_rule(self):
-        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER
+        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER.copy()
         body = {
             'display_name': fake_virtual_server['display_name'],
             'description': fake_virtual_server['description'],
@@ -418,7 +418,7 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                 body)
 
     def test_remove_rule(self):
-        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER
+        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER.copy()
         fake_virtual_server['rule_ids'] = [consts.FAKE_RULE_UUID]
         body = {
             'display_name': fake_virtual_server['display_name'],
@@ -431,9 +431,70 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
         }
         with mock.patch.object(self.nsxlib.client, 'get') as mock_get, \
             mock.patch.object(self.nsxlib.client, 'update') as mock_update:
-            mock_get.return_value = fake_virtual_server
+            mock_get.return_value = fake_virtual_server.copy()
             self.nsxlib.load_balancer.virtual_server.remove_rule(
                 fake_virtual_server['id'], consts.FAKE_RULE_UUID)
+            mock_update.assert_called_with(
+                'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'],
+                body)
+
+    def test_add_client_ssl_profile_binding(self):
+        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER.copy()
+        body = {
+            'display_name': fake_virtual_server['display_name'],
+            'description': fake_virtual_server['description'],
+            'id': fake_virtual_server['id'],
+            'enabled': fake_virtual_server['enabled'],
+            'port': fake_virtual_server['port'],
+            'ip_protocol': fake_virtual_server['ip_protocol'],
+            'client_ssl_profile_binding': {
+                'ssl_profile_id': consts.FAKE_CLIENT_SSL_PROFILE_UUID,
+                'default_certificate_id': consts.FAKE_DEFAULT_CERTIFICATE_ID,
+                'client_auth': 'IGNORE',
+                'certificate_chain_depth': 3
+            }
+        }
+        with mock.patch.object(self.nsxlib.client, 'get') as mock_get, \
+            mock.patch.object(self.nsxlib.client, 'update') as mock_update:
+            mock_get.return_value = fake_virtual_server
+            vs_client = self.nsxlib.load_balancer.virtual_server
+            vs_client.add_client_ssl_profile_binding(
+                fake_virtual_server['id'],
+                consts.FAKE_CLIENT_SSL_PROFILE_UUID,
+                consts.FAKE_DEFAULT_CERTIFICATE_ID,
+                client_auth='IGNORE',
+                certificate_chain_depth=3,
+                xyz='xyz'
+            )
+            mock_update.assert_called_with(
+                'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'],
+                body)
+
+    def test_add_server_ssl_profile_binding(self):
+        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER.copy()
+        body = {
+            'display_name': fake_virtual_server['display_name'],
+            'description': fake_virtual_server['description'],
+            'id': fake_virtual_server['id'],
+            'enabled': fake_virtual_server['enabled'],
+            'port': fake_virtual_server['port'],
+            'ip_protocol': fake_virtual_server['ip_protocol'],
+            'server_ssl_profile_binding': {
+                'ssl_profile_id': consts.FAKE_SERVER_SSL_PROFILE_UUID,
+                'server_auth': 'IGNORE',
+                'certificate_chain_depth': 3
+            }
+        }
+        with mock.patch.object(self.nsxlib.client, 'get') as mock_get, \
+            mock.patch.object(self.nsxlib.client, 'update') as mock_update:
+            mock_get.return_value = fake_virtual_server
+            vs_client = self.nsxlib.load_balancer.virtual_server
+            vs_client.add_server_ssl_profile_binding(
+                fake_virtual_server['id'],
+                consts.FAKE_SERVER_SSL_PROFILE_UUID,
+                server_auth='IGNORE',
+                certificate_chain_depth=3,
+                xyz='xyz')
             mock_update.assert_called_with(
                 'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'],
                 body)
