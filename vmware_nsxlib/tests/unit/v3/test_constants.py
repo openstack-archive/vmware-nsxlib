@@ -356,3 +356,5 @@ FAKE_RELAY_SERVICE = {
     "dhcp_relay_profile_id": FAKE_RELAY_UUID,
     "resource_type": "DhcpRelayService"
 }
+
+FAKE_DEFAULT_CERTIFICATE_ID = uuidutils.generate_uuid()
