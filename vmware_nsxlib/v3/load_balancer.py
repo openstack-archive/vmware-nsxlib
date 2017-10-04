@@ -314,6 +314,43 @@ class VirtualServer(LoadBalancerBase):
     def remove_rule(self, vs_id, rule_id):
         self.remove_from_list(vs_id, rule_id, 'rule_ids')
 
+    def add_client_ssl_profile_binding(self, virtual_server_id,
+                                       ssl_profile_id, default_certificate_id,
+                                       sni_certificate_ids=None, **kwargs):
+        binding = {'ssl_profile_id': ssl_profile_id,
+                   'default_certificate_id': default_certificate_id}
+        if sni_certificate_ids:
+            binding.update({'sni_certificate_ids': sni_certificate_ids})
+
+        valid_args = ['client_auth_ca_ids', 'client_auth_crl_ids',
+                      'certificate_chain_depth', 'client_auth']
+        # Remove the args that is not in the valid_args list or the
+        # keyword argument doesn't have value.
+        for arg in kwargs:
+            if arg in valid_args and kwargs.get(arg):
+                binding[arg] = kwargs.get(arg)
+        object_url = self.resource + '/' + virtual_server_id
+        body = self.client.get(object_url)
+        body['client_ssl_profile_binding'] = binding
+        return self.client.update(object_url, body)
+
+    def add_server_ssl_profile_binding(self, virtual_server_id,
+                                       ssl_profile_id, **kwargs):
+        binding = {'ssl_profile_id': ssl_profile_id}
+
+        valid_args = ['server_auth_ca_ids', 'server_auth_crl_ids',
+                      'certificate_chain_depth', 'server_auth',
+                      'client_certificate_id']
+        # Remove the args that is not in the valid_args list or the
+        # keyword argument doesn't have value.
+        for arg in kwargs:
+            if arg in valid_args and kwargs.get(arg):
+                binding[arg] = kwargs[arg]
+        object_url = self.resource + '/' + virtual_server_id
+        body = self.client.get(object_url)
+        body['server_ssl_profile_binding'] = binding
+        return self.client.update(object_url, body)
+
 
 class Service(LoadBalancerBase):
     resource = 'loadbalancer/services'
@@ -365,5 +402,5 @@ class LoadBalancer(object):
         self.application_profile = ApplicationProfile(client, nsxlib_config)
         self.persistence_profile = PersistenceProfile(client, nsxlib_config)
         self.client_ssl_profile = ClientSslProfile(client, nsxlib_config)
-        self.server_ssh_profile = ServerSslProfile(client, nsxlib_config)
+        self.server_ssl_profile = ServerSslProfile(client, nsxlib_config)
         self.rule = Rule(client, nsxlib_config)
