@@ -30,6 +30,7 @@ from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_defs
 from vmware_nsxlib.v3 import policy_resources
 from vmware_nsxlib.v3 import resources
+from vmware_nsxlib.v3 import router
 from vmware_nsxlib.v3 import security
 from vmware_nsxlib.v3 import trust_management
 from vmware_nsxlib.v3 import utils
@@ -248,6 +249,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config)
         self.trust_management = trust_management.NsxLibTrustManagement(
             self.client, self.nsxlib_config)
+        self.router = router.RouterLib(
+            self.logical_router, self.logical_router_port, self)
 
     @property
     def keepalive_section(self):
