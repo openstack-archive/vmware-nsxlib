@@ -251,6 +251,10 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config)
         self.router = router.RouterLib(
             self.logical_router, self.logical_router_port, self)
+        self.virtual_machine = core_resources.NsxLibFabricVirtualMachine(
+            self.client, self.nsxlib_config, nsxlib=self)
+        self.vif = core_resources.NsxLibFabricVirtualInterface(
+            self.client, self.nsxlib_config, nsxlib=self)
 
     @property
     def keepalive_section(self):
