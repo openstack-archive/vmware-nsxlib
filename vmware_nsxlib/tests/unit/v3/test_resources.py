@@ -1321,6 +1321,40 @@ class NsxLibIpBlockTestCase(BaseTestResource):
             core_resources.NsxLibIpBlock)
 
 
+class NsxLibFabricVirtualInterfaceTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibFabricVirtualInterfaceTestCase, self).setUp(
+            core_resources.NsxLibFabricVirtualInterface)
+
+    def test_get_by_owner_vm_id(self):
+        mocked_resource = self.get_mocked_resource()
+        vm_id = uuidutils.generate_uuid()
+        mocked_resource.get_by_owner_vm_id(vm_id)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            'https://1.2.3.4/api/v1/%s?owner_vm_id=%s' %
+            (mocked_resource.uri_segment, vm_id),
+            headers=self.default_headers())
+
+
+class NsxLibFabricVirtualMachineTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibFabricVirtualMachineTestCase, self).setUp(
+            core_resources.NsxLibFabricVirtualMachine)
+
+    def test_get_by_display_name(self):
+        mocked_resource = self.get_mocked_resource()
+        display_name = 'some-vm-name'
+        mocked_resource.get_by_display_name(display_name)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            'https://1.2.3.4/api/v1/%s?display_name=%s' %
+            (mocked_resource.uri_segment, display_name),
+            headers=self.default_headers())
+
+
 class LogicalDhcpServerTestCase(BaseTestResource):
 
     def setUp(self):
