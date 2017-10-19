@@ -819,3 +819,33 @@ class NsxLibIpBlock(utils.NsxLibApiBase):
     @property
     def resource_type(self):
         return 'IpBlock'
+
+
+class NsxLibFabricVirtualMachine(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'fabric/virtual-machines'
+
+    @property
+    def resource_type(self):
+        return 'VirtualMachine'
+
+    def get_by_display_name(self, display_name):
+        url_suffix = '?display_name=%s' % display_name
+        return self.client.get(self.get_path(url_suffix))
+
+
+class NsxLibFabricVirtualInterface(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'fabric/vifs'
+
+    @property
+    def resource_type(self):
+        return 'VirtualNetworkInterface'
+
+    def get_by_owner_vm_id(self, owner_vm_id):
+        url_suffix = '?owner_vm_id=%s' % owner_vm_id
+        return self.client.get(self.get_path(url_suffix))
