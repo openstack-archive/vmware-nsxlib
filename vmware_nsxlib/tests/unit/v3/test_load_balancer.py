@@ -400,7 +400,7 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                 'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'])
 
     def test_add_rule(self):
-        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER
+        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER.copy()
         body = {
             'display_name': fake_virtual_server['display_name'],
             'description': fake_virtual_server['description'],
@@ -420,7 +420,7 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                 body)
 
     def test_remove_rule(self):
-        fake_virtual_server = copy.deepcopy(consts.FAKE_VIRTUAL_SERVER)
+        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER.copy()
         fake_virtual_server['rule_ids'] = [consts.FAKE_RULE_UUID]
         body = {
             'display_name': fake_virtual_server['display_name'],
@@ -441,7 +441,7 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                 body)
 
     def test_add_client_ssl_profile_binding(self):
-        fake_virtual_server = copy.deepcopy(consts.FAKE_VIRTUAL_SERVER)
+        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER.copy()
         body = {
             'display_name': fake_virtual_server['display_name'],
             'description': fake_virtual_server['description'],
@@ -473,7 +473,7 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                 body)
 
     def test_add_server_ssl_profile_binding(self):
-        fake_virtual_server = copy.deepcopy(consts.FAKE_VIRTUAL_SERVER)
+        fake_virtual_server = consts.FAKE_VIRTUAL_SERVER.copy()
         body = {
             'display_name': fake_virtual_server['display_name'],
             'description': fake_virtual_server['description'],
@@ -497,9 +497,9 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                 server_auth='IGNORE',
                 certificate_chain_depth=3,
                 xyz='xyz')
-        mock_update.assert_called_with(
-            'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'],
-            body)
+            mock_update.assert_called_with(
+                'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'],
+                body)
 
 
 class TestService(nsxlib_testcase.NsxClientTestCase):
