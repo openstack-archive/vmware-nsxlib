@@ -497,9 +497,9 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
                 server_auth='IGNORE',
                 certificate_chain_depth=3,
                 xyz='xyz')
-        mock_update.assert_called_with(
-            'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'],
-            body)
+            mock_update.assert_called_with(
+                'loadbalancer/virtual-servers/%s' % fake_virtual_server['id'],
+                body)
 
 
 class TestService(nsxlib_testcase.NsxClientTestCase):
