@@ -178,6 +178,10 @@ class RESTClient(object):
                    silent=False):
         request_headers = headers.copy() if headers else {}
         request_headers.update(self._default_headers)
+        if utils.INJECT_HEADERS_CALLBACK:
+            inject_headers = utils.INJECT_HEADERS_CALLBACK()
+            request_headers.update(inject_headers)
+
         request_url = self._build_url(url)
 
         do_request = getattr(self._conn, method.lower())
