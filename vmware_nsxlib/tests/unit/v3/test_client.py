@@ -23,6 +23,7 @@ from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import exceptions as nsxlib_exc
+from vmware_nsxlib.v3 import utils
 
 
 LOG = log.getLogger(__name__)
@@ -268,6 +269,32 @@ class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
                 nsxlib_exc.BackendResourceNotFound,
                 _verb_response_code, verb,
                 requests.codes.NOT_FOUND, 202)
+
+    def test_inject_headers_callback(self):
+
+        self.injected = None
+
+        def inject_header():
+            self.injected = True
+            return {}
+
+        utils.set_inject_headers_callback(inject_header)
+        api = self.new_mocked_client(
+            client.RESTClient,
+            url_prefix='/v1/api')
+
+        api.list()
+        injected_headers = {}
+        assert_call(
+            'get', api,
+            'https://1.2.3.4/v1/api',
+            headers=_headers(**injected_headers))
+
+        api = self.new_mocked_client(
+            client.RESTClient,
+            url_prefix='/v1/api')
+        utils.set_inject_headers_callback(None)
+        self.assertIsNotNone(self.injected)
 
 
 class NsxV3JSONClientTestCase(nsxlib_testcase.NsxClientTestCase):
