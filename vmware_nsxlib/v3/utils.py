@@ -32,6 +32,12 @@ MAX_RESOURCE_TYPE_LEN = 20
 MAX_TAG_LEN = 40
 DEFAULT_MAX_ATTEMPTS = 10
 DEFAULT_CACHE_AGE_SEC = 600
+INJECT_HEADERS_CALLBACK = None
+
+
+def set_inject_headers_callback(callback):
+    global INJECT_HEADERS_CALLBACK
+    INJECT_HEADERS_CALLBACK = callback
 
 
 def _validate_resource_type_length(resource_type):
