@@ -17,7 +17,6 @@ import datetime
 from time import time
 import uuid
 
-from neutron_lib import exceptions
 from OpenSSL import crypto
 from oslo_log import log
 
@@ -39,7 +38,7 @@ def validate_cert_params(key_size, valid_for_days,
 
     expected_key_sizes = (2048, 4096)
     if key_size not in expected_key_sizes:
-        raise exceptions.InvalidInput(
+        raise nsxlib_exceptions.InvalidInput(
             error_message=_('Invalid key size %(value)d'
                             '(must be one of %(list)s)') %
             {'value': key_size,
@@ -47,7 +46,7 @@ def validate_cert_params(key_size, valid_for_days,
 
     expected_signature_algs = ('sha224', 'sha256')
     if signature_alg not in expected_signature_algs:
-        raise exceptions.InvalidInput(
+        raise nsxlib_exceptions.InvalidInput(
             error_message=_('Invalid signature algorithm %(value)s'
                             '(must be one of %(list)s)') %
             {'value': signature_alg,
@@ -55,7 +54,7 @@ def validate_cert_params(key_size, valid_for_days,
 
     if (CERT_SUBJECT_COUNTRY in subject and
        (len(subject[CERT_SUBJECT_COUNTRY]) != 2)):
-        raise exceptions.InvalidInput(
+        raise nsxlib_exceptions.InvalidInput(
             error_message=_('Invalid country %s: '
                             'must be exactly 2 characters') %
             subject[CERT_SUBJECT_COUNTRY])
@@ -68,7 +67,7 @@ def validate_cert_params(key_size, valid_for_days,
 
     for field, max_len in max_len_constraints.items():
         if field in subject and (len(subject[field]) > max_len):
-            raise exceptions.InvalidInput(
+            raise nsxlib_exceptions.InvalidInput(
                 error_message=_('Invalid %(field)s [%(value)s]: '
                                 'must not exceed %(max)d characters') %
                 {'field': field,

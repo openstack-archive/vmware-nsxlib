@@ -18,7 +18,6 @@ NSX-V3 Plugin router module
 """
 import copy
 
-from neutron_lib import exceptions as n_exc
 from oslo_log import log
 
 from vmware_nsxlib._i18n import _
@@ -72,7 +71,7 @@ class RouterLib(object):
                         'exp_num': MIN_EDGE_NODE_NUM,
                         'cluster_id': edge_cluster_uuid}
         if err_msg:
-            raise n_exc.InvalidInput(error_message=err_msg)
+            raise exceptions.InvalidInput(error_message=err_msg)
         else:
             tier0_groups_dict[tier0_uuid] = {
                 'edge_cluster_uuid': edge_cluster_uuid,

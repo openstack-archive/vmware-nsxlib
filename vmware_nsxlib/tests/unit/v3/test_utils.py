@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from neutron_lib import exceptions as n_exc
-
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
+from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import utils
 
@@ -50,7 +49,7 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
         self.assertEqual(expected, result)
 
     def test_build_v3_tags_payload_invalid_length(self):
-        self.assertRaises(n_exc.InvalidInput,
+        self.assertRaises(exceptions.InvalidInput,
                           self.nsxlib.build_v3_tags_payload,
                           {'id': 'fake_id',
                            'project_id': 'fake_proj_id'},
@@ -115,7 +114,7 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
         self.assertEqual(expected, result)
 
     def test_add_v3_tag_invalid_scope_length(self):
-        self.assertRaises(n_exc.InvalidInput,
+        self.assertRaises(exceptions.InvalidInput,
                           utils.add_v3_tag,
                           [],
                           'fake-scope-name-is-far-too-long',
@@ -242,13 +241,15 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
         max_retries = 5
         total_count = {'val': 0}
 
-        @utils.retry_upon_exception(n_exc.InvalidInput,
+        @utils.retry_upon_exception(exceptions.InvalidInput,
                                     max_attempts=max_retries)
         def func_to_fail(x):
             total_count['val'] = total_count['val'] + 1
-            raise n_exc.InvalidInput()
+            raise exceptions.InvalidInput(operation='opertaion',
+                                          arg_val='arg_val',
+                                          arg_name='arg_name')
 
-        self.assertRaises(n_exc.InvalidInput, func_to_fail, 99)
+        self.assertRaises(exceptions.InvalidInput, func_to_fail, 99)
         self.assertEqual(max_retries, total_count['val'])
 
 
