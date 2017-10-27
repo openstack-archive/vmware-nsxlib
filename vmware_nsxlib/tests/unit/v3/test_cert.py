@@ -15,7 +15,6 @@
 #
 import os
 
-from neutron_lib import exceptions
 from OpenSSL import crypto
 from oslo_serialization import jsonutils
 
@@ -291,6 +290,6 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
                             'subject': {}}]
 
         for args in bad_cert_values:
-            self.assertRaises(exceptions.InvalidInput,
+            self.assertRaises(nsxlib_exc.NsxLibInvalidInput,
                               client_cert.generate_self_signed_cert_pair,
                               **args)
