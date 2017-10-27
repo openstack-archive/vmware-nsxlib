@@ -13,8 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.v3 import native_dhcp
+from vmware_nsxlib.v3 import utils
 
 
 # TODO(asarfaty): Add more test cases here
@@ -60,7 +63,9 @@ class TestNativeDhcp(nsxlib_testcase.NsxLibTestCase):
         self.assertEqual([self.subnet_dns_nameserver],
                          result['dns_nameservers'])
 
-    def test_build_server_config_dns_from_net_with_defaults(self):
+    @mock.patch.object(utils, 'is_attr_set', return_value=True)
+    def test_build_server_config_dns_from_net_with_defaults(self,
+                                                            mock_is_attr_set):
         # Verify that net/subnet dns params are used if exist, even if there
         # are defaults
         result = self._get_server_config(with_net_dns=True,

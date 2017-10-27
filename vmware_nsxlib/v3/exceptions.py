@@ -63,6 +63,10 @@ class CertificateError(NsxLibException):
     message = _("Certificate error: %(msg)s")
 
 
+class NsxLibInvalidInput(NsxLibException):
+    message = _("Invalid input for operation: %(error_message)s.")
+
+
 class ManagerError(NsxLibException):
     message = _("Unexpected error from backend manager (%(manager)s) "
                 "for %(operation)s %(details)s")
