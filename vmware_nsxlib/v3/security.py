@@ -18,10 +18,10 @@
 NSX-V3 Plugin security & Distributed Firewall integration module
 """
 
-from neutron_lib import constants
 from oslo_log import log
 from oslo_utils import excutils
 
+from vmware_nsxlib.v3 import constants
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants as consts
 from vmware_nsxlib.v3 import utils
