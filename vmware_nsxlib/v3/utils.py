@@ -18,7 +18,6 @@ import inspect
 import re
 import time
 
-from neutron_lib import exceptions
 from oslo_log import log
 import tenacity
 from tenacity import _utils as tenacity_utils
@@ -33,6 +32,18 @@ MAX_TAG_LEN = 40
 DEFAULT_MAX_ATTEMPTS = 10
 DEFAULT_CACHE_AGE_SEC = 600
 INJECT_HEADERS_CALLBACK = None
+IS_ATTR_SET_CALLBACK = None
+
+
+def set_is_attr_callback(callback):
+    global IS_ATTR_SET_CALLBACK
+    IS_ATTR_SET_CALLBACK = callback
+
+
+def is_attr_set(attr):
+    if IS_ATTR_SET_CALLBACK:
+        return IS_ATTR_SET_CALLBACK(attr)
+    return attr is not None
 
 
 def set_inject_headers_callback(callback):
@@ -43,7 +54,7 @@ def set_inject_headers_callback(callback):
 def _validate_resource_type_length(resource_type):
     # Add in a validation to ensure that we catch this at build time
     if len(resource_type) > MAX_RESOURCE_TYPE_LEN:
-        raise exceptions.InvalidInput(
+        raise nsxlib_exceptions.NsxLibInvalidInput(
             error_message=(_('Resource type cannot exceed %(max_len)s '
                              'characters: %(resource_type)s') %
                            {'max_len': MAX_RESOURCE_TYPE_LEN,
