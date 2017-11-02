@@ -182,6 +182,26 @@ def build_extra_args(body, extra_args, **kwargs):
     return body
 
 
+def update_tag(tags, scope, tag):
+    """
+    :param tags: tags of a nsx resource
+    :param scope: scope of the tag to be updated
+    :param tag: tag value to be updated
+    :return: updated tags
+    """
+    found = False
+    for t in tags:
+        if t['scope'] == scope:
+            t['tag'] = tag
+            found = True
+            break
+    # If scope is not found, append it as new tag
+    if not found:
+        tags.append({'scope': scope, 'tag': tag})
+
+    return tags
+
+
 def escape_tag_data(data):
     # ElasticSearch query_string requires slashes and dashes to
     # be escaped. We assume no other reserved characters will be
