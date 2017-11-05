@@ -236,7 +236,7 @@ class ClientCertificateManager(object):
         """Delete specified client certificate without storage verification"""
         # This file may contain private key
         # passing the pem through crypto will perform validation and
-        # stripp off the key
+        # strip off the key
         cert = self._get_cert_from_file(filename)
         cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
 

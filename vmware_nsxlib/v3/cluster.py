@@ -139,7 +139,7 @@ class TimeoutSession(requests.Session):
         # important).
         # It would be optimal to populate certificate once per connection,
         # per request. Unfortunately requests library verifies cert file
-        # existance regardless of whether certificate is going to be used
+        # existence regardless of whether certificate is going to be used
         # for this request.
         # Optimal solution for this would be to expose certificate as variable
         # and not as a file to the SSL library

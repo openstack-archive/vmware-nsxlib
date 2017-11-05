@@ -60,7 +60,7 @@ def update_v3_tags(current_tags, tags_update):
     current_scopes = set([tag['scope'] for tag in current_tags])
     updated_scopes = set([tag['scope'] for tag in tags_update])
 
-    # All tags scopes which are either completley new or arleady defined on the
+    # All tags scopes which are either completely new or already defined on the
     # resource are left in place, unless the tag value is empty, in that case
     # it is ignored.
     tags = [{'scope': tag['scope'], 'tag': tag['tag']}
