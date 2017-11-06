@@ -395,7 +395,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             if force:
                 # shared sections (like default section) can serve multiple
                 # openstack deployments. If some operate under protected
-                # identities, force-owerwrite is needed.
+                # identities, force-overwrite is needed.
                 # REVISIT(annak): find better solution for shared sections
                 headers = {'X-Allow-Overwrite': 'true'}
 

@@ -35,7 +35,7 @@ class NsxLibConfig(object):
                              instead of basic authentication.
     :param insecure: If true, the NSX Manager server certificate is not
                      verified. If false the CA bundle specified via "ca_file"
-                     will be used or if unsest the default system root CAs
+                     will be used or if unset the default system root CAs
                      will be used.
     :param ca_file: Specify a CA bundle file to use in verifying the NSX
                     Manager server certificate. This option is ignored if
