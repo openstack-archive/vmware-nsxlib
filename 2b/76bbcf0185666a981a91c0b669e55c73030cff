@@ -1,0 +1,12 @@
+Code-Review+2: Anna Khmelnitsky <akhmelnitsky@vmware.com>
+Code-Review+2: garyk <gkotton@vmware.com>
+Code-Review+1: Tong Liu <tongl@vmware.com>
+Code-Review+2: Adit Sarfaty <asarfaty@vmware.com>
+Workflow+1: Adit Sarfaty <asarfaty@vmware.com>
+Verified+1: VMware NSX CI
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Mon, 06 Nov 2017 08:30:55 +0000
+Reviewed-on: https://review.openstack.org/474242
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
