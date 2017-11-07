@@ -449,3 +449,40 @@ FAKE_CERT_PEM = (
     "Nd3coEUMwd16vr57QJatJbTo/wVMMbvW3vqVy0AuXReHCPVTDF5+vnsMGXK/IV7w\n"
     "LzulLswFmA==\n"
     "-----END CERTIFICATE-----\n")
+
+FAKE_DPD_ID = "c933402b-f111-4634-9d66-cc8fffde0f65"
+FAKE_DPD = {
+    "resource_type": "IPSecVPNDPDProfile",
+    "description": "neutron dpd profile",
+    "id": FAKE_DPD_ID,
+    "display_name": "con1-dpd-profile",
+    "enabled": True,
+    "timeout": 120,
+}
+
+FAKE_PEP_ID = "a7b2915c-2041-4a33-9ea7-9d22b67bf38e"
+FAKE_PEP = {
+    "resource_type": "IPSecVPNPeerEndpoint",
+    "id": FAKE_PEP_ID,
+    "display_name": "con1",
+    "connection_initiation_mode": "INITIATOR",
+    "authentication_mode": "PSK",
+    "ipsec_tunnel_profile_id": "76e3707d-22e5-4e36-a9ef-b568215e2481",
+    "dpd_profile_id": "04191f5f-3bdd-4ec1-ae56-154b06778d4f",
+    "ike_profile_id": "df386534-5cec-49b4-9c21-4c212cba3cbf",
+    "peer_address": "172.24.4.233",
+    "peer_id": "172.24.4.233"
+}
+
+FAKE_LEP_ID = "cb57de72-4adb-4dad-9abc-685f9f1d0265"
+FAKE_LEP = {
+    "resource_type": "IPSecVPNLocalEndpoint",
+    "description": "XXX",
+    "id": FAKE_LEP_ID,
+    "display_name": "XXX",
+    "local_id": "1.1.1.1",
+    "ipsec_vpn_service_id": "aca38a11-981b-46d8-9e2c-9bedc0d96794",
+    "local_address": "1.1.1.1",
+    "trust_ca_ids": [],
+    "trust_crl_ids": [],
+}
