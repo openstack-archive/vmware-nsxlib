@@ -271,9 +271,10 @@ class NsxLib(NsxLibBase):
     def feature_supported(self, feature):
         if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_2_2_0)):
-            # Features available since 3.0
+            # Features available since 2.2
             if (feature == nsx_constants.FEATURE_VLAN_ROUTER_INTERFACE or
-                feature == nsx_constants.FEATURE_IPSEC_VPN):
+                feature == nsx_constants.FEATURE_IPSEC_VPN or
+                feature == nsx_constants.FEATURE_ON_BEHALF_OF):
                 return True
 
         if (version.LooseVersion(self.get_version()) >=
