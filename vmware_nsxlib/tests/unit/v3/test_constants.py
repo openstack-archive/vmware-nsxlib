@@ -449,3 +449,13 @@ FAKE_CERT_PEM = (
     "Nd3coEUMwd16vr57QJatJbTo/wVMMbvW3vqVy0AuXReHCPVTDF5+vnsMGXK/IV7w\n"
     "LzulLswFmA==\n"
     "-----END CERTIFICATE-----\n")
+
+FAKE_DPD_ID = "c933402b-f111-4634-9d66-cc8fffde0f65"
+FAKE_DPD = {
+    "resource_type": "IPSecVPNDPDProfile",
+    "description": "neutron dpd profile",
+    "id": FAKE_DPD_ID,
+    "display_name": "con1-dpd-profile",
+    "enabled": True,
+    "timeout": 120,
+}
