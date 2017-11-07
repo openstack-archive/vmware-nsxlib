@@ -65,35 +65,40 @@ def _mock_nsxlib():
                  'id': uuidutils.generate_uuid()}
                 for rule in rules
             ]}
-
-    mock.patch(
+    mocking = []
+    mocking.append(mock.patch(
         "vmware_nsxlib.v3.cluster.NSXRequestsHTTPProvider"
-        ".validate_connection").start()
+        ".validate_connection"))
 
-    mock.patch(
+    mocking.append(mock.patch(
         "vmware_nsxlib.v3.security.NsxLibNsGroup.create",
         side_effect=_return_id_key
-    ).start()
+    ))
 
-    mock.patch(
+    mocking.append(mock.patch(
         "vmware_nsxlib.v3.security.NsxLibFirewallSection.create_empty",
-        side_effect=_return_id_key).start()
+        side_effect=_return_id_key))
 
-    mock.patch(
+    mocking.append(mock.patch(
         "vmware_nsxlib.v3.security.NsxLibFirewallSection.init_default",
-        side_effect=_return_id_key).start()
+        side_effect=_return_id_key))
 
-    mock.patch(
-        "vmware_nsxlib.v3.security.NsxLibNsGroup.list").start()
+    mocking.append(mock.patch(
+        "vmware_nsxlib.v3.security.NsxLibNsGroup.list"))
 
-    mock.patch(
+    mocking.append(mock.patch(
         "vmware_nsxlib.v3.security.NsxLibFirewallSection.add_rules",
-        side_effect=_mock_add_rules_in_section).start()
+        side_effect=_mock_add_rules_in_section))
 
-    mock.patch(
+    mocking.append(mock.patch(
         ("vmware_nsxlib.v3.core_resources."
          "NsxLibTransportZone.get_id_by_name_or_id"),
-        return_value=uuidutils.generate_uuid()).start()
+        return_value=uuidutils.generate_uuid()))
+
+    for m in mocking:
+        m.start()
+
+    return mocking
 
 
 def get_default_nsxlib_config():
@@ -141,7 +146,7 @@ class NsxLibTestCase(unittest.TestCase):
 
     def setUp(self, *args, **kwargs):
         super(NsxLibTestCase, self).setUp()
-        _mock_nsxlib()
+        self.mocking = _mock_nsxlib()
 
         if self.use_client_cert_auth():
             nsxlib_config = get_nsxlib_config_with_client_cert()
@@ -152,6 +157,12 @@ class NsxLibTestCase(unittest.TestCase):
 
         # print diffs when assert comparisons fail
         self.maxDiff = None
+
+    def tearDown(self, *args, **kwargs):
+        # stop the mocks
+        for m in self.mocking:
+            m.stop()
+        super(NsxLibTestCase, self).tearDown()
 
 
 class MemoryMockAPIProvider(nsx_cluster.AbstractHTTPProvider):
