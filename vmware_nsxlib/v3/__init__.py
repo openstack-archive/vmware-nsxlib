@@ -260,6 +260,13 @@ class NsxLib(NsxLibBase):
 
     def feature_supported(self, feature):
         if (version.LooseVersion(self.get_version()) >=
+            version.LooseVersion(nsx_constants.NSX_VERSION_2_2_0)):
+            # Features available since 2.2
+            if (feature == nsx_constants.FEATURE_VLAN_ROUTER_INTERFACE or
+                feature == nsx_constants.FEATURE_ON_BEHALF_OF):
+                return True
+
+        if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_2_1_0)):
             # Features available since 2.1
             if (feature == nsx_constants.FEATURE_LOAD_BALANCER):
