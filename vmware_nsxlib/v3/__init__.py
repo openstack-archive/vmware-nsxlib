@@ -34,6 +34,7 @@ from vmware_nsxlib.v3 import router
 from vmware_nsxlib.v3 import security
 from vmware_nsxlib.v3 import trust_management
 from vmware_nsxlib.v3 import utils
+from vmware_nsxlib.v3 import vpn_ipsec
 
 LOG = log.getLogger(__name__)
 
@@ -254,6 +255,8 @@ class NsxLib(NsxLibBase):
         self.virtual_machine = core_resources.NsxLibFabricVirtualMachine(
             self.client, self.nsxlib_config, nsxlib=self)
         self.vif = core_resources.NsxLibFabricVirtualInterface(
+            self.client, self.nsxlib_config, nsxlib=self)
+        self.vpn_ipsec = vpn_ipsec.VpnIpSec(
             self.client, self.nsxlib_config, nsxlib=self)
 
     @property
