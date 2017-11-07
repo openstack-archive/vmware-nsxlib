@@ -449,3 +449,27 @@ FAKE_CERT_PEM = (
     "Nd3coEUMwd16vr57QJatJbTo/wVMMbvW3vqVy0AuXReHCPVTDF5+vnsMGXK/IV7w\n"
     "LzulLswFmA==\n"
     "-----END CERTIFICATE-----\n")
+
+FAKE_DPD_ID = "c933402b-f111-4634-9d66-cc8fffde0f65"
+FAKE_DPD = {
+    "resource_type": "IPSecVPNDPDProfile",
+    "description": "neutron dpd profile",
+    "id": FAKE_DPD_ID,
+    "display_name": "con1-dpd-profile",
+    "enabled": True,
+    "timeout": 120,
+}
+
+FAKE_PEP_ID = "a7b2915c-2041-4a33-9ea7-9d22b67bf38e"
+FAKE_PEP = {
+    "resource_type": "IPSecVPNPeerEndpoint",
+    "id": FAKE_PEP_ID,
+    "display_name": "con1",
+    "connection_initiation_mode": "INITIATOR",
+    "authentication_mode": "PSK",
+    "ipsec_tunnel_profile_id": "76e3707d-22e5-4e36-a9ef-b568215e2481",
+    "dpd_profile_id": "04191f5f-3bdd-4ec1-ae56-154b06778d4f",
+    "ike_profile_id": "df386534-5cec-49b4-9c21-4c212cba3cbf",
+    "peer_address": "172.24.4.233",
+    "peer_id": "172.24.4.233"
+}
