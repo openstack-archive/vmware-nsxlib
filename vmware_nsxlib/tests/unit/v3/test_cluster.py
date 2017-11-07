@@ -16,7 +16,6 @@
 import unittest
 
 import mock
-from oslo_serialization import jsonutils
 from requests import exceptions as requests_exceptions
 from requests import models
 import six.moves.urllib.parse as urlparse
@@ -95,19 +94,22 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
             self.assertEqual(99, session.timeout)
 
     def test_validate_connection(self):
-        self.skipTest("Revist")
         mock_conn = mocks.MockRequestSessionApi()
+        mock_conn.default_headers = {}
         mock_ep = mock.Mock()
         mock_ep.provider.url = 'https://1.2.3.4'
+        mock_cluster = mock.Mock()
+        mock_cluster.nsxlib_config = mock.Mock()
+        mock_cluster.nsxlib_config.url_base = 'abc'
+        mock_cluster.nsxlib_config.keepalive_section = 'transport-zones'
         provider = cluster.NSXRequestsHTTPProvider()
         self.assertRaises(nsxlib_exc.ResourceNotFound,
                           provider.validate_connection,
-                          mock.Mock(), mock_ep, mock_conn)
+                          mock_cluster, mock_ep, mock_conn)
 
-        mock_conn.post('api/v1/transport-zones',
-                       data=jsonutils.dumps({'id': 'dummy-tz'}),
-                       headers=client.JSONRESTClient._DEFAULT_HEADERS)
-        provider.validate_connection(mock.Mock(), mock_ep, mock_conn)
+        with mock.patch.object(client.JSONRESTClient, "get",
+                               return_value={'result_count': 1}):
+            provider.validate_connection(mock_cluster, mock_ep, mock_conn)
 
 
 class NsxV3ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
