@@ -121,7 +121,9 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
     def create(self, display_name, transport_zone_id, tags,
                replication_mode=nsx_constants.MTEP,
                admin_state=True, vlan_id=None, ip_pool_id=None,
-               mac_pool_id=None, description=None):
+               mac_pool_id=None, description=None,
+               trunk_vlan_range=None):
+        operation = "Create logical switch"
         # TODO(salv-orlando): Validate Replication mode and admin_state
         # NOTE: These checks might be moved to the API client library if one
         # that performs such checks in the client is available
@@ -137,6 +139,39 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
 
         if vlan_id:
             body['vlan'] = vlan_id
+
+        # trunk_vlan_range is mutually exclusive with vlan_id
+        # For guest vlan tagging it is allowed for overlay networks
+        # TODO(asarfaty): check network type? different for ENS?
+        if trunk_vlan_range:
+            failed = False
+            if (self.nsxlib and
+                self.nsxlib.feature_supported(
+                    nsx_constants.FEATURE_TRUNK_VLAN)):
+                if vlan_id is not None:
+                    failed = True
+                    LOG.error("Failed to create logical switch %(name)s with "
+                              "trunk vlan: vlan id %(vlan)s is used.",
+                              {'name': display_name, 'vlan': vlan_id})
+                elif (len(trunk_vlan_range) != 2 or
+                      trunk_vlan_range[0] >= trunk_vlan_range[1]):
+                    failed = True
+                    LOG.error("Failed to create logical switch %(name)s with "
+                              "trunk vlan: illegal range (%(trunk)s) is used.",
+                              {'name': display_name,
+                               'trunk': trunk_vlan_range})
+                else:
+                    body['vlan_trunk_spec'] = {'start': trunk_vlan_range[0],
+                                               'end': trunk_vlan_range[1]}
+            else:
+                LOG.error("Failed to create logical switch %s with trunk "
+                          "vlan: this feature is not supported.", display_name)
+                failed = True
+            if failed:
+                raise exceptions.InvalidInput(
+                    operation=operation,
+                    arg_val=trunk_vlan_range,
+                    arg_name='trunk_vlan_range')
 
         if ip_pool_id:
             body['ip_pool_id'] = ip_pool_id

@@ -1164,7 +1164,7 @@ class NsxLibSwitchTestCase(BaseTestResource):
         self._tz_id = uuidutils.generate_uuid()
 
     def _create_body(self, admin_state=nsx_constants.ADMIN_STATE_UP,
-                     vlan_id=None, description=None):
+                     vlan_id=None, description=None, trunk_vlan=None):
         body = {
             "transport_zone_id": self._tz_id,
             "replication_mode": "MTEP",
@@ -1176,6 +1176,9 @@ class NsxLibSwitchTestCase(BaseTestResource):
             body['vlan'] = vlan_id
         if description is not None:
             body['description'] = description
+        if trunk_vlan:
+            body['vlan_trunk_spec'] = {'start': trunk_vlan[0],
+                                       'end': trunk_vlan[1]}
         return body
 
     def test_create_logical_switch(self):
@@ -1217,6 +1220,55 @@ class NsxLibSwitchTestCase(BaseTestResource):
             'https://1.2.3.4/api/v1/logical-switches',
             data=jsonutils.dumps(data, sort_keys=True),
             headers=self.default_headers())
+
+    def test_create_logical_switch_trunk(self):
+        """Test creating switch with trunk vlan"""
+        ls = self.get_mocked_resource()
+        trunk_vlan = [10, 20]
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.2.0'):
+            ls.create(mocks.FAKE_NAME, self._tz_id, [],
+                      trunk_vlan_range=trunk_vlan)
+            data = self._create_body(trunk_vlan=trunk_vlan)
+            test_client.assert_json_call(
+                'post', ls,
+                'https://1.2.3.4/api/v1/logical-switches',
+                data=jsonutils.dumps(data, sort_keys=True),
+                headers=self.default_headers())
+
+    def test_create_logical_switch_trunk_not_supported(self):
+        """Test creating switch with trunk vlan without the support"""
+        ls = self.get_mocked_resource()
+        trunk_vlan = [10, 20]
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.0.0'):
+            self.assertRaises(exceptions.InvalidInput,
+                              ls.create,
+                              mocks.FAKE_NAME, self._tz_id, [],
+                              trunk_vlan_range=trunk_vlan)
+
+    def test_create_logical_switch_trunk_with_vlan(self):
+        """Test creating switch with trunk vlan and vlan tag"""
+        ls = self.get_mocked_resource()
+        trunk_vlan = [10, 20]
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.2.0'):
+            self.assertRaises(exceptions.InvalidInput,
+                              ls.create,
+                              mocks.FAKE_NAME, self._tz_id, [],
+                              trunk_vlan_range=trunk_vlan,
+                              vlan_id='111')
+
+    def test_create_logical_switch_illegal_trunk(self):
+        """Test creating switch with illegal trunk vlan"""
+        ls = self.get_mocked_resource()
+        trunk_vlan = [10]
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.2.0'):
+            self.assertRaises(exceptions.InvalidInput,
+                              ls.create,
+                              mocks.FAKE_NAME, self._tz_id, [],
+                              trunk_vlan_range=trunk_vlan)
 
     def test_delete_resource(self):
         """Test deleting switch"""
