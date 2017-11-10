@@ -469,23 +469,23 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             rule_dict['applied_tos'] = applied_tos
         return rule_dict
 
-    def add_rule(self, rule, section_id):
+    def add_rule(self, rule, section_id, operation=consts.FW_INSERT_BOTTOM):
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)
         def _add_rule():
             resource = 'firewall/sections/%s/rules' % section_id
-            params = '?operation=insert_bottom'
+            params = '?operation=%s' % operation
             return self.client.create(resource + params, rule)
         return _add_rule()
 
-    def add_rules(self, rules, section_id):
+    def add_rules(self, rules, section_id, operation=consts.FW_INSERT_BOTTOM):
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)
         def _add_rules():
             resource = 'firewall/sections/%s/rules' % section_id
-            params = '?action=create_multiple&operation=insert_bottom'
+            params = '?action=create_multiple&operation=%s' % operation
             return self.client.create(resource + params, {'rules': rules})
         return _add_rules()
 
