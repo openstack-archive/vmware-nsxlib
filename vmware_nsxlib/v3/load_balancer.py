@@ -126,11 +126,17 @@ class LoadBalancerBase(utils.NsxLibApiBase):
 
     def update(self, object_id, display_name=None, description=None,
                tags=None, resource_type=None, **kwargs):
-        object_url = self.resource + '/' + object_id
-        orig_body = self.client.get(object_url)
-        body = self._build_args(orig_body, display_name, description, tags,
-                                resource_type, **kwargs)
-        return self.client.update(object_url, body)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + object_id
+            orig_body = self.client.get(object_url)
+            body = self._build_args(orig_body, display_name, description, tags,
+                                    resource_type, **kwargs)
+            return self.client.update(object_url, body)
+        return do_update()
 
     def delete(self, object_id):
         object_url = self.resource + '/' + object_id
