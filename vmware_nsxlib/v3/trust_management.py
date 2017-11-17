@@ -37,7 +37,6 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
             body.update({'passphrase': passphrase})
         if tags:
             body.update({'tags': tags})
-
         results = self.client.create(resource, body)['results']
         if len(results) > 0:
             # should be only one result
@@ -53,6 +52,13 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
     def delete_cert(self, cert_id):
         resource = CERT_SECTION + '/' + cert_id
         self.client.delete(resource)
+
+    def find_cert_with_pem(self, cert_pem):
+        # Find certificate with cert_pem
+        certs = self.get_certs()
+        cert_ids = [cert['id'] for cert in certs
+                    if cert['pem_encoded'] == cert_pem]
+        return cert_ids
 
     def create_identity(self, name, cert_id,
                         node_id, permission_group):

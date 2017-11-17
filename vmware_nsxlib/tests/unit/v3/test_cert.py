@@ -13,8 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+
 import os
 
+import mock
 from neutron_lib import exceptions
 from OpenSSL import crypto
 from oslo_serialization import jsonutils
@@ -22,6 +24,7 @@ from oslo_serialization import jsonutils
 from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import test_client
+from vmware_nsxlib.tests.unit.v3 import test_constants as const
 from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import client_cert
 from vmware_nsxlib.v3 import exceptions as nsxlib_exc
@@ -294,3 +297,11 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
             self.assertRaises(exceptions.InvalidInput,
                               client_cert.generate_self_signed_cert_pair,
                               **args)
+
+    def test_find_cert_with_pem(self):
+        with mock.patch.object(self.nsxlib.trust_management, 'get_certs'
+                               ) as mock_get_certs:
+            mock_get_certs.return_value = const.FAKE_CERT_LIST
+            cert_ids = self.nsxlib.trust_management.find_cert_with_pem(
+                const.FAKE_CERT_PEM)
+            self.assertEqual(const.FAKE_CERT_LIST[1]['id'], cert_ids[0])
