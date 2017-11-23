@@ -62,6 +62,9 @@ class NsxLibBase(object):
         super(NsxLibBase, self).__init__()
 
         self.nsx_version = None
+        # Update tag limits
+        self.tag_limits = self.get_tag_limits()
+        utils.update_tag_limits(self.tag_limits)
 
     def set_config(self, nsxlib_config):
         """Set config user provided and extend it according to application"""
@@ -193,6 +196,23 @@ class NsxLibBase(object):
         except KeyError as e:
             reason = _('Missing key:%s in tags') % str(e)
             raise exceptions.NsxSearchInvalidQuery(reason=reason)
+
+    def get_tag_limits(self):
+        try:
+            result = self.client.url_get('spec/vmware/types/Tag')
+            scope_length = result['properties']['scope']['maxLength']
+            tag_length = result['properties']['tag']['maxLength']
+        except Exception as e:
+            LOG.error("Unable to read tag limits. Reason: %s", e)
+            scope_length = utils.MAX_RESOURCE_TYPE_LEN
+            tag_length = utils.MAX_TAG_LEN
+        try:
+            result = self.client.url_get('spec/vmware/types/ManagedResource')
+            max_tags = result['properties']['tags']['maxItems']
+        except Exception as e:
+            LOG.error("Unable to read maximum tags. Reason: %s", e)
+            max_tags = utils.MAX_TAGS
+        return utils.TagLimits(scope_length, tag_length, max_tags)
 
 
 class NsxLib(NsxLibBase):
