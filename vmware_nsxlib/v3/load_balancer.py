@@ -149,6 +149,8 @@ class ApplicationProfile(LoadBalancerBase):
             body['description'] = description
         if tags:
             body['tags'] = tags
+        if resource_type is None:
+            return body
         if resource_type == ApplicationProfileTypes.HTTP:
             body['resource_type'] = resource_type
             extra_args = ['http_redirect_to', 'http_redirect_to_https',
