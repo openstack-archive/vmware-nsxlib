@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import collections
 import inspect
 import re
 import time
@@ -27,8 +28,15 @@ from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions
 
 LOG = log.getLogger(__name__)
 
+TagLimits = collections.namedtuple('TagLimits',
+                                   ['scope_length', 'tag_length', 'max_tags'])
+
+# The tag limits may change in the NSX. We set the default values to be those
+# in NSX 2.0. If the NSX returns different values we update these globals.
 MAX_RESOURCE_TYPE_LEN = 20
 MAX_TAG_LEN = 40
+MAX_TAGS = 15
+
 DEFAULT_MAX_ATTEMPTS = 10
 DEFAULT_CACHE_AGE_SEC = 600
 INJECT_HEADERS_CALLBACK = None
@@ -49,6 +57,27 @@ def is_attr_set(attr):
 def set_inject_headers_callback(callback):
     global INJECT_HEADERS_CALLBACK
     INJECT_HEADERS_CALLBACK = callback
+
+
+def _update_resource_length(length):
+    global MAX_RESOURCE_TYPE_LEN
+    MAX_RESOURCE_TYPE_LEN = length
+
+
+def _update_tag_length(length):
+    global MAX_TAG_LEN
+    MAX_TAG_LEN = length
+
+
+def _update_max_tags(max_tags):
+    global MAX_TAGS
+    MAX_TAGS = max_tags
+
+
+def update_tag_limits(limits):
+    _update_resource_length(limits.scope_length)
+    _update_tag_length(limits.tag_length)
+    _update_max_tags(limits.max_tags)
 
 
 def _validate_resource_type_length(resource_type):

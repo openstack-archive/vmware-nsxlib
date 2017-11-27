@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import mock
+
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants
@@ -249,6 +251,17 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
 
         self.assertRaises(exceptions.NsxLibInvalidInput, func_to_fail, 99)
         self.assertEqual(max_retries, total_count['val'])
+
+    @mock.patch.object(utils, '_update_max_tags')
+    @mock.patch.object(utils, '_update_tag_length')
+    @mock.patch.object(utils, '_update_resource_length')
+    def test_update_limits(self, _update_resource_length,
+                           _update_tag_length, _update_max_tags):
+        limits = utils.TagLimits(1, 2, 3)
+        utils.update_tag_limits(limits)
+        _update_resource_length.assert_called_with(1)
+        _update_tag_length.assert_called_with(2)
+        _update_max_tags.assert_called_with(3)
 
 
 class NsxFeaturesTestCase(nsxlib_testcase.NsxLibTestCase):
