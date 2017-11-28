@@ -27,6 +27,7 @@ from vmware_nsxlib.v3 import client as nsx_client
 from vmware_nsxlib.v3 import client_cert
 from vmware_nsxlib.v3 import cluster as nsx_cluster
 from vmware_nsxlib.v3 import config
+from vmware_nsxlib.v3 import utils
 
 NSX_USER = 'admin'
 NSX_PASSWORD = 'default'
@@ -65,6 +66,10 @@ def _mock_nsxlib():
                  'id': uuidutils.generate_uuid()}
                 for rule in rules
             ]}
+
+    def _mock_limits(*args):
+        return utils.TagLimits(20, 40, 15)
+
     mocking = []
     mocking.append(mock.patch(
         "vmware_nsxlib.v3.cluster.NSXRequestsHTTPProvider"
@@ -94,6 +99,10 @@ def _mock_nsxlib():
         ("vmware_nsxlib.v3.core_resources."
          "NsxLibTransportZone.get_id_by_name_or_id"),
         return_value=uuidutils.generate_uuid()))
+
+    mocking.append(mock.patch(
+        "vmware_nsxlib.v3.NsxLib.get_tag_limits",
+        side_effect=_mock_limits))
 
     for m in mocking:
         m.start()
