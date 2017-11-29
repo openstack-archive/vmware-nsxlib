@@ -294,7 +294,8 @@ class NsxLib(NsxLibBase):
             # Features available since 2.2
             if (feature == nsx_constants.FEATURE_VLAN_ROUTER_INTERFACE or
                 feature == nsx_constants.FEATURE_IPSEC_VPN or
-                feature == nsx_constants.FEATURE_ON_BEHALF_OF):
+                feature == nsx_constants.FEATURE_ON_BEHALF_OF or
+                feature == nsx_constants.FEATURE_TRUNK_VLAN):
                 return True
 
         if (version.LooseVersion(self.get_version()) >=
