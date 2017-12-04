@@ -73,20 +73,26 @@ class LoadBalancerBase(utils.NsxLibApiBase):
                          virtual server
         :return: client update response
         """
-        object_url = self.resource + '/' + resource_id
-        body = self.client.get(object_url)
-        if item_key in body:
-            item_list = body[item_key]
-            if item_id not in item_list:
-                item_list.append(item_id)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + resource_id
+            body = self.client.get(object_url)
+            if item_key in body:
+                item_list = body[item_key]
+                if item_id not in item_list:
+                    item_list.append(item_id)
+                else:
+                    LOG.error('Item %s is already in resource %s',
+                              item_id, item_key)
+                    return body
             else:
-                LOG.error('Item %s is already in resource %s',
-                          item_id, item_key)
-                return body
-        else:
-            item_list = [item_id]
-        body[item_key] = item_list
-        return self.client.update(object_url, body)
+                item_list = [item_id]
+            body[item_key] = item_list
+            return self.client.update(object_url, body)
+        return do_update()
 
     def remove_from_list(self, resource_id, item_id, item_key):
         """Remove item_id from resource item_key list
@@ -97,18 +103,24 @@ class LoadBalancerBase(utils.NsxLibApiBase):
                          virtual server
         :return: client update response
         """
-        object_url = self.resource + '/' + resource_id
-        body = self.client.get(object_url)
-        item_list = body.get(item_key)
-        if item_list and item_id in item_list:
-            item_list.remove(item_id)
-            body[item_key] = item_list
-            return self.client.update(object_url, body)
-        else:
-            ops = ('removing item %s from resource %s %s as it is not in '
-                   'the list', item_id, item_key, item_list)
-            raise nsxlib_exc.ResourceNotFound(
-                manager=self.client.nsx_api_managers, operation=ops)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + resource_id
+            body = self.client.get(object_url)
+            item_list = body.get(item_key)
+            if item_list and item_id in item_list:
+                item_list.remove(item_id)
+                body[item_key] = item_list
+                return self.client.update(object_url, body)
+            else:
+                ops = ('removing item %s from resource %s %s as it is not in '
+                       'the list', item_id, item_key, item_list)
+                raise nsxlib_exc.ResourceNotFound(
+                    manager=self.client.nsx_api_managers, operation=ops)
+        return do_update()
 
     def create(self, display_name=None, description=None, tags=None,
                resource_type=None, **kwargs):
@@ -272,10 +284,16 @@ class Pool(LoadBalancerBase):
     resource = 'loadbalancer/pools'
 
     def update_pool_with_members(self, pool_id, members):
-        object_url = self.resource + '/' + pool_id
-        body = self.client.get(object_url)
-        body['members'] = members
-        return self.client.update(object_url, body)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + pool_id
+            body = self.client.get(object_url)
+            body['members'] = members
+            return self.client.update(object_url, body)
+        return do_update()
 
     def add_monitor_to_pool(self, pool_id, monitor_id):
         self.add_to_list(pool_id, monitor_id, 'active_monitor_ids')
@@ -288,33 +306,51 @@ class VirtualServer(LoadBalancerBase):
     resource = 'loadbalancer/virtual-servers'
 
     def update_virtual_server_with_pool(self, virtual_server_id, pool_id):
-        object_url = self.resource + '/' + virtual_server_id
-        body = self.client.get(object_url)
-        body['pool_id'] = pool_id
-        return self.client.update(object_url, body)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + virtual_server_id
+            body = self.client.get(object_url)
+            body['pool_id'] = pool_id
+            return self.client.update(object_url, body)
+        return do_update()
 
     def update_virtual_server_with_profiles(self, virtual_server_id,
                                             application_profile_id=None,
                                             persistence_profile_id=None,
                                             ip_protocol=None):
-        object_url = self.resource + '/' + virtual_server_id
-        body = self.client.get(object_url)
-        if application_profile_id:
-            body['application_profile_id'] = application_profile_id
-        if persistence_profile_id:
-            body['persistence_profile_id'] = persistence_profile_id
-        # In case the application profile is updated and its protocol
-        # is updated as well, backend requires us to pass the new
-        # protocol in the virtual server body.
-        if ip_protocol:
-            body['ip_protocol'] = ip_protocol
-        return self.client.update(object_url, body)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + virtual_server_id
+            body = self.client.get(object_url)
+            if application_profile_id:
+                body['application_profile_id'] = application_profile_id
+            if persistence_profile_id:
+                body['persistence_profile_id'] = persistence_profile_id
+            # In case the application profile is updated and its protocol
+            # is updated as well, backend requires us to pass the new
+            # protocol in the virtual server body.
+            if ip_protocol:
+                body['ip_protocol'] = ip_protocol
+            return self.client.update(object_url, body)
+        return do_update()
 
     def update_virtual_server_with_vip(self, virtual_server_id, vip):
-        object_url = self.resource + '/' + virtual_server_id
-        body = self.client.get(object_url)
-        body['ip_address'] = vip
-        return self.client.update(object_url, body)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + virtual_server_id
+            body = self.client.get(object_url)
+            body['ip_address'] = vip
+            return self.client.update(object_url, body)
+        return do_update()
 
     def add_rule(self, vs_id, rule_id):
         self.add_to_list(vs_id, rule_id, 'rule_ids')
@@ -325,39 +361,51 @@ class VirtualServer(LoadBalancerBase):
     def add_client_ssl_profile_binding(self, virtual_server_id,
                                        ssl_profile_id, default_certificate_id,
                                        sni_certificate_ids=None, **kwargs):
-        binding = {'ssl_profile_id': ssl_profile_id,
-                   'default_certificate_id': default_certificate_id}
-        if sni_certificate_ids:
-            binding.update({'sni_certificate_ids': sni_certificate_ids})
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            binding = {'ssl_profile_id': ssl_profile_id,
+                       'default_certificate_id': default_certificate_id}
+            if sni_certificate_ids:
+                binding.update({'sni_certificate_ids': sni_certificate_ids})
 
-        valid_args = ['client_auth_ca_ids', 'client_auth_crl_ids',
-                      'certificate_chain_depth', 'client_auth']
-        # Remove the args that is not in the valid_args list or the
-        # keyword argument doesn't have value.
-        for arg in kwargs:
-            if arg in valid_args and kwargs.get(arg):
-                binding[arg] = kwargs.get(arg)
-        object_url = self.resource + '/' + virtual_server_id
-        body = self.client.get(object_url)
-        body['client_ssl_profile_binding'] = binding
-        return self.client.update(object_url, body)
+            valid_args = ['client_auth_ca_ids', 'client_auth_crl_ids',
+                          'certificate_chain_depth', 'client_auth']
+            # Remove the args that is not in the valid_args list or the
+            # keyword argument doesn't have value.
+            for arg in kwargs:
+                if arg in valid_args and kwargs.get(arg):
+                    binding[arg] = kwargs.get(arg)
+            object_url = self.resource + '/' + virtual_server_id
+            body = self.client.get(object_url)
+            body['client_ssl_profile_binding'] = binding
+            return self.client.update(object_url, body)
+        return do_update()
 
     def add_server_ssl_profile_binding(self, virtual_server_id,
                                        ssl_profile_id, **kwargs):
-        binding = {'ssl_profile_id': ssl_profile_id}
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            binding = {'ssl_profile_id': ssl_profile_id}
 
-        valid_args = ['server_auth_ca_ids', 'server_auth_crl_ids',
-                      'certificate_chain_depth', 'server_auth',
-                      'client_certificate_id']
-        # Remove the args that is not in the valid_args list or the
-        # keyword argument doesn't have value.
-        for arg in kwargs:
-            if arg in valid_args and kwargs.get(arg):
-                binding[arg] = kwargs[arg]
-        object_url = self.resource + '/' + virtual_server_id
-        body = self.client.get(object_url)
-        body['server_ssl_profile_binding'] = binding
-        return self.client.update(object_url, body)
+            valid_args = ['server_auth_ca_ids', 'server_auth_crl_ids',
+                          'certificate_chain_depth', 'server_auth',
+                          'client_certificate_id']
+            # Remove the args that is not in the valid_args list or the
+            # keyword argument doesn't have value.
+            for arg in kwargs:
+                if arg in valid_args and kwargs.get(arg):
+                    binding[arg] = kwargs[arg]
+            object_url = self.resource + '/' + virtual_server_id
+            body = self.client.get(object_url)
+            body['server_ssl_profile_binding'] = binding
+            return self.client.update(object_url, body)
+        return do_update()
 
 
 class Service(LoadBalancerBase):
@@ -365,17 +413,29 @@ class Service(LoadBalancerBase):
 
     def update_service_with_virtual_servers(self, service_id,
                                             virtual_server_ids):
-        object_url = self.resource + '/' + service_id
-        body = self.client.get(object_url)
-        body['virtual_server_ids'] = virtual_server_ids
-        return self.client.update(object_url, body)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + service_id
+            body = self.client.get(object_url)
+            body['virtual_server_ids'] = virtual_server_ids
+            return self.client.update(object_url, body)
+        return do_update()
 
     def update_service_with_attachment(self, service_id, logical_router_id):
-        object_url = self.resource + '/' + service_id
-        body = self.client.get(object_url)
-        body['attachment'] = {'target_id': logical_router_id,
-                              'target_type': 'LogicalRouter'}
-        return self.client.update(object_url, body)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            nsxlib_exc.StaleRevision,
+            max_attempts=self.client.max_attempts)
+        def do_update():
+            object_url = self.resource + '/' + service_id
+            body = self.client.get(object_url)
+            body['attachment'] = {'target_id': logical_router_id,
+                                  'target_type': 'LogicalRouter'}
+            return self.client.update(object_url, body)
+        return do_update()
 
     def add_virtual_server(self, service_id, vs_id):
         self.add_to_list(service_id, vs_id, 'virtual_server_ids')
