@@ -658,7 +658,13 @@ class NsxLibIPSet(utils.NsxLibApiBase):
         return self.client.get('ip-sets/%s' % ip_set_id)
 
     def delete(self, ip_set_id):
-        return self.client.delete('ip-sets/%s' % ip_set_id)
+        # Using internal method so we can access max_attempts in the decorator
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _do_delete():
+             return self.client.delete('ip-sets/%s' % ip_set_id)
+        return _do_delete()
 
     def get_ipset_reference(self, ip_set_id):
         return {'target_id': ip_set_id,
