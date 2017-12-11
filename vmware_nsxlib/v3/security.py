@@ -358,11 +358,11 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                 'stateful': True,
                 'section_type': consts.FW_SECTION_LAYER3,
                 'applied_tos': applied_tos or [],
-                'rules': rules or [],
                 'tags': tags or []
             }
-            if rules:
+            if rules is not None:
                 resource += '&action=create_with_rules'
+                body['rules'] = rules
             if other_section:
                 resource += '&id=%s' % other_section
             return self.client.create(resource, body)
