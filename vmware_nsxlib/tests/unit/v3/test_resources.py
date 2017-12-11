@@ -694,6 +694,35 @@ class LogicalRouterTestCase(BaseTestResource):
                 data=jsonutils.dumps(data, sort_keys=True),
                 headers=self.default_headers())
 
+    def test_update_advertisement_rules(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        rules = [{"action": "ALLOW",
+                  "networks": ["44.0.0.0/20"],
+                  "display_name": "rule1"},
+                 {"action": "ALLOW",
+                  "networks": ["6.60.0.0/20"],
+                  "display_name": "rule2"}]
+        with mock.patch.object(router.client, 'get',
+                               return_value={}):
+            router.update_advertisement_rules(router_id, rules)
+            test_client.assert_json_call(
+                'put', router,
+                ('https://1.2.3.4/api/v1/logical-routers/%s/routing/'
+                 'advertisement/rules' % router_id),
+                data=jsonutils.dumps({'rules': rules}, sort_keys=True),
+                headers=self.default_headers())
+
+    def test_get_advertisement_rules(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        router.get_advertisement_rules(router_id)
+        test_client.assert_json_call(
+            'get', router,
+            ('https://1.2.3.4/api/v1/logical-routers/%s/routing/'
+             'advertisement/rules' % router_id),
+            headers=self.default_headers())
+
 
 class LogicalRouterPortTestCase(BaseTestResource):
 
