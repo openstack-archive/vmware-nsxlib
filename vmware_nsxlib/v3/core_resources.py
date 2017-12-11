@@ -634,6 +634,16 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
 
         return self._update_resource_with_retry(resource, kwargs)
 
+    def update_advertisement_rules(self, logical_router_id, rules):
+        resource = ('logical-routers/%s/routing/advertisement/rules' %
+                    logical_router_id)
+        return self._update_resource_with_retry(resource, {'rules': rules})
+
+    def get_advertisement_rules(self, logical_router_id):
+        resource = ('logical-routers/%s/routing/advertisement/rules' %
+                    logical_router_id)
+        return self.client.get(resource)['rules']
+
     def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
                description=None):
         # TODO(salv-orlando): If possible do not manage edge clusters
