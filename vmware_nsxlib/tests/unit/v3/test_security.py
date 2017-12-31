@@ -85,7 +85,7 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
                 'display-name', 'section-description', rules=[rule])
             resource = 'firewall/sections?operation=insert_bottom' \
                 '&action=create_with_rules'
-            create.assert_called_with(resource, expected_body)
+            create.assert_called_with(resource, expected_body, headers=None)
 
     def test_get_excludelist(self):
         with mock.patch.object(self.nsxlib.client, 'list') as clist:
@@ -153,7 +153,7 @@ class TestNsxLibIPSet(nsxlib_testcase.NsxClientTestCase):
                 self.nsxlib.ip_set.update(
                     fake_ip_set['id'], ip_addresses=new_ip_addresses)
                 resource = 'ip-sets/%s' % fake_ip_set['id']
-                update.assert_called_with(resource, data)
+                update.assert_called_with(resource, data, headers=None)
 
     def test_update_ip_set_empty_ip_addresses(self):
         fake_ip_set = test_constants.FAKE_IP_SET.copy()
@@ -170,7 +170,7 @@ class TestNsxLibIPSet(nsxlib_testcase.NsxClientTestCase):
                 self.nsxlib.ip_set.update(
                     fake_ip_set['id'], ip_addresses=new_ip_addresses)
                 resource = 'ip-sets/%s' % fake_ip_set['id']
-                update.assert_called_with(resource, data)
+                update.assert_called_with(resource, data, headers=None)
 
 
 class TestNsxLibNSGroup(nsxlib_testcase.NsxClientTestCase):
@@ -194,4 +194,4 @@ class TestNsxLibNSGroup(nsxlib_testcase.NsxClientTestCase):
                 self.nsxlib.ns_group.update('nsgroupid', tags_update=nsg_tags)
                 resource = 'ns-groups/nsgroupid'
                 data = {'tags': nsg_tags}
-                update.assert_called_with(resource, data)
+                update.assert_called_with(resource, data, headers=None)
