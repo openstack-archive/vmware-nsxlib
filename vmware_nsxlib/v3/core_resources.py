@@ -186,39 +186,24 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
         return self.client.create(self.get_path(), body)
 
     def delete(self, lswitch_id):
-        # Using internal method so we can access max_attempts in the decorator
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _do_delete():
-            resource = '%s?detach=true&cascade=true' % lswitch_id
-            self.client.delete(self.get_path(resource))
-
-        _do_delete()
+        resource = '%s?detach=true&cascade=true' % lswitch_id
+        self._delete_with_retry(resource)
 
     def update(self, lswitch_id, name=None, admin_state=None, tags=None,
                description=None):
-        # Using internal method so we can access max_attempts in the decorator
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _do_update():
-            lswitch = self.get(lswitch_id)
-            # Assign name to a local variable since 'name' is out of scope
-            ls_name = name or lswitch.get('display_name')
-            lswitch['display_name'] = ls_name
-            if admin_state is not None:
-                if admin_state:
-                    lswitch['admin_state'] = nsx_constants.ADMIN_STATE_UP
-                else:
-                    lswitch['admin_state'] = nsx_constants.ADMIN_STATE_DOWN
-            if tags is not None:
-                lswitch['tags'] = tags
-            if description is not None:
-                lswitch['description'] = description
-            return self.client.update(self.get_path(lswitch_id), lswitch)
-
-        return _do_update()
+        body = {}
+        if name:
+            body['display_name'] = name
+        if admin_state is not None:
+            if admin_state:
+                body['admin_state'] = nsx_constants.ADMIN_STATE_UP
+            else:
+                body['admin_state'] = nsx_constants.ADMIN_STATE_DOWN
+        if tags is not None:
+            body['tags'] = tags
+        if description is not None:
+            body['description'] = description
+        return self._update_with_retry(lswitch_id, body)
 
 
 class SwitchingProfileTypes(object):
@@ -408,9 +393,8 @@ class NsxLibQosSwitchingProfile(NsxLibSwitchingProfile):
         return self.client.create(self.get_path(), body)
 
     def update(self, profile_id, tags, name=None, description=None):
-        # get the current configuration
-        body = self.get(profile_id)
         # update the relevant fields
+        body = {}
         body = self._update_args(body, name, description)
         if tags is not None:
             body['tags'] = tags
@@ -615,7 +599,7 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
     def update_nat_rule(self, logical_router_id, nat_rule_id, **kwargs):
         resource = 'logical-routers/%s/nat/rules/%s' % (
             logical_router_id, nat_rule_id)
-        return self._update_resource_with_retry(resource, kwargs)
+        return self._update_resource(resource, kwargs, retry=True)
 
     def update_advertisement(self, logical_router_id, **kwargs):
         resource = ('logical-routers/%s/routing/advertisement' %
@@ -632,12 +616,12 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                               {'arg': arg, 'rtr': logical_router_id})
                 del kwargs[arg]
 
-        return self._update_resource_with_retry(resource, kwargs)
+        return self._update_resource(resource, kwargs, retry=True)
 
     def update_advertisement_rules(self, logical_router_id, rules):
         resource = ('logical-routers/%s/routing/advertisement/rules' %
                     logical_router_id)
-        return self._update_resource_with_retry(resource, {'rules': rules})
+        return self._update_resource(resource, {'rules': rules}, retry=True)
 
     def get_advertisement_rules(self, logical_router_id):
         resource = ('logical-routers/%s/routing/advertisement/rules' %
@@ -666,21 +650,7 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         return self.client.delete(self.get_path(url))
 
     def update(self, lrouter_id, *args, **kwargs):
-        # Using internal method so we can access max_attempts in the decorator
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.client.max_attempts)
-        def _do_update():
-            lrouter = self.get(lrouter_id)
-            for k in kwargs:
-                lrouter[k] = kwargs[k]
-            # If revision_id of the payload that we send is older than what
-            # NSX has, we will get a 412: Precondition Failed.
-            # In that case we need to re-fetch, patch the response and send
-            # it again with the new revision_id
-            return self.client.update(self.get_path(lrouter_id), body=lrouter)
-
-        return _do_update()
+        return self._update_with_retry(lrouter_id, kwargs)
 
     def get_firewall_section_id(self, lrouter_id, router_body=None):
         """Return the id of the auto created firewall section of the router
@@ -808,8 +778,7 @@ class NsxLibMetadataProxy(utils.NsxLibApiBase):
         return 'MetadataProxy'
 
     def update(self, uuid, server_url=None, secret=None, edge_cluster_id=None):
-        # get the current configuration
-        body = self.get(uuid)
+        body = {}
         # update the relevant fields
         if server_url is not None:
             body['metadata_server_url'] = server_url
