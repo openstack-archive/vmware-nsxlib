@@ -107,7 +107,8 @@ class NsxLibQosTestCase(nsxlib_testcase.NsxClientTestCase):
                 update.assert_called_with(
                     'switching-profiles/%s'
                     % test_constants.FAKE_QOS_PROFILE['id'],
-                    self._body(description=new_description))
+                    self._body(description=new_description),
+                    headers=None)
 
     def _enable_qos_switching_profile_shaping(
         self, direction=nsx_constants.EGRESS, new_burst_size=100):
