@@ -331,8 +331,6 @@ class LogicalPortTestCase(BaseTestResource):
 
         pkt_classifiers, binding_repr = self._get_pktcls_bindings()
 
-        fake_port['address_bindings'] = binding_repr
-
         mocked_resource = self.get_mocked_resource()
         description = 'dummy'
         switch_profile = resources.SwitchingProfile
@@ -352,7 +350,7 @@ class LogicalPortTestCase(BaseTestResource):
                 'id': fake_port['attachment']['id']
             },
             'admin_state': 'UP',
-            'address_bindings': fake_port['address_bindings'],
+            'address_bindings': binding_repr,
             'description': description
         }
 
@@ -366,7 +364,7 @@ class LogicalPortTestCase(BaseTestResource):
         """Test creating a port returns the correct response and 200 status
 
         """
-        fake_port = test_constants.FAKE_CONTAINER_PORT.copy()
+        fake_port = copy.deepcopy(test_constants.FAKE_CONTAINER_PORT)
 
         profile_dicts = self._get_profile_dicts(fake_port)
 
@@ -451,12 +449,13 @@ class LogicalPortTestCase(BaseTestResource):
         fake_port['address_bindings'] = ['a', 'b']
         mocked_resource = self.get_mocked_resource()
 
-        def get_fake_port(*args):
-            return fake_port
+        def get_fake_port(*args, **kwargs):
+            return copy.copy(fake_port)
 
-        mocked_resource.get = get_fake_port
+        mocked_resource.client.get = get_fake_port
         mocked_resource.update(
-            fake_port['id'], fake_port['id'], address_bindings=[])
+            fake_port['id'], fake_port['attachment']['id'],
+            address_bindings=[])
 
         fake_port['address_bindings'] = []
         test_client.assert_json_call(
@@ -482,6 +481,98 @@ class LogicalPortTestCase(BaseTestResource):
                     mock.Mock(), *profile_dicts))
         except exceptions.ManagerError as e:
             self.assertIn(nsxlib_testcase.NSX_MANAGER, e.msg)
+
+    def test_update_logical_port_no_addr_binding(self):
+        fake_port = copy.deepcopy(test_constants.FAKE_CONTAINER_PORT)
+        mocked_resource = self.get_mocked_resource()
+        new_name = 'updated_port'
+        new_desc = 'updated'
+        fake_port_ctx = fake_port['attachment']['context']
+        fake_container_host_vif_id = fake_port_ctx['container_host_vif_id']
+
+        def get_fake_port(*args, **kwargs):
+            return copy.copy(fake_port)
+
+        mocked_resource.client.get = get_fake_port
+
+        mocked_resource.update(
+            fake_port['id'],
+            fake_port['attachment']['id'],
+            name=new_name,
+            description=new_desc,
+            parent_vif_id=fake_container_host_vif_id,
+            traffic_tag=fake_port_ctx['vlan_tag'],
+            vif_type=fake_port_ctx['vif_type'],
+            app_id=fake_port_ctx['app_id'],
+            allocate_addresses=fake_port_ctx['allocate_addresses'])
+
+        fake_port['display_name'] = new_name
+        fake_port['description'] = new_desc
+        fake_port['attachment'] = {
+            'attachment_type': 'VIF',
+            'id': fake_port['attachment']['id'],
+            'context': {
+                'resource_type': 'VifAttachmentContext',
+                'allocate_addresses': 'Both',
+                'parent_vif_id': fake_container_host_vif_id,
+                'traffic_tag': fake_port_ctx['vlan_tag'],
+                'app_id': fake_port_ctx['app_id'],
+                'vif_type': 'CHILD',
+            }
+        }
+
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/logical-ports/%s' % fake_port['id'],
+            data=jsonutils.dumps(fake_port, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_update_logical_port_with_addr_binding(self):
+        fake_port = copy.deepcopy(test_constants.FAKE_CONTAINER_PORT)
+        mocked_resource = self.get_mocked_resource()
+        new_name = 'updated_port'
+        new_desc = 'updated'
+        fake_port_ctx = fake_port['attachment']['context']
+        fake_container_host_vif_id = fake_port_ctx['container_host_vif_id']
+        pkt_classifiers, binding_repr = self._get_pktcls_bindings()
+
+        def get_fake_port(*args, **kwargs):
+            return copy.copy(fake_port)
+
+        mocked_resource.client.get = get_fake_port
+
+        mocked_resource.update(
+            fake_port['id'],
+            fake_port['attachment']['id'],
+            name=new_name,
+            description=new_desc,
+            parent_vif_id=fake_container_host_vif_id,
+            traffic_tag=fake_port_ctx['vlan_tag'],
+            vif_type=fake_port_ctx['vif_type'],
+            app_id=fake_port_ctx['app_id'],
+            allocate_addresses=fake_port_ctx['allocate_addresses'],
+            address_bindings=pkt_classifiers)
+
+        fake_port['display_name'] = new_name
+        fake_port['description'] = new_desc
+        fake_port['attachment'] = {
+            'attachment_type': 'VIF',
+            'id': fake_port['attachment']['id'],
+            'context': {
+                'resource_type': 'VifAttachmentContext',
+                'allocate_addresses': 'Both',
+                'parent_vif_id': fake_container_host_vif_id,
+                'traffic_tag': fake_port_ctx['vlan_tag'],
+                'app_id': fake_port_ctx['app_id'],
+                'vif_type': 'CHILD',
+            }
+        }
+        fake_port['address_bindings'] = binding_repr
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/logical-ports/%s' % fake_port['id'],
+            data=jsonutils.dumps(fake_port, sort_keys=True),
+            headers=self.default_headers())
 
 
 class LogicalRouterTestCase(BaseTestResource):
@@ -776,7 +867,8 @@ class LogicalRouterPortTestCase(BaseTestResource):
         uuid = fake_router_port['id']
         fake_relay_uuid = uuidutils.generate_uuid()
         lrport = self.get_mocked_resource()
-        with mock.patch.object(lrport, 'get', return_value=fake_router_port),\
+        with mock.patch.object(lrport.client, 'get',
+                               return_value=fake_router_port),\
             mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
                        return_value='2.0.0'):
             lrport.update(uuid, relay_service_uuid=fake_relay_uuid)
@@ -1442,6 +1534,120 @@ class LogicalDhcpServerTestCase(BaseTestResource):
     def setUp(self):
         super(LogicalDhcpServerTestCase, self).setUp(
             resources.LogicalDhcpServer)
+
+    def test_update_empty_dhcp_server(self):
+        mocked_resource = self.get_mocked_resource()
+        server_uuid = 'server-uuid'
+        ip = '1.1.1.1'
+
+        with mock.patch.object(mocked_resource.client, "get", return_value={}):
+            mocked_resource.update(server_uuid, server_ip=ip)
+        body = {'ipv4_dhcp_server': {'dhcp_server_ip': ip}}
+
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s' %
+            (mocked_resource.uri_segment, server_uuid),
+            data=jsonutils.dumps(body, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_update_dhcp_server_new_val(self):
+        mocked_resource = self.get_mocked_resource()
+        server_uuid = 'server-uuid'
+        ip = '1.1.1.1'
+        domain_name = 'dummy'
+        existing_server = {'ipv4_dhcp_server': {'domain_name': domain_name}}
+
+        # add the server ip
+        with mock.patch.object(mocked_resource.client, "get",
+                               return_value=existing_server):
+            mocked_resource.update(server_uuid, server_ip=ip)
+
+        existing_server['ipv4_dhcp_server']['dhcp_server_ip'] = ip
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s' %
+            (mocked_resource.uri_segment, server_uuid),
+            data=jsonutils.dumps(existing_server, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_update_dhcp_server_replace_val(self):
+        mocked_resource = self.get_mocked_resource()
+        server_uuid = 'server-uuid'
+        ip = '1.1.1.1'
+        domain_name = 'dummy'
+        existing_server = {'ipv4_dhcp_server': {'domain_name': domain_name,
+                                                'dhcp_server_ip': ip}}
+
+        # replace the server ip
+        new_ip = '2.2.2.2'
+        with mock.patch.object(mocked_resource.client, "get",
+                               return_value=existing_server):
+            mocked_resource.update(server_uuid, server_ip=new_ip)
+
+        existing_server['ipv4_dhcp_server']['dhcp_server_ip'] = new_ip
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s' %
+            (mocked_resource.uri_segment, server_uuid),
+            data=jsonutils.dumps(existing_server, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_create_binding(self):
+        mocked_resource = self.get_mocked_resource()
+        server_uuid = 'server-uuid'
+        mac = 'aa:bb:cc:dd:ee:ff'
+        ip = '1.1.1.1'
+        host = 'host'
+        mocked_resource.create_binding(server_uuid, mac, ip, hostname=host)
+        body = {
+            'mac_address': mac,
+            'ip_address': ip,
+            'host_name': host,
+        }
+        test_client.assert_json_call(
+            'post', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s/static-bindings' %
+            (mocked_resource.uri_segment, server_uuid),
+            data=jsonutils.dumps(body, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_get_binding(self):
+        mocked_resource = self.get_mocked_resource()
+        server_uuid = 'server-uuid'
+        binding_uuid = 'binding-uuid'
+        mocked_resource.get_binding(server_uuid, binding_uuid)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s/static-bindings/%s' %
+            (mocked_resource.uri_segment, server_uuid, binding_uuid),
+            headers=self.default_headers())
+
+    def test_update_binding(self):
+        mocked_resource = self.get_mocked_resource()
+        server_uuid = 'server-uuid'
+        binding_uuid = 'binding-uuid'
+        mac = 'aa:bb:cc:dd:ee:ff'
+        new_mac = 'dd:bb:cc:dd:ee:ff'
+        ip = '1.1.1.1'
+        host = 'host'
+        body = {
+            'mac_address': mac,
+            'ip_address': ip,
+            'host_name': host,
+        }
+        with mock.patch.object(mocked_resource.client, "get",
+                               return_value=body):
+            mocked_resource.update_binding(server_uuid,
+                                           binding_uuid,
+                                           mac_address=new_mac)
+        body['mac_address'] = new_mac
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s/static-bindings/%s' %
+            (mocked_resource.uri_segment, server_uuid, binding_uuid),
+            data=jsonutils.dumps(body, sort_keys=True),
+            headers=self.default_headers())
 
 
 class DummyCachedResource(utils.NsxLibApiBase):

@@ -316,6 +316,10 @@ class NsxLibApiBase(object):
             self.cache.update(uuid, result)
         return result
 
+    def read(self, uuid, silent=False):
+        """The same as get"""
+        return self.get(uuid, silent=silent)
+
     def delete(self, uuid):
         if self.use_cache_for_get:
             self.cache.remove(uuid)
@@ -331,19 +335,96 @@ class NsxLibApiBase(object):
     def _update_with_retry(self, uuid, payload):
         if self.use_cache_for_get:
             self.cache.remove(uuid)
-        return self._update_resource_with_retry(self.get_path(uuid), payload)
+        return self._update_resource(self.get_path(uuid), payload, retry=True)
 
-    def _update_resource_with_retry(self, resource, payload):
-        # Using internal method so we can access max_attempts in the decorator
-        @retry_upon_exception(nsxlib_exceptions.StaleRevision,
-                              max_attempts=self.nsxlib_config.max_attempts)
-        def do_update():
-            revised_payload = self.client.get(resource)
-            for key_name in payload.keys():
+    def _internal_update_resource(self, resource, payload, headers=None,
+                                  create_action=False,
+                                  get_params=None,
+                                  action_params=None,
+                                  update_payload_cbk=None):
+        get_path = action_path = resource
+        if get_params:
+            get_path = get_path + get_params
+        if action_params:
+            action_path = action_path + action_params
+        revised_payload = self.client.get(get_path)
+        # custom resource callback for updating the payload
+        if update_payload_cbk:
+            update_payload_cbk(revised_payload, payload)
+        # special treatment for tags (merge old and new)
+        if 'tags_update' in payload.keys():
+            revised_payload['tags'] = update_v3_tags(
+                revised_payload.get('tags', []),
+                payload['tags_update'])
+            del payload['tags_update']
+        # update all the rest of the parameters
+        for key_name in payload.keys():
+            # handle 2 levels of dictionary:
+            if isinstance(payload[key_name], dict):
+                if key_name not in revised_payload:
+                    revised_payload[key_name] = payload[key_name]
+                else:
+                    # copy each key
+                    revised_payload[key_name].update(payload[key_name])
+            else:
                 revised_payload[key_name] = payload[key_name]
-            return self.client.update(resource, revised_payload)
+        if create_action:
+            return self.client.create(action_path, revised_payload,
+                                      headers=headers)
+        else:
+            return self.client.update(action_path, revised_payload,
+                                      headers=headers)
 
-        return do_update()
+    def _update_resource(self, resource, payload, headers=None,
+                         create_action=False, get_params=None,
+                         action_params=None, update_payload_cbk=None,
+                         retry=False):
+        if retry:
+            # If revision_id of the payload that we send is older than what
+            # NSX has, we will get a 412: Precondition Failed.
+            # In that case we need to re-fetch, patch the response and send
+            # it again with the new revision_id
+            @retry_upon_exception(
+                nsxlib_exceptions.StaleRevision,
+                max_attempts=self.nsxlib_config.max_attempts)
+            def do_update():
+                return self._internal_update_resource(
+                    resource, payload,
+                    headers=headers,
+                    create_action=create_action,
+                    get_params=get_params,
+                    action_params=action_params,
+                    update_payload_cbk=update_payload_cbk)
+
+            return do_update()
+        else:
+            return self._internal_update_resource(
+                resource, payload,
+                headers=headers,
+                create_action=create_action,
+                get_params=get_params,
+                action_params=action_params,
+                update_payload_cbk=update_payload_cbk)
+
+    def _delete_with_retry(self, resource):
+        # Using internal method so we can access max_attempts in the decorator
+        @retry_upon_exception(
+            nsxlib_exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _do_delete():
+            self.client.delete(self.get_path(resource))
+
+        _do_delete()
+
+    def _create_with_retry(self, resource, body=None, headers=None):
+        # Using internal method so we can access max_attempts in the decorator
+        @retry_upon_exception(
+            nsxlib_exceptions.StaleRevision,
+            max_attempts=self.nsxlib_config.max_attempts)
+        def _do_create():
+            return self.client.create(resource, body, headers=headers)
+
+        return _do_create()
 
     def _get_resource_by_name_or_id(self, name_or_id, resource):
         all_results = self.client.list(resource)['results']
