@@ -41,6 +41,14 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
         super(NsxLibNsGroup, self).__init__(client, nsxlib_config,
                                             nsxlib=nsxlib)
 
+    @property
+    def uri_segment(self):
+        return 'ns-groups'
+
+    @property
+    def resource_type(self):
+        return 'NSGroup'
+
     def update_on_backend(self, context, security_group,
                           nsgroup_id, section_id,
                           log_sg_allowed_traffic):
@@ -130,35 +138,29 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
                 body.update({'membership_criteria': membership_criteria})
             else:
                 body.update({'membership_criteria': [membership_criteria]})
-        return self.client.create('ns-groups', body)
+        return self.client.create(self.get_path(), body)
 
     def list(self):
         return self.client.list(
-            'ns-groups?populate_references=false').get('results', [])
+            '%s?populate_references=false' % self.get_path()).get(
+            'results', [])
 
     def update(self, nsgroup_id, display_name=None, description=None,
                membership_criteria=None, members=None, tags_update=None):
-        # Using internal method so we can access max_attempts in the decorator
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _do_update():
-            nsgroup = self.read(nsgroup_id)
-            if display_name is not None:
-                nsgroup['display_name'] = display_name
-            if description is not None:
-                nsgroup['description'] = description
-            if members is not None:
-                nsgroup['members'] = members
-            if membership_criteria is not None:
-                nsgroup['membership_criteria'] = [membership_criteria]
-            if tags_update is not None:
-                nsgroup['tags'] = utils.update_v3_tags(nsgroup.get('tags', []),
-                                                       tags_update)
-            return self.client.update(
-                'ns-groups/%s' % nsgroup_id, nsgroup)
-
-        return _do_update()
+        nsgroup = {}
+        if display_name is not None:
+            nsgroup['display_name'] = display_name
+        if description is not None:
+            nsgroup['description'] = description
+        if members is not None:
+            nsgroup['members'] = members
+        if membership_criteria is not None:
+            nsgroup['membership_criteria'] = [membership_criteria]
+        if tags_update is not None:
+            nsgroup['tags_update'] = tags_update
+        return self._update_resource_with_retry(
+            self.get_path(nsgroup_id), nsgroup,
+            get_params='?populate_references=true')
 
     def get_member_expression(self, target_type, target_id):
         return {
@@ -169,7 +171,7 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
             'value': target_id}
 
     def _update_with_members(self, nsgroup_id, members, action):
-        members_update = 'ns-groups/%s?action=%s' % (nsgroup_id, action)
+        members_update = '%s?action=%s' % (self.get_path(nsgroup_id), action)
         return self.client.create(members_update, members)
 
     def add_members(self, nsgroup_id, target_type, target_ids):
@@ -210,12 +212,12 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
 
     def read(self, nsgroup_id):
         return self.client.get(
-            'ns-groups/%s?populate_references=true' % nsgroup_id)
+            '%s?populate_references=true' % self.get_path(nsgroup_id))
 
     def delete(self, nsgroup_id):
         try:
             return self.client.delete(
-                'ns-groups/%s?force=true' % nsgroup_id)
+                '%s?force=true' % self.get_path(nsgroup_id))
         # FIXME(roeyc): Should only except NotFound error.
         except Exception:
             LOG.debug("NSGroup %s does not exists for delete request.",
@@ -231,28 +233,24 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
 
 class NsxLibFirewallSection(utils.NsxLibApiBase):
 
-    def add_member_to_fw_exclude_list(self, target_id, target_type):
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _add_member_to_fw_exclude_list():
-            resource = 'firewall/excludelist?action=add_member'
-            body = {"target_id": target_id,
-                    "target_type": target_type}
-            self.client.create(resource, body)
+    @property
+    def uri_segment(self):
+        return 'firewall/sections'
 
-        _add_member_to_fw_exclude_list()
+    @property
+    def resource_type(self):
+        return 'FirewallSection'
+
+    def add_member_to_fw_exclude_list(self, target_id, target_type):
+        resource = 'firewall/excludelist?action=add_member'
+        body = {"target_id": target_id,
+                "target_type": target_type}
+        self._create_with_retry(resource, body)
 
     def remove_member_from_fw_exclude_list(self, target_id, target_type):
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _remove_member_from_fw_exclude_list():
-            resource = ('firewall/excludelist?action=remove_member&object_id='
-                        + target_id)
-            self.client.create(resource)
-
-        _remove_member_from_fw_exclude_list()
+        resource = ('firewall/excludelist?action=remove_member&object_id='
+                    + target_id)
+        self._create_with_retry(resource)
 
     def get_excludelist(self):
         return self.client.list('firewall/excludelist')
@@ -332,92 +330,72 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                      applied_tos, tags,
                      operation=consts.FW_INSERT_BOTTOM,
                      other_section=None):
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _create_empty():
-            resource = 'firewall/sections?operation=%s' % operation
-            body = self._build(display_name, description,
-                               applied_tos, tags)
-            if other_section:
-                resource += '&id=%s' % other_section
-            return self.client.create(resource, body)
-        return _create_empty()
+        resource = '%s?operation=%s' % (self.uri_segment, operation)
+        body = self._build(display_name, description,
+                           applied_tos, tags)
+        if other_section:
+            resource += '&id=%s' % other_section
+        return self._create_with_retry(resource, body)
 
     def create_with_rules(self, display_name, description, applied_tos=None,
                           tags=None, operation=consts.FW_INSERT_BOTTOM,
                           other_section=None, rules=None):
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _create_with_rules():
-            resource = 'firewall/sections?operation=%s' % operation
-            body = {
-                'display_name': display_name,
-                'description': description,
-                'stateful': True,
-                'section_type': consts.FW_SECTION_LAYER3,
-                'applied_tos': applied_tos or [],
-                'tags': tags or []
-            }
-            if rules is not None:
-                resource += '&action=create_with_rules'
-                body['rules'] = rules
-            if other_section:
-                resource += '&id=%s' % other_section
-            return self.client.create(resource, body)
-        return _create_with_rules()
+        resource = '%s?operation=%s' % (self.uri_segment, operation)
+        body = {
+            'display_name': display_name,
+            'description': description,
+            'stateful': True,
+            'section_type': consts.FW_SECTION_LAYER3,
+            'applied_tos': applied_tos or [],
+            'tags': tags or []
+        }
+        if rules is not None:
+            resource += '&action=create_with_rules'
+            body['rules'] = rules
+        if other_section:
+            resource += '&id=%s' % other_section
+        return self._create_with_retry(resource, body)
 
     def update(self, section_id, display_name=None, description=None,
                applied_tos=None, rules=None, tags_update=None, force=False):
-        # Using internal method so we can access max_attempts in the decorator
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _do_update():
-            resource = 'firewall/sections/%s' % section_id
-            section = self.read(section_id)
+        resource = self.get_path(section_id)
+        section = {}
+        if rules is not None:
+            resource += '?action=update_with_rules'
+            section['rules'] = rules
+        if display_name is not None:
+            section['display_name'] = display_name
+        if description is not None:
+            section['description'] = description
+        if applied_tos is not None:
+            section['applied_tos'] = [self.get_nsgroup_reference(nsg_id)
+                                      for nsg_id in applied_tos]
+        if tags_update is not None:
+            section['tags_update'] = tags_update
 
-            if rules is not None:
-                resource += '?action=update_with_rules'
-                section.update({'rules': rules})
-            if display_name is not None:
-                section['display_name'] = display_name
-            if description is not None:
-                section['description'] = description
-            if applied_tos is not None:
-                section['applied_tos'] = [self.get_nsgroup_reference(nsg_id)
-                                          for nsg_id in applied_tos]
-            if tags_update is not None:
-                section['tags'] = utils.update_v3_tags(section.get('tags', []),
-                                                       tags_update)
-            headers = None
-            if force:
-                # shared sections (like default section) can serve multiple
-                # openstack deployments. If some operate under protected
-                # identities, force-overwrite is needed.
-                # REVISIT(annak): find better solution for shared sections
-                headers = {'X-Allow-Overwrite': 'true'}
+        headers = None
+        if force:
+            # shared sections (like default section) can serve multiple
+            # openstack deployments. If some operate under protected
+            # identities, force-overwrite is needed.
+            # REVISIT(annak): find better solution for shared sections
+            headers = {'X-Allow-Overwrite': 'true'}
 
-            if rules is not None:
-                return self.client.create(resource, section, headers=headers)
+        if rules is not None:
+            return self._update_resource_with_retry(resource, section,
+                                                    headers=headers,
+                                                    create_action=True)
 
-            elif any(p is not None for p in (display_name, description,
-                                             applied_tos, tags_update)):
-                return self.client.update(resource, section, headers=headers)
-
-        return _do_update()
-
-    def read(self, section_id):
-        resource = 'firewall/sections/%s' % section_id
-        return self.client.get(resource)
+        elif any(p is not None for p in (display_name, description,
+                                         applied_tos, tags_update)):
+            return self._update_resource_with_retry(resource, section,
+                                                    headers=headers)
 
     def list(self):
-        resource = 'firewall/sections'
-        return self.client.list(resource).get('results', [])
+        return self.client.list(self.get_path()).get('results', [])
 
     def delete(self, section_id):
-        resource = 'firewall/sections/%s?cascade=true' % section_id
+        resource = '%s?cascade=true' % self.gert_path(section_id)
         return self.client.delete(resource)
 
     def get_nsgroup_reference(self, nsgroup_id):
@@ -470,36 +448,22 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return rule_dict
 
     def add_rule(self, rule, section_id, operation=consts.FW_INSERT_BOTTOM):
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _add_rule():
-            resource = 'firewall/sections/%s/rules' % section_id
-            params = '?operation=%s' % operation
-            return self.client.create(resource + params, rule)
-        return _add_rule()
+        resource = '%s/rules' % self.get_path(section_id)
+        params = '?operation=%s' % operation
+        return self._create_with_retry(resource + params, rule)
 
     def add_rules(self, rules, section_id, operation=consts.FW_INSERT_BOTTOM):
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _add_rules():
-            resource = 'firewall/sections/%s/rules' % section_id
-            params = '?action=create_multiple&operation=%s' % operation
-            return self.client.create(resource + params, {'rules': rules})
-        return _add_rules()
+        resource = '%s/rules' % self.get_path(section_id)
+        params = '?action=create_multiple&operation=%s' % operation
+        return self._create_with_retry(resource + params, {'rules': rules})
 
     def delete_rule(self, section_id, rule_id):
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _delete_rule():
-            resource = 'firewall/sections/%s/rules/%s' % (section_id, rule_id)
-            return self.client.delete(resource)
-        return _delete_rule()
+        resource = '%s/rules/%s' % (self.get_path(section_id), rule_id)
+        return self.client.delete(resource)
+        return self._delete_with_retry(resource)
 
     def get_rules(self, section_id):
-        resource = 'firewall/sections/%s/rules' % section_id
+        resource = '%s/rules' % self.get_path(section_id)
         return self.client.get(resource)
 
     def get_default_rule(self, section_id):
@@ -621,44 +585,37 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
 
 class NsxLibIPSet(utils.NsxLibApiBase):
 
+    @property
+    def uri_segment(self):
+        return 'ip-sets'
+
+    @property
+    def resource_type(self):
+        return 'IPSet'
+
     def create(self, display_name, description=None, ip_addresses=None,
                tags=None):
-        resource = 'ip-sets'
         body = {
             'display_name': display_name,
             'description': description or '',
             'ip_addresses': ip_addresses or [],
             'tags': tags or []
         }
-        return self.client.create(resource, body)
+        return self.client.create(self.get_path(), body)
 
     def update(self, ip_set_id, display_name=None, description=None,
                ip_addresses=None, tags_update=None):
-        # Using internal method so we can access max_attempts in the decorator
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
-        def _do_update():
-            resource = 'ip-sets/%s' % ip_set_id
-            ip_set = self.read(ip_set_id)
-            tags = ip_set.get('tags', [])
-            if tags_update:
-                tags = utils.update_v3_tags(tags, tags_update)
-            if display_name is not None:
-                ip_set['display_name'] = display_name
-            if description is not None:
-                ip_set['description'] = description
-            if ip_addresses is not None:
-                ip_set['ip_addresses'] = ip_addresses
-            return self.client.update(resource, ip_set)
-
-        return _do_update()
-
-    def read(self, ip_set_id):
-        return self.client.get('ip-sets/%s' % ip_set_id)
-
-    def delete(self, ip_set_id):
-        return self.client.delete('ip-sets/%s' % ip_set_id)
+        ip_set = {}
+        if tags_update:
+            ip_set['tags_update'] = tags_update
+        if display_name is not None:
+            ip_set['display_name'] = display_name
+        if description is not None:
+            ip_set['description'] = description
+        if ip_addresses is not None:
+            ip_set['ip_addresses'] = ip_addresses
+        return self._update_resource_with_retry(self.get_path(ip_set_id),
+                                                ip_set)
 
     def get_ipset_reference(self, ip_set_id):
         return {'target_id': ip_set_id,
