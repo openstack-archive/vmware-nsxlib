@@ -263,7 +263,6 @@ class NSX3Client(JSONRESTClient):
             else:
                 url_prefix = "%s/%s" % (url_path_base,
                                         url_prefix or '')
-        self.max_attempts = max_attempts
 
         super(NSX3Client, self).__init__(
             connection, url_prefix=url_prefix,
