@@ -38,7 +38,8 @@ def http_error_to_exception(status_code, error_code):
         requests.codes.INTERNAL_SERVER_ERROR:
             {'99': exceptions.ClientCertificateNotTrusted},
         requests.codes.FORBIDDEN:
-            {'98': exceptions.BadXSRFToken}}
+            {'98': exceptions.BadXSRFToken},
+        requests.codes.TOO_MANY_REQUESTS: exceptions.TooManyRequests}
 
     if status_code in errors:
         if isinstance(errors[status_code], dict):
@@ -245,6 +246,7 @@ class NSX3Client(JSONRESTClient):
                  default_headers=None,
                  nsx_api_managers=None,
                  max_attempts=utils.DEFAULT_MAX_ATTEMPTS,
+                 rate_limit_retry=True,
                  client_obj=None,
                  url_path_base=NSX_V1_API_PREFIX):
 
@@ -252,9 +254,11 @@ class NSX3Client(JSONRESTClient):
         if client_obj:
             self.nsx_api_managers = client_obj.nsx_api_managers or []
             self.max_attempts = client_obj.max_attempts
+            self.rate_limit_retry = client_obj.rate_limit_retry
         else:
             self.nsx_api_managers = nsx_api_managers or []
             self.max_attempts = max_attempts
+            self.rate_limit_retry = rate_limit_retry
 
         url_prefix = url_prefix or url_path_base
         if url_prefix and url_path_base not in url_prefix:
@@ -278,3 +282,18 @@ class NSX3Client(JSONRESTClient):
                     operation=operation,
                     details=result_msg,
                     error_code=error_code)
+
+    def _rest_call(self, url, **kwargs):
+        if self.rate_limit_retry:
+            # If too many requests are handled by the nsx at the same time,
+            # error "429: Too Many Requests" will be returned.
+            # the client is expected to retry after a random 400-600 milli,
+            # and later exponentially until 5 seconds wait
+            @utils.retry_random_upon_exception(
+                exceptions.TooManyRequests,
+                max_attempts=self.max_attempts)
+            def _rest_call_with_retry(self, url, **kwargs):
+                return super(NSX3Client, self)._rest_call(url, **kwargs)
+            return _rest_call_with_retry(self, url, **kwargs)
+        else:
+            return super(NSX3Client, self)._rest_call(url, **kwargs)

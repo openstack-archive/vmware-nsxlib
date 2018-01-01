@@ -94,7 +94,8 @@ class NsxLibConfig(object):
                  dns_nameservers=None,
                  dns_domain='openstacklocal',
                  dhcp_profile_uuid=None,
-                 allow_overwrite_header=False):
+                 allow_overwrite_header=False,
+                 rate_limit_retry=True):
 
         self.nsx_api_managers = nsx_api_managers
         self._username = username
@@ -115,6 +116,7 @@ class NsxLibConfig(object):
         self.dns_nameservers = dns_nameservers or []
         self.dns_domain = dns_domain
         self.allow_overwrite_header = allow_overwrite_header
+        self.rate_limit_retry = rate_limit_retry
 
         if dhcp_profile_uuid:
             # this is deprecated, and never used.
