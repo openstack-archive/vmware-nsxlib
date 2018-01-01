@@ -53,7 +53,8 @@ class NsxLibBase(object):
             self.cluster,
             nsx_api_managers=self.nsxlib_config.nsx_api_managers,
             max_attempts=self.nsxlib_config.max_attempts,
-            url_path_base=self.client_url_prefix)
+            url_path_base=self.client_url_prefix,
+            rate_limit_retry=self.nsxlib_config.rate_limit_retry)
 
         self.general_apis = utils.NsxLibApiBase(
             self.client, self.nsxlib_config)
