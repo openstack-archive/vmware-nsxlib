@@ -252,6 +252,19 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
         self.assertRaises(exceptions.NsxLibInvalidInput, func_to_fail, 99)
         self.assertEqual(max_retries, total_count['val'])
 
+    def test_retry_random(self):
+        max_retries = 5
+        total_count = {'val': 0}
+
+        @utils.retry_random_upon_exception(exceptions.NsxLibInvalidInput,
+                                           max_attempts=max_retries)
+        def func_to_fail(x):
+            total_count['val'] = total_count['val'] + 1
+            raise exceptions.NsxLibInvalidInput(error_message='foo')
+
+        self.assertRaises(exceptions.NsxLibInvalidInput, func_to_fail, 99)
+        self.assertEqual(max_retries, total_count['val'])
+
     @mock.patch.object(utils, '_update_max_tags')
     @mock.patch.object(utils, '_update_tag_length')
     @mock.patch.object(utils, '_update_resource_length')
