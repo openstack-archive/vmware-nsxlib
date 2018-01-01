@@ -97,6 +97,10 @@ class StaleRevision(ManagerError):
     pass
 
 
+class TooManyRequests(ManagerError):
+    pass
+
+
 class ClientCertificateNotTrusted(ManagerError):
     message = _("Certificate not trusted")
 

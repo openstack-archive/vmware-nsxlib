@@ -16,6 +16,7 @@
 from neutron_lib import exceptions as n_exc
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
+from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import utils
 
@@ -237,6 +238,32 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
                                       cookie_name='ABC', cookie_fallback=True,
                                       bogus='bogus')
         self.assertEqual(resp, expected)
+
+    def test_retry(self):
+        max_retries = 5
+        total_count = {'val': 0}
+
+        @utils.retry_upon_exception(exceptions.StaleRevision,
+                                    max_attempts=max_retries)
+        def func_to_fail(x):
+            total_count['val'] = total_count['val'] + 1
+            raise exceptions.StaleRevision(error_message='foo')
+
+        self.assertRaises(exceptions.StaleRevision, func_to_fail, 99)
+        self.assertEqual(max_retries, total_count['val'])
+
+    def test_retry_random(self):
+        max_retries = 5
+        total_count = {'val': 0}
+
+        @utils.retry_random_upon_exception(exceptions.StaleRevision,
+                                           max_attempts=max_retries)
+        def func_to_fail(x):
+            total_count['val'] = total_count['val'] + 1
+            raise exceptions.StaleRevision(error_message='foo')
+
+        self.assertRaises(exceptions.StaleRevision, func_to_fail, 99)
+        self.assertEqual(max_retries, total_count['val'])
 
 
 class NsxFeaturesTestCase(nsxlib_testcase.NsxLibTestCase):
