@@ -246,6 +246,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config)
         self.trust_management = trust_management.NsxLibTrustManagement(
             self.client, self.nsxlib_config)
+        self.http_services = resources.NodeHttpServiceProperties(
+            self.client, self.nsxlib_config, nsxlib=self)
 
     @property
     def keepalive_section(self):
@@ -264,6 +266,7 @@ class NsxLib(NsxLibBase):
             version.LooseVersion(nsx_constants.NSX_VERSION_2_2_0)):
             # Features available since 2.2
             if (feature == nsx_constants.FEATURE_VLAN_ROUTER_INTERFACE or
+                feature == nsx_constants.FEATURE_RATE_LIMIT or
                 feature == nsx_constants.FEATURE_ON_BEHALF_OF):
                 return True
 
