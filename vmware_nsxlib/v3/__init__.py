@@ -276,6 +276,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config, nsxlib=self)
         self.vpn_ipsec = vpn_ipsec.VpnIpSec(
             self.client, self.nsxlib_config, nsxlib=self)
+        self.http_services = resources.NodeHttpServiceProperties(
+            self.client, self.nsxlib_config, nsxlib=self)
 
         # Update tag limits
         self.tag_limits = self.get_tag_limits()
@@ -300,6 +302,7 @@ class NsxLib(NsxLibBase):
             if (feature == nsx_constants.FEATURE_VLAN_ROUTER_INTERFACE or
                 feature == nsx_constants.FEATURE_IPSEC_VPN or
                 feature == nsx_constants.FEATURE_ON_BEHALF_OF or
+                feature == nsx_constants.FEATURE_RATE_LIMIT or
                 feature == nsx_constants.FEATURE_TRUNK_VLAN):
                 return True
 

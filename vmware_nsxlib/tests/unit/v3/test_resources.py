@@ -1650,6 +1650,54 @@ class LogicalDhcpServerTestCase(BaseTestResource):
             headers=self.default_headers())
 
 
+class NodeHttpServicePropertiesTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NodeHttpServicePropertiesTestCase, self).setUp(
+            resources.NodeHttpServiceProperties)
+
+    def test_get_resource(self):
+        self.skipTest("The action is not supported by this resource")
+
+    def test_list_all(self):
+        self.skipTest("The action is not supported by this resource")
+
+    def test_delete_resource(self):
+        self.skipTest("The action is not supported by this resource")
+
+    def test_get_rate_limit(self):
+        mocked_resource = self.get_mocked_resource()
+        rate_limit = 40
+        body = {'service_properties': {'api_rate_limit': rate_limit}}
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.2.0'),\
+            mock.patch.object(mocked_resource.client, "url_get",
+                              return_value=body):
+            result = mocked_resource.get_rate_limit()
+            self.assertEqual(rate_limit, result)
+
+    def test_update_rate_limit(self):
+        mocked_resource = self.get_mocked_resource()
+        old_rate_limit = 40
+        new_rate_limit = 50
+        body = {'service_properties': {'api_rate_limit': old_rate_limit}}
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='2.2.0'),\
+            mock.patch.object(mocked_resource.client, "url_get",
+                              return_value=body):
+            mocked_resource.update_rate_limit(new_rate_limit)
+            body['service_properties']['api_rate_limit'] = new_rate_limit
+            test_client.assert_json_call(
+                'put', mocked_resource,
+                'https://1.2.3.4/api/v1/node/services/http',
+                data=jsonutils.dumps(body, sort_keys=True),
+                headers=self.default_headers())
+            test_client.assert_json_call(
+                'post', mocked_resource,
+                'https://1.2.3.4/api/v1/node/services/http?action=restart',
+                headers=self.default_headers())
+
+
 class DummyCachedResource(utils.NsxLibApiBase):
 
     @property

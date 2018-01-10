@@ -87,14 +87,18 @@ class RESTClient(object):
     def get(self, uuid, headers=None, silent=False):
         return self.url_get(uuid, headers=headers, silent=silent)
 
-    def delete(self, uuid, headers=None):
-        return self.url_delete(uuid, headers=headers)
+    def delete(self, uuid, headers=None, expected_results=None):
+        return self.url_delete(uuid, headers=headers,
+                               expected_results=expected_results)
 
-    def update(self, uuid, body=None, headers=None):
-        return self.url_put(uuid, body, headers=headers)
+    def update(self, uuid, body=None, headers=None, expected_results=None):
+        return self.url_put(uuid, body, headers=headers,
+                            expected_results=expected_results)
 
-    def create(self, resource='', body=None, headers=None):
-        return self.url_post(resource, body, headers=headers)
+    def create(self, resource='', body=None, headers=None,
+               expected_results=None):
+        return self.url_post(resource, body, headers=headers,
+                             expected_results=expected_results)
 
     def url_list(self, url, headers=None, silent=False):
         concatenate_response = self.url_get(url, headers=headers)
@@ -112,14 +116,17 @@ class RESTClient(object):
         return self._rest_call(url, method='GET', headers=headers,
                                silent=silent)
 
-    def url_delete(self, url, headers=None):
-        return self._rest_call(url, method='DELETE', headers=headers)
+    def url_delete(self, url, headers=None, expected_results=None):
+        return self._rest_call(url, method='DELETE', headers=headers,
+                               expected_results=expected_results)
 
-    def url_put(self, url, body, headers=None):
-        return self._rest_call(url, method='PUT', body=body, headers=headers)
+    def url_put(self, url, body, headers=None, expected_results=None):
+        return self._rest_call(url, method='PUT', body=body, headers=headers,
+                               expected_results=expected_results)
 
-    def url_post(self, url, body, headers=None):
-        return self._rest_call(url, method='POST', body=body, headers=headers)
+    def url_post(self, url, body, headers=None, expected_results=None):
+        return self._rest_call(url, method='POST', body=body, headers=headers,
+                               expected_results=expected_results)
 
     def _raise_error(self, status_code, operation, result_msg,
                      error_code=None):
@@ -177,7 +184,7 @@ class RESTClient(object):
         return re.sub(pattern, '"password": "********"', json)
 
     def _rest_call(self, url, method='GET', body=None, headers=None,
-                   silent=False):
+                   silent=False, expected_results=None):
         request_headers = headers.copy() if headers else {}
         request_headers.update(self._default_headers)
         if utils.INJECT_HEADERS_CALLBACK:
@@ -206,8 +213,10 @@ class RESTClient(object):
                       result.json() if result.content else '',
                       te - ts)
 
+        if not expected_results:
+            expected_results = RESTClient._VERB_RESP_CODES[method.lower()]
         self._validate_result(
-            result, RESTClient._VERB_RESP_CODES[method.lower()],
+            result, expected_results,
             _("%(verb)s %(url)s") % {'verb': method, 'url': request_url},
             silent=silent)
         return result
