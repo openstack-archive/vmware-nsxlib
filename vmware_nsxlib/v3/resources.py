@@ -17,6 +17,7 @@ import netaddr
 
 from oslo_log import log
 from oslo_log import versionutils
+import requests
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import core_resources
@@ -602,3 +603,61 @@ class IpPool(utils.NsxLibApiBase):
         """Return information about the allocated IPs in the pool."""
         url = "%s/allocations" % pool_id
         return self.client.url_get(self.get_path(url))
+
+
+class NodeHttpServiceProperties(utils.NsxLibApiBase):
+    @property
+    def uri_segment(self):
+        return 'node/services/http'
+
+    @property
+    def resource_type(self):
+        return 'NodeHttpServiceProperties'
+
+    def get_rate_limit(self):
+        if (self.nsxlib and
+            not self.nsxlib.feature_supported(
+                nsx_constants.FEATURE_RATE_LIMIT)):
+            msg = (_("Rate limit is not supported by NSX version %s") %
+                   self.nsxlib.get_version())
+            raise exceptions.ManagerError(details=msg)
+
+        properties = self.list()
+        return properties.get('service_properties', {}).get('api_rate_limit')
+
+    def update_rate_limit(self, value):
+        """update the NSX rate limit. default value is 40. 0 means no limit"""
+        if (self.nsxlib and
+            not self.nsxlib.feature_supported(
+                nsx_constants.FEATURE_RATE_LIMIT)):
+            msg = (_("Rate limit is not supported by NSX version %s") %
+                   self.nsxlib.get_version())
+            raise exceptions.ManagerError(details=msg)
+
+        properties = self.list()
+        if 'service_properties' in properties:
+            properties['service_properties']['api_rate_limit'] = int(value)
+
+        # update the value using a PUT command, which is expected to return 202
+        expected_results = [requests.codes.accepted]
+        self.client.update(self.uri_segment, properties,
+                           expected_results=expected_results)
+
+        # restart the http service using POST, which is expected to return 202
+        restart_url = self.uri_segment + '?action=restart'
+        self.client.create(restart_url, expected_results=expected_results)
+
+    def delete(self, uuid):
+        """Not supported"""
+        msg = _("Delete is not supported for %s") % self.uri_segment
+        raise exceptions.ManagerError(details=msg)
+
+    def get(self, uuid):
+        """Not supported"""
+        msg = _("Get is not supported for %s") % self.uri_segment
+        raise exceptions.ManagerError(details=msg)
+
+    def find_by_display_name(self, display_name):
+        """Not supported"""
+        msg = _("Find is not supported for %s") % self.uri_segment
+        raise exceptions.ManagerError(details=msg)
