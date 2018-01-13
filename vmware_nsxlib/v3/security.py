@@ -125,11 +125,11 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
                 'tag': tag}
 
     def create(self, display_name, description, tags,
-               membership_criteria=None):
+               membership_criteria=None, members=None):
         body = {'display_name': display_name,
                 'description': description,
                 'tags': tags,
-                'members': []}
+                'members': [] if members is None else members}
         if membership_criteria:
             # Allow caller to pass a list of membership criterias.
             # The 'else' block is maintained for backwards compatibility
@@ -155,7 +155,10 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
         if members is not None:
             nsgroup['members'] = members
         if membership_criteria is not None:
-            nsgroup['membership_criteria'] = [membership_criteria]
+            if isinstance(membership_criteria, list):
+                nsgroup['membership_criteria'] = membership_criteria
+            else:
+                nsgroup['membership_criteria'] = [membership_criteria]
         if tags_update is not None:
             nsgroup['tags_update'] = tags_update
         return self._update_resource(
