@@ -304,7 +304,7 @@ class TestService(test_resources.BaseTestResource):
             'https://1.2.3.4/api/v1/%s' % mocked_resource.uri_segment,
             data=jsonutils.dumps({
                 'display_name': name,
-                'logical_router_id': {'target_id': router_id},
+                'logical_router_id': router_id,
                 'ike_log_level': log_level,
                 'enabled': enabled
             }, sort_keys=True),

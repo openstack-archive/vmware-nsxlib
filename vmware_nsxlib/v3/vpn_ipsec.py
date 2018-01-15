@@ -422,7 +422,7 @@ class Service(utils.NsxLibApiBase):
 
         # mandatory parameters
         body = {'display_name': name,
-                'logical_router_id': {'target_id': logical_router_id}}
+                'logical_router_id': logical_router_id}
         # optional parameters
         if ike_log_level:
             body['ike_log_level'] = ike_log_level
