@@ -32,23 +32,24 @@ class IkeVersionTypes(object):
 
 class EncryptionAlgorithmTypes(object):
     """Supported encryption algorithms (NSX default is GCM)"""
-    ENCRYPTION_ALGORITHM_128 = 'AES128'
-    ENCRYPTION_ALGORITHM_256 = 'AES256'
-    ENCRYPTION_ALGORITHM_GCM = 'AESGCM'
+    ENCRYPTION_ALGORITHM_128 = 'AES_128'
+    ENCRYPTION_ALGORITHM_256 = 'AES_256'
+    ENCRYPTION_ALGORITHM_GCM128 = 'AES_GCM_128'  # only with IKE_V2
+    ENCRYPTION_ALGORITHM_GCM192 = 'AES_GCM_192'  # only with IKE_V2
+    ENCRYPTION_ALGORITHM_GCM256 = 'AES_GCM_256'  # only with IKE_V2
 
 
 class DigestAlgorithmTypes(object):
-    """Supported digest (auth) algorithms (NSX default is None)"""
+    """Supported digest (auth) algorithms (NSX default is SHA2_256)"""
     DIGEST_ALGORITHM_SHA1 = 'SHA1'
-    DIGEST_ALGORITHM_SHA256 = 'SHA256'
-    DIGEST_ALGORITHM_GMAC_128 = 'GMAC_128'
-    DIGEST_ALGORITHM_GMAC_256 = 'GMAC_256'
+    DIGEST_ALGORITHM_SHA256 = 'SHA2_256'
+    DIGEST_ALGORITHM_GMAC_128 = 'GMAC_128'  # only for tunnel profile
+    DIGEST_ALGORITHM_GMAC_192 = 'GMAC_192'  # only for tunnel profile
+    DIGEST_ALGORITHM_GMAC_256 = 'GMAC_256'  # only for tunnel profile
 
 
 class DHGroupTypes(object):
     """Supported DH groups for Perfect Forward Secrecy"""
-    DH_GROUP_2 = 'GROUP2'
-    DH_GROUP_5 = 'GROUP5'
     DH_GROUP_14 = 'GROUP14'
     DH_GROUP_15 = 'GROUP15'
     DH_GROUP_16 = 'GROUP16'
@@ -77,20 +78,27 @@ class DpdProfileActionTypes(object):
 
 class DpdProfileTimeoutLimits(object):
     """Supported DPD timeout range"""
-    DPD_TIMEOUT_MIN = 10
+    DPD_TIMEOUT_MIN = 3
     DPD_TIMEOUT_MAX = 3600
 
 
-class SALifetimeLimits(object):
-    """Limits to the allowed SA lifetime in seconds"""
-    SA_LIFETIME_MIN = 90
-    SA_LIFETIME_MAX = 365 * 24 * 3600
+class IkeSALifetimeLimits(object):
+    """Limits to the allowed SA lifetime in seconds (NSX default is 1 day)"""
+    SA_LIFETIME_MIN = 21600
+    SA_LIFETIME_MAX = 31536000
+
+
+class IPsecSALifetimeLimits(object):
+    """Limits to the allowed SA lifetime in seconds (NSX default is 3600)"""
+    SA_LIFETIME_MIN = 900
+    SA_LIFETIME_MAX = 31536000
 
 
 class ConnectionInitiationModeTypes(object):
     """Supported connection initiation mode type"""
     INITIATION_MODE_INITIATOR = 'INITIATOR'
     INITIATION_MODE_RESPOND_ONLY = 'RESPOND_ONLY'
+    INITIATION_MODE_ON_DEMAND = 'ON_DEMAND'
 
 
 class IkeLogLevelTypes(object):
@@ -120,7 +128,6 @@ class IkeProfile(utils.NsxLibApiBase):
                encryption_algorithm=None,
                digest_algorithm=None,
                ike_version=None,
-               pfs=None,
                dh_group=None,
                sa_life_time=None,
                tags=None):
@@ -137,14 +144,11 @@ class IkeProfile(utils.NsxLibApiBase):
         if ike_version:
             body['ike_version'] = ike_version
         if sa_life_time:
-            body['sa_life_time'] = {'unit': 'SEC', 'value': sa_life_time}
+            body['sa_life_time'] = sa_life_time
         if dh_group:
             body['dh_groups'] = [dh_group]
         if tags:
             body['tags'] = tags
-        # Boolean parameters
-        if pfs is not None:
-            body['enable_perfect_forward_secrecy'] = pfs
         return self.client.create(self.get_path(), body=body)
 
 
@@ -176,7 +180,7 @@ class IPSecTunnelProfile(utils.NsxLibApiBase):
         if digest_algorithm:
             body['digest_algorithms'] = [digest_algorithm]
         if sa_life_time:
-            body['sa_life_time'] = {'unit': 'SEC', 'value': sa_life_time}
+            body['sa_life_time'] = sa_life_time
         if dh_group:
             body['dh_groups'] = [dh_group]
         if tags:
@@ -422,7 +426,7 @@ class Service(utils.NsxLibApiBase):
 
         # mandatory parameters
         body = {'display_name': name,
-                'logical_router_id': {'target_id': logical_router_id}}
+                'logical_router_id': logical_router_id}
         # optional parameters
         if ike_log_level:
             body['ike_log_level'] = ike_log_level

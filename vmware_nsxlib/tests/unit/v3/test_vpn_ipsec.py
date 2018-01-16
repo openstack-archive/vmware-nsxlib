@@ -41,7 +41,6 @@ class TestIkeProfile(test_resources.BaseTestResource):
                                encryption_algorithm=enc_alg,
                                digest_algorithm=dig_alg,
                                ike_version=ike_ver,
-                               pfs=True,
                                dh_group=dh_group,
                                sa_life_time=lifetime)
 
@@ -54,9 +53,8 @@ class TestIkeProfile(test_resources.BaseTestResource):
                 'encryption_algorithms': [enc_alg],
                 'digest_algorithms': [dig_alg],
                 'ike_version': ike_ver,
-                'enable_perfect_forward_secrecy': True,
                 'dh_groups': [dh_group],
-                'sa_life_time': {'unit': 'SEC', 'value': lifetime}
+                'sa_life_time': lifetime
             }, sort_keys=True),
             headers=self.default_headers())
 
@@ -92,7 +90,7 @@ class TestIPSecTunnelProfile(test_resources.BaseTestResource):
                 'digest_algorithms': [dig_alg],
                 'enable_perfect_forward_secrecy': True,
                 'dh_groups': [dh_group],
-                'sa_life_time': {'unit': 'SEC', 'value': lifetime}
+                'sa_life_time': lifetime
             }, sort_keys=True),
             headers=self.default_headers())
 
@@ -304,7 +302,7 @@ class TestService(test_resources.BaseTestResource):
             'https://1.2.3.4/api/v1/%s' % mocked_resource.uri_segment,
             data=jsonutils.dumps({
                 'display_name': name,
-                'logical_router_id': {'target_id': router_id},
+                'logical_router_id': router_id,
                 'ike_log_level': log_level,
                 'enabled': enabled
             }, sort_keys=True),
