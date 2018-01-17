@@ -316,7 +316,7 @@ class LocalEndpoint(utils.NsxLibApiBase):
         # mandatory parameters
         body = {'display_name': name,
                 'local_address': local_address,
-                'ipsec_vpn_service_id': ipsec_vpn_service_id}
+                'ipsec_vpn_service_id': {'target_id': ipsec_vpn_service_id}}
         # optional parameters
         if description:
             body['description'] = description
@@ -346,7 +346,7 @@ class LocalEndpoint(utils.NsxLibApiBase):
         if local_address:
             body['local_address'] = local_address
         if ipsec_vpn_service_id:
-            body['ipsec_vpn_service_id'] = ipsec_vpn_service_id
+            body['ipsec_vpn_service_id'] = {'target_id': ipsec_vpn_service_id}
         if local_id:
             body['local_id'] = local_id
         if certificate_id:

@@ -481,7 +481,8 @@ FAKE_LEP = {
     "id": FAKE_LEP_ID,
     "display_name": "XXX",
     "local_id": "1.1.1.1",
-    "ipsec_vpn_service_id": "aca38a11-981b-46d8-9e2c-9bedc0d96794",
+    "ipsec_vpn_service_id": {"target_id":
+                             "aca38a11-981b-46d8-9e2c-9bedc0d96794"},
     "local_address": "1.1.1.1",
     "trust_ca_ids": [],
     "trust_crl_ids": [],

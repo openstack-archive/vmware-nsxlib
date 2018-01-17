@@ -224,7 +224,7 @@ class TestLocalEndpoint(test_resources.BaseTestResource):
                 'local_address': local_address,
                 'local_id': local_id,
                 'description': description,
-                'ipsec_vpn_service_id': ipsec_vpn_service_id
+                'ipsec_vpn_service_id': {'target_id': ipsec_vpn_service_id}
             }, sort_keys=True),
             headers=self.default_headers())
 
