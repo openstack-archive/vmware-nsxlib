@@ -24,6 +24,7 @@ import tenacity
 from tenacity import _utils as tenacity_utils
 
 from vmware_nsxlib._i18n import _
+from vmware_nsxlib.v3 import config
 from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions
 
 LOG = log.getLogger(__name__)
@@ -270,6 +271,8 @@ class NsxLibApiBase(object):
     """Base class for nsxlib api """
     def __init__(self, client, nsxlib_config=None, nsxlib=None):
         self.client = client
+        if nsxlib_config is None:
+            nsxlib_config = config.NsxLibConfig()
         self.nsxlib_config = nsxlib_config
         self.nsxlib = nsxlib
         super(NsxLibApiBase, self).__init__()
