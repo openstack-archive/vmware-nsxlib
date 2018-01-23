@@ -386,7 +386,7 @@ class NsxLibApiBase(object):
             # it again with the new revision_id
             @retry_upon_exception(
                 nsxlib_exceptions.StaleRevision,
-                max_attempts=self.nsxlib_config.max_attempts)
+                max_attempts=self.client.max_attempts)
             def do_update():
                 return self._internal_update_resource(
                     resource, payload,
@@ -410,7 +410,7 @@ class NsxLibApiBase(object):
         # Using internal method so we can access max_attempts in the decorator
         @retry_upon_exception(
             nsxlib_exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
+            max_attempts=self.client.max_attempts)
         def _do_delete():
             self.client.delete(self.get_path(resource))
 
@@ -420,7 +420,7 @@ class NsxLibApiBase(object):
         # Using internal method so we can access max_attempts in the decorator
         @retry_upon_exception(
             nsxlib_exceptions.StaleRevision,
-            max_attempts=self.nsxlib_config.max_attempts)
+            max_attempts=self.client.max_attempts)
         def _do_create():
             return self.client.create(resource, body, headers=headers)
 
