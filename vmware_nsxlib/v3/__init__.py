@@ -188,13 +188,20 @@ class NsxLibBase(object):
                     operation=msg,
                     details='')
 
+    def _build_tag_query(self, tag):
+        query = ''
+        _scope = tag.get('scope')
+        _tag = tag.get('tag')
+        if _scope:
+            query += 'tags.scope:%s' % _scope
+        if _scope and _tag:
+            query += ' AND '
+        if _tag:
+            query += 'tags.tag:%s' % _and
+        return query
+
     def _build_query(self, tags):
-        try:
-            return " AND ".join(['tags.scope:%(scope)s AND '
-                                 'tags.tag:%(tag)s' % item for item in tags])
-        except KeyError as e:
-            reason = _('Missing key:%s in tags') % str(e)
-            raise exceptions.NsxSearchInvalidQuery(reason=reason)
+        return " AND ".join([self._build_tag_query(item) for item in tags])
 
     def get_tag_limits(self):
         try:
