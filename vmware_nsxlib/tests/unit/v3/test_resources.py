@@ -1135,6 +1135,30 @@ class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
             self.nsxlib.search_by_tags(tags=user_tags)
             search.assert_called_with('search?query=%s' % query)
 
+    def test_nsx_search_tags_scope_only(self):
+        """Test search of resources with the specified tag."""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            user_tags = [{'scope': 'user'}]
+            query = self.nsxlib._build_query(tags=user_tags)
+            self.nsxlib.search_by_tags(tags=user_tags)
+            search.assert_called_with('search?query=%s' % query)
+
+    def test_nsx_search_tags_tag_only(self):
+        """Test search of resources with the specified tag."""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            user_tags = [{'tag': 'k8s'}]
+            query = self.nsxlib._build_query(tags=user_tags)
+            self.nsxlib.search_by_tags(tags=user_tags)
+            search.assert_called_with('search?query=%s' % query)
+
+    def test_nsx_search_tags_tag_and_scope(self):
+        """Test search of resources with the specified tag."""
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            user_tags = [{'tag': 'k8s'}, {'scope': 'user'}]
+            query = self.nsxlib._build_query(tags=user_tags)
+            self.nsxlib.search_by_tags(tags=user_tags)
+            search.assert_called_with('search?query=%s' % query)
+
     def test_nsx_search_tags_and_resource_type(self):
         """Test search of specified resource with the specified tag."""
         with mock.patch.object(self.nsxlib.client, 'url_get') as search:
