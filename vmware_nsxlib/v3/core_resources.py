@@ -137,12 +137,6 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
         else:
             body['admin_state'] = nsx_constants.ADMIN_STATE_DOWN
 
-        if vlan_id:
-            body['vlan'] = vlan_id
-
-        # trunk_vlan_range is mutually exclusive with vlan_id
-        # For guest vlan tagging it is allowed for overlay networks
-        # TODO(asarfaty): check network type? different for ENS?
         if trunk_vlan_range:
             failed = False
             if (self.nsxlib and
@@ -173,6 +167,8 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
                     operation=operation,
                     arg_val=trunk_vlan_range,
                     arg_name='trunk_vlan_range')
+        elif vlan_id:
+            body['vlan'] = vlan_id
 
         if ip_pool_id:
             body['ip_pool_id'] = ip_pool_id
