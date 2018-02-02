@@ -172,15 +172,18 @@ class RouterLib(object):
                                                  logical_switch_port_id,
                                                  address_groups,
                                                  urpf_mode=None,
-                                                 relay_service_uuid=None):
+                                                 relay_service_uuid=None,
+                                                 resource_type=None):
         try:
             port = self._router_port_client.get_by_lswitch_id(ls_id)
         except exceptions.ResourceNotFound:
+            if resource_type is None:
+                resource_type = nsx_constants.LROUTERPORT_DOWNLINK
             return self._router_port_client.create(
                 logical_router_id,
                 display_name,
                 tags,
-                nsx_constants.LROUTERPORT_DOWNLINK,
+                resource_type,
                 logical_switch_port_id,
                 address_groups,
                 urpf_mode=urpf_mode,

@@ -42,6 +42,7 @@ ROUTER_TYPE_TIER1 = "TIER1"
 
 LROUTERPORT_UPLINK = "LogicalRouterUplinkPort"
 LROUTERPORT_DOWNLINK = "LogicalRouterDownLinkPort"
+LROUTERPORT_CENTRALIZED = "LogicalRouterCentralizedServicePort"
 LROUTERPORT_LINKONTIER0 = "LogicalRouterLinkPortOnTIER0"
 LROUTERPORT_LINKONTIER1 = "LogicalRouterLinkPortOnTIER1"
 

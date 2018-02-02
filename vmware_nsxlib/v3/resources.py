@@ -249,7 +249,8 @@ class LogicalRouterPort(utils.NsxLibApiBase):
         if address_groups:
             body['subnets'] = address_groups
         if resource_type in [nsx_constants.LROUTERPORT_UPLINK,
-                             nsx_constants.LROUTERPORT_DOWNLINK]:
+                             nsx_constants.LROUTERPORT_DOWNLINK,
+                             nsx_constants.LROUTERPORT_CENTRALIZED]:
             body['linked_logical_switch_port_id'] = {
                 'target_id': logical_port_id}
         elif resource_type == nsx_constants.LROUTERPORT_LINKONTIER1:
