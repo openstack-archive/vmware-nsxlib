@@ -1692,7 +1692,7 @@ class NodeHttpServicePropertiesTestCase(BaseTestResource):
     def test_get_rate_limit(self):
         mocked_resource = self.get_mocked_resource()
         rate_limit = 40
-        body = {'service_properties': {'api_rate_limit': rate_limit}}
+        body = {'service_properties': {'client_api_rate_limit': rate_limit}}
         with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
                         return_value='2.2.0'),\
             mock.patch.object(mocked_resource.client, "url_get",
@@ -1704,13 +1704,15 @@ class NodeHttpServicePropertiesTestCase(BaseTestResource):
         mocked_resource = self.get_mocked_resource()
         old_rate_limit = 40
         new_rate_limit = 50
-        body = {'service_properties': {'api_rate_limit': old_rate_limit}}
+        body = {'service_properties': {
+                'client_api_rate_limit': old_rate_limit}}
         with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
                         return_value='2.2.0'),\
             mock.patch.object(mocked_resource.client, "url_get",
                               return_value=body):
             mocked_resource.update_rate_limit(new_rate_limit)
-            body['service_properties']['api_rate_limit'] = new_rate_limit
+            body['service_properties'][
+                'client_api_rate_limit'] = new_rate_limit
             test_client.assert_json_call(
                 'put', mocked_resource,
                 'https://1.2.3.4/api/v1/node/services/http',

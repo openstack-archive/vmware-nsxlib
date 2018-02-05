@@ -627,7 +627,8 @@ class NodeHttpServiceProperties(utils.NsxLibApiBase):
             raise exceptions.ManagerError(details=msg)
 
         properties = self.get_properties()
-        return properties.get('service_properties', {}).get('api_rate_limit')
+        return properties.get('service_properties', {}).get(
+            'client_api_rate_limit')
 
     def update_rate_limit(self, value):
         """update the NSX rate limit. default value is 40. 0 means no limit"""
@@ -640,7 +641,8 @@ class NodeHttpServiceProperties(utils.NsxLibApiBase):
 
         properties = self.get_properties()
         if 'service_properties' in properties:
-            properties['service_properties']['api_rate_limit'] = int(value)
+            properties['service_properties'][
+                'client_api_rate_limit'] = int(value)
 
         # update the value using a PUT command, which is expected to return 202
         expected_results = [requests.codes.accepted]
