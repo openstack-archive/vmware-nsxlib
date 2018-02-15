@@ -117,7 +117,7 @@ class TestIPSecDpdProfile(test_resources.BaseTestResource):
             data=jsonutils.dumps({
                 'display_name': name,
                 'description': description,
-                'timeout': timeout,
+                'dpd_probe_interval': timeout,
                 'enabled': enabled
             }, sort_keys=True),
             headers=self.default_headers())
@@ -128,7 +128,7 @@ class TestIPSecDpdProfile(test_resources.BaseTestResource):
         uuid = test_constants.FAKE_DPD_ID
         mocked_resource = self.get_mocked_resource(response=fake_dpd)
         mocked_resource.update(uuid, timeout=new_timeout)
-        fake_dpd['timeout'] = new_timeout
+        fake_dpd['dpd_probe_interval'] = new_timeout
         test_client.assert_json_call(
             'put', mocked_resource,
             'https://1.2.3.4/api/v1/%s/%s' % (mocked_resource.uri_segment,

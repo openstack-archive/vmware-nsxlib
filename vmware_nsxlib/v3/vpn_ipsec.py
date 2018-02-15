@@ -79,7 +79,7 @@ class DpdProfileActionTypes(object):
 class DpdProfileTimeoutLimits(object):
     """Supported DPD timeout range"""
     DPD_TIMEOUT_MIN = 3
-    DPD_TIMEOUT_MAX = 3600
+    DPD_TIMEOUT_MAX = 360
 
 
 class IkeSALifetimeLimits(object):
@@ -211,7 +211,7 @@ class IPSecDpdProfile(utils.NsxLibApiBase):
         if description:
             body['description'] = description
         if timeout:
-            body['timeout'] = timeout
+            body['dpd_probe_interval'] = timeout
         # Boolean parameters
         if enabled is not None:
             body['enabled'] = enabled
@@ -224,7 +224,7 @@ class IPSecDpdProfile(utils.NsxLibApiBase):
 
         body = self.get(profile_id)
         if timeout:
-            body['timeout'] = timeout
+            body['dpd_probe_interval'] = timeout
         if enabled is not None:
             body['enabled'] = enabled
         if tags is not None:
