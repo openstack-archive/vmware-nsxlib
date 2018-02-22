@@ -60,6 +60,7 @@ class RESTClient(object):
         'get': [requests.codes.ok],
         'post': [requests.codes.created, requests.codes.ok],
         'put': [requests.codes.created, requests.codes.ok],
+        'patch': [requests.codes.created, requests.codes.ok],
         'delete': [requests.codes.ok]
     }
 
@@ -94,6 +95,9 @@ class RESTClient(object):
     def create(self, resource='', body=None, headers=None):
         return self.url_post(resource, body, headers=headers)
 
+    def patch(self, resource='', body=None, headers=None):
+        return self.url_patch(resource, body, headers=headers)
+
     def url_list(self, url, headers=None, silent=False):
         concatenate_response = self.url_get(url, headers=headers)
         cursor = concatenate_response.get('cursor', NULL_CURSOR_PREFIX)
@@ -118,6 +122,9 @@ class RESTClient(object):
 
     def url_post(self, url, body, headers=None):
         return self._rest_call(url, method='POST', body=body, headers=headers)
+
+    def url_patch(self, url, body, headers=None):
+        return self._rest_call(url, method='PATCH', body=body, headers=headers)
 
     def _raise_error(self, status_code, operation, result_msg,
                      error_code=None):
