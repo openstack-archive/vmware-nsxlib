@@ -109,11 +109,6 @@ class IkeLogLevelTypes(object):
     LOG_LEVEL_ERROR = 'ERROR'
 
 
-class PolicyRuleActionTypes(object):
-    POLICY_RULE_ACTION_BYPASS = 'BYPASS'
-    POLICY_RULE_ACTION_PROTECT = 'PROTECT'
-
-
 class IkeProfile(utils.NsxLibApiBase):
 
     @property
@@ -386,14 +381,12 @@ class Session(utils.NsxLibApiBase):
             body['tags'] = tags
         return self.client.create(self.get_path(), body=body)
 
-    def get_rule_obj(self, sources, destinations,
-                     action=PolicyRuleActionTypes.POLICY_RULE_ACTION_PROTECT):
+    def get_rule_obj(self, sources, destinations):
         src_subnets = [{'subnet': src} for src in sources]
         dst_subnets = [{'subnet': dst} for dst in destinations]
         return {
             'sources': src_subnets,
-            'destinations': dst_subnets,
-            'action': action
+            'destinations': dst_subnets
         }
 
     def update(self, uuid, name=None, description=None, policy_rules=None,
@@ -422,7 +415,7 @@ class Service(utils.NsxLibApiBase):
 
     def create(self, name, logical_router_id,
                enabled=True, ike_log_level="ERROR",
-               tags=None):
+               tags=None, bypass_rules=None):
 
         # mandatory parameters
         body = {'display_name': name,
@@ -434,6 +427,8 @@ class Service(utils.NsxLibApiBase):
             body['enabled'] = enabled
         if tags:
             body['tags'] = tags
+        if bypass_rules:
+            body['bypass_rules'] = bypass_rules
         return self.client.create(self.get_path(), body=body)
 
 
