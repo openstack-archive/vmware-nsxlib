@@ -286,6 +286,7 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     def entry_def(self):
         return policy_defs.L4ServiceEntryDef
 
+    # TODO(asarfaty): service name cannot contain spaces or slashes
     def create_or_overwrite(self, name, service_id=None, description=None,
                             protocol=policy_constants.TCP, dest_ports=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -322,12 +323,13 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
 
         self.policy_api.create_or_update(entry_def)
 
+    # TODO(asarfaty): service name cannot contain spaces or slashes
+    # TODO(asarfaty) currently service update doesn't work
     def update(self, service_id, name=None, description=None,
                protocol=None, dest_ports=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         # Get the current data of service & its' service entry
         service = self.get(service_id, tenant=tenant)
-
         # update the service itself:
         if name is not None or description is not None:
             # update the service itself
@@ -442,126 +444,15 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
         return self.get(service_id, tenant=tenant)
 
 
-class NsxPolicyCommunicationProfileApi(NsxPolicyResourceBase):
-    """NSX Policy Communication profile (with a single entry).
-
-    Note the nsx-policy backend supports multiple entries per communication
-    profile.
-    At this point this is not supported here.
-    """
-    def create_or_overwrite(self, name, profile_id=None, description=None,
-                            services=None,
-                            action=policy_constants.ACTION_ALLOW,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Create a Communication profile with a single entry.
-
-        Services should be a list of service ids
-        """
-        profile_id = self._init_obj_uuid(profile_id)
-        profile_def = policy_defs.CommunicationProfileDef(
-            profile_id=profile_id,
-            name=name,
-            description=description,
-            tenant=tenant)
-        # NOTE(asarfaty) We set the profile entry display name (which is also
-        # used as the id) to be the same as the profile name. In case we
-        # support multiple entries, we need the name to be unique.
-        entry_def = policy_defs.CommunicationProfileEntryDef(
-            profile_id=profile_id,
-            name=name,
-            description=description,
-            services=services,
-            action=action,
-            tenant=tenant)
-
-        return self.policy_api.create_with_parent(profile_def, entry_def)
-
-    def delete(self, profile_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Delete the Communication profile with all the entries"""
-        # first delete the entries, or else the profile deletion will fail
-        profile_def = policy_defs.CommunicationProfileDef(
-            profile_id=profile_id, tenant=tenant)
-        prof = self.policy_api.get(profile_def)
-        if 'communication_profile_entries' in prof:
-            for entry in prof['communication_profile_entries']:
-                entry_def = policy_defs.CommunicationProfileEntryDef(
-                    profile_id=profile_id,
-                    profile_entry_id=entry['id'],
-                    tenant=tenant)
-                self.policy_api.delete(entry_def)
-        self.policy_api.delete(profile_def)
-
-    def get(self, profile_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
-        profile_def = policy_defs.CommunicationProfileDef(
-            profile_id=profile_id, tenant=tenant)
-        return self.policy_api.get(profile_def)
-
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
-        profile_def = policy_defs.CommunicationProfileDef(tenant=tenant)
-        return self.policy_api.list(profile_def)['results']
-
-    def _update_profile_entry(self, profile_id, profile_entry,
-                              name=None, description=None,
-                              services=None, action=None,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
-        entry_id = profile_entry['id']
-        entry_def = policy_defs.CommunicationProfileEntryDef(
-            profile_id=profile_id,
-            profile_entry_id=entry_id,
-            tenant=tenant)
-        entry_def.update_attributes_in_body(body=profile_entry,
-                                            name=name,
-                                            description=description,
-                                            services=services,
-                                            action=action)
-
-        self.policy_api.create_or_update(entry_def)
-
-    def update(self, profile_id, name=None, description=None,
-               services=None, action=None,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
-        # Get the current data of the profile & its' entry
-        profile = self.get(profile_id, tenant=tenant)
-
-        if name is not None or description is not None:
-            # update the profile itself
-            profile_def = policy_defs.CommunicationProfileDef(
-                profile_id=profile_id, tenant=tenant)
-            profile_def.update_attributes_in_body(name=name,
-                                                  description=description)
-
-            # update the backend
-            updated_profile = self.policy_api.create_or_update(profile_def)
-        else:
-            updated_profile = profile
-
-        # update the profile entry if it exists
-        profile_entry = policy_defs.CommunicationProfileDef.get_single_entry(
-            profile)
-        if not profile_entry:
-            LOG.error("Cannot update communication profile %s - expected 1 "
-                      "profile entry", profile_id)
-            return updated_profile
-
-        self._update_profile_entry(
-            profile_id, profile_entry,
-            name=name, description=description,
-            services=services, action=action,
-            tenant=tenant)
-
-        # re-read the profile from the backend to return the current data
-        return self.get(profile_id, tenant=tenant)
-
-
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     """NSX Policy CommunicationMap (Under a Domain)."""
-    def _get_last_seq_num(self, domain_id,
+    def _get_last_seq_num(self, domain_id, map_id,
                           tenant=policy_constants.POLICY_INFRA_TENANT):
         # get the current entries, and choose the next unused sequence number
+        # between the entries under the same communication map
         try:
-            com_entries = self.list(domain_id, tenant=tenant)
+            com_map = self.get(domain_id, map_id, tenant=tenant)
+            com_entries = com_map.get('communication_entries')
         except exceptions.ResourceNotFound:
             return -1
         if not com_entries:
@@ -571,11 +462,13 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         return seq_nums[-1]
 
     def create_or_overwrite(self, name, domain_id, map_id=None,
-                            description=None, sequence_number=None,
-                            profile_id=None,
+                            description=None, precedence=0,
+                            category=policy_constants.CATEGORY_DEFAULT,
+                            sequence_number=None, service_id=None,
+                            action=policy_constants.ACTION_ALLOW,
                             source_groups=None, dest_groups=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Create CommunicationMapEntry.
+        """Create CommunicationMap & Entry.
 
         source_groups/dest_groups should be a list of group ids belonging
         to the domain.
@@ -584,44 +477,55 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         end up with same sequence number.
         """
         # Validate and convert inputs
-        map_id = self._init_obj_uuid(map_id)
-        if not profile_id:
-            # profile-id must be provided
+        if not service_id:
+            # service-id must be provided
             err_msg = (_("Cannot create a communication map %(name)s without "
-                         "communication profile id") % {'name': name})
+                         "service id") % {'name': name})
             raise exceptions.ManagerError(details=err_msg)
+        if map_id:
+            # get the next available sequence number
+            last_sequence = self._get_last_seq_num(domain_id, map_id,
+                                                   tenant=tenant)
+        else:
+            map_id = self._init_obj_uuid(map_id)
+            last_sequence = -1
 
-        # get the next available sequence number
-        last_sequence = self._get_last_seq_num(domain_id, tenant=tenant)
         if not sequence_number:
             if last_sequence < 0:
                 sequence_number = 1
             else:
                 sequence_number = last_sequence + 1
 
+        # Build the communication entry. Since we currently support only one
+        # it will have the same id as its parent
         entry_def = policy_defs.CommunicationMapEntryDef(
             domain_id=domain_id,
             map_id=map_id,
+            entry_id=map_id,
             name=name,
             description=description,
             sequence_number=sequence_number,
             source_groups=source_groups,
             dest_groups=dest_groups,
-            profile_id=profile_id,
+            service_id=service_id,
+            action=action,
             tenant=tenant)
 
+        map_def = policy_defs.CommunicationMapDef(
+            domain_id=domain_id, map_id=map_id,
+            tenant=tenant, name=name, description=description,
+            precedence=precedence, category=category)
         if last_sequence < 0:
             # if communication map is absent, we need to create it
-            map_def = policy_defs.CommunicationMapDef(domain_id, tenant)
-            map_result = self.policy_api.create_with_parent(map_def, entry_def)
-            # return the created entry
-            return map_result['communication_entries'][0]
+            return self.policy_api.create_with_parent(map_def, entry_def)
 
-        return self.policy_api.create_or_update(entry_def)
+        self.policy_api.create_or_update(map_def)
+        self.policy_api.create_or_update(entry_def)
+        return self.get(domain_id, map_id, tenant=tenant)
 
     def delete(self, domain_id, map_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.CommunicationMapEntryDef(
+        map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
@@ -629,7 +533,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def get(self, domain_id, map_id,
             tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.CommunicationMapEntryDef(
+        map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
@@ -644,44 +548,60 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def list(self, domain_id,
              tenant=policy_constants.POLICY_INFRA_TENANT):
         """List all the map entries of a specific domain."""
-        map_def = policy_defs.CommunicationMapEntryDef(
+        map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id,
             tenant=tenant)
         return self.policy_api.list(map_def)['results']
 
     def update(self, domain_id, map_id, name=None, description=None,
-               sequence_number=None, profile_id=None,
-               source_groups=None, dest_groups=None,
+               sequence_number=None, service_id=None, action=None,
+               source_groups=None, dest_groups=None, precedence=0,
+               category=policy_constants.CATEGORY_DEFAULT,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.CommunicationMapEntryDef(
+        # Get the current data of service & its' service entry
+        comm_map = self.get(domain_id, map_id, tenant=tenant)
+        # update the communication map itself:
+        comm_def = policy_defs.CommunicationMapDef(
+            domain_id=domain_id, map_id=map_id, tenant=tenant)
+        comm_def.update_attributes_in_body(name=name,
+                                           description=description,
+                                           category=category,
+                                           precedence=precedence)
+        updated_map = self.policy_api.create_or_update(comm_def)
+
+        # update the communication map entry if it exists
+        comm_entry = policy_defs.CommunicationMapDef.get_single_entry(comm_map)
+        if not comm_entry:
+            LOG.error("Cannot update communication map %s - expected 1 entry",
+                      map_id)
+            return updated_map
+
+        entry_def = policy_defs.CommunicationMapEntryDef(
             domain_id=domain_id,
             map_id=map_id,
+            entry_id=map_id,
             tenant=tenant)
 
-        # Get the current data, and update it with the new values
-        try:
-            comm_map = self.get(domain_id, map_id, tenant=tenant)
-        except exceptions.ResourceNotFound:
-            return self.create_or_overwrite(name, domain_id, map_id,
-                                            description, sequence_number,
-                                            profile_id, source_groups,
-                                            dest_groups, tenant)
-
-        map_def.update_attributes_in_body(
-            body=comm_map,
+        entry_def.update_attributes_in_body(
+            body=comm_entry,
             name=name,
             description=description,
             sequence_number=sequence_number,
-            profile_id=profile_id,
+            service_id=service_id,
+            action=action,
             source_groups=source_groups,
             dest_groups=dest_groups)
 
         # update the backend
-        return self.policy_api.create_or_update(map_def)
+        self.policy_api.create_or_update(entry_def)
 
-    def get_realized_state(self, domain_id, ep_id,
+        # re-read the map from the backend to return the current data
+        return self.get(domain_id, map_id, tenant=tenant)
+
+    def get_realized_state(self, domain_id, map_id, ep_id,
                            tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.CommunicationMapDef(domain_id, tenant)
+        map_def = policy_defs.CommunicationMapDef(map_id, domain_id,
+                                                  tenant=tenant)
         path = map_def.get_realized_state_path(ep_id)
         return self._get_realized_state(path)
 
@@ -734,13 +654,15 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
         username & password must be defined
         """
         if not username or password is None:
-            # profile-id must be provided
+            # username/password must be provided
             err_msg = (_("Cannot update an enforcement point without "
                          "username and password"))
             raise exceptions.ManagerError(details=err_msg)
-
+        # Get the original body because ip&thumbprint are mandatory
+        body = self.get(ep_id)
         ep_def = policy_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
-        ep_def.update_attributes_in_body(name=name,
+        ep_def.update_attributes_in_body(body=body,
+                                         name=name,
                                          description=description,
                                          ip_address=ip_address,
                                          username=username,
@@ -807,7 +729,7 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
                ep_id=None, domain_id=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         map_def = policy_defs.DeploymentMapDef(
-            map_id=map_id, tenant=tenant)
+            map_id=map_id, domain_id=domain_id, tenant=tenant)
         map_def.update_attributes_in_body(name=name,
                                           description=description,
                                           ep_id=ep_id,

@@ -44,7 +44,7 @@ class TestPolicyDomain(TestPolicyApi):
             'prokaryotic cells',
             'typically characterized by membrane lipids')
         self.policy_api.create_or_update(domain_def)
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/archaea',
                               data=domain_def.get_obj_dict())
 
@@ -74,7 +74,7 @@ class TestPolicyGroup(TestPolicyApi):
             'cats',
             'felis catus')
         self.policy_api.create_or_update(group_def)
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/eukarya/groups/cats',
                               data=group_def.get_obj_dict())
 
@@ -89,7 +89,7 @@ class TestPolicyGroup(TestPolicyApi):
         self.policy_api.create_with_parent(domain_def, group_def)
         data = domain_def.get_obj_dict()
         data['groups'] = [group_def.get_obj_dict()]
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/eukarya',
                               data=data)
 
@@ -115,7 +115,7 @@ class TestPolicyGroup(TestPolicyApi):
                          'display_name': None,
                          'description': None,
                          'groups': [expected_group]}
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/eukarya',
                               data=expected_data)
 
@@ -132,7 +132,7 @@ class TestPolicyGroup(TestPolicyApi):
         self.policy_api.create_with_parent(domain_def, group_def)
         data = domain_def.get_obj_dict()
         data['groups'] = [group_def.get_obj_dict()]
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/eukarya',
                               data=data)
 
@@ -148,7 +148,7 @@ class TestPolicyService(TestPolicyApi):
     def test_create(self):
         service_def = policy.ServiceDef('roomservice')
         self.policy_api.create_or_update(service_def)
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/services/roomservice',
                               data=service_def.get_obj_dict())
 
@@ -170,7 +170,7 @@ class TestPolicyService(TestPolicyApi):
                          'display_name': None,
                          'description': None,
                          'service_entries': [expected_entry]}
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/services/roomservice',
                               data=expected_data)
 
@@ -190,40 +190,8 @@ class TestPolicyService(TestPolicyApi):
                          'display_name': None,
                          'description': None,
                          'service_entries': [expected_entry]}
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/services/icmpservice',
-                              data=expected_data)
-
-
-class TestPolicyCommunicationProfile(TestPolicyApi):
-
-    def test_create(self):
-        profile_def = policy.CommunicationProfileDef('rental')
-        self.policy_api.create_or_update(profile_def)
-        self.assert_json_call('POST', self.client,
-                              'infra/communication-profiles/rental',
-                              data=profile_def.get_obj_dict())
-
-    def test_create_with_parent(self):
-        profile_def = policy.CommunicationProfileDef('rental')
-        entry_def = policy.CommunicationProfileEntryDef(
-            'rental',
-            'room1',
-            description='includes roomservice',
-            services=["roomservice"])
-
-        self.policy_api.create_with_parent(profile_def, entry_def)
-        expected_entry = {'id': 'room1',
-                          'display_name': None,
-                          'description': 'includes roomservice',
-                          'services': ["roomservice"],
-                          'action': 'ALLOW'}
-        expected_data = {'id': 'rental',
-                         'display_name': None,
-                         'description': None,
-                         'communication_profile_entries': [expected_entry]}
-        self.assert_json_call('POST', self.client,
-                              'infra/communication-profiles/rental',
                               data=expected_data)
 
 
@@ -237,7 +205,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             source_groups=["group1",
                            "group2"],
             dest_groups=["group1"],
-            profile_id="profile1")
+            service_id="profile1")
 
         self.entry2 = policy.CommunicationMapEntryDef(
             'd1', 'cm2',
@@ -245,7 +213,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             source_groups=["group1",
                            "group2"],
             dest_groups=["group3"],
-            profile_id="profile2")
+            service_id="profile2")
 
         self.expected_data1 = {'id': 'cm1',
                                'display_name': None,
@@ -277,7 +245,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
         self.policy_api.create_with_parent(map_def, self.entry1)
         expected_data = map_def.get_obj_dict()
         expected_data['communication_entries'] = [self.expected_data1]
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/d1/communication-map',
                               data=expected_data)
 
@@ -289,14 +257,14 @@ class TestPolicyCommunicationMap(TestPolicyApi):
         expected_data = map_def.get_obj_dict()
         expected_data['communication_entries'] = [self.expected_data1,
                                                   self.expected_data2]
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/d1/communication-map',
                               data=expected_data)
 
     def test_update_entry(self):
         self.policy_api.create_or_update(self.entry1)
 
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/d1/communication-map/'
                               'communication-entries/cm1',
                               data=self.expected_data1)
@@ -319,7 +287,7 @@ class TestPolicyEnforcementPoint(TestPolicyApi):
 
         self.policy_api.create_or_update(ep_def)
         ep_path = policy.EnforcementPointDef('ep1').get_resource_path()
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               ep_path,
                               data=ep_def.get_obj_dict())
 
@@ -336,6 +304,6 @@ class TestPolicyDeploymentMap(TestPolicyApi):
                          'description': None,
                          'enforcement_point_path': ep_path}
 
-        self.assert_json_call('POST', self.client,
+        self.assert_json_call('PATCH', self.client,
                               'infra/domains/d1/domain-deployment-maps/dm1',
                               data=expected_data)
