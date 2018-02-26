@@ -22,12 +22,12 @@ from vmware_nsxlib.v3 import policy_constants
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
-COMM_PROF_PATH_PATTERN = TENANTS_PATH_PATTERN + "communication-profiles/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
 REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/%s-%s"
-REALIZED_STATE_COMM_MAP = REALIZED_STATE_EF + "firewalls/firewall-sections/%s"
+REALIZED_STATE_COMM_MAP = (REALIZED_STATE_EF +
+                           "firewalls/firewall-sections/%s.%s")
 REALIZED_STATE_SERVICE = REALIZED_STATE_EF + "services/nsservices/services:%s"
 
 
@@ -324,124 +324,77 @@ class IcmpServiceEntryDef(ServiceEntryDef):
             body=body, **kwargs)
 
 
-class CommunicationProfileDef(ResourceDef):
-    def __init__(self,
-                 profile_id=None,
-                 name=None,
-                 description=None,
-                 tenant=policy_constants.POLICY_INFRA_TENANT):
-        super(CommunicationProfileDef, self).__init__()
-        self.tenant = tenant
-        self.id = profile_id
-        self.name = name
-        self.description = description
-        self.parent_ids = (tenant)
-
-    @property
-    def path_pattern(self):
-        return COMM_PROF_PATH_PATTERN
-
-    def get_obj_dict(self):
-        body = super(CommunicationProfileDef, self).get_obj_dict()
-        body['communication_profile_entries'] = []
-        return body
-
-    @staticmethod
-    def sub_entries_path():
-        entryDef = CommunicationProfileEntryDef()
-        return entryDef.get_last_section_dict_key
-
-    def update_attributes_in_body(self, **kwargs):
-        super(CommunicationProfileDef, self).update_attributes_in_body(
-            **kwargs)
-        # make sure entries are there
-        entries_path = self.sub_entries_path()
-        if entries_path not in self.body:
-            self.body[entries_path] = []
-
-
-class CommunicationProfileEntryDef(ResourceDef):
-    def __init__(self,
-                 profile_id=None,
-                 profile_entry_id=None,
-                 name=None,
-                 description=None,
-                 services=None,
-                 action=policy_constants.ACTION_ALLOW,
-                 tenant=policy_constants.POLICY_INFRA_TENANT):
-        super(CommunicationProfileEntryDef, self).__init__()
-        self.tenant = tenant
-        self.id = profile_entry_id
-        self.name = name
-        self.description = description
-        self.services = services
-        self.action = action.upper()
-        self.parent_ids = (tenant, profile_id)
-
-    @property
-    def path_pattern(self):
-        return COMM_PROF_PATH_PATTERN + "%s/communication-profile-entries/"
-
-    def get_obj_dict(self):
-        body = super(CommunicationProfileEntryDef, self).get_obj_dict()
-        body['services'] = self.services
-        body['action'] = self.action
-        return body
-
-    def update_attributes_in_body(self, **kwargs):
-        body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-        if kwargs.get('action') is not None:
-            body['action'] = kwargs['action'].upper()
-            del kwargs['action']
-        super(CommunicationProfileEntryDef, self).update_attributes_in_body(
-            body=body, **kwargs)
-
-
 class CommunicationMapDef(ResourceDef):
     def __init__(self,
+                 map_id=None,
                  domain_id=None,
+                 category=policy_constants.CATEGORY_DEFAULT,
+                 name=None,
+                 precedence=0,
+                 description=None,
                  tenant=policy_constants.POLICY_INFRA_TENANT):
         super(CommunicationMapDef, self).__init__()
+        self.id = map_id
+        self.category = category
+        self.precedence = precedence
+        self.name = name
+        self.description = description
         self.tenant = tenant
         self.domain_id = domain_id
         self.parent_ids = (tenant, domain_id)
 
     @property
     def path_pattern(self):
-        return (DOMAINS_PATH_PATTERN + "%s/communication-map/")
+        return (DOMAINS_PATH_PATTERN + "%s/communication-maps/")
 
     def get_realized_state_path(self, ep_id):
-        return REALIZED_STATE_COMM_MAP % (self.tenant, ep_id, self.domain_id)
+        return REALIZED_STATE_COMM_MAP % (self.tenant, ep_id, self.domain_id,
+                                          self.id)
+
+    def get_obj_dict(self):
+        body = super(CommunicationMapDef, self).get_obj_dict()
+        if self.category:
+            body['category'] = self.category
+        if self.precedence:
+            body['precedence'] = self.precedence
+        return body
+
+    @staticmethod
+    def sub_entries_path():
+        return CommunicationMapEntryDef().get_last_section_dict_key
 
 
 class CommunicationMapEntryDef(ResourceDef):
     def __init__(self,
                  domain_id=None,
                  map_id=None,
+                 entry_id=None,
                  sequence_number=None,
                  source_groups=None,
                  dest_groups=None,
-                 profile_id=None,
+                 service_id=None,
+                 action=policy_constants.ACTION_ALLOW,
+                 scope="ANY",
                  name=None,
                  description=None,
                  tenant=policy_constants.POLICY_INFRA_TENANT):
         super(CommunicationMapEntryDef, self).__init__()
         self.tenant = tenant
         self.domain_id = domain_id
-        self.id = map_id
+        self.map_id = map_id,
+        self.id = entry_id
         self.name = name
         self.description = description
         self.sequence_number = sequence_number
-
+        self.action = action
+        self.scope = scope
         self.source_groups = self.get_groups_path(domain_id, source_groups)
         self.dest_groups = self.get_groups_path(domain_id, dest_groups)
-        self.profile_path = self.get_profile_path(
-            profile_id) if profile_id else None
-        self.parent_ids = (tenant, domain_id)
+        self.service_path = self.get_service_path(
+            service_id) if service_id else None
+        self.parent_ids = (tenant, domain_id, map_id)
 
-    # convert groups and communication profile to full path
+    # convert groups and services to full path
     def get_groups_path(self, domain_id, group_ids):
         if not group_ids:
             return [policy_constants.ANY_GROUP]
@@ -450,22 +403,24 @@ class CommunicationMapEntryDef(ResourceDef):
                          tenant=self.tenant).get_resource_full_path()
                 for group_id in group_ids]
 
-    def get_profile_path(self, profile_id):
-        return CommunicationProfileDef(
-            profile_id,
+    def get_service_path(self, service_id):
+        return ServiceDef(
+            service_id,
             tenant=self.tenant).get_resource_full_path()
 
     @property
     def path_pattern(self):
         return (DOMAINS_PATH_PATTERN +
-                "%s/communication-map/communication-entries/")
+                "%s/communication-maps/%s/communication-entries/")
 
     def get_obj_dict(self):
         body = super(CommunicationMapEntryDef, self).get_obj_dict()
         body['source_groups'] = self.source_groups
         body['destination_groups'] = self.dest_groups
         body['sequence_number'] = self.sequence_number
-        body['communication_profile_path'] = self.profile_path
+        body['services'] = [self.service_path]
+        body['scope'] = [self.scope]
+        body['action'] = self.action
         return body
 
     def update_attributes_in_body(self, **kwargs):
@@ -473,10 +428,10 @@ class CommunicationMapEntryDef(ResourceDef):
         if 'body' in kwargs:
             del kwargs['body']
         # Fix params that need special conversions
-        if kwargs.get('profile_id') is not None:
-            profile_path = self.get_profile_path(kwargs['profile_id'])
-            body['communication_profile_path'] = profile_path
-            del kwargs['profile_id']
+        if kwargs.get('service_id') is not None:
+            service_path = self.get_service_path(kwargs['service_id'])
+            body['services'] = [service_path]
+            del kwargs['service_id']
 
         if kwargs.get('dest_groups') is not None:
             groups = self.get_groups_path(
@@ -489,6 +444,10 @@ class CommunicationMapEntryDef(ResourceDef):
                 self.domain_id, kwargs['source_groups'])
             body['source_groups'] = groups
             del kwargs['source_groups']
+
+        if kwargs.get('scope') is not None:
+            body['scope'] = [kwargs['scope']]
+            del kwargs['scope']
 
         super(CommunicationMapEntryDef, self).update_attributes_in_body(
             body=body, **kwargs)
@@ -538,13 +497,18 @@ class EnforcementPointDef(ResourceDef):
         if 'body' in kwargs:
             del kwargs['body']
         # Fix params that need special conversions
-        if body.get('connection_info'):
-            body['connection_info'][0]['resource_type'] = 'NSXTConnectionInfo'
+        if not body.get('connection_info'):
+            body['connection_info'] = {}
+        body['connection_info']['resource_type'] = 'NSXTConnectionInfo'
+        body['resource_type'] = 'EnforcementPoint'
 
-            for attr in ('username', 'password', 'ip_address', 'thumbprint'):
-                if kwargs.get(attr) is not None:
-                    body['connection_info'][0][attr] = kwargs[attr]
-                    del kwargs[attr]
+        for attr in ('username', 'password', 'ip_address', 'thumbprint'):
+            if kwargs.get(attr) is not None:
+                body_attr = attr
+                if attr == 'ip_address':
+                    body_attr = 'enforcement_point_address'
+                body['connection_info'][body_attr] = kwargs[attr]
+                del kwargs[attr]
 
         super(EnforcementPointDef, self).update_attributes_in_body(
             body=body, **kwargs)
@@ -592,14 +556,14 @@ class DeploymentMapDef(ResourceDef):
             domain_id = kwargs.get('domain_id')
             domain_path = DomainDef(
                 domain_id, tenant=self.tenant).get_resource_full_path()
-            body['domain_path'] = domain_path
+            body['parent_path'] = domain_path
             del kwargs['domain_id']
 
         if kwargs.get('ep_id') is not None:
             ep_id = kwargs.get('ep_id')
             ep_path = EnforcementPointDef(
                 ep_id, tenant=self.tenant).get_resource_full_path()
-            body['enforcement_point_paths'] = [ep_path]
+            body['enforcement_point_path'] = ep_path
             del kwargs['ep_id']
 
         super(DeploymentMapDef, self).update_attributes_in_body(
@@ -616,13 +580,14 @@ class NsxPolicyApi(object):
 
         This api will update an existing object, or create a new one if it
         doesn't exist.
-        The policy API supports POST for update too
+        The policy API supports PATCH for create/update operations
         """
         path = resource_def.get_resource_path()
         body = resource_def.body
         if not body:
             body = resource_def.get_obj_dict()
-        return self.client.create(path, body)
+        self.client.patch(path, body)
+        return self.client.get(path)
 
     def create_with_parent(self, parent_def, resource_def):
         path = parent_def.get_resource_path()
@@ -633,7 +598,8 @@ class NsxPolicyApi(object):
         else:
             child_dict_key = resource_def.get_last_section_dict_key
             body[child_dict_key] = [resource_def.get_obj_dict()]
-        return self.client.create(path, body)
+        self.client.patch(path, body)
+        return self.client.get(path)
 
     def delete(self, resource_def):
         path = resource_def.get_resource_path()
