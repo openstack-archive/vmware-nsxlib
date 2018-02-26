@@ -286,6 +286,7 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     def entry_def(self):
         return policy_defs.L4ServiceEntryDef
 
+    # TODO(asarfaty): service name cannot contain spaces or slashes
     def create_or_overwrite(self, name, service_id=None, description=None,
                             protocol=policy_constants.TCP, dest_ports=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -322,12 +323,13 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
 
         self.policy_api.create_or_update(entry_def)
 
+    # TODO(asarfaty): service name cannot contain spaces or slashes
+    # TODO(asarfaty) currently service update doesn't work
     def update(self, service_id, name=None, description=None,
                protocol=None, dest_ports=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         # Get the current data of service & its' service entry
         service = self.get(service_id, tenant=tenant)
-
         # update the service itself:
         if name is not None or description is not None:
             # update the service itself
@@ -738,9 +740,11 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
             err_msg = (_("Cannot update an enforcement point without "
                          "username and password"))
             raise exceptions.ManagerError(details=err_msg)
-
+        # Get the original body because ip&thumbprint are mandatory
+        body = self.get(ep_id)
         ep_def = policy_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
-        ep_def.update_attributes_in_body(name=name,
+        ep_def.update_attributes_in_body(body=body,
+                                         name=name,
                                          description=description,
                                          ip_address=ip_address,
                                          username=username,
@@ -807,7 +811,7 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
                ep_id=None, domain_id=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         map_def = policy_defs.DeploymentMapDef(
-            map_id=map_id, tenant=tenant)
+            map_id=map_id, domain_id=domain_id, tenant=tenant)
         map_def.update_attributes_in_body(name=name,
                                           description=description,
                                           ep_id=ep_id,

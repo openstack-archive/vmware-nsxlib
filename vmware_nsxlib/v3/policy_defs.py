@@ -538,13 +538,18 @@ class EnforcementPointDef(ResourceDef):
         if 'body' in kwargs:
             del kwargs['body']
         # Fix params that need special conversions
-        if body.get('connection_info'):
-            body['connection_info'][0]['resource_type'] = 'NSXTConnectionInfo'
+        if not body.get('connection_info'):
+            body['connection_info'] = {}
+        body['connection_info']['resource_type'] = 'NSXTConnectionInfo'
+        body['resource_type'] = 'EnforcementPoint'
 
-            for attr in ('username', 'password', 'ip_address', 'thumbprint'):
-                if kwargs.get(attr) is not None:
-                    body['connection_info'][0][attr] = kwargs[attr]
-                    del kwargs[attr]
+        for attr in ('username', 'password', 'ip_address', 'thumbprint'):
+            if kwargs.get(attr) is not None:
+                body_attr = attr
+                if attr == 'ip_address':
+                    body_attr = 'enforcement_point_address'
+                body['connection_info'][body_attr] = kwargs[attr]
+                del kwargs[attr]
 
         super(EnforcementPointDef, self).update_attributes_in_body(
             body=body, **kwargs)
@@ -592,14 +597,14 @@ class DeploymentMapDef(ResourceDef):
             domain_id = kwargs.get('domain_id')
             domain_path = DomainDef(
                 domain_id, tenant=self.tenant).get_resource_full_path()
-            body['domain_path'] = domain_path
+            body['parent_path'] = domain_path
             del kwargs['domain_id']
 
         if kwargs.get('ep_id') is not None:
             ep_id = kwargs.get('ep_id')
             ep_path = EnforcementPointDef(
                 ep_id, tenant=self.tenant).get_resource_full_path()
-            body['enforcement_point_paths'] = [ep_path]
+            body['enforcement_point_path'] = ep_path
             del kwargs['ep_id']
 
         super(DeploymentMapDef, self).update_attributes_in_body(
@@ -622,7 +627,8 @@ class NsxPolicyApi(object):
         body = resource_def.body
         if not body:
             body = resource_def.get_obj_dict()
-        return self.client.create(path, body)
+        self.client.patch(path, body)
+        return self.client.get(path)
 
     def create_with_parent(self, parent_def, resource_def):
         path = parent_def.get_resource_path()
@@ -633,7 +639,8 @@ class NsxPolicyApi(object):
         else:
             child_dict_key = resource_def.get_last_section_dict_key
             body[child_dict_key] = [resource_def.get_obj_dict()]
-        return self.client.create(path, body)
+        self.client.patch(path, body)
+        return self.client.get(path)
 
     def delete(self, resource_def):
         path = resource_def.get_resource_path()

@@ -1063,11 +1063,13 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
         ip_address = '1.1.1.1'
         username = 'admin'
         password = 'zzz'
+        thumbprint = 'abc'
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
             self.resourceApi.create_or_overwrite(
                 name, description=description,
                 ip_address=ip_address,
+                thumbprint=thumbprint,
                 username=username,
                 password=password,
                 tenant=TEST_TENANT)
@@ -1078,6 +1080,7 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
                 description=description,
                 ip_address=ip_address,
                 username=username,
+                thumbprint=thumbprint,
                 password=password,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -1119,18 +1122,30 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
         name = 'new name'
         username = 'admin'
         password = 'zzz'
+        ip_address = '1.1.1.1'
+        thumbprint = 'abc'
         with mock.patch.object(self.policy_api,
-                               "create_or_update") as update_call:
+                               "create_or_update") as update_call,\
+            mock.patch.object(self.policy_api, "get", return_value={'id': id}):
             self.resourceApi.update(id,
                                     name=name,
                                     username=username,
                                     password=password,
+                                    ip_address=ip_address,
+                                    thumbprint=thumbprint,
                                     tenant=TEST_TENANT)
             expected_def = policy_defs.EnforcementPointDef(ep_id=id,
                                                            tenant=TEST_TENANT)
-            expected_dict = {'display_name': name,
-                             'username': username,
-                             'password': password}
+            expected_dict = {'id': id,
+                             'display_name': name,
+                             'resource_type': 'EnforcementPoint',
+                             'connection_info': {
+                                 'username': username,
+                                 'password': password,
+                                 'thumbprint': thumbprint,
+                                 'enforcement_point_address': ip_address,
+                                 'resource_type': 'NSXTConnectionInfo'
+                            }}
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
 
@@ -1235,7 +1250,7 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
             ep_path = ("/%s/deployment-zones/default/"
                        "enforcement-points/%s" % (TEST_TENANT, ep_id))
             expected_dict = {'display_name': name,
-                             'enforcement_point_paths': [ep_path],
-                             'domain_path': domain_path}
+                             'enforcement_point_path': ep_path,
+                             'parent_path': domain_path}
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
