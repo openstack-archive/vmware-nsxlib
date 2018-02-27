@@ -9,7 +9,7 @@ shift 1
 
 set -e
 
-# NOTE(tonyb): Place this in the tox enviroment's log dir so it will get
+# NOTE(tonyb): Place this in the tox environment's log dir so it will get
 # published to logs.openstack.org for easy debugging.
 localfile="$VIRTUAL_ENV/log/upper-constraints.txt"
 
