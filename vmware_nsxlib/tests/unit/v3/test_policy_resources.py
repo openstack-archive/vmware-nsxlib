@@ -840,6 +840,8 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
         username = 'admin'
         password = 'zzz'
         thumbprint = 'abc'
+        edge_cluster_id = 'ec1'
+        transport_zone_id = 'tz1'
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
             self.resourceApi.create_or_overwrite(
@@ -848,6 +850,8 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
                 thumbprint=thumbprint,
                 username=username,
                 password=password,
+                edge_cluster_id=edge_cluster_id,
+                transport_zone_id=transport_zone_id,
                 tenant=TEST_TENANT)
 
             expected_def = policy_defs.EnforcementPointDef(
@@ -858,6 +862,8 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
                 username=username,
                 thumbprint=thumbprint,
                 password=password,
+                edge_cluster_id=edge_cluster_id,
+                transport_zone_id=transport_zone_id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -900,6 +906,8 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
         password = 'zzz'
         ip_address = '1.1.1.1'
         thumbprint = 'abc'
+        edge_cluster_id = 'ec1'
+        transport_zone_id = 'tz1'
         with mock.patch.object(self.policy_api,
                                "create_or_update") as update_call,\
             mock.patch.object(self.policy_api, "get", return_value={'id': id}):
@@ -909,6 +917,8 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
                                     password=password,
                                     ip_address=ip_address,
                                     thumbprint=thumbprint,
+                                    edge_cluster_id=edge_cluster_id,
+                                    transport_zone_id=transport_zone_id,
                                     tenant=TEST_TENANT)
             expected_def = policy_defs.EnforcementPointDef(ep_id=id,
                                                            tenant=TEST_TENANT)
@@ -920,6 +930,8 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
                                  'password': password,
                                  'thumbprint': thumbprint,
                                  'enforcement_point_address': ip_address,
+                                 'edge_cluster_ids': [edge_cluster_id],
+                                 'transport_zone_ids': [transport_zone_id],
                                  'resource_type': 'NSXTConnectionInfo'}}
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
