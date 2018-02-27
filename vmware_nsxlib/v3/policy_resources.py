@@ -582,6 +582,7 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
     def create_or_overwrite(self, name, ep_id=None, description=None,
                             ip_address=None, username=None,
                             password=None, thumbprint=None,
+                            edge_cluster_id=None, transport_zone_id=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         if not ip_address or not username or password is None:
             err_msg = (_("Cannot create an enforcement point without "
@@ -596,6 +597,8 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
             username=username,
             password=password,
             thumbprint=thumbprint,
+            edge_cluster_id=edge_cluster_id,
+            transport_zone_id=transport_zone_id,
             tenant=tenant)
         return self.policy_api.create_or_update(ep_def)
 
@@ -618,6 +621,7 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
     def update(self, ep_id, name=None, description=None,
                ip_address=None, username=None,
                password=None, thumbprint=None,
+               edge_cluster_id=None, transport_zone_id=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         """Update the enforcement point.
 
@@ -637,6 +641,8 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
                                          ip_address=ip_address,
                                          username=username,
                                          password=password,
+                                         edge_cluster_id=edge_cluster_id,
+                                         transport_zone_id=transport_zone_id,
                                          thumbprint=thumbprint)
         # update the backend
         return self.policy_api.create_or_update(ep_def)

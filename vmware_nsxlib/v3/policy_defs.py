@@ -473,6 +473,8 @@ class EnforcementPointDef(ResourceDef):
                  username=None,
                  password=None,
                  thumbprint=None,
+                 edge_cluster_id=None,
+                 transport_zone_id=None,
                  tenant=policy_constants.POLICY_INFRA_TENANT):
         super(EnforcementPointDef, self).__init__()
         self.id = ep_id
@@ -483,6 +485,8 @@ class EnforcementPointDef(ResourceDef):
         self.password = password
         self.ip_address = ip_address
         self.thumbprint = thumbprint
+        self.edge_cluster_id = edge_cluster_id
+        self.transport_zone_id = transport_zone_id
         self.parent_ids = (tenant)
 
     @property
@@ -498,6 +502,8 @@ class EnforcementPointDef(ResourceDef):
             'username': self.username,
             'password': self.password,
             'enforcement_point_address': self.ip_address,
+            'edge_cluster_ids': [self.edge_cluster_id],
+            'transport_zone_ids': [self.transport_zone_id],
             'resource_type': 'NSXTConnectionInfo'}
         body['resource_type'] = 'EnforcementPoint'
         return body
@@ -518,6 +524,12 @@ class EnforcementPointDef(ResourceDef):
                 if attr == 'ip_address':
                     body_attr = 'enforcement_point_address'
                 body['connection_info'][body_attr] = kwargs[attr]
+                del kwargs[attr]
+
+        for attr in ('edge_cluster_id', 'transport_zone_id'):
+            if kwargs.get(attr) is not None:
+                body_attr = attr + 's'
+                body['connection_info'][body_attr] = [kwargs[attr]]
                 del kwargs[attr]
 
         super(EnforcementPointDef, self).update_attributes_in_body(
