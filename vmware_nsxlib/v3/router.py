@@ -241,3 +241,16 @@ class RouterLib(object):
         return self.nsxlib.logical_router.delete_static_route_by_values(
             nsx_router_id, dest_cidr=route['destination'],
             nexthop=route['nexthop'])
+
+    def get_tier0_router_tz(self, tier0_uuid):
+        lrouter = self._router_client.get(tier0_uuid)
+        edge_cluster_uuid = lrouter.get('edge_cluster_id')
+        if not edge_cluster_uuid:
+            return []
+        tier0_transport_nodes = self.nsxlib.edge_cluster.get_transport_nodes(
+            edge_cluster_uuid)
+        tier0_tzs = []
+        for tn_uuid in tier0_transport_nodes:
+            tier0_tzs.extend(self.nsxlib.transport_node.get_transport_zones(
+                tn_uuid))
+        return tier0_tzs
