@@ -1277,6 +1277,19 @@ class TransportZone(BaseTestResource):
             self.assertEqual(tz.HOST_SWITCH_MODE_STANDARD, tz_mode)
 
 
+class TransportNode(BaseTestResource):
+
+    def setUp(self):
+        super(TransportNode, self).setUp(core_resources.NsxLibTransportNode)
+
+    def test_get_transport_zones(self):
+        fake_tn = test_constants.FAKE_TN.copy()
+        tn = self.get_mocked_resource()
+        with mock.patch.object(tn.client, 'url_get', return_value=fake_tn):
+            tzs = tn.get_transport_zones(fake_tn['id'])
+            self.assertEqual([test_constants.FAKE_TZ_UUID], tzs)
+
+
 class MetadataProxy(BaseTestResource):
 
     def setUp(self):

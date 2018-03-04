@@ -711,6 +711,26 @@ class NsxLibTransportZone(utils.NsxLibApiBase):
         return tz.get('host_switch_mode', self.HOST_SWITCH_MODE_STANDARD)
 
 
+class NsxLibTransportNode(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'transport-nodes'
+
+    @property
+    def resource_type(self):
+        return 'TransportNode'
+
+    @property
+    def use_cache_for_get(self):
+        return True
+
+    def get_transport_zones(self, uuid):
+        tz = self.get(uuid)
+        return [ep.get('transport_zone_id') for ep in
+                tz.get('transport_zone_endpoints', [])]
+
+
 class NsxLibDhcpProfile(utils.NsxLibApiBase):
 
     @property

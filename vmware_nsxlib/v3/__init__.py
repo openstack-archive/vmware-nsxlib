@@ -244,6 +244,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config, nsxlib=self)
         self.transport_zone = core_resources.NsxLibTransportZone(
             self.client, self.nsxlib_config, nsxlib=self)
+        self.transport_node = core_resources.NsxLibTransportNode(
+            self.client, self.nsxlib_config, nsxlib=self)
         self.relay_service = core_resources.NsxLibDhcpRelayService(
             self.client, self.nsxlib_config, nsxlib=self)
         self.relay_profile = core_resources.NsxLibDhcpRelayProfile(
