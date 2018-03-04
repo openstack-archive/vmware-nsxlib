@@ -331,6 +331,15 @@ FAKE_TZ = {
     "host_switch_mode": "STANDARD"
 }
 
+FAKE_TN_UUID = uuidutils.generate_uuid()
+FAKE_TN = {
+    "resource_type": "TransportNode",
+    "revision": 0,
+    "id": FAKE_TZ_UUID,
+    "display_name": FAKE_NAME,
+    "transport_zone_endpoints": [{"transport_zone_id": FAKE_TZ_UUID}]
+}
+
 FAKE_MD_UUID = uuidutils.generate_uuid()
 FAKE_URL = "http://7.7.7.70:3500/abc"
 FAKE_MD = {
