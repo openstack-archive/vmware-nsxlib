@@ -682,6 +682,13 @@ class NsxLibEdgeCluster(utils.NsxLibApiBase):
     def resource_type(self):
         return 'EdgeCluster'
 
+    def get_transport_nodes(self, uuid):
+        ec = self.get(uuid)
+        members = []
+        for member in ec.get('members', []):
+            members.append(member.get('transport_node_id'))
+        return members
+
 
 class NsxLibTransportZone(utils.NsxLibApiBase):
 
@@ -709,6 +716,26 @@ class NsxLibTransportZone(utils.NsxLibApiBase):
     def get_host_switch_mode(self, uuid):
         tz = self.get(uuid)
         return tz.get('host_switch_mode', self.HOST_SWITCH_MODE_STANDARD)
+
+
+class NsxLibTransportNode(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'transport-nodes'
+
+    @property
+    def resource_type(self):
+        return 'TransportNode'
+
+    @property
+    def use_cache_for_get(self):
+        return True
+
+    def get_transport_zones(self, uuid):
+        tz = self.get(uuid)
+        return [ep.get('transport_zone_id') for ep in
+                tz.get('transport_zone_endpoints', [])]
 
 
 class NsxLibDhcpProfile(utils.NsxLibApiBase):
