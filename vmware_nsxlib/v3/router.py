@@ -165,6 +165,10 @@ class RouterLib(object):
         return self._router_client.update(nsx_router_id,
                                           edge_cluster_id=edge_cluster_uuid)
 
+    def update_router_transport_zone(self, nsx_router_id, transport_zone_id):
+        return self._router_client.update(nsx_router_id,
+                                          transport_zone_id=transport_zone_id)
+
     def create_logical_router_intf_port_by_ls_id(self, logical_router_id,
                                                  display_name,
                                                  tags,
@@ -251,5 +255,6 @@ class RouterLib(object):
             edge_cluster_uuid)
         tier0_tzs = []
         for tn_uuid in tier0_transport_nodes:
-            tier0_tzs.extend(self.nsxlib.transport_node.get_transport_zones(tn_uuid))
+            tier0_tzs.extend(self.nsxlib.transport_node.get_transport_zones(
+                tn_uuid))
         return tier0_tzs
