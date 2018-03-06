@@ -589,20 +589,49 @@ class LogicalRouterTestCase(BaseTestResource):
         router = self.get_mocked_resource()
         tier0_router = True
         description = 'dummy'
+        tz_id = 'tz_id'
         router.create(fake_router['display_name'], None, None, tier0_router,
-                      description=description)
+                      description=description, transport_zone_id=tz_id)
 
         data = {
             'display_name': fake_router['display_name'],
             'router_type': 'TIER0' if tier0_router else 'TIER1',
             'tags': None,
-            'description': description
+            'description': description,
+            'advanced_config': {'transport_zone_id': tz_id}
         }
 
         test_client.assert_json_call(
             'post', router,
             'https://1.2.3.4/api/v1/logical-routers',
             data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_update_logical_router(self):
+        fake_router = test_constants.FAKE_ROUTER.copy()
+        router = self.get_mocked_resource()
+        uuid = fake_router['id']
+
+        name = 'dummy'
+        description = 'dummy'
+        edge_cluster_id = 'ec_id'
+        tz_id = 'tz_id'
+        with mock.patch.object(router.client, 'get',
+                               return_value=fake_router),\
+            mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                       return_value='2.2.0'):
+            router.update(uuid, display_name=name, description=description,
+                          edge_cluster_id=edge_cluster_id,
+                          transport_zone_id=tz_id)
+
+        fake_router["display_name"] = name
+        fake_router["description"] = description
+        fake_router["edge_cluster_id"] = edge_cluster_id
+        fake_router["advanced_config"]['transport_zone_id'] = tz_id
+        test_client.assert_json_call(
+            'put', router,
+            'https://1.2.3.4/api/v1/logical-routers/%s' % uuid,
+            data=jsonutils.dumps(fake_router, sort_keys=True),
             headers=self.default_headers())
 
     def test_force_delete_logical_router(self):

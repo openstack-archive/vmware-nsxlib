@@ -165,6 +165,10 @@ class RouterLib(object):
         return self._router_client.update(nsx_router_id,
                                           edge_cluster_id=edge_cluster_uuid)
 
+    def update_router_transport_zone(self, nsx_router_id, transport_zone_id):
+        return self._router_client.update(nsx_router_id,
+                                          transport_zone_id=transport_zone_id)
+
     def create_logical_router_intf_port_by_ls_id(self, logical_router_id,
                                                  display_name,
                                                  tags,
@@ -251,5 +255,16 @@ class RouterLib(object):
             edge_cluster_uuid)
         tier0_tzs = []
         for tn_uuid in tier0_transport_nodes:
-            tier0_tzs.extend(self.nsxlib.transport_node.get_transport_zones(tn_uuid))
+            tier0_tzs.extend(self.nsxlib.transport_node.get_transport_zones(
+                tn_uuid))
         return tier0_tzs
+
+    def get_tier0_router_overlay_tz(self, tier0_uuid):
+        tz_uuids = self.get_tier0_router_tz(tier0_uuid)
+        for tz_uuid in tz_uuids:
+            # look for the overlay tz
+            backend_type = self.nsxlib.transport_zone.get_transport_type(
+                tz_uuid)
+            if (backend_type ==
+                self.nsxlib.transport_zone.TRANSPORT_TYPE_OVERLAY):
+                return tz_uuid
