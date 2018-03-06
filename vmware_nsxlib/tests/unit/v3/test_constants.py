@@ -117,6 +117,9 @@ FAKE_ROUTER = {
         "target_type": "FirewallSection",
         "target_id": FAKE_ROUTER_FW_SEC_UUID
     }],
+    "advanced_config": {
+        "external_transit_networks": ["100.64.0.0/10"],
+    },
 }
 
 FAKE_ROUTER_PORT_UUID = uuidutils.generate_uuid()

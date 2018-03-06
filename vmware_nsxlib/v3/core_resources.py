@@ -625,7 +625,7 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         return self.client.get(resource)
 
     def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
-               description=None):
+               description=None, transport_zone_id=None):
         # TODO(salv-orlando): If possible do not manage edge clusters
         # in the main plugin logic.
         router_type = (nsx_constants.ROUTER_TYPE_TIER0 if tier_0 else
@@ -637,6 +637,9 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
             body['edge_cluster_id'] = edge_cluster_uuid
         if description:
             body['description'] = description
+        if transport_zone_id:
+            body['advanced_config'] = {
+                'transport_zone_id': transport_zone_id}
         return self.client.create(self.get_path(), body=body)
 
     def delete(self, lrouter_id, force=False):
@@ -646,7 +649,16 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         return self.client.delete(self.get_path(url))
 
     def update(self, lrouter_id, *args, **kwargs):
-        return self._update_with_retry(lrouter_id, kwargs)
+        body = {}
+        for arg in kwargs:
+            # special care for transport_zone_id
+            if arg == 'transport_zone_id':
+                body['advanced_config'] = {
+                    'transport_zone_id': kwargs['transport_zone_id']}
+            else:
+                body[arg] = kwargs[arg]
+
+        return self._update_with_retry(lrouter_id, body)
 
     def get_firewall_section_id(self, lrouter_id, router_body=None):
         """Return the id of the auto created firewall section of the router
