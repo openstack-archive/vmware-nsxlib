@@ -441,12 +441,10 @@ class NsxLibApiBase(object):
         if len(matched_results) == 0:
             err_msg = (_("Could not find %(resource)s %(name)s") %
                        {'name': name_or_id, 'resource': resource})
-            # TODO(aaron): improve exception handling...
             raise nsxlib_exceptions.ManagerError(details=err_msg)
         elif len(matched_results) > 1:
             err_msg = (_("Found multiple %(resource)s named %(name)s") %
                        {'name': name_or_id, 'resource': resource})
-            # TODO(aaron): improve exception handling...
             raise nsxlib_exceptions.ManagerError(details=err_msg)
 
         return matched_results[0].get('id')

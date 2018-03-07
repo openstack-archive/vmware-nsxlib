@@ -20,8 +20,6 @@ from vmware_nsxlib.v3 import utils
 LOG = logging.getLogger(__name__)
 VPN_IPSEC_PATH = 'vpn/ipsec/'
 
-# TODO(asarfaty) Add update for tags
-
 
 class IkeVersionTypes(object):
     """Supported IKE versions (NSX default is V2)"""
