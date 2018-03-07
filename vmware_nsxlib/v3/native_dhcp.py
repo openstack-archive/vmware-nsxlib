@@ -41,6 +41,20 @@ class NsxLibNativeDhcp(utils.NsxLibApiBase):
                                   'next_hop': gateway_ip})
         return static_routes, gateway_ip
 
+    def build_server_name(self, net_name, net_id):
+        return utils.get_name_and_uuid(net_name or 'dhcpserver', net_id)
+
+    def build_server_dns_name(self, net_dns_domain, default_dns_domain):
+        if net_dns_domain:
+            domain_name = net_dns_domain['dns_domain']
+        else:
+            # use the default one, or the globally configured one
+            if default_dns_domain is not None:
+                domain_name = default_dns_domain
+            else:
+                domain_name = self.nsxlib_config.dns_domain
+        return domain_name
+
     def build_server_config(self, network, subnet, port, tags,
                             default_dns_nameservers=None,
                             default_dns_domain=None):
@@ -60,18 +74,9 @@ class NsxLibNativeDhcp(utils.NsxLibApiBase):
         static_routes, gateway_ip = self.build_static_routes(
             gateway_ip, subnet['cidr'], subnet['host_routes'])
         options = {'option121': {'static_routes': static_routes}}
-        name = utils.get_name_and_uuid(network['name'] or 'dhcpserver',
-                                       network['id'])
-        dns_domain = network.get('dns_domain')
-        if dns_domain:
-            domain_name = dns_domain['dns_domain']
-        else:
-            # use the default one , or the globally configured one
-            if default_dns_domain is not None:
-                domain_name = default_dns_domain
-            else:
-                domain_name = self.nsxlib_config.dns_domain
-
+        name = self.build_server_name(network['name'], network['id'])
+        domain_name = self.build_server_dns_name(network.get('dns_domain'),
+                                                 default_dns_domain)
         return {'name': name,
                 'server_ip': server_ip,
                 'dns_nameservers': dns_nameservers,
