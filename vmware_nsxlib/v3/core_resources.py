@@ -811,6 +811,12 @@ class NsxLibMetadataProxy(utils.NsxLibApiBase):
             body['edge_cluster_id'] = edge_cluster_id
         return self._update_with_retry(uuid, body)
 
+    def get_md_proxy_status(self, attachment_id, logical_switch_id):
+        """Return all matching logical port statuses"""
+        url_suffix = ('/%s/%s/status' %
+                      (attachment_id, logical_switch_id))
+        return self.client.get(self.get_path(url_suffix))
+
 
 class NsxLibBridgeCluster(utils.NsxLibApiBase):
 
