@@ -1342,6 +1342,18 @@ class MetadataProxy(BaseTestResource):
                 data=jsonutils.dumps(fake_md, sort_keys=True),
                 headers=self.default_headers())
 
+    def test_get_md_proxy_status(self):
+        """Test getting proxy_status."""
+        mocked_resource = self.get_mocked_resource()
+        attachment_id = 'd84ba3b8-9201-4591-8264-aad289e762ee'
+        logical_switch_id = 'e11803a2-2d3e-452b-a834-aeb94940d272'
+        mocked_resource.get_md_proxy_status(attachment_id, logical_switch_id)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            "https://1.2.3.4/api/v1/md-proxies/%s/%s/status" %
+            (attachment_id, logical_switch_id),
+            headers=self.default_headers())
+
 
 class NsxLibSwitchTestCase(BaseTestResource):
 
