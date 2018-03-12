@@ -328,7 +328,7 @@ class NsxV3JSONClientTestCase(nsxlib_testcase.NsxClientTestCase):
                 'password': pwds[0],
                 'some_list': {'name_password': 'name2',
                               'password': pwds[1]},
-                'password': pwds[2]}
+                'password_': pwds[2]}
 
         cl = client.RESTClient(None)
         json_body = jsonutils.dumps(body)
