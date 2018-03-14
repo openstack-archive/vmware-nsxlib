@@ -152,3 +152,8 @@ class NsxSearchInvalidQuery(NsxLibException):
 
 class APITransactionAborted(ServerBusy):
     message = _("API transaction aborted as MP cluster is reconfiguring.")
+
+
+class NsxIndexingInProgress(NsxLibException):
+    message = _("Bad Request due to indexing is in progress, please retry "
+                "after sometime")
