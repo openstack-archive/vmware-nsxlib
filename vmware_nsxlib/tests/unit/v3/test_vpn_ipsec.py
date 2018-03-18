@@ -125,10 +125,15 @@ class TestIPSecDpdProfile(test_resources.BaseTestResource):
     def test_dpd_profile_update(self):
         fake_dpd = test_constants.FAKE_DPD.copy()
         new_timeout = 1000
+        new_name = 'dpd_profile_updated'
+        new_desc = 'desc updated'
         uuid = test_constants.FAKE_DPD_ID
         mocked_resource = self.get_mocked_resource(response=fake_dpd)
-        mocked_resource.update(uuid, timeout=new_timeout)
+        mocked_resource.update(uuid, timeout=new_timeout, name=new_name,
+                               description=new_desc)
         fake_dpd['dpd_probe_interval'] = new_timeout
+        fake_dpd['display_name'] = new_name
+        fake_dpd['description'] = new_desc
         test_client.assert_json_call(
             'put', mocked_resource,
             'https://1.2.3.4/api/v1/%s/%s' % (mocked_resource.uri_segment,
@@ -262,7 +267,8 @@ class TestSession(test_resources.BaseTestResource):
         description = 'desc'
         local_ep_id = 'uuid1'
         peer_ep_id = 'uuid2'
-        policy_rules = []
+        policy_rules = [mocked_resource.get_rule_obj(['1.1.1.0/24'],
+                                                     ['2.2.2.0/24'])]
         mocked_resource.create(name, local_ep_id, peer_ep_id, policy_rules,
                                description=description)
         test_client.assert_json_call(
@@ -280,6 +286,27 @@ class TestSession(test_resources.BaseTestResource):
             headers=self.default_headers())
 
     # TODO(asarfaty): add tests for update & rules
+    def test_session_update(self):
+        fake_sess = test_constants.FAKE_VPN_SESS.copy()
+        mocked_resource = self.get_mocked_resource(response=fake_sess)
+        uuid = test_constants.FAKE_VPN_SESS_ID
+        new_name = 'session'
+        new_desc = 'desc'
+        cidr1 = '1.1.1.0/24'
+        cidr2 = '2.2.2.0/24'
+        policy_rules = [mocked_resource.get_rule_obj([cidr1], [cidr2])]
+        mocked_resource.update(uuid, name=new_name, description=new_desc,
+                               policy_rules=policy_rules, enabled=False)
+        fake_sess['description'] = new_desc
+        fake_sess['display_name'] = new_name
+        fake_sess['policy_rules'] = policy_rules
+        fake_sess['enabled'] = False
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s' % (mocked_resource.uri_segment,
+                                              uuid),
+            data=jsonutils.dumps(fake_sess, sort_keys=True),
+            headers=self.default_headers())
 
 
 class TestService(test_resources.BaseTestResource):
