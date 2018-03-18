@@ -195,9 +195,7 @@ class IPSecDpdProfile(utils.NsxLibApiBase):
     def uri_segment(self):
         return VPN_IPSEC_PATH + 'dpd-profiles'
 
-    def create(self, name, description=None,
-               enabled=None,
-               timeout=None,
+    def create(self, name, description=None, enabled=None, timeout=None,
                tags=None):
 
         # mandatory parameters
@@ -214,10 +212,14 @@ class IPSecDpdProfile(utils.NsxLibApiBase):
             body['tags'] = tags
         return self.client.create(self.get_path(), body=body)
 
-    def update(self, profile_id, enabled=None,
+    def update(self, profile_id, name=None, description=None, enabled=None,
                timeout=None, tags=None):
 
         body = self.get(profile_id)
+        if name:
+            body['display_name'] = name
+        if description:
+            body['description'] = description
         if timeout:
             body['dpd_probe_interval'] = timeout
         if enabled is not None:
@@ -390,7 +392,7 @@ class Session(utils.NsxLibApiBase):
         }
 
     def update(self, uuid, name=None, description=None, policy_rules=None,
-               tags=None):
+               tags=None, enabled=None):
         body = self.get(uuid)
         if description:
             body['description'] = description
@@ -400,6 +402,8 @@ class Session(utils.NsxLibApiBase):
             body['display_name'] = name
         if policy_rules is not None:
             body['policy_rules'] = policy_rules
+        if enabled is not None:
+            body['enabled'] = enabled
         return self.client.update(self.get_path(uuid), body=body)
 
 
