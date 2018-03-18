@@ -499,3 +499,23 @@ FAKE_LEP = {
     "trust_ca_ids": [],
     "trust_crl_ids": [],
 }
+
+FAKE_VPN_SESS_ID = "33b2f8ce-4357-4780-8c7c-270094847395"
+FAKE_VPN_SESS = {
+    "resource_type": "PolicyBasedIPSecVPNSession",
+    "description": "con1",
+    "id": FAKE_VPN_SESS_ID,
+    "display_name": "con1",
+    "ipsec_vpn_service_id": "f5bbbd92-0c57-412f-82e6-83c73298f2e9",
+    "peer_endpoint_id": "7a821e15-93b6-46f9-9d2a-db5a164ee6e3",
+    "local_endpoint_id": "e8a3c141-b866-4cb7-91a4-e556b7bd84d6",
+    "enabled": True,
+    "policy_rules": [{
+        "id": "1211",
+        "sources": [{"subnet": "10.0.6.0/24"}],
+        "logged": False,
+        "destinations": [{"subnet": "10.0.5.0/24"}],
+        "action": "PROTECT",
+        "enabled": True,
+    }],
+}
