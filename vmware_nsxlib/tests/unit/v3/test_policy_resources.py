@@ -624,7 +624,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  map_id=map_id,
                                                  description=description,
                                                  sequence_number=seq_num,
-                                                 service_id=service_id,
+                                                 service_ids=[service_id],
                                                  source_groups=[source_group],
                                                  dest_groups=[dest_group],
                                                  tenant=TEST_TENANT)
@@ -645,7 +645,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 sequence_number=seq_num,
-                service_id=service_id,
+                service_ids=[service_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 tenant=TEST_TENANT)
@@ -668,7 +668,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             self.resourceApi.create_or_overwrite(name, domain_id,
                                                  map_id=map_id,
                                                  description=description,
-                                                 service_id=service_id,
+                                                 service_ids=[service_id],
                                                  source_groups=[source_group],
                                                  dest_groups=[dest_group],
                                                  category=category,
@@ -691,7 +691,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 sequence_number=1,
-                service_id=service_id,
+                service_ids=[service_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 tenant=TEST_TENANT)
@@ -703,12 +703,14 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         description = 'desc'
         source_group = 'g1'
         dest_group = 'g2'
-        service_id = 'c1'
+        service1_id = 'c1'
+        service2_id = 'c2'
         with mock.patch.object(self.policy_api,
                                "create_with_parent") as api_call:
             self.resourceApi.create_or_overwrite(name, domain_id,
                                                  description=description,
-                                                 service_id=service_id,
+                                                 service_ids=[service1_id,
+                                                              service2_id],
                                                  source_groups=[source_group],
                                                  dest_groups=[dest_group],
                                                  tenant=TEST_TENANT)
@@ -729,7 +731,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 sequence_number=1,
-                service_id=service_id,
+                service_ids=[service1_id, service2_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 tenant=TEST_TENANT)
@@ -790,7 +792,8 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         description = 'new desc'
         source_group = 'ng1'
         dest_group = 'ng2'
-        service_id = 'nc1'
+        service1_id = 'nc1'
+        service2_id = 'nc2'
         with mock.patch.object(self.policy_api, "get",
                                return_value={}) as get_call,\
             mock.patch.object(self.policy_api,
@@ -798,7 +801,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             self.resourceApi.update(domain_id, map_id,
                                     name=name,
                                     description=description,
-                                    service_id=service_id,
+                                    service_ids=[service1_id, service2_id],
                                     source_groups=[source_group],
                                     dest_groups=[dest_group],
                                     tenant=TEST_TENANT)
