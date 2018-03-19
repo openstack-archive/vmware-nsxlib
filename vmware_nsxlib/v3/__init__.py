@@ -134,7 +134,14 @@ class NsxLibBase(object):
             url += "&cursor=%d" % cursor
         if page_size:
             url += "&page_size=%d" % page_size
-        return self.client.url_get(url)
+
+        # Retry the search on case of error
+        @utils.retry_upon_exception(exceptions.NsxIndexingInProgress,
+                                    max_attempts=self.client.max_attempts)
+        def do_search(url):
+            return self.client.url_get(url)
+
+        return do_search(url)
 
     def search_all_by_tags(self, tags, resource_type=None):
         """Return all the results searched based on tags."""

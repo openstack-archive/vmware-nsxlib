@@ -140,3 +140,8 @@ class SecurityGroupMaximumCapacityReached(ManagerError):
 
 class NsxSearchInvalidQuery(NsxLibException):
     message = _("Invalid input for NSX search query. Reason: %(reason)s")
+
+
+class NsxIndexingInProgress(NsxLibException):
+    message = _("Bad Request due to indexing is in progress, please retry "
+                "after sometime")
