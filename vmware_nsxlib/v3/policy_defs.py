@@ -492,9 +492,14 @@ class EnforcementPointDef(ResourceDef):
             'username': self.username,
             'password': self.password,
             'enforcement_point_address': self.ip_address,
-            'edge_cluster_ids': [self.edge_cluster_id],
-            'transport_zone_ids': [self.transport_zone_id],
             'resource_type': 'NSXTConnectionInfo'}
+        if self.edge_cluster_id:
+            body['connection_info']['edge_cluster_ids'] = [
+                self.edge_cluster_id]
+        if self.transport_zone_id:
+            body['connection_info']['transport_zone_ids'] = [
+                self.transport_zone_id]
+
         body['resource_type'] = 'EnforcementPoint'
         return body
 
