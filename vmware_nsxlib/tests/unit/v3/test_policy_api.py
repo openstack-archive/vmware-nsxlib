@@ -205,7 +205,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             source_groups=["group1",
                            "group2"],
             dest_groups=["group1"],
-            service_id="service1")
+            service_ids=["service1"])
 
         self.entry2 = policy.CommunicationMapEntryDef(
             'd1', 'cm2', 'en2',
@@ -213,7 +213,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             source_groups=["group1",
                            "group2"],
             dest_groups=["group3"],
-            service_id="service2")
+            service_ids=["service2"])
 
         self.expected_data1 = {'id': 'en1',
                                'display_name': None,
