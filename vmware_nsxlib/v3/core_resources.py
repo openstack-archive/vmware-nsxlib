@@ -512,6 +512,20 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                                        'res': resource,
                                        'values': kwargs})
 
+    def _validate_nat_rule_action(self, action):
+        if not action:
+            return
+        if action in ['SNAT', 'DNAT', 'NO_NAT', 'REFLEXIVE']:
+            # legal values for all NSX versions
+            return
+        if (action not in ['NO_SNAT', 'NO_DNAT'] or (
+            self.nsxlib and not self.nsxlib.feature_supported(
+                nsx_constants.FEATURE_NO_DNAT_NO_SNAT))):
+            raise exceptions.InvalidInput(
+                operation="Create/Update NAT rule",
+                arg_val=action,
+                arg_name='action')
+
     def add_nat_rule(self, logical_router_id, action, translated_network,
                      source_net=None, dest_net=None,
                      enabled=True, rule_priority=None,
@@ -519,6 +533,7 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                      match_resource_type=None,
                      bypass_firewall=True,
                      tags=None):
+        self._validate_nat_rule_action(action)
         resource = 'logical-routers/%s/nat/rules' % logical_router_id
         body = {'action': action,
                 'enabled': enabled,
@@ -595,6 +610,8 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         return self.client.list(resource)
 
     def update_nat_rule(self, logical_router_id, nat_rule_id, **kwargs):
+        if 'action' in kwargs:
+            self._validate_nat_rule_action(kwargs['action'])
         resource = 'logical-routers/%s/nat/rules/%s' % (
             logical_router_id, nat_rule_id)
         return self._update_resource(resource, kwargs, retry=True)

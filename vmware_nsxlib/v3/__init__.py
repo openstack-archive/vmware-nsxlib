@@ -322,7 +322,8 @@ class NsxLib(NsxLibBase):
                 feature == nsx_constants.FEATURE_ON_BEHALF_OF or
                 feature == nsx_constants.FEATURE_RATE_LIMIT or
                 feature == nsx_constants.FEATURE_TRUNK_VLAN or
-                feature == nsx_constants.FEATURE_ROUTER_TRANSPORT_ZONE):
+                feature == nsx_constants.FEATURE_ROUTER_TRANSPORT_ZONE or
+                feature == nsx_constants.FEATURE_NO_DNAT_NO_SNAT):
                 return True
 
         if (version.LooseVersion(self.get_version()) >=

@@ -660,9 +660,9 @@ class LogicalRouterTestCase(BaseTestResource):
             test_constants.FAKE_ROUTER_UUID, router_body=fake_router)
         self.assertEqual(test_constants.FAKE_ROUTER_FW_SEC_UUID, section_id)
 
-    def _test_nat_rule_create(self, nsx_version, add_bypas_arg):
+    def _test_nat_rule_create(self, nsx_version, add_bypas_arg=True,
+                              action='SNAT', expect_failure=False):
         router = self.get_mocked_resource()
-        action = 'SNAT'
         translated_net = '1.1.1.1'
         priority = 10
 
@@ -679,11 +679,18 @@ class LogicalRouterTestCase(BaseTestResource):
         # Ignoring 'bypass_firewall' with version 1.1
         with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
                         return_value=nsx_version):
-            router.add_nat_rule(test_constants.FAKE_ROUTER_UUID,
-                                action=action,
-                                translated_network=translated_net,
-                                rule_priority=priority,
-                                bypass_firewall=False)
+            try:
+                router.add_nat_rule(test_constants.FAKE_ROUTER_UUID,
+                                    action=action,
+                                    translated_network=translated_net,
+                                    rule_priority=priority,
+                                    bypass_firewall=False)
+            except exceptions.InvalidInput as e:
+                if expect_failure:
+                    return
+                else:
+                    self.fail("Failed to create NAT rule: %s", e)
+
             test_client.assert_json_call(
                 'post', router,
                 ('https://1.2.3.4/api/v1/logical-routers/%s/nat/rules' %
@@ -693,11 +700,25 @@ class LogicalRouterTestCase(BaseTestResource):
 
     def test_nat_rule_create_v1(self):
         # Ignoring 'bypass_firewall' with version 1.1
-        self._test_nat_rule_create('1.1.0', False)
+        self._test_nat_rule_create('1.1.0', add_bypas_arg=False)
 
     def test_nat_rule_create_v2(self):
         # Sending 'bypass_firewall' with version 1.1
-        self._test_nat_rule_create('2.0.0', True)
+        self._test_nat_rule_create('2.0.0')
+
+    def test_nat_rule_create_v22_NO_DNAT(self):
+        # NO_DNAT is supported from 2.2 & up
+        self._test_nat_rule_create('2.2.0', action='NO_DNAT')
+
+    def test_nat_rule_create_v2_NO_DNAT(self):
+        # NO_DNAT is supported from 2.2 & up
+        self._test_nat_rule_create('2.0.0', action='NO_DNAT',
+                                   expect_failure=True)
+
+    def test_nat_rule_create_invalid(self):
+        # NO_DNAT is supported from 2.2 & up
+        self._test_nat_rule_create('2.0.0', action='INVALID',
+                                   expect_failure=True)
 
     def test_nat_rule_list(self):
         router = self.get_mocked_resource()
