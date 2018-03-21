@@ -434,7 +434,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def create_or_overwrite(self, name, domain_id, map_id=None,
                             description=None, precedence=0,
                             category=policy_constants.CATEGORY_DEFAULT,
-                            sequence_number=None, service_id=None,
+                            sequence_number=None, service_ids=None,
                             action=policy_constants.ACTION_ALLOW,
                             source_groups=None, dest_groups=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -447,10 +447,10 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         end up with same sequence number.
         """
         # Validate and convert inputs
-        if not service_id:
-            # service-id must be provided
+        if not service_ids:
+            # service-ids must be provided
             err_msg = (_("Cannot create a communication map %(name)s without "
-                         "service id") % {'name': name})
+                         "services") % {'name': name})
             raise exceptions.ManagerError(details=err_msg)
         if map_id:
             # get the next available sequence number
@@ -477,7 +477,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             sequence_number=sequence_number,
             source_groups=source_groups,
             dest_groups=dest_groups,
-            service_id=service_id,
+            service_ids=service_ids,
             action=action,
             tenant=tenant)
 
@@ -525,7 +525,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         return self.policy_api.list(map_def)['results']
 
     def update(self, domain_id, map_id, name=None, description=None,
-               sequence_number=None, service_id=None, action=None,
+               sequence_number=None, service_ids=None, action=None,
                source_groups=None, dest_groups=None, precedence=None,
                category=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -554,7 +554,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             entry_def.update_attributes_in_body(
                 body=comm_entry, name=name,
                 description=description,
-                service_id=service_id,
+                service_ids=service_ids,
                 source_groups=source_groups,
                 dest_groups=dest_groups,
                 sequence_number=sequence_number,

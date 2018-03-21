@@ -372,7 +372,7 @@ class CommunicationMapEntryDef(ResourceDef):
                  sequence_number=None,
                  source_groups=None,
                  dest_groups=None,
-                 service_id=None,
+                 service_ids=None,
                  action=policy_constants.ACTION_ALLOW,
                  scope="ANY",
                  name=None,
@@ -390,8 +390,8 @@ class CommunicationMapEntryDef(ResourceDef):
         self.scope = scope
         self.source_groups = self.get_groups_path(domain_id, source_groups)
         self.dest_groups = self.get_groups_path(domain_id, dest_groups)
-        self.service_path = self.get_service_path(
-            service_id) if service_id else None
+        self.service_paths = [self.get_service_path(service_id) for service_id
+                              in service_ids] if service_ids else []
         self.parent_ids = (tenant, domain_id, map_id)
 
     # convert groups and services to full path
@@ -418,7 +418,7 @@ class CommunicationMapEntryDef(ResourceDef):
         body['source_groups'] = self.source_groups
         body['destination_groups'] = self.dest_groups
         body['sequence_number'] = self.sequence_number
-        body['services'] = [self.service_path]
+        body['services'] = self.service_paths
         body['scope'] = [self.scope]
         body['action'] = self.action
         return body
@@ -428,10 +428,10 @@ class CommunicationMapEntryDef(ResourceDef):
         if 'body' in kwargs:
             del kwargs['body']
         # Fix params that need special conversions
-        if kwargs.get('service_id') is not None:
-            service_path = self.get_service_path(kwargs['service_id'])
-            body['services'] = [service_path]
-            del kwargs['service_id']
+        if kwargs.get('service_ids') is not None:
+            body['services'] = [self.get_service_path(service_id) for
+                                service_id in kwargs['service_ids']]
+            del kwargs['service_ids']
 
         if kwargs.get('dest_groups') is not None:
             groups = self.get_groups_path(
