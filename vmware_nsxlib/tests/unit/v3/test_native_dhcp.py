@@ -17,7 +17,6 @@ from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.v3 import native_dhcp
 
 
-# TODO(asarfaty): Add more test cases here
 class TestNativeDhcp(nsxlib_testcase.NsxLibTestCase):
     """Tests for vmware_nsxlib.v3.native_dhcp.NsxLibNativeDhcp."""
 
@@ -31,15 +30,18 @@ class TestNativeDhcp(nsxlib_testcase.NsxLibTestCase):
         self.default_dns_domain = 'b.com'
         self.default_dns_nameserver = '2.2.2.2'
 
-    def _get_server_config(self, with_net_dns=True, with_default_dns=True):
-        net = {'name': 'dummy',
-               'id': 'dummy'}
+    def _get_server_config(self, with_net_dns=True, with_default_dns=True,
+                           tags=None, gateway_ip='2.2.2.2', cidr='5.5.0.0/24',
+                           port_ip='5.5.0.1', net_name='dummy',
+                           net_id='dummy_uuid'):
+        net = {'name': net_name, 'id': net_id}
         subnet = {'dns_nameservers': None,
-                  'gateway_ip': '2.2.2.2',
-                  'cidr': '5.5.0.0/24',
+                  'gateway_ip': gateway_ip,
+                  'cidr': cidr,
                   'host_routes': []}
-        port = {'fixed_ips': [{'ip_address': '5.5.0.1'}]}
-        tags = []
+        port = {'fixed_ips': [{'ip_address': port_ip}]}
+        if not tags:
+            tags = []
         if with_net_dns:
             net['dns_domain'] = {'dns_domain': self.net_dns_domain}
             subnet['dns_nameservers'] = [self.subnet_dns_nameserver]
@@ -86,6 +88,33 @@ class TestNativeDhcp(nsxlib_testcase.NsxLibTestCase):
         self.assertEqual(nsxlib_testcase.DNS_DOMAIN, result['domain_name'])
         self.assertEqual(nsxlib_testcase.DNS_NAMESERVERS,
                          result['dns_nameservers'])
+
+    def test_build_server_config_with_tags(self):
+        tags = [{'scope': 'a', 'value': 'a'}]
+        result = self._get_server_config(tags=tags)
+        self.assertEqual(tags, result['tags'])
+
+    def test_build_server_config_with_gateway(self):
+        gw_ip = '10.10.10.10'
+        result = self._get_server_config(gateway_ip=gw_ip)
+        self.assertEqual(gw_ip, result['gateway_ip'])
+
+    def test_build_server_config_with_server_ip(self):
+        result = self._get_server_config(cidr='7.7.7.0/24', port_ip='7.7.7.14')
+        self.assertEqual('7.7.7.14/24', result['server_ip'])
+
+    def test_build_server_config_with_name(self):
+        net_name = 'net1'
+        net_id = 'uuid1uuid2'
+        result = self._get_server_config(net_name=net_name, net_id=net_id)
+        self.assertEqual('%s_%s...%s' % (net_name, net_id[:5], net_id[-5:]),
+                         result['name'])
+
+    def test_build_server_config_no_name(self):
+        net_id = 'uuid1uuid2'
+        result = self._get_server_config(net_name=None, net_id=net_id)
+        self.assertEqual('dhcpserver_%s...%s' % (net_id[:5], net_id[-5:]),
+                         result['name'])
 
     def test_build_static_routes(self):
         gateway_ip = '2.2.2.2'
