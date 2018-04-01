@@ -145,3 +145,9 @@ class NsxSearchInvalidQuery(NsxLibException):
 class NsxIndexingInProgress(NsxLibException):
     message = _("Bad Request due to indexing is in progress, please retry "
                 "after sometime")
+
+
+class NsxPendingDelete(NsxLibException):
+    message = _("An object with the same name is marked for deletion. Either "
+                "use another path or wait for the purge cycle to permanently "
+                "remove the deleted object")
