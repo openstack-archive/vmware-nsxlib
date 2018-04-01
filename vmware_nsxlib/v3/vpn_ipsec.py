@@ -34,9 +34,6 @@ class EncryptionAlgorithmTypes(object):
     """Supported encryption algorithms (NSX default is GCM)"""
     ENCRYPTION_ALGORITHM_128 = 'AES_128'
     ENCRYPTION_ALGORITHM_256 = 'AES_256'
-    ENCRYPTION_ALGORITHM_GCM128 = 'AES_GCM_128'  # only with IKE_V2
-    ENCRYPTION_ALGORITHM_GCM192 = 'AES_GCM_192'  # only with IKE_V2
-    ENCRYPTION_ALGORITHM_GCM256 = 'AES_GCM_256'  # only with IKE_V2
 
 
 class DigestAlgorithmTypes(object):
