@@ -285,8 +285,7 @@ class TestSession(test_resources.BaseTestResource):
             }, sort_keys=True),
             headers=self.default_headers())
 
-    # TODO(asarfaty): add tests for update & rules
-    def test_session_update(self):
+    def test_session_update_with_rules(self):
         fake_sess = test_constants.FAKE_VPN_SESS.copy()
         mocked_resource = self.get_mocked_resource(response=fake_sess)
         uuid = test_constants.FAKE_VPN_SESS_ID
@@ -300,6 +299,24 @@ class TestSession(test_resources.BaseTestResource):
         fake_sess['description'] = new_desc
         fake_sess['display_name'] = new_name
         fake_sess['policy_rules'] = policy_rules
+        fake_sess['enabled'] = False
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s' % (mocked_resource.uri_segment,
+                                              uuid),
+            data=jsonutils.dumps(fake_sess, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_session_update_no_rules(self):
+        fake_sess = test_constants.FAKE_VPN_SESS.copy()
+        mocked_resource = self.get_mocked_resource(response=fake_sess)
+        uuid = test_constants.FAKE_VPN_SESS_ID
+        new_name = 'session'
+        new_desc = 'desc'
+        mocked_resource.update(uuid, name=new_name, description=new_desc,
+                               enabled=False)
+        fake_sess['description'] = new_desc
+        fake_sess['display_name'] = new_name
         fake_sess['enabled'] = False
         test_client.assert_json_call(
             'put', mocked_resource,
