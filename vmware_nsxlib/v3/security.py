@@ -459,11 +459,15 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
     def add_rule(self, rule, section_id, operation=consts.FW_INSERT_BOTTOM):
         resource = '%s/rules' % self.get_path(section_id)
         params = '?operation=%s' % operation
+        rule['_revision'] = self.get(section_id)['_revision']
         return self._create_with_retry(resource + params, rule)
 
     def add_rules(self, rules, section_id, operation=consts.FW_INSERT_BOTTOM):
         resource = '%s/rules' % self.get_path(section_id)
         params = '?action=create_multiple&operation=%s' % operation
+        rev_id = self.get(section_id)['_revision']
+        for rule in rules:
+            rule['_revision'] = rev_id
         return self._create_with_retry(resource + params, {'rules': rules})
 
     def delete_rule(self, section_id, rule_id):
