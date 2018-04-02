@@ -18,6 +18,8 @@
 NSX-V3 Plugin security & Distributed Firewall integration module
 """
 
+from distutils import version
+
 from oslo_log import log
 from oslo_utils import excutils
 
@@ -457,14 +459,30 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return rule_dict
 
     def add_rule(self, rule, section_id, operation=consts.FW_INSERT_BOTTOM):
-        resource = '%s/rules' % self.get_path(section_id)
-        params = '?operation=%s' % operation
-        return self._create_with_retry(resource + params, rule)
+        @utils.retry_upon_exception(exceptions.StaleRevision,
+                                    max_attempts=self.client.max_attempts)
+        def do_add_rule():
+            resource = '%s/rules' % self.get_path(section_id)
+            params = '?operation=%s' % operation
+            if (version.LooseVersion(self.get_version()) >=
+                version.LooseVersion(consts.NSX_VERSION_2_2_3)):
+                rule['_revision'] = self.get(section_id)['_revision']
+            return self._create_with_retry(resource + params, rule)
+        return do_add_rule()
 
     def add_rules(self, rules, section_id, operation=consts.FW_INSERT_BOTTOM):
-        resource = '%s/rules' % self.get_path(section_id)
-        params = '?action=create_multiple&operation=%s' % operation
-        return self._create_with_retry(resource + params, {'rules': rules})
+        @utils.retry_upon_exception(exceptions.StaleRevision,
+                                    max_attempts=self.client.max_attempts)
+        def do_add_rules():
+            resource = '%s/rules' % self.get_path(section_id)
+            params = '?action=create_multiple&operation=%s' % operation
+            if (version.LooseVersion(self.get_version()) >=
+                version.LooseVersion(consts.NSX_VERSION_2_2_3)):
+                rev_id = self.get(section_id)['_revision']
+                for rule in rules:
+                    rule['_revision'] = rev_id
+            return self._create_with_retry(resource + params, {'rules': rules})
+        return do_add_rules()
 
     def delete_rule(self, section_id, rule_id):
         resource = '%s/rules/%s' % (section_id, rule_id)
