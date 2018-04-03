@@ -15,10 +15,10 @@
 
 import datetime
 from time import time
-import uuid
 
 from OpenSSL import crypto
 from oslo_log import log
+from oslo_utils import uuidutils
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions
@@ -156,7 +156,7 @@ class ClientCertificateManager(object):
                                                    subject)
 
         # register on backend
-        self._register_cert(cert, node_id or uuid.uuid4())
+        self._register_cert(cert, node_id or uuidutils.generate_uuid())
 
         # save in storage
         cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
@@ -224,7 +224,7 @@ class ClientCertificateManager(object):
 
         cert = self._get_cert_from_file(filename)
         # register on backend
-        self._register_cert(cert, node_id or uuid.uuid4())
+        self._register_cert(cert, node_id or uuidutils.generate_uuid())
 
         cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
         self._storage_driver.store_cert(self._identity, cert_pem, None)
