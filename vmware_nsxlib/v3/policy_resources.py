@@ -15,9 +15,9 @@
 #
 
 import abc
-import uuid
 
 from oslo_log import log as logging
+from oslo_utils import uuidutils
 import six
 
 from vmware_nsxlib._i18n import _
@@ -62,7 +62,7 @@ class NsxPolicyResourceBase(object):
     def _init_obj_uuid(obj_uuid):
         if not obj_uuid:
             # generate a random id
-            obj_uuid = str(uuid.uuid4())
+            obj_uuid = str(uuidutils.generate_uuid())
         return obj_uuid
 
     def _canonize_name(self, name):
