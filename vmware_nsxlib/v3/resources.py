@@ -131,7 +131,7 @@ class LogicalPort(utils.NsxLibApiBase):
 
     def _prepare_attachment(self, attachment_type, vif_uuid,
                             allocate_addresses, vif_type,
-                            parent_vif_id, traffic_tag, app_id):
+                            parent_vif_id, traffic_tag, app_id, tn_uuid):
         if attachment_type and vif_uuid:
             attachment = {'attachment_type': attachment_type,
                           'id': vif_uuid}
@@ -142,6 +142,9 @@ class LogicalPort(utils.NsxLibApiBase):
                 if parent_vif_id:
                     context['parent_vif_id'] = parent_vif_id
                     context['traffic_tag'] = traffic_tag
+                    context['app_id'] = app_id
+                elif tn_uuid:
+                    context['transport_node_uuid'] = tn_uuid
                     context['app_id'] = app_id
                 attachment['context'] = context
             return attachment
@@ -156,7 +159,7 @@ class LogicalPort(utils.NsxLibApiBase):
                parent_vif_id=None, traffic_tag=None,
                switch_profile_ids=None, vif_type=None, app_id=None,
                allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE,
-               description=None):
+               description=None, tn_uuid=None):
         tags = tags or []
         body = {'logical_switch_id': lswitch_id}
         # NOTE(arosen): If parent_vif_id is specified we need to use
@@ -164,7 +167,7 @@ class LogicalPort(utils.NsxLibApiBase):
         attachment = self._prepare_attachment(attachment_type, vif_uuid,
                                               allocate_addresses, vif_type,
                                               parent_vif_id, traffic_tag,
-                                              app_id)
+                                              app_id, tn_uuid)
         body.update(self._build_body_attrs(
             display_name=name,
             admin_state=admin_state, tags=tags,
@@ -185,11 +188,11 @@ class LogicalPort(utils.NsxLibApiBase):
                parent_vif_id=None, traffic_tag=None,
                vif_type=None, app_id=None,
                allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE,
-               description=None):
+               description=None, tn_uuid=None):
         attachment = self._prepare_attachment(attachment_type, vif_uuid,
                                               allocate_addresses, vif_type,
                                               parent_vif_id, traffic_tag,
-                                              app_id)
+                                              app_id, tn_uuid)
         lport = {}
         if tags_update is not None:
             lport['tags_update'] = tags_update
