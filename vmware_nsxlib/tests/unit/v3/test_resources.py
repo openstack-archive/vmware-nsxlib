@@ -427,6 +427,56 @@ class LogicalPortTestCase(BaseTestResource):
 
         self.assertEqual(fake_port, result)
 
+    def test_create_logical_port_with_tn_uuid(self):
+        """Test creating port with transport_node_uuid."""
+        fake_port = copy.deepcopy(test_constants.FAKE_CONTAINER_PORT)
+        fake_port['parent_vif_id'] = None
+        fake_port_ctx = fake_port['attachment']['context']
+        fake_port_ctx['vif_type'] = 'INDEPENDENT'
+        fake_port_ctx['transport_node_uuid'] = test_constants.FAKE_TN_UUID
+
+        profile_dicts = self._get_profile_dicts(fake_port)
+        pkt_classifiers, binding_repr = self._get_pktcls_bindings()
+        fake_port['address_bindings'] = binding_repr
+
+        mocked_resource = self.get_mocked_resource()
+        switch_profile = resources.SwitchingProfile
+
+        mocked_resource.create(
+            fake_port['logical_switch_id'],
+            fake_port['attachment']['id'],
+            traffic_tag=fake_port_ctx['vlan_tag'],
+            address_bindings=pkt_classifiers,
+            switch_profile_ids=switch_profile.build_switch_profile_ids(
+                mock.Mock(), *profile_dicts),
+            vif_type=fake_port_ctx['vif_type'], app_id=fake_port_ctx['app_id'],
+            allocate_addresses=fake_port_ctx['allocate_addresses'],
+            tn_uuid=fake_port_ctx['transport_node_uuid'])
+
+        resp_body = {
+            'logical_switch_id': fake_port['logical_switch_id'],
+            'switching_profile_ids': fake_port['switching_profile_ids'],
+            'attachment': {
+                'attachment_type': 'VIF',
+                'id': fake_port['attachment']['id'],
+                'context': {
+                    'resource_type': 'VifAttachmentContext',
+                    'allocate_addresses': 'Both',
+                    'app_id': fake_port_ctx['app_id'],
+                    'vif_type': 'INDEPENDENT',
+                    'transport_node_uuid': test_constants.FAKE_TN_UUID,
+                }
+            },
+            'admin_state': 'UP',
+            'address_bindings': fake_port['address_bindings']
+        }
+
+        test_client.assert_json_call(
+            'post', mocked_resource,
+            'https://1.2.3.4/api/v1/logical-ports',
+            data=jsonutils.dumps(resp_body, sort_keys=True),
+            headers=self.default_headers())
+
     def test_delete_resource(self):
         """Test deleting port."""
         super(LogicalPortTestCase, self).test_delete_resource(
