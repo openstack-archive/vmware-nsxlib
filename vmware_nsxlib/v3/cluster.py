@@ -425,8 +425,8 @@ class ClusteredAPI(object):
             conns.spawn(self._validate, endpoint)
         eventlet.sleep(0)
         while conns.running():
-            if (self.health == ClusterHealth.GREEN
-                    or self.health == ClusterHealth.ORANGE):
+            if (self.health == ClusterHealth.GREEN or
+                self.health == ClusterHealth.ORANGE):
                 # only wait for 1 or more endpoints to reduce init time
                 break
             eventlet.sleep(0.5)
