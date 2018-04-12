@@ -243,8 +243,8 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             exceptions.StaleRevision,
             max_attempts=self.nsxlib_config.max_attempts)
         def _remove_member_from_fw_exclude_list():
-            resource = ('firewall/excludelist?action=remove_member&object_id='
-                        + target_id)
+            resource = ('firewall/excludelist?action=remove_member&'
+                        'object_id=' + target_id)
             self.client.create(resource)
 
         _remove_member_from_fw_exclude_list()

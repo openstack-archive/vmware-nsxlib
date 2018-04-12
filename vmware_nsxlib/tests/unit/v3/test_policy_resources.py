@@ -319,10 +319,12 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                     'key': policy_constants.CONDITION_KEY_TAG,
                     'value': 'abc',
                     'operator': policy_constants.CONDITION_OP_EQUALS}
-        with mock.patch.object(self.policy_api, "get",
-                               return_value={'expression': [old_cond]}) as get_call,\
-            mock.patch.object(self.policy_api,
-                              "create_or_update") as update_call:
+        with mock.patch.object(
+                self.policy_api, "get",
+                return_value={'expression': [old_cond]}) as get_call,\
+            mock.patch.object(
+                self.policy_api,
+                "create_or_update") as update_call:
             self.resourceApi.update_condition(domain_id, id,
                                               cond_val=None,
                                               tenant=TEST_TENANT)
