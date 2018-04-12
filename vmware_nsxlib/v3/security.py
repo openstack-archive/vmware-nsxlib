@@ -252,8 +252,8 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         self._create_with_retry(resource, body)
 
     def remove_member_from_fw_exclude_list(self, target_id, target_type):
-        resource = ('firewall/excludelist?action=remove_member&object_id='
-                    + target_id)
+        resource = ('firewall/excludelist?action=remove_member&object_id=' +
+                    target_id)
         self._create_with_retry(resource)
 
     def get_excludelist(self):
