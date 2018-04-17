@@ -343,6 +343,21 @@ class LogicalRouterPort(utils.NsxLibApiBase):
             manager=self.client.nsx_api_managers,
             operation="get router link port")
 
+    def get_tier0_uplink_port(self, logical_router_id):
+        logical_router_ports = self.get_by_router_id(logical_router_id)
+        for port in logical_router_ports:
+            if port['resource_type'] == nsx_constants.LROUTERPORT_UPLINK:
+                return port
+
+    def get_tier1_uplink_ips(self, logical_router_id):
+        port = self.get_tier0_uplink_port(logical_router_id)
+        ips = []
+        if port:
+            for subnet in port.get('subnets', []):
+                for ip_address in subnet.get('ip_addresses'):
+                    ips.append(ip_address)
+        return ips
+
 
 class MetaDataProxy(core_resources.NsxLibMetadataProxy):
     # TODO(asarfaty): keeping this for backwards compatibility.

@@ -887,7 +887,8 @@ class LogicalRouterPortTestCase(BaseTestResource):
             'tags': [],
             'service_bindings': [{'service_id': {
                 'target_type': 'LogicalService',
-                'target_id': fake_relay_uuid}}]
+                'target_id': fake_relay_uuid}}],
+            'linked_logical_switch_port_id': {'target_id': None}
         }
 
         with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
@@ -922,21 +923,14 @@ class LogicalRouterPortTestCase(BaseTestResource):
             mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
                        return_value='2.0.0'):
             lrport.update(uuid, relay_service_uuid=fake_relay_uuid)
-            data = {
-                'id': uuid,
-                'display_name': fake_router_port['display_name'],
-                'logical_router_id': fake_router_port['logical_router_id'],
-                'resource_type': fake_router_port['resource_type'],
-                "revision": 0,
-                'service_bindings': [{'service_id': {
-                    'target_type': 'LogicalService',
-                    'target_id': fake_relay_uuid}}]
-            }
+            fake_router_port['service_bindings'] = [{'service_id': {
+                'target_type': 'LogicalService',
+                'target_id': fake_relay_uuid}}]
 
             test_client.assert_json_call(
                 'put', lrport,
                 'https://1.2.3.4/api/v1/logical-router-ports/%s' % uuid,
-                data=jsonutils.dumps(data, sort_keys=True),
+                data=jsonutils.dumps(fake_router_port, sort_keys=True),
                 headers=self.default_headers())
 
     def test_get_logical_router_port_by_router_id(self):
@@ -970,6 +964,66 @@ class LogicalRouterPortTestCase(BaseTestResource):
             'https://1.2.3.4/api/v1/logical-router-ports/?'
             'logical_switch_id=%s' % switch_id,
             headers=self.default_headers())
+
+    def test_get_tier1_link_port(self):
+        """Test getting a Tier0 router uplink port by router id."""
+        router_id = test_constants.FAKE_ROUTER_PORT['logical_router_id']
+
+        # No ports found - raise an exception
+        lrport = self.get_mocked_resource(response={'results': []})
+        self.assertRaises(exceptions.ResourceNotFound,
+                          lrport.get_tier1_link_port,
+                          router_id)
+
+        # Non uplink ports found - raise an exception
+        lrport = self.get_mocked_resource(response={'results': [
+            test_constants.FAKE_ROUTER_PORT]})
+        self.assertRaises(exceptions.ResourceNotFound,
+                          lrport.get_tier1_link_port,
+                          router_id)
+
+        # uplink port exists
+        lrport = self.get_mocked_resource(response={'results': [
+            test_constants.FAKE_ROUTER_LINKT1_PORT]})
+        result = lrport.get_tier1_link_port(router_id)
+        self.assertEqual(test_constants.FAKE_ROUTER_LINKT1_PORT, result)
+
+    def test_get_tier0_uplink_port(self):
+        """Test getting a Tier0 router uplink port by router id."""
+        router_id = test_constants.FAKE_ROUTER_PORT['logical_router_id']
+
+        # No ports found - return None
+        lrport = self.get_mocked_resource(response={'results': []})
+        result = lrport.get_tier0_uplink_port(router_id)
+        self.assertIsNone(result)
+
+        # Non uplink ports found - return None
+        lrport = self.get_mocked_resource(response={'results': [
+            test_constants.FAKE_ROUTER_LINKT1_PORT]})
+        result = lrport.get_tier0_uplink_port(router_id)
+        self.assertIsNone(result)
+
+        # uplink port exists
+        lrport = self.get_mocked_resource(response={'results': [
+            test_constants.FAKE_ROUTER_PORT]})
+        result = lrport.get_tier0_uplink_port(router_id)
+        self.assertEqual(test_constants.FAKE_ROUTER_PORT, result)
+
+    def test_get_tier0_uplink_port_ips(self):
+        """Test getting a Tier0 router uplink port by router id."""
+        router_id = test_constants.FAKE_ROUTER_PORT['logical_router_id']
+
+        # No ports found - return empty list
+        lrport = self.get_mocked_resource(response={'results': []})
+        result = lrport.get_tier1_uplink_ips(router_id)
+        self.assertEqual(0, len(result))
+
+        # uplink port exists, return ips
+        lrport = self.get_mocked_resource(response={'results': [
+            test_constants.FAKE_ROUTER_PORT]})
+        result = lrport.get_tier1_uplink_ips(router_id)
+        self.assertEqual(1, len(result))
+        self.assertEqual('172.20.1.60', result[0])
 
 
 class IpPoolTestCase(BaseTestResource):
