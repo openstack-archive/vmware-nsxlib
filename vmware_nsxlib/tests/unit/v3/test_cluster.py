@@ -209,7 +209,7 @@ class ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
         self.assertRaises(nsxlib_exc.StaleRevision,
                           api.get, 'api/v1/transport-zones')
 
-    def test_cluster_proxy_connection_error(self):
+    def test_cluster_proxy_connection_establish_error(self):
 
         def connect_timeout():
             raise requests_exceptions.ConnectTimeout()
@@ -218,6 +218,21 @@ class ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
         api._validate = mock.Mock()
         self.assertRaises(nsxlib_exc.ServiceClusterUnavailable,
                           api.get, 'api/v1/transport-zones')
+
+    def test_cluster_proxy_connection_aborted(self):
+
+        def connect_timeout():
+            raise requests_exceptions.ConnectionError("Connection Aborted")
+
+        def all_good():
+            pass
+
+        # First call will cause connection aborted error, but next one
+        # should work
+        api = self.mock_nsx_clustered_api(session_response=[connect_timeout,
+                                                            all_good])
+        api._validate = mock.Mock()
+        self.assertEqual(cluster.ClusterHealth.GREEN, api.health)
 
     def test_cluster_round_robin_servicing(self):
         conf_managers = ['8.9.10.11', '9.10.11.12', '10.11.12.13']

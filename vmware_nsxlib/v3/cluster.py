@@ -221,6 +221,9 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
     def is_connection_exception(self, exception):
         return isinstance(exception, requests_exceptions.ConnectionError)
 
+    def is_conn_open_exception(self, exception):
+        return isinstance(exception, requests_exceptions.ConnectTimeout)
+
     def get_default_headers(self, session, provider, allow_overwrite_header):
         """Get the default headers that should be added to future requests"""
         session.default_headers = {}
@@ -584,10 +587,15 @@ class ClusteredAPI(object):
                 if not self._http_provider.is_connection_exception(e):
                     # only trap and retry connection errors
                     raise e
-                endpoint.set_state(EndpointState.DOWN)
+                if self._http_provider.is_conn_open_exception(e):
+                    # unable to establish new connection - endpoint is
+                    # inaccessible
+                    endpoint.set_state(EndpointState.DOWN)
+
                 LOG.debug("Connection to %s failed, checking additional "
-                          "endpoints" % url)
-                # retry until exhausting endpoints
+                          "connections and endpoints" % url)
+                # this might be a result of server closing connection
+                # retry until exhausting connections and endpoints
                 return self._proxy(proxy_for, uri, *args, **kwargs)
 
 
