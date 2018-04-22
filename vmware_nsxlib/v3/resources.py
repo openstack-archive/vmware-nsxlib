@@ -446,6 +446,7 @@ class LogicalDhcpServer(utils.NsxLibApiBase):
             'domain-search': 119,
             'classless-static-route': 121,
             'tftp-server-address': 150,
+            'server-ip-address': 150,
             'etherboot': 175,
             'config-file': 209,
             'path-prefix': 210,
