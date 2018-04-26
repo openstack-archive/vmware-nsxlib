@@ -313,6 +313,10 @@ class NsxLib(NsxLibBase):
         self.nsx_version = node.get('node_version')
         return self.nsx_version
 
+    def export_restricted(self):
+        node = self.client.get("node")
+        return node.get('export_type') is 'RESTRICTED'
+
     def feature_supported(self, feature):
         if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_2_2_0)):
