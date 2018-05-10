@@ -108,7 +108,7 @@ class TimeoutSession(requests.Session):
         def request_with_retry_on_ssl_error(*args, **kwargs):
             try:
                 return super(TimeoutSession, self).request(*args, **kwargs)
-            except OpenSSL.SSL.Error:
+            except (IOError, OpenSSL.SSL.Error):
                 # This can happen when connection tries to access certificate
                 # file it was opened with (renegotiation?)
                 # Proper way to solve this would be to pass in-memory cert
