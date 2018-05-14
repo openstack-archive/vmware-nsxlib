@@ -167,9 +167,11 @@ def retry_upon_exception(exc, delay=0.5, max_delay=2,
 
 def retry_random_upon_exception(exc, delay=0.5, max_delay=5,
                                 max_attempts=DEFAULT_MAX_ATTEMPTS):
+    # Note(asarfaty): Using wait_exponential instead of wait_random_exponential
+    # because the current tenacity version in use does not support it yet
     return tenacity.retry(reraise=True,
                           retry=tenacity.retry_if_exception_type(exc),
-                          wait=tenacity.wait_random_exponential(
+                          wait=tenacity.wait_exponential(
                               multiplier=delay, max=max_delay),
                           stop=tenacity.stop_after_attempt(max_attempts),
                           before=_log_before_retry, after=_log_after_retry)
