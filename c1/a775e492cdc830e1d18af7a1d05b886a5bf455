@@ -1,0 +1,10 @@
+Code-Review+1: Quan Tian <qtian@vmware.com>
+Verified+1: VMware NSX CI
+Code-Review+2: Salvatore Orlando <salv.orlando@gmail.com>
+Workflow+1: Salvatore Orlando <salv.orlando@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Wed, 16 May 2018 09:11:09 +0000
+Reviewed-on: https://review.openstack.org/559680
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
