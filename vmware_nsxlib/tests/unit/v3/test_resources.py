@@ -715,9 +715,11 @@ class LogicalRouterTestCase(BaseTestResource):
         router = self.get_mocked_resource()
         translated_net = '1.1.1.1'
         priority = 10
+        display_name = 'fake_name'
 
         data = {
             'action': action,
+            'display_name': display_name,
             'enabled': True,
             'translated_network': translated_net,
             'rule_priority': priority
@@ -734,7 +736,8 @@ class LogicalRouterTestCase(BaseTestResource):
                                     action=action,
                                     translated_network=translated_net,
                                     rule_priority=priority,
-                                    bypass_firewall=False)
+                                    bypass_firewall=False,
+                                    display_name=display_name)
             except exceptions.InvalidInput as e:
                 if expect_failure:
                     return
