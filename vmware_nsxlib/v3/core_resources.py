@@ -532,7 +532,8 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                      match_ports=None, match_protocol=None,
                      match_resource_type=None,
                      bypass_firewall=True,
-                     tags=None):
+                     tags=None,
+                     display_name=None):
         self._validate_nat_rule_action(action)
         resource = 'logical-routers/%s/nat/rules' % logical_router_id
         body = {'action': action,
@@ -561,6 +562,8 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                       "this feature is not supported.", logical_router_id)
         if tags is not None:
             body['tags'] = tags
+        if display_name:
+            body['display_name'] = display_name
         return self.client.create(resource, body)
 
     def add_static_route(self, logical_router_id, dest_cidr, nexthop):

@@ -153,14 +153,15 @@ class RouterLib(object):
             skip_not_found=True, strict_mode=False)
 
     def add_gw_snat_rule(self, logical_router_id, gw_ip, source_net=None,
-                         bypass_firewall=True, tags=None):
+                         bypass_firewall=True, tags=None, display_name=None):
         return self.nsxlib.logical_router.add_nat_rule(
             logical_router_id, action="SNAT",
             translated_network=gw_ip,
             source_net=source_net,
             rule_priority=GW_NAT_PRI,
             bypass_firewall=bypass_firewall,
-            tags=tags)
+            tags=tags,
+            display_name=display_name)
 
     def update_router_edge_cluster(self, nsx_router_id, edge_cluster_uuid):
         return self._router_client.update(nsx_router_id,
@@ -200,14 +201,15 @@ class RouterLib(object):
 
     def add_fip_nat_rules(self, logical_router_id, ext_ip, int_ip,
                           match_ports=None, bypass_firewall=True,
-                          tags=None):
+                          tags=None, display_name=None):
         self.nsxlib.logical_router.add_nat_rule(
             logical_router_id, action="SNAT",
             translated_network=ext_ip,
             source_net=int_ip,
             rule_priority=FIP_NAT_PRI,
             bypass_firewall=bypass_firewall,
-            tags=tags)
+            tags=tags,
+            display_name=display_name)
         self.nsxlib.logical_router.add_nat_rule(
             logical_router_id, action="DNAT",
             translated_network=int_ip,
@@ -215,7 +217,8 @@ class RouterLib(object):
             rule_priority=FIP_NAT_PRI,
             match_ports=match_ports,
             bypass_firewall=bypass_firewall,
-            tags=tags)
+            tags=tags,
+            display_name=display_name)
 
     def delete_fip_nat_rules_by_internal_ip(self, logical_router_id, int_ip):
         self.nsxlib.logical_router.delete_nat_rule_by_values(
