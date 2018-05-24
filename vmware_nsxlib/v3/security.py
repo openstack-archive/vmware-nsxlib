@@ -547,14 +547,17 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
 
     def init_default(self, name, description, nested_groups,
                      log_sg_blocked_traffic):
+        LOG.info("Initializing the default section named %s", name)
         fw_sections = self.list()
         for section in reversed(fw_sections):
             if section['display_name'] == name:
+                LOG.info("Found existing default section %s", section['id'])
                 break
         else:
             tags = self.build_v3_api_version_tag()
             section = self.create_empty(
                 name, description, nested_groups, tags)
+            LOG.info("Creating a new default section %s", section['id'])
 
         block_rule = self.get_rule_dict(
             'Block All', action=consts.FW_ACTION_DROP,
