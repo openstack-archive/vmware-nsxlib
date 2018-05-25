@@ -44,7 +44,7 @@ def validate_cert_params(key_size, valid_for_days,
             {'value': key_size,
              'list': expected_key_sizes})
 
-    expected_signature_algs = ('sha224', 'sha256')
+    expected_signature_algs = ('sha256')
     if signature_alg not in expected_signature_algs:
         raise nsxlib_exceptions.NsxLibInvalidInput(
             error_message=_('Invalid signature algorithm %(value)s'
