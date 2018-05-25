@@ -291,7 +291,7 @@ class NsxV3ClientCertificateTestCase(nsxlib_testcase.NsxClientTestCase):
                             'subject': {}},
                            {'key_size': 4096,
                             'valid_for_days': 100,
-                            'signature_alg': 'sha',
+                            'signature_alg': 'sha224',
                             'subject': {}}]
 
         for args in bad_cert_values:
