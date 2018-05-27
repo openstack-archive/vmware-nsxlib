@@ -43,7 +43,8 @@ def http_error_to_exception(status_code, error_code):
             {'99': exceptions.ClientCertificateNotTrusted},
         requests.codes.FORBIDDEN:
             {'98': exceptions.BadXSRFToken},
-        requests.codes.TOO_MANY_REQUESTS: exceptions.TooManyRequests}
+        requests.codes.TOO_MANY_REQUESTS: exceptions.TooManyRequests,
+        requests.codes.SERVICE_UNAVAILABLE: exceptions.ServiceUnavailable}
 
     if status_code in errors:
         if isinstance(errors[status_code], dict):
@@ -306,11 +307,12 @@ class NSX3Client(JSONRESTClient):
     def _rest_call(self, url, **kwargs):
         if self.rate_limit_retry:
             # If too many requests are handled by the nsx at the same time,
-            # error "429: Too Many Requests" will be returned.
+            # error "429: Too Many Requests" or "503: SServer Unavailable"
+            # will be returned.
             # the client is expected to retry after a random 400-600 milli,
             # and later exponentially until 5 seconds wait
             @utils.retry_random_upon_exception(
-                exceptions.TooManyRequests,
+                [exceptions.TooManyRequests, exceptions.ServiceUnavailable],
                 max_attempts=self.max_attempts)
             def _rest_call_with_retry(self, url, **kwargs):
                 return super(NSX3Client, self)._rest_call(url, **kwargs)

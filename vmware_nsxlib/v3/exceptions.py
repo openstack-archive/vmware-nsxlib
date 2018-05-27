@@ -105,6 +105,10 @@ class TooManyRequests(ManagerError):
     pass
 
 
+class ServiceUnavailable(ManagerError):
+    pass
+
+
 class ClientCertificateNotTrusted(ManagerError):
     message = _("Certificate not trusted")
 
