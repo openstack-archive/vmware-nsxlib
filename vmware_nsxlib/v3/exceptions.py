@@ -101,7 +101,15 @@ class StaleRevision(ManagerError):
     pass
 
 
-class TooManyRequests(ManagerError):
+class ServerBusy(ManagerError):
+    pass
+
+
+class TooManyRequests(ServerBusy):
+    pass
+
+
+class ServiceUnavailable(ServerBusy):
     pass
 
 
