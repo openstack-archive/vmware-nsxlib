@@ -77,8 +77,7 @@ def _mock_nsxlib():
 
     mocking.append(mock.patch(
         "vmware_nsxlib.v3.security.NsxLibNsGroup.create",
-        side_effect=_return_id_key
-    ))
+        side_effect=_return_id_key))
 
     mocking.append(mock.patch(
         "vmware_nsxlib.v3.security.NsxLibFirewallSection.create_empty",
@@ -86,7 +85,7 @@ def _mock_nsxlib():
 
     mocking.append(mock.patch(
         "vmware_nsxlib.v3.security.NsxLibFirewallSection.init_default",
-        side_effect=_return_id_key))
+        return_value=uuidutils.generate_uuid()))
 
     mocking.append(mock.patch(
         "vmware_nsxlib.v3.security.NsxLibNsGroup.list"))
