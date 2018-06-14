@@ -1371,12 +1371,13 @@ class NsxLibSwitchTestCase(BaseTestResource):
             core_resources.NsxLibLogicalSwitch)
         self._tz_id = uuidutils.generate_uuid()
 
-    def _create_body(self, admin_state=nsx_constants.ADMIN_STATE_UP,
+    def _create_body(self, display_name="fake_name",
+                     admin_state=nsx_constants.ADMIN_STATE_UP,
                      vlan_id=None, description=None, trunk_vlan=None):
         body = {
             "transport_zone_id": self._tz_id,
             "replication_mode": "MTEP",
-            "display_name": "fake_name",
+            "display_name": display_name,
             "tags": [],
             "admin_state": admin_state
         }
@@ -1478,6 +1479,17 @@ class NsxLibSwitchTestCase(BaseTestResource):
                               ls.create,
                               mocks.FAKE_NAME, self._tz_id, [],
                               trunk_vlan_range=trunk_vlan)
+
+    def test_create_logical_switch_illegal_name(self):
+        """Test creating switch with illegal name that will be escaped"""
+        ls = self.get_mocked_resource()
+        ls.create(mocks.FAKE_NAME + ';|=,~@', self._tz_id, [])
+        data = self._create_body(display_name=mocks.FAKE_NAME + '......')
+        test_client.assert_json_call(
+            'post', ls,
+            'https://1.2.3.4/api/v1/logical-switches',
+            data=jsonutils.dumps(data, sort_keys=True),
+            headers=self.default_headers())
 
     def test_delete_resource(self):
         """Test deleting switch"""

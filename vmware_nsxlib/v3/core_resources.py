@@ -124,6 +124,8 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
                mac_pool_id=None, description=None,
                trunk_vlan_range=None):
         operation = "Create logical switch"
+        if display_name:
+            display_name = utils.escape_display_name(display_name)
         # TODO(salv-orlando): Validate Replication mode and admin_state
         # NOTE: These checks might be moved to the API client library if one
         # that performs such checks in the client is available
@@ -189,6 +191,7 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
                description=None):
         body = {}
         if name:
+            name = utils.escape_display_name(name)
             body['display_name'] = name
         if admin_state is not None:
             if admin_state:
