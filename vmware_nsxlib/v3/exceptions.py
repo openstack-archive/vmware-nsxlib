@@ -14,10 +14,15 @@
 #    under the License.
 #
 
+import sys
+
 from oslo_utils import excutils
 import six
 
 from vmware_nsxlib._i18n import _
+
+if sys.version_info >= (3,):
+    unicode = str
 
 
 class NsxLibException(Exception):
