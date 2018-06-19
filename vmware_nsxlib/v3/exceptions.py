@@ -42,7 +42,7 @@ class NsxLibException(Exception):
 
     if six.PY2:
         def __unicode__(self):
-            return unicode(self.msg)
+            return unicode(self.msg) if six.PY2 else self.msg  # noqa
 
     def __str__(self):
         return self.msg
