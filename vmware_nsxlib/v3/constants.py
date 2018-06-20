@@ -14,6 +14,7 @@
 #    under the License.
 
 IPv4_ANY = '0.0.0.0/0'
+TEST = 'to delete'
 
 # Protocol names and numbers for Security Groups/Firewalls
 PROTO_NAME_AH = 'ah'

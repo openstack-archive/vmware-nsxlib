@@ -153,7 +153,7 @@ FAKE_QOS_PROFILE = {
         "mode": "UNTRUSTED"
     },
     "tags": [],
-    "description": FAKE_NAME,
+    "description": FAKE_NAME + '123',
     "class_of_service": 0,
     "shaper_configuration": [
         {
