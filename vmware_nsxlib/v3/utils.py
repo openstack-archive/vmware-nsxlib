@@ -239,6 +239,12 @@ def escape_tag_data(data):
     return data.replace('/', '\\/').replace('-', '\\-')
 
 
+def escape_display_name(display_name):
+    # Illegal characters for the display names are  ;|=,~@
+    rx = re.compile('([;|=,~@])')
+    return rx.sub('.', display_name)
+
+
 class NsxLibCache(object):
     def __init__(self, timeout):
         self.timeout = timeout
