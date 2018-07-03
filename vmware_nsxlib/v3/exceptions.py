@@ -69,7 +69,7 @@ class NsxLibInvalidInput(NsxLibException):
 
 class ManagerError(NsxLibException):
     message = _("Unexpected error from backend manager (%(manager)s) "
-                "for %(operation)s %(details)s")
+                "for %(operation)s%(details)s")
 
     def __init__(self, **kwargs):
         details = kwargs.get('details', '')
