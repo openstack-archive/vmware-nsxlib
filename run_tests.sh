@@ -196,7 +196,7 @@ function run_pep8_changed {
 }
 
 
-TESTRTESTS="python setup.py testr"
+TESTRTESTS="stestr run"
 
 if [ $never_venv -eq 0 ]
 then
