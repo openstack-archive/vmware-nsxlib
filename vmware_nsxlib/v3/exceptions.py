@@ -72,7 +72,7 @@ class ManagerError(NsxLibException):
                 "for %(operation)s%(details)s")
 
     def __init__(self, **kwargs):
-        details = kwargs.get('details')
+        details = kwargs.get('details', '')
         kwargs['details'] = ': %s' % details if details else ''
         super(ManagerError, self).__init__(**kwargs)
         try:
