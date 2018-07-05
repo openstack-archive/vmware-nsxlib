@@ -406,8 +406,8 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
         return self.client.list(self.get_path()).get('results', [])
 
     def delete(self, section_id):
-        resource = '%s?cascade=true' % self.get_path(section_id)
-        return self.client.delete(resource)
+        resource = '%s?cascade=true' % section_id
+        return self._delete_with_retry(resource)
 
     def get_nsgroup_reference(self, nsgroup_id):
         return {'target_id': nsgroup_id,
