@@ -20,6 +20,7 @@ from oslo_utils import uuidutils
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import test_constants
+from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3 import nsx_constants as const
 
 
@@ -58,6 +59,34 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
             }
         }
         self.assertEqual(expected, result)
+
+    def test_create_rules(self):
+        with mock.patch("vmware_nsxlib.v3.security.NsxLibFirewallSection"
+                        ".add_rules") as add_rules:
+            rule_id = uuidutils.generate_uuid()
+            rule = {'id': rule_id,
+                    'ethertype': 'IPv4',
+                    'protocol': 'ipip',
+                    'direction': 'ingress',
+                    'remote_ip_prefix': None}
+            rules = [rule]
+            self.nsxlib.firewall_section.create_rules(
+                None, 'section-id', 'nsgroup-id', False,
+                "ALLOW", rules, {rule_id: 'dummy'})
+            add_rules.assert_called_once()
+
+    def test_create_rule_with_illegal_protocol(self):
+        rule_id = uuidutils.generate_uuid()
+        rule = {'id': rule_id,
+                'ethertype': 'IPv4',
+                'protocol': 'bad',
+                'direction': 'ingress',
+                'remote_ip_prefix': None}
+        rules = [rule]
+        self.assertRaises(nsxlib_exc.InvalidInput,
+                          self.nsxlib.firewall_section.create_rules,
+                          None, 'section-id', 'nsgroup-id', False,
+                          "ALLOW", rules, {rule_id: 'dummy'})
 
     def test_create_with_rules(self):
         expected_body = {

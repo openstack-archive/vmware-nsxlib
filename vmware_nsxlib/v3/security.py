@@ -270,7 +270,13 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             return
         protocol_number = constants.IP_PROTOCOL_MAP.get(protocol_number,
                                                         protocol_number)
-        protocol_number = int(protocol_number)
+        try:
+            protocol_number = int(protocol_number)
+        except ValueError:
+            raise exceptions.InvalidInput(
+                operation='create_rule',
+                arg_val=protocol_number,
+                arg_name='protocol')
         if protocol_number == 6:
             return consts.TCP
         elif protocol_number == 17:
@@ -530,7 +536,6 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                 logging_enabled, action)
 
             firewall_rules.append(fw_rule)
-
         return self.add_rules(firewall_rules, section_id)
 
     def set_rule_logging(self, section_id, logging):
