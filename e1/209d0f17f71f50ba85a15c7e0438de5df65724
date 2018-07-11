@@ -1,0 +1,10 @@
+Verified-1: VMware NSX CI
+Code-Review+2: Kobi Samoray <ksamoray@vmware.com>
+Code-Review+2: Anna Khmelnitsky <akhmelnitsky@vmware.com>
+Workflow+1: Anna Khmelnitsky <akhmelnitsky@vmware.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Wed, 11 Jul 2018 21:47:54 +0000
+Reviewed-on: https://review.openstack.org/581615
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/stable/queens
