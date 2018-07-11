@@ -70,8 +70,8 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
                     'direction': 'ingress',
                     'remote_ip_prefix': None}
             rules = [rule]
-            self.nsxlib.firewall_section.create_rules(
-                None, 'section-id', 'nsgroup-id', False,
+            self.nsxlib.firewall_section.create_section_rules(
+                'section-id', 'nsgroup-id', False,
                 "ALLOW", rules, {rule_id: 'dummy'})
             add_rules.assert_called_once()
 
@@ -84,8 +84,8 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
                 'remote_ip_prefix': None}
         rules = [rule]
         self.assertRaises(nsxlib_exc.InvalidInput,
-                          self.nsxlib.firewall_section.create_rules,
-                          None, 'section-id', 'nsgroup-id', False,
+                          self.nsxlib.firewall_section.create_section_rules,
+                          'section-id', 'nsgroup-id', False,
                           "ALLOW", rules, {rule_id: 'dummy'})
 
     def test_create_with_rules(self):
@@ -228,3 +228,41 @@ class TestNsxLibNSGroup(nsxlib_testcase.NsxClientTestCase):
                 data = {'tags': nsg_tags,
                         'membership_criteria': membership_criteria}
                 update.assert_called_with(resource, data, headers=None)
+
+    def test_update_nsgroup_and_section(self):
+        security_group = {
+            'name': 'name',
+            'id': uuidutils.generate_uuid(),
+            'description': None,
+            'logging': False}
+        nsgroup_id = uuidutils.generate_uuid()
+        section_id = uuidutils.generate_uuid()
+        log_sg_allowed_traffic = True
+
+        with mock.patch.object(self.nsxlib.client, 'update') as update_mock,\
+            mock.patch.object(self.nsxlib.client, 'get') as get_mock:
+            self.nsxlib.ns_group.update_nsgroup_and_section(
+                security_group, nsgroup_id, section_id,
+                log_sg_allowed_traffic)
+            # updating the nsgroup and the section
+            self.assertEqual(2, update_mock.call_count)
+            # getting the rules, and get before each update
+            self.assertEqual(3, get_mock.call_count)
+
+    def test_update_lport_nsgroups(self):
+        nsgroup_id1 = uuidutils.generate_uuid()
+        nsgroup_id2 = uuidutils.generate_uuid()
+        lport_id = uuidutils.generate_uuid()
+        original_nsgroups = [nsgroup_id1]
+        updated_nsgroups = [nsgroup_id2]
+
+        with mock.patch('vmware_nsxlib.v3.security.NsxLibNsGroup.'
+                        'remove_member') as remove_mock,\
+            mock.patch('vmware_nsxlib.v3.security.NsxLibNsGroup.'
+                       'add_members') as add_mock:
+            self.nsxlib.ns_group.update_lport_nsgroups(
+                lport_id, original_nsgroups, updated_nsgroups)
+            add_mock.assert_called_once_with(nsgroup_id2, 'LogicalPort',
+                                             [lport_id])
+            remove_mock.assert_called_once_with(nsgroup_id1, 'LogicalPort',
+                                                lport_id)
