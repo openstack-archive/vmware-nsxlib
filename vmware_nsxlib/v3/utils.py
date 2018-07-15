@@ -175,6 +175,15 @@ def retry_random_upon_exception(exc, delay=0.5, max_delay=5,
                           before=_log_before_retry, after=_log_after_retry)
 
 
+def retry_upon_none_result(max_attempts, delay=0.5, max_delay=2):
+    return tenacity.retry(reraise=True,
+                          retry=tenacity.retry_if_result(lambda x: x is None),
+                          wait=tenacity.wait_exponential(
+                              multiplier=delay, max=max_delay),
+                          stop=tenacity.stop_after_attempt(max_attempts),
+                          before=_log_before_retry, after=_log_after_retry)
+
+
 def list_match(list1, list2):
     # Check if list1 and list2 have identical elements, but relaxed on
     # dict elements where list1's dict element can be a subset of list2's

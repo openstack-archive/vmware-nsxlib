@@ -260,6 +260,48 @@ class ClusteredAPITestCase(nsxlib_testcase.NsxClientTestCase):
         eps[0]._state = cluster.EndpointState.UP
         self.assertEqual(_get_schedule(4), [eps[0], eps[2], eps[0], eps[2]])
 
+    def test_cluster_select_endpoint(self):
+        conf_managers = ['8.9.10.11', '9.10.11.12', '10.11.12.13']
+        api = self.mock_nsx_clustered_api(nsx_api_managers=conf_managers)
+        api._validate = mock.Mock()
+        eps = list(api._endpoints.values())
+
+        # all up - select the first one
+        self.assertEqual(api._select_endpoint(), eps[0])
+
+        # run again - select the 2nd
+        self.assertEqual(api._select_endpoint(), eps[1])
+
+        # all down - return None
+        eps[0]._state = cluster.EndpointState.DOWN
+        eps[1]._state = cluster.EndpointState.DOWN
+        eps[2]._state = cluster.EndpointState.DOWN
+        self.assertEqual(api._select_endpoint(), None)
+
+        # up till now the validate method should not have been called
+        self.assertEqual(api._validate.call_count, 0)
+
+        # set up the retries flag, and check that validate was called
+        # until retries have been exhausted
+        api.nsxlib_config.skip_cluster_unavailable = True
+        self.assertEqual(api._select_endpoint(), None)
+        self.assertEqual(api._validate.call_count,
+                         api.nsxlib_config.max_attempts * len(eps))
+
+        # simulate the case where 1 endpoint finally goes up
+        self.validate_count = 0
+        self.max_validate = 9
+
+        def _mock_validate(ep):
+            if self.validate_count >= self.max_validate:
+                ep._state = cluster.EndpointState.UP
+            self.validate_count += 1
+
+        api._validate = _mock_validate
+        self.assertEqual(api._select_endpoint(),
+                         eps[(self.max_validate - 1) % len(eps)])
+        self.assertEqual(self.validate_count, self.max_validate + 1)
+
     def test_reinitialize_cluster(self):
         with mock.patch.object(cluster.TimeoutSession, 'request',
                                return_value=get_sess_create_resp()):
