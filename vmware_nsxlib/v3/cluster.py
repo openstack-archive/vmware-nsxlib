@@ -33,10 +33,12 @@ from requests import adapters
 from requests import exceptions as requests_exceptions
 import six
 import six.moves.urllib.parse as urlparse
+import tenacity
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import client as nsx_client
 from vmware_nsxlib.v3 import exceptions
+from vmware_nsxlib.v3 import utils
 
 
 LOG = log.getLogger(__name__)
@@ -401,7 +403,12 @@ class ClusteredAPI(object):
         def _create_conn(p):
             def _conn():
                 # called when a pool needs to create a new connection
-                return self._http_provider.new_connection(self, p)
+                try:
+                    return self._http_provider.new_connection(self, p)
+                except Exception as e:
+                    if self._http_provider.is_conn_open_exception(e):
+                        LOG.warning("Timeout while trying to open a "
+                                    "connection with %s", p)
 
             return _conn
 
@@ -484,6 +491,11 @@ class ClusteredAPI(object):
     def _validate(self, endpoint):
         try:
             with endpoint.pool.item() as conn:
+                if not conn:
+                    LOG.warning("No connection established with endpoint "
+                                "%(ep)s. ", {'ep': endpoint})
+                    endpoint.set_state(EndpointState.DOWN)
+                    return
                 self._http_provider.validate_connection(self, endpoint, conn)
                 endpoint.set_state(EndpointState.UP)
         except exceptions.ClientCertificateNotTrusted:
@@ -505,13 +517,39 @@ class ClusteredAPI(object):
                         {'ep': endpoint, 'err': e})
 
     def _select_endpoint(self):
-        # check for UP state until exhausting all endpoints
-        seen, total = 0, len(self._endpoints.values())
-        while seen < total:
-            endpoint = next(self._endpoint_schedule)
-            if endpoint.state == EndpointState.UP:
-                return endpoint
-            seen += 1
+        """Return an endpoint in UP state.
+
+        Go over all endpoint and return the next one which is UP
+        If all endpoints are currently DOWN, depending on the configuration
+        retry it until one is UP (or max retries exceeded)
+        """
+        def _select_endpoint_internal(refresh=False):
+            # check for UP state until exhausting all endpoints
+            seen, total = 0, len(self._endpoints.values())
+            while seen < total:
+                endpoint = next(self._endpoint_schedule)
+                if refresh:
+                    self._validate(endpoint)
+                if endpoint.state == EndpointState.UP:
+                    return endpoint
+                seen += 1
+
+        @utils.retry_upon_none_result(self.nsxlib_config.max_attempts)
+        def _select_endpoint_internal_with_retry():
+            # redo endpoint selection with refreshing states
+            return _select_endpoint_internal(refresh=True)
+
+        # First attempt to get an UP endpoint
+        endpoint = _select_endpoint_internal()
+        if endpoint or not self.nsxlib_config.cluster_unavailable_retry:
+            return endpoint
+
+        # Retry the selection while refreshing the endpoints state
+        try:
+            return _select_endpoint_internal_with_retry()
+        except tenacity.RetryError:
+            # exhausted number of retries
+            return None
 
     def endpoint_for_connection(self, conn):
         # check all endpoint pools
