@@ -293,12 +293,10 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
 
     def _decide_service(self, sg_rule):
         l4_protocol = self._get_l4_protocol_name(sg_rule['protocol'])
-        direction = self._get_direction(sg_rule)
 
         if l4_protocol in [consts.TCP, consts.UDP]:
             # If port_range_min is not specified then we assume all ports are
             # matched, relying on neutron to perform validation.
-            source_ports = []
             if sg_rule['port_range_min'] is None:
                 destination_ports = []
             elif sg_rule['port_range_min'] != sg_rule['port_range_max']:
@@ -308,13 +306,10 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             else:
                 destination_ports = ['%(port_range_min)s' % sg_rule]
 
-            if direction == consts.OUT:
-                source_ports, destination_ports = destination_ports, []
-
             return self.get_nsservice(
                 consts.L4_PORT_SET_NSSERVICE,
                 l4_protocol=l4_protocol,
-                source_ports=source_ports,
+                source_ports=[],
                 destination_ports=destination_ports)
         elif l4_protocol == consts.ICMPV4:
             return self.get_nsservice(
