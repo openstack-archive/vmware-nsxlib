@@ -60,7 +60,7 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
         }
         self.assertEqual(expected, result)
 
-    def test_create_rules(self):
+    def test_create_rules_with_protocol(self):
         with mock.patch("vmware_nsxlib.v3.security.NsxLibFirewallSection"
                         ".add_rules") as add_rules:
             rule_id = uuidutils.generate_uuid()
@@ -70,10 +70,93 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
                     'direction': 'ingress',
                     'remote_ip_prefix': None}
             rules = [rule]
+            section_id = 'section-id'
+            group_id = 'nsgroup-id'
+            target_id = 'dummy'
             self.nsxlib.firewall_section.create_rules(
-                None, 'section-id', 'nsgroup-id', False,
-                "ALLOW", rules, {rule_id: 'dummy'})
-            add_rules.assert_called_once()
+                None, section_id, group_id, False,
+                "ALLOW", rules, {rule_id: target_id})
+            add_rules.assert_called_once_with([
+                {'display_name': mock.ANY,
+                 'ip_protocol': 'IPV4',
+                 'direction': 'IN',
+                 'services': [{'service': {
+                     'resource_type': 'IPProtocolNSService',
+                     'protocol_number': 4}}],
+                 'disabled': False,
+                 'sources': [{'target_id': target_id,
+                              'target_type': 'NSGroup'}],
+                 'destinations': [{'target_id': group_id,
+                                   'target_type': 'NSGroup'}],
+                 'logged': False, 'action': 'ALLOW'}], section_id)
+
+    def test_create_rules_ingress_with_port(self):
+        with mock.patch("vmware_nsxlib.v3.security.NsxLibFirewallSection"
+                        ".add_rules") as add_rules:
+            rule_id = uuidutils.generate_uuid()
+            rule = {'id': rule_id,
+                    'ethertype': 'IPv4',
+                    'protocol': 'tcp',
+                    'direction': 'ingress',
+                    'port_range_min': 80,
+                    'port_range_max': 80,
+                    'remote_ip_prefix': None}
+            rules = [rule]
+            section_id = 'section-id'
+            group_id = 'nsgroup-id'
+            target_id = 'dummy'
+            self.nsxlib.firewall_section.create_rules(
+                None, section_id, group_id, False,
+                "ALLOW", rules, {rule_id: target_id})
+            add_rules.assert_called_once_with([
+                {'display_name': mock.ANY,
+                 'ip_protocol': 'IPV4',
+                 'direction': 'IN',
+                 'services': [{'service': {
+                     'l4_protocol': 'TCP',
+                     'destination_ports': ['80'],
+                     'source_ports': [],
+                     'resource_type': 'L4PortSetNSService'}}],
+                 'disabled': False,
+                 'sources': [{'target_id': target_id,
+                              'target_type': 'NSGroup'}],
+                 'destinations': [{'target_id': group_id,
+                                   'target_type': 'NSGroup'}],
+                 'logged': False, 'action': 'ALLOW'}], section_id)
+
+    def test_create_rules_egress_with_port(self):
+        with mock.patch("vmware_nsxlib.v3.security.NsxLibFirewallSection"
+                        ".add_rules") as add_rules:
+            rule_id = uuidutils.generate_uuid()
+            rule = {'id': rule_id,
+                    'ethertype': 'IPv4',
+                    'protocol': 'tcp',
+                    'direction': 'egress',
+                    'port_range_min': 80,
+                    'port_range_max': 80,
+                    'remote_ip_prefix': None}
+            rules = [rule]
+            section_id = 'section-id'
+            group_id = 'nsgroup-id'
+            target_id = 'dummy'
+            self.nsxlib.firewall_section.create_rules(
+                None, section_id, group_id, False,
+                "ALLOW", rules, {rule_id: target_id})
+            add_rules.assert_called_once_with([
+                {'display_name': mock.ANY,
+                 'ip_protocol': 'IPV4',
+                 'direction': 'OUT',
+                 'services': [{'service': {
+                     'l4_protocol': 'TCP',
+                     'destination_ports': ['80'],
+                     'source_ports': [],
+                     'resource_type': 'L4PortSetNSService'}}],
+                 'disabled': False,
+                 'destinations': [{'target_id': target_id,
+                                   'target_type': 'NSGroup'}],
+                 'sources': [{'target_id': group_id,
+                              'target_type': 'NSGroup'}],
+                 'logged': False, 'action': 'ALLOW'}], section_id)
 
     def test_create_rule_with_illegal_protocol(self):
         rule_id = uuidutils.generate_uuid()
