@@ -221,7 +221,7 @@ class RESTClient(object):
         if not silent:
             LOG.debug("REST call: %s %s. Response: %s. Took %2.4f",
                       method, request_url,
-                      result.json() if result.content else '',
+                      result.json().encode('utf-8') if result.content else '',
                       te - ts)
 
         if not expected_results:
