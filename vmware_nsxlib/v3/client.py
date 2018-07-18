@@ -219,10 +219,11 @@ class RESTClient(object):
         te = time.time()
 
         if not silent:
+            msg = ''
+            if result.content:
+                msg = result.json().__str__().encode('utf-8')
             LOG.debug("REST call: %s %s. Response: %s. Took %2.4f",
-                      method, request_url,
-                      result.json() if result.content else '',
-                      te - ts)
+                      method, request_url, msg, te - ts)
 
         if not expected_results:
             expected_results = RESTClient._VERB_RESP_CODES[method.lower()]
