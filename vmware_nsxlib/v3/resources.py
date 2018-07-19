@@ -494,6 +494,10 @@ class LogicalDhcpServer(utils.NsxLibApiBase):
         url = "%s/static-bindings" % server_uuid
         return self.client.url_post(self.get_path(url), body)
 
+    def list_bindings(self, server_uuid):
+        url = "%s/static-bindings" % (server_uuid)
+        return self.get(url)
+
     def get_binding(self, server_uuid, binding_uuid):
         url = "%s/static-bindings/%s" % (server_uuid, binding_uuid)
         return self.get(url)
@@ -507,6 +511,34 @@ class LogicalDhcpServer(utils.NsxLibApiBase):
     def delete_binding(self, server_uuid, binding_uuid):
         url = "%s/static-bindings/%s" % (server_uuid, binding_uuid)
         return self.delete(url)
+
+    def list_ip_pools(self, server_uuid):
+        url = "%s/ip-pools" % (server_uuid)
+        return self.get(url)
+
+    def get_ip_pool(self, server_uuid, ip_pool_id):
+        url = "%s/ip-pools/%s" % (server_uuid, ip_pool_id)
+        return self.get(url)
+
+    def create_ip_pool(self, server_uuid, **kwargs):
+        body = {}
+        body.update(kwargs)
+        url = "%s/ip-pools" % server_uuid
+        return self.client.url_post(self.get_path(url), body)
+
+    def update_ip_pool(self, server_uuid, ip_pool_id, **kwargs):
+        body = {}
+        body.update(kwargs)
+        url = "%s/ip-pools/%s" % (server_uuid, ip_pool_id)
+        self._update_resource(self.get_path(url), body, retry=True)
+
+    def delete_ip_pool(self, server_uuid, ip_pool_id):
+        url = "%s/ip-pools/%s" % (server_uuid, ip_pool_id)
+        return self.delete(url)
+
+    def get_leases_for_ip_pool(self, server_uuid, ip_pool_id):
+        url = "%s/leases?pool_id=%s" % (server_uuid, ip_pool_id)
+        return self.get(url)
 
 
 class IpPool(utils.NsxLibApiBase):
