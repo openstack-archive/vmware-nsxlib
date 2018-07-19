@@ -204,6 +204,9 @@ class NsxLibLogicalSwitch(utils.NsxLibApiBase):
             body['description'] = description
         return self._update_with_retry(lswitch_id, body)
 
+    def get_state(self, lswitch_id):
+        url = "%s/state" % (lswitch_id)
+        return self.get(url)
 
 class SwitchingProfileTypes(object):
     IP_DISCOVERY = 'IpDiscoverySwitchingProfile'
