@@ -22,6 +22,8 @@ from vmware_nsxlib.v3 import policy_constants
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
+PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
+NETWORKS_PATH_PATTERN = TENANTS_PATH_PATTERN + "networks/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
@@ -39,6 +41,7 @@ class ResourceDef(object):
         self.name = None
         self.description = None
         self.parent_ids = None
+        self.tags = None
         self.body = {}
 
     def get_obj_dict(self):
@@ -46,7 +49,12 @@ class ResourceDef(object):
                 'description': self.description}
         if self.id:
             body['id'] = self.id
+        if self.tags:
+            body['tags'] = self.tags
         return body
+
+    def add_tags(self, tags):
+        self.tags = tags
 
     @abc.abstractproperty
     def path_pattern(self):
@@ -131,6 +139,97 @@ class DomainDef(ResourceDef):
     @property
     def path_pattern(self):
         return DOMAINS_PATH_PATTERN
+
+
+class NetworkDef(ResourceDef):
+
+    def __init__(self,
+                 network_id=None,
+                 name=None,
+                 description=None,
+                 provider=None,
+                 ip_addresses=None,
+                 ha_mode=policy_constants.ACTIVE_STANDBY,
+                 force_whitelisting=False,
+                 tenant=policy_constants.POLICY_INFRA_TENANT):
+        super(NetworkDef, self).__init__()
+        self.tenant = tenant
+        self.id = network_id
+        self.name = name
+        self.description = description
+        # TODO(annak): replace with provider path when provider is exposed
+        if provider:
+            self.provider = "/" + TENANTS_PATH_PATTERN % tenant + \
+                            "providers/" + provider
+        else:
+            self.provider = None
+        self.ip_addresses = ip_addresses
+        self.ha_mode = ha_mode
+        self.force_whitelisting = force_whitelisting
+        self.parent_ids = (tenant)
+
+    @property
+    def path_pattern(self):
+        return NETWORKS_PATH_PATTERN
+
+    def get_obj_dict(self):
+        body = super(NetworkDef, self).get_obj_dict()
+        body['provider'] = self.provider
+        body['ha_mode'] = self.ha_mode
+        body['force_whitelisting'] = self.force_whitelisting
+        if self.ip_addresses:
+            body['ip_addresses'] = self.ip_addresses
+        return body
+
+
+class Subnet(object):
+    def __init__(self, gateway_address, dhcp_ranges=None):
+        self.gateway_address = gateway_address
+        self.dhcp_ranges = dhcp_ranges
+
+    def get_obj_dict(self):
+        body = {'gateway_address': self.gateway_address}
+        if self.dhcp_ranges:
+            body['dhcp_ranges'] = self.dhcp_ranges
+
+        return body
+
+
+# TODO(annak) - add advanced config when supported by platform
+class SegmentDef(ResourceDef):
+    def __init__(self,
+                 network_id,
+                 segment_id=None,
+                 name=None,
+                 description=None,
+                 subnets=None,
+                 dns_domain_name=None,
+                 vlan_ids=None,
+                 tenant=policy_constants.POLICY_INFRA_TENANT):
+        super(SegmentDef, self).__init__()
+        self.tenant = tenant
+        self.id = segment_id
+        self.name = name
+        self.description = description
+        self.dns_domain_name = dns_domain_name
+        self.vlan_ids = vlan_ids
+        self.subnets = subnets
+        self.parent_ids = (tenant, network_id)
+
+    @property
+    def path_pattern(self):
+        return NETWORKS_PATH_PATTERN + "%s/segments/"
+
+    def get_obj_dict(self):
+        body = super(SegmentDef, self).get_obj_dict()
+        if self.subnets:
+            body['subnets'] = [subnet.get_obj_dict()
+                               for subnet in self.subnets]
+        if self.dns_domain_name:
+            body['domain_name'] = self.dns_domain_name
+        if self.vlan_ids:
+            body['vlan_ids'] = self.vlan_ids
+        return body
 
 
 class Condition(object):
