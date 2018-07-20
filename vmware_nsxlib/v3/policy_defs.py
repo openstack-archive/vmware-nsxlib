@@ -22,6 +22,7 @@ from vmware_nsxlib.v3 import policy_constants
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
+NETWORKS_PATH_PATTERN = TENANTS_PATH_PATTERN + "networks/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
@@ -131,6 +132,64 @@ class DomainDef(ResourceDef):
     @property
     def path_pattern(self):
         return DOMAINS_PATH_PATTERN
+
+
+class NetworkDef(ResourceDef):
+
+    def __init__(self,
+                 network_id=None,
+                 name=None,
+                 description=None,
+                 ip_addresses=[],
+                 ha_mode="ACTIVE_STANDBY",
+                 force_whitelisting=False,
+                 tenant=policy_constants.POLICY_INFRA_TENANT):
+        super(NetworkDef, self).__init__()
+        self.tenant = tenant
+        self.id = network_id
+        self.name = name
+        self.description = description
+        self.ip_addresses = ip_addresses
+        self.ha_mode = ha_mode
+        self.force_whitelisting = force_whitelisting
+        self.parent_ids = (tenant)
+
+    @property
+    def path_pattern(self):
+        return NETWORKS_PATH_PATTERN
+
+
+class Subnet(object):
+    def __init__(self, prefix_len, gateway_addresses, dhcp_ranges):
+        self.prefix_len = prefix_len
+        self.gateway_addresses = gateway_addresses
+        self.dhcp_ranges = dhcp_ranges
+
+    def get_obj_dict(self):
+        return {'prefix_len': self.prefix_len,
+                'gateway_addresses': self.gateway_addresses,
+                'dhcp_ranges': self.dhcp_ranges}
+
+
+class SegmentDef(ResourceDef):
+    def __init__(self,
+                 network_id=None,
+                 segment_id=None,
+                 name=None,
+                 description=None,
+                 subnets=[],
+                 tenant=policy_constants.POLICY_INFRA_TENANT):
+        super(NetworkDef, self).__init__()
+        self.tenant = tenant
+        self.id = network_id
+        self.name = name
+        self.description = description
+        self.subnets = subnets
+        self.parent_ids = (tenant, network_id)
+
+    @property
+    def path_pattern(self):
+        return NETWORKS_PATH_PATTERN
 
 
 class Condition(object):
