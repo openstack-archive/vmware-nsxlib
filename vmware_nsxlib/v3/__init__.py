@@ -367,6 +367,8 @@ class NsxPolicyLib(NsxLibBase):
         self.service = policy_resources.NsxPolicyL4ServiceApi(self.policy_api)
         self.icmp_service = policy_resources.NsxPolicyIcmpServiceApi(
             self.policy_api)
+        self.network = policy_resources.NsxPolicyNetworkApi(self.policy_api)
+        self.segment = policy_resources.NsxPolicySegmentApi(self.policy_api)
         self.comm_map = policy_resources.NsxPolicyCommunicationMapApi(
             self.policy_api)
         self.enforcement_point = policy_resources.NsxPolicyEnforcementPointApi(
