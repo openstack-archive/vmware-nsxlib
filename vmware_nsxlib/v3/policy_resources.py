@@ -414,6 +414,62 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
                                             icmp_code=icmp_code)
 
 
+class NsxPolicyNetworkApi(NsxPolicyResourceBase):
+    """NSX Network API """
+    @property
+    def entry_def(self):
+        return policy_defs.NetworkDef
+
+    def create_or_overwrite(self, name, network_id=None, description=None,
+                            provider=None,
+                            ip_addresses=None,
+                            ha_mode=policy_constants.ACTIVE_STANDBY,
+                            force_whitelisting=False,
+                            tags=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        network_id = self._init_obj_uuid(network_id)
+        network_def = self.entry_def(network_id=network_id,
+                                     name=name,
+                                     description=description,
+                                     provider=provider,
+                                     ip_addresses=ip_addresses,
+                                     ha_mode=ha_mode,
+                                     force_whitelisting=force_whitelisting,
+                                     tenant=tenant)
+        if tags:
+            network_def.add_tags(tags)
+        return self.policy_api.create_or_update(network_def)
+
+    def delete(self, network_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        network_def = self.entry_def(network_id, tenant=tenant)
+        self.policy_api.delete(network_def)
+
+    def get(self, network_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        network_def = self.entry_def(network_id, tenant=tenant)
+        return self.policy_api.get(network_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        network_def = self.entry_def(tenant=tenant)
+        return self.policy_api.list(network_def)['results']
+
+    def update(self, network_id, name=None, description=None,
+               ip_addresses=None, ha_mode=None,
+               force_whitelisting=None,
+               tags=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        network_def = policy_defs.NetworkDef(network_id=network_id,
+                                             tenant=tenant)
+        network_def.update_attributes_in_body(
+            name=name,
+            description=description,
+            ip_addresses=ip_addresses,
+            ha_mode=ha_mode,
+            force_whitelisting=force_whitelisting,
+            tags=tags)
+        return self.policy_api.create_or_update(network_def)
+
+
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     """NSX Policy CommunicationMap (Under a Domain)."""
     def _get_last_seq_num(self, domain_id, map_id,
