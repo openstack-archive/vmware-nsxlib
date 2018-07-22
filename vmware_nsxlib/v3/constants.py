@@ -89,3 +89,25 @@ IP_PROTOCOL_MAP = {PROTO_NAME_AH: PROTO_NUM_AH,
                    PROTO_NAME_UDP: PROTO_NUM_UDP,
                    PROTO_NAME_UDPLITE: PROTO_NUM_UDPLITE,
                    PROTO_NAME_VRRP: PROTO_NUM_VRRP}
+
+# Supported ICMP types and their codes
+IPV4_ICMP_TYPES = {0: [0],  # Echo reply
+                   3: range(0, 16),  # Destination unreachable
+                   4: [0],  # Source quench
+                   5: range(0, 4),  # Redirect
+                   8: [0],  # Echo request
+                   9: [0, 16],  # Router advertisement
+                   10: [0],  # Router Selection
+                   11: [0, 1],  # Time exceeded
+                   12: [0, 1, 2],  # Parameter Problem
+                   13: [0],  # Timestamp
+                   14: [0],  # Timestamp reply
+                   15: [0],  # Information request
+                   16: [0],  # Information reply
+                   17: [0],  # Address mask request
+                   18: [0],  # Address mask reply
+                   33: [0],  # Where-Are-You
+                   34: [0],  # I-Am-Here
+                   35: [0],  # Mobile registration request
+                   36: [0],  # Mobile registration reply
+                   }
