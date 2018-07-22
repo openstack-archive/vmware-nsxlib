@@ -338,11 +338,26 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
                 source_ports=[],
                 destination_ports=destination_ports)
         elif l4_protocol == consts.ICMPV4:
+            # Validate the icmp type & code
+            icmp_type = sg_rule['port_range_min']
+            icmp_code = sg_rule['port_range_max']
+            if icmp_type and icmp_type not in constants.IPV4_ICMP_TYPES:
+                raise exceptions.InvalidInput(
+                    operation='create_rule',
+                    arg_val=icmp_type,
+                    arg_name='icmp_type')
+            if (icmp_code and
+                icmp_code not in constants.IPV4_ICMP_TYPES[icmp_type]):
+                raise exceptions.InvalidInput(
+                    operation='create_rule',
+                    arg_val=icmp_code,
+                    arg_name='icmp_code for this icmp_type')
+
             return self.get_nsservice(
                 consts.ICMP_TYPE_NSSERVICE,
                 protocol=l4_protocol,
-                icmp_type=sg_rule['port_range_min'],
-                icmp_code=sg_rule['port_range_max'])
+                icmp_type=icmp_type,
+                icmp_code=icmp_code)
         elif l4_protocol is not None:
             return self.get_nsservice(
                 consts.IP_PROTOCOL_NSSERVICE,
