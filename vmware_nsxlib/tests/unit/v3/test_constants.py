@@ -140,7 +140,8 @@ FAKE_ROUTER_LINKT1_PORT = {
     "revision": 0,
     "id": FAKE_ROUTER_LINKT1_PORT_UUID,
     "display_name": FAKE_NAME,
-    "logical_router_id": FAKE_ROUTER_UUID
+    "logical_router_id": FAKE_ROUTER_UUID,
+    "linked_logical_router_port_id": {'target_id': uuidutils.generate_uuid()}
 }
 
 FAKE_QOS_PROFILE = {
@@ -530,4 +531,60 @@ FAKE_VPN_SESS = {
         "action": "PROTECT",
         "enabled": True,
     }],
+}
+
+FAKE_EDGE_CLUSTER_ID = "69c6bc48-0590-4ff5-87b6-9b49e20b67e0"
+FAKE_EDGE_CLUSTER = {
+    "resource_type": "EdgeCluster",
+    "description": "edgecluster1",
+    "id": FAKE_EDGE_CLUSTER_ID,
+    "display_name": "edgecluster1",
+    "deployment_type": "VIRTUAL_MACHINE",
+    "member_node_type": "EDGE_NODE",
+    "members": [{
+        "member_index": 0,
+        "transport_node_id": "321d2746-898e-11e8-9723-000c29391f21"
+    }],
+    "cluster_profile_bindings": [{
+        "profile_id": "15d3485e-0474-4511-bd79-1506ce777baa",
+        "resource_type": "EdgeHighAvailabilityProfile"
+    }],
+}
+
+FAKE_TIERO_ROUTER_ID = "67927d95-18d3-4763-9eb1-a45ff0e63bbe"
+FAKE_TIERO_ROUTER = {
+    "resource_type": "LogicalRouter",
+    "description": "Provider Logical Router(Tier0)",
+    "id": FAKE_TIERO_ROUTER_ID,
+    "display_name": "PLR-1 LogicalRouterTier0",
+    "edge_cluster_id": FAKE_EDGE_CLUSTER_ID,
+    "firewall_sections": [{
+        "is_valid": True,
+        "target_type": "FirewallSection",
+        "target_id": "c3d80576-e340-403d-a2d0-f4a72a1db6e3"
+    }],
+    "advanced_config": {
+        "external_transit_networks": ["100.64.0.0/16"],
+        "internal_transit_network": "169.254.0.0/28"
+    },
+    "router_type": "TIER0",
+    "high_availability_mode": "ACTIVE_STANDBY",
+    "failover_mode": "NON_PREEMPTIVE",
+}
+
+
+FAKE_TRANS_NODE_ID = "f5a2b5ca-8dba-11e8-9799-020039422cc8"
+FAKE_TRANS_NODE = {
+    "resource_type": "TransportNode",
+    "id": FAKE_TRANS_NODE_ID,
+    "display_name": FAKE_TRANS_NODE_ID,
+    "maintenance_mode": "DISABLED",
+    "transport_zone_endpoints": [{
+        "transport_zone_id": FAKE_TZ_UUID,
+        "transport_zone_profile_ids": [{
+            "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a",
+            "resource_type": "BfdHealthMonitoringProfile"
+        }]
+    }],
+    "node_id": "f5a2b5ca-8dba-11e8-9799-020039422cc8"
 }
