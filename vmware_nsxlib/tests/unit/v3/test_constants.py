@@ -140,7 +140,8 @@ FAKE_ROUTER_LINKT1_PORT = {
     "revision": 0,
     "id": FAKE_ROUTER_LINKT1_PORT_UUID,
     "display_name": FAKE_NAME,
-    "logical_router_id": FAKE_ROUTER_UUID
+    "logical_router_id": FAKE_ROUTER_UUID,
+    "linked_logical_router_port_id": {'target_id': uuidutils.generate_uuid()}
 }
 
 FAKE_QOS_PROFILE = {
@@ -529,5 +530,23 @@ FAKE_VPN_SESS = {
         "destinations": [{"subnet": "10.0.5.0/24"}],
         "action": "PROTECT",
         "enabled": True,
+    }],
+}
+
+FAKE_EDGE_CLUSTER_ID = "69c6bc48-0590-4ff5-87b6-9b49e20b67e0"
+FAKE_EDGE_CLUSTER = {
+    "resource_type": "EdgeCluster",
+    "description": "edgecluster1",
+    "id": FAKE_EDGE_CLUSTER_ID,
+    "display_name": "edgecluster1",
+    "deployment_type": "VIRTUAL_MACHINE",
+    "member_node_type": "EDGE_NODE",
+    "members": [{
+        "member_index": 0,
+        "transport_node_id": "321d2746-898e-11e8-9723-000c29391f21"
+    }],
+    "cluster_profile_bindings": [{
+        "profile_id": "15d3485e-0474-4511-bd79-1506ce777baa",
+        "resource_type": "EdgeHighAvailabilityProfile"
     }],
 }
