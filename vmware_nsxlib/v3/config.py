@@ -73,7 +73,11 @@ class NsxLibConfig(object):
                                    the requests, to allow admin user to update/
                                    delete all entries.
     :param rate_limit_retry: If True, the client will retry requests failed on
-           "Too many requests" error
+           "Too many requests" error.
+    :param cluster_unavailable_retry: If True, skip fatal errors when no
+                                      endpoint in the NSX management cluster is
+                                      available to serve a request, and retry
+                                      the request instead.
     """
 
     def __init__(self,
@@ -97,7 +101,8 @@ class NsxLibConfig(object):
                  dns_domain='openstacklocal',
                  dhcp_profile_uuid=None,
                  allow_overwrite_header=False,
-                 rate_limit_retry=True):
+                 rate_limit_retry=True,
+                 cluster_unavailable_retry=False):
 
         self.nsx_api_managers = nsx_api_managers
         self._username = username
@@ -119,6 +124,7 @@ class NsxLibConfig(object):
         self.dns_domain = dns_domain
         self.allow_overwrite_header = allow_overwrite_header
         self.rate_limit_retry = rate_limit_retry
+        self.cluster_unavailable_retry = cluster_unavailable_retry
 
         if dhcp_profile_uuid:
             # this is deprecated, and never used.
