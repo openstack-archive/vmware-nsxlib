@@ -66,7 +66,7 @@ class RouterLib(object):
                     err_msg = _("%(act_num)s edge members found in "
                                 "edge_cluster %(cluster_id)s, however we "
                                 "require at least %(exp_num)s edge nodes "
-                                "in edge cluster for use.") % {
+                                "in edge cluster for use") % {
                         'act_num': len(member_index_list),
                         'exp_num': MIN_EDGE_NODE_NUM,
                         'cluster_id': edge_cluster_uuid}
