@@ -136,3 +136,23 @@ class TestRouter(nsxlib_testcase.NsxClientTestCase):
                               return_value="OVERLAY"):
             tz = self.nsxlib.router.get_tier0_router_overlay_tz(tier0_uuid)
             self.assertEqual(tz, test_constants.FAKE_TZ_UUID)
+
+    def test_get_connected_t0_transit_net(self):
+        t1_uuid = uuidutils.generate_uuid()
+        link_port_uuid = uuidutils.generate_uuid()
+        link_port = {
+            'linked_logical_router_port_id': {
+                'target_id': link_port_uuid}}
+        transit_net = '1.1.1.0'
+        transit_prefix = '31'
+        t0_port = {'subnets': [{'ip_addresses': [transit_net],
+                                'prefix_length': transit_prefix}]}
+        with mock.patch.object(self.nsxlib.router._router_port_client,
+                               'get_tier1_link_port',
+                               return_value=link_port) as get_link,\
+            mock.patch.object(self.nsxlib.router._router_port_client,
+                              'get', return_value=t0_port) as get_port:
+            cidr = self.nsxlib.router.get_connected_t0_transit_net(t1_uuid)
+            get_link.assert_called_with(t1_uuid)
+            get_port.assert_called_with(link_port_uuid)
+            self.assertEqual('%s/%s' % (transit_net, transit_prefix), cidr)

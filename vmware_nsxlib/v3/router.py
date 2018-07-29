@@ -277,3 +277,24 @@ class RouterLib(object):
             if (backend_type ==
                 self.nsxlib.transport_zone.TRANSPORT_TYPE_OVERLAY):
                 return tz_uuid
+
+    def get_connected_t0_transit_net(self, tier1_uuid):
+        """Return the cidr of the tier1->tier0 link port
+
+        return None if the router is not connected to a tier0 router
+        """
+        try:
+            tier1_link_port = (
+                self._router_port_client.get_tier1_link_port(tier1_uuid))
+        except exceptions.ResourceNotFound:
+            # No GW
+            return
+        tier0_link_port_id = tier1_link_port.get(
+            'linked_logical_router_port_id', {}).get('target_id')
+        if not tier0_link_port_id:
+            return
+        tier0_link_port = self._router_port_client.get(tier0_link_port_id)
+        for subnet in tier0_link_port.get('subnets', []):
+            for ip_address in subnet.get('ip_addresses'):
+                # Expecting only 1 cidr here. Return it.
+                return "%s/%s" % (ip_address, subnet.get('prefix_length', '0'))
