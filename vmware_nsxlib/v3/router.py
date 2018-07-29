@@ -279,7 +279,7 @@ class RouterLib(object):
                 return tz_uuid
 
     def get_connected_t0_transit_net(self, tier1_uuid):
-        """Return the cidr of the tier1->tier0 link port
+        """Return the IP of the tier1->tier0 link port
 
         return None if the router is not connected to a tier0 router
         """
@@ -289,12 +289,7 @@ class RouterLib(object):
         except exceptions.ResourceNotFound:
             # No GW
             return
-        tier0_link_port_id = tier1_link_port.get(
-            'linked_logical_router_port_id', {}).get('target_id')
-        if not tier0_link_port_id:
-            return
-        tier0_link_port = self._router_port_client.get(tier0_link_port_id)
-        for subnet in tier0_link_port.get('subnets', []):
+        for subnet in tier1_link_port.get('subnets', []):
             for ip_address in subnet.get('ip_addresses'):
-                # Expecting only 1 cidr here. Return it.
-                return "%s/%s" % (ip_address, subnet.get('prefix_length', '0'))
+                # Expecting only 1 ip here. Return it.
+                return ip_address
