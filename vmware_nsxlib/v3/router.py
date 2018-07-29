@@ -96,7 +96,9 @@ class RouterLib(object):
             logical_port_id=linked_logical_port_id,
             address_groups=None)
 
-    def remove_router_link_port(self, tier1_uuid, tier0_uuid):
+    def remove_router_link_port(self, tier1_uuid, tier0_uuid=None):
+        # Note(asarfaty): tier0_uuid is not used by this method and can
+        # be removed.
         try:
             tier1_link_port = (
                 self._router_port_client.get_tier1_link_port(tier1_uuid))
