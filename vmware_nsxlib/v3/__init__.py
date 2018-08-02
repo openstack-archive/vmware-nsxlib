@@ -320,11 +320,13 @@ class NsxLib(NsxLibBase):
         return node.get('export_type') is 'RESTRICTED'
 
     def feature_supported(self, feature):
-        if (version.LooseVersion(self.get_version()) >=
-            version.LooseVersion(nsx_constants.NSX_VERSION_2_3_0)):
-            # Features available since 2.3
-            if (feature == nsx_constants.FEATURE_ENS_WITH_SEC):
-                return True
+        # if (version.LooseVersion(self.get_version()) >=
+        #     version.LooseVersion(nsx_constants.NSX_VERSION_2_4_0)):
+            # Features available since 2.4
+        if (feature == nsx_constants.FEATURE_ENS_WITH_SEC):
+            return True
+        if (feature == nsx_constants.FEATURE_ICMP_STRICT):
+            return True
 
         if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_2_2_0)):

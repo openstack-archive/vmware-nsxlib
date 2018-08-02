@@ -126,7 +126,7 @@ NSX_VERSION_2_0_0 = '2.0.0'
 NSX_VERSION_2_1_0 = '2.1.0'
 NSX_VERSION_2_2_0 = '2.2.0'
 NSX_VERSION_2_3_0 = '2.3.0'
-NSX_VERSION_2_3_0 = '2.4.0'
+NSX_VERSION_2_4_0 = '2.4.0'
 NSX_VERSION_3_0_0 = '3.0.0'
 
 # Features available depending on the backend version
@@ -145,3 +145,4 @@ FEATURE_TRUNK_VLAN = 'Trunk Vlan'
 FEATURE_ROUTER_TRANSPORT_ZONE = 'Router Transport Zone'
 FEATURE_NO_DNAT_NO_SNAT = 'No DNAT/No SNAT'
 FEATURE_ENS_WITH_SEC = 'ENS with security'
+FEATURE_ICMP_STRICT = 'Strict list of supported ICMP types and codes'
