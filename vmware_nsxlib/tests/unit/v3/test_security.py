@@ -171,7 +171,7 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
                           'section-id', 'nsgroup-id', False,
                           "ALLOW", rules, {rule_id: 'dummy'})
 
-    def test_create_rule_with_icmp(self):
+    def test_create_rule_with_icmp_nsx_2_3(self):
         with mock.patch("vmware_nsxlib.v3.security.NsxLibFirewallSection"
                         ".add_rules") as add_rules:
             rule_id = uuidutils.generate_uuid()
@@ -186,24 +186,62 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
             section_id = 'section-id'
             group_id = 'nsgroup-id'
             target_id = 'dummy'
-            self.nsxlib.firewall_section.create_rules(
-                None, section_id, group_id, False,
-                "ALLOW", rules, {rule_id: target_id})
-            add_rules.assert_called_once_with([
-                {'display_name': mock.ANY,
-                 'ip_protocol': 'IPV4',
-                 'direction': 'OUT',
-                 'services': [{'service': {
-                     'protocol': 'ICMPv4',
-                     'icmp_type': 33,
-                     'icmp_code': 0,
-                     'resource_type': 'ICMPTypeNSService'}}],
-                 'disabled': False,
-                 'destinations': [{'target_id': target_id,
-                                   'target_type': 'NSGroup'}],
-                 'sources': [{'target_id': group_id,
-                              'target_type': 'NSGroup'}],
-                 'logged': False, 'action': 'ALLOW'}], section_id)
+            with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                            return_value='2.3.0'):
+                self.nsxlib.firewall_section.create_rules(
+                    None, section_id, group_id, False,
+                    "ALLOW", rules, {rule_id: target_id})
+                add_rules.assert_called_once_with([
+                    {'display_name': mock.ANY,
+                     'ip_protocol': 'IPV4',
+                     'direction': 'OUT',
+                     'services': [{'service': {
+                         'protocol': 'ICMPv4',
+                         'icmp_type': 33,
+                         'icmp_code': 0,
+                         'resource_type': 'ICMPTypeNSService'}}],
+                     'disabled': False,
+                     'destinations': [{'target_id': target_id,
+                                       'target_type': 'NSGroup'}],
+                     'sources': [{'target_id': group_id,
+                                  'target_type': 'NSGroup'}],
+                     'logged': False, 'action': 'ALLOW'}], section_id)
+
+    def test_create_rule_with_icmp_nsx_2_4(self):
+        with mock.patch("vmware_nsxlib.v3.security.NsxLibFirewallSection"
+                        ".add_rules") as add_rules:
+            rule_id = uuidutils.generate_uuid()
+            rule = {'id': rule_id,
+                    'ethertype': 'IPv4',
+                    'protocol': 'icmp',
+                    'direction': 'egress',
+                    'port_range_min': 33,
+                    'port_range_max': 0,
+                    'remote_ip_prefix': None}
+            rules = [rule]
+            section_id = 'section-id'
+            group_id = 'nsgroup-id'
+            target_id = 'dummy'
+            with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                            return_value='2.4.0'):
+                self.nsxlib.firewall_section.create_rules(
+                    None, section_id, group_id, False,
+                    "ALLOW", rules, {rule_id: target_id})
+                add_rules.assert_called_once_with([
+                    {'display_name': mock.ANY,
+                     'ip_protocol': 'IPV4',
+                     'direction': 'OUT',
+                     'services': [{'service': {
+                         'protocol': 'ICMPv4',
+                         'icmp_type': 33,
+                         'icmp_code': 0,
+                         'resource_type': 'ICMPTypeNSService'}}],
+                     'disabled': False,
+                     'destinations': [{'target_id': target_id,
+                                       'target_type': 'NSGroup'}],
+                     'sources': [{'target_id': group_id,
+                                  'target_type': 'NSGroup'}],
+                     'logged': False, 'action': 'ALLOW'}], section_id)
 
     def test_create_rule_with_illegal_icmp(self):
         rule_id = uuidutils.generate_uuid()
@@ -218,10 +256,18 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
         section_id = 'section-id'
         group_id = 'nsgroup-id'
         target_id = 'dummy'
-        self.assertRaises(nsxlib_exc.InvalidInput,
-                          self.nsxlib.firewall_section.create_rules,
-                          None, section_id, group_id, False,
-                          "ALLOW", rules, {rule_id: target_id})
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value="2.3.0"):
+            self.assertRaises(nsxlib_exc.InvalidInput,
+                              self.nsxlib.firewall_section.create_rules,
+                              None, section_id, group_id, False,
+                              "ALLOW", rules, {rule_id: target_id})
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value="2.4.0"):
+            self.assertRaises(nsxlib_exc.InvalidInput,
+                              self.nsxlib.firewall_section.create_rules,
+                              None, section_id, group_id, False,
+                              "ALLOW", rules, {rule_id: target_id})
 
     def test_create_with_rules(self):
         expected_body = {

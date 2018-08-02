@@ -111,3 +111,19 @@ IPV4_ICMP_TYPES = {0: [0],  # Echo reply
                    35: [0],  # Mobile registration request
                    36: [0],  # Mobile registration reply
                    }
+# Supported strict ICMP types and their codes
+IPV4_ICMP_STRICT_TYPES = {0: [0],  # Echo reply
+                          8: [0],  # Echo request
+                          9: [0],  # Router advertisement
+                          10: [0],  # Router Selection
+                          13: [0],  # Timestamp
+                          14: [0],  # Timestamp reply
+                          15: [0],  # Information request
+                          16: [0],  # Information reply
+                          17: [0],  # Address mask request
+                          18: [0],  # Address mask reply
+                          33: [0],  # Where-Are-You
+                          34: [0],  # I-Am-Here
+                          35: [0],  # Mobile registration request
+                          36: [0],  # Mobile registration reply
+                          }
