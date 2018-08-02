@@ -341,17 +341,24 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             # Validate the icmp type & code
             icmp_type = sg_rule['port_range_min']
             icmp_code = sg_rule['port_range_max']
-            if icmp_type and icmp_type not in constants.IPV4_ICMP_TYPES:
-                raise exceptions.InvalidInput(
-                    operation='create_rule',
-                    arg_val=icmp_type,
-                    arg_name='icmp_type')
-            if (icmp_code and
-                icmp_code not in constants.IPV4_ICMP_TYPES[icmp_type]):
-                raise exceptions.InvalidInput(
-                    operation='create_rule',
-                    arg_val=icmp_code,
-                    arg_name='icmp_code for this icmp_type')
+            if (icmp_type and icmp_type not in
+                    constants.IPV4_ICMP_STRICT_TYPES):
+                if (icmp_type and icmp_type not in
+                        constants.IPV4_ICMP_TYPES and not
+                        consts.FEATURE_ICMP_STRICT):
+                    raise exceptions.InvalidInput(
+                        operation='create_rule',
+                        arg_val=icmp_type,
+                        arg_name='icmp_type')
+            if (icmp_code and icmp_code not in
+                    constants.IPV4_ICMP_STRICT_TYPES[icmp_type]):
+                if (icmp_code not in
+                        constants.IPV4_ICMP_TYPES[icmp_type] and not
+                        consts.FEATURE_ICMP_STRICT):
+                    raise exceptions.InvalidInput(
+                        operation='create_rule',
+                        arg_val=icmp_code,
+                        arg_name='icmp_code for this icmp_type')
 
             return self.get_nsservice(
                 consts.ICMP_TYPE_NSSERVICE,
