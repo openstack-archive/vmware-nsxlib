@@ -218,10 +218,18 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
         section_id = 'section-id'
         group_id = 'nsgroup-id'
         target_id = 'dummy'
-        self.assertRaises(nsxlib_exc.InvalidInput,
-                          self.nsxlib.firewall_section.create_rules,
-                          None, section_id, group_id, False,
-                          "ALLOW", rules, {rule_id: target_id})
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value="2.3.0"):
+            self.assertRaises(nsxlib_exc.InvalidInput,
+                              self.nsxlib.firewall_section.create_rules,
+                              None, section_id, group_id, False,
+                              "ALLOW", rules, {rule_id: target_id})
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value="2.4.0"):
+            self.assertRaises(nsxlib_exc.InvalidInput,
+                              self.nsxlib.firewall_section.create_rules,
+                              None, section_id, group_id, False,
+                              "ALLOW", rules, {rule_id: target_id})
 
     def test_create_with_rules(self):
         expected_body = {
