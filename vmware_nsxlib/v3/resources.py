@@ -691,3 +691,32 @@ class NodeHttpServiceProperties(utils.NsxLibApiBase):
         """Not supported"""
         msg = _("Find is not supported for %s") % self.uri_segment
         raise exceptions.ManagerError(details=msg)
+
+
+class NsxlibClusterNodesConfig(utils.NsxLibApiBase):
+    @property
+    def uri_segment(self):
+        return 'cluster/nodes'
+
+    @property
+    def resource_type(self):
+        return 'ClusterNodeConfig'
+
+    def delete(self, uuid):
+        """Not supported"""
+        msg = _("Delete is not supported for %s") % self.uri_segment
+        raise exceptions.ManagerError(details=msg)
+
+    def get_managers_ips(self):
+        manager_ips = []
+        nodes_config = self.client.get(self.get_path())['results']
+        for node in nodes_config:
+            if 'manager_role' in node:
+                manager_conf = node['manager_role']
+                if 'api_listen_addr' in manager_conf:
+                    list_addr = manager_conf['mgmt_cluster_listen_addr']
+                    ip = list_addr['ip_address']
+                    if ip != '127.0.0.1':
+                        manager_ips.append(list_addr['ip_address'])
+
+        return manager_ips

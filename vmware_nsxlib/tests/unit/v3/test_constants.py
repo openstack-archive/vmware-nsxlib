@@ -588,3 +588,52 @@ FAKE_TRANS_NODE = {
     }],
     "node_id": "f5a2b5ca-8dba-11e8-9799-020039422cc8"
 }
+
+FAKE_MANAGER_IP1 = "10.192.210.181"
+FAKE_MANAGER_IP2 = "10.192.210.182"
+FAKE_CLUSTER_NODES_CONFIG = [{
+    "resource_type": "ClusterNodeConfig",
+    "manager_role": {
+        "type": "ManagementClusterRoleConfig",
+        "mgmt_cluster_listen_addr": {
+            "port": 0,
+            "ip_address": FAKE_MANAGER_IP1
+        },
+        "api_listen_addr": {
+            "port": 443,
+            "ip_address": FAKE_MANAGER_IP1
+        },
+        "mgmt_plane_listen_addr": {
+            "port": 5671,
+            "ip_address": FAKE_MANAGER_IP1
+        }
+    },
+    "appliance_mgmt_listen_addr": FAKE_MANAGER_IP1
+}, {
+    "resource_type": "ClusterNodeConfig",
+    "controller_role": {
+        "type": "ControllerClusterRoleConfig",
+        "control_cluster_listen_addr": {
+            "port": 7777,
+            "ip_address": "127.0.0.1"
+        },
+    },
+}, {
+    "resource_type": "ClusterNodeConfig",
+    "manager_role": {
+        "type": "ManagementClusterRoleConfig",
+        "mgmt_cluster_listen_addr": {
+            "port": 0,
+            "ip_address": FAKE_MANAGER_IP2
+        },
+        "api_listen_addr": {
+            "port": 443,
+            "ip_address": FAKE_MANAGER_IP2
+        },
+        "mgmt_plane_listen_addr": {
+            "port": 5671,
+            "ip_address": FAKE_MANAGER_IP2
+        }
+    },
+    "appliance_mgmt_listen_addr": FAKE_MANAGER_IP2
+}]

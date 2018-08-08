@@ -1918,6 +1918,24 @@ class NodeHttpServicePropertiesTestCase(BaseTestResource):
                 headers=self.default_headers())
 
 
+class TestNsxlibClusterNodesConfigTestCase(BaseTestResource):
+    def setUp(self):
+        super(TestNsxlibClusterNodesConfigTestCase, self).setUp(
+            resources.NsxlibClusterNodesConfig)
+
+    def test_delete_resource(self):
+        self.skipTest("The action is not supported by this resource")
+
+    def test_get_managers_ips(self):
+        mocked_resource = self.get_mocked_resource()
+        body = {'results': test_constants.FAKE_CLUSTER_NODES_CONFIG}
+        with mock.patch.object(mocked_resource.client, "url_get",
+                               return_value=body):
+            result = mocked_resource.get_managers_ips()
+            self.assertEqual([test_constants.FAKE_MANAGER_IP1,
+                              test_constants.FAKE_MANAGER_IP2], result)
+
+
 class DummyCachedResource(utils.NsxLibApiBase):
 
     @property

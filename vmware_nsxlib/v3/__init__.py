@@ -296,6 +296,8 @@ class NsxLib(NsxLibBase):
             self.client, self.nsxlib_config, nsxlib=self)
         self.http_services = resources.NodeHttpServiceProperties(
             self.client, self.nsxlib_config, nsxlib=self)
+        self.cluster_nodes = resources.NsxlibClusterNodesConfig(
+            self.client, self.nsxlib_config, nsxlib=self)
 
         # Update tag limits
         self.tag_limits = self.get_tag_limits()
