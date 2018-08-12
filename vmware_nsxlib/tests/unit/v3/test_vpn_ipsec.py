@@ -325,6 +325,16 @@ class TestSession(test_resources.BaseTestResource):
             data=jsonutils.dumps(fake_sess, sort_keys=True),
             headers=self.default_headers())
 
+    def test_session_get_status(self):
+        uuid = test_constants.FAKE_VPN_SESS_ID
+        mocked_resource = self.get_mocked_resource()
+        mocked_resource.get_status(uuid)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            'https://1.2.3.4/api/v1/%s/%s/status?source=realtime' % (
+                mocked_resource.uri_segment, uuid),
+            headers=self.default_headers())
+
 
 class TestService(test_resources.BaseTestResource):
 
