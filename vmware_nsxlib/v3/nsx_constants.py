@@ -151,3 +151,7 @@ FEATURE_ROUTER_ALLOCATION_PROFILE = 'Router Allocation Profile'
 # Features available depending on the Policy Manager backend version
 FEATURE_NSX_POLICY = 'NSX Policy'
 FEATURE_NSX_POLICY_NETWORKING = 'NSX Policy Networking'
+
+# NSX Tags related constants
+SCOPE = 'scope'
+TAG = 'tag'
