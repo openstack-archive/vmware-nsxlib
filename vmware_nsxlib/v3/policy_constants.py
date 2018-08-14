@@ -40,3 +40,6 @@ CATEGORY_INFRASTRUCTURE = 'Infrastructure'
 CATEGORY_ENVIRONMENTAL = 'Environmental'
 CATEGORY_APPLICATION = 'Application'
 CATEGORY_DEFAULT = 'Default'
+
+# Segment Port related constants
+SEGMENT_PORT_ATTACHMENT = 'PortAttachment'
