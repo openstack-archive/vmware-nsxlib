@@ -428,6 +428,7 @@ class NsxPolicyNetworkApi(NsxPolicyResourceBase):
                             tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
+        # TODO(abhiraut): Move ID autogeneration to the base class
         network_id = self._init_obj_uuid(network_id)
         network_def = self.entry_def(network_id=network_id,
                                      name=name,
@@ -526,6 +527,64 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
             vlan_ids=vlan_ids,
             tags=tags)
         return self.policy_api.create_or_update(segment_def)
+
+
+class NsxPolicyPortApi(NsxPolicyResourceBase):
+    """NSX Policy Port API (Under a Segment)."""
+    @property
+    def entry_def(self):
+        return policy_defs.PortDef
+
+    def create_or_overwrite(self, name, port_id=None, segment_id=None,
+                            network_id=None, description=None,
+                            app_id=None, vif_type=None, host_vif_id=None,
+                            allocate_addresses=None, traffic_tag=None,
+                            tags=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        port_id = self._init_obj_uuid(port_id)
+        port_def = self.entry_def(port_id=port_id,
+                                  segment_id=segment_id,
+                                  network_id=network_id,
+                                  name=name,
+                                  description=description,
+                                  app_id=app_id,
+                                  vif_type=vif_type,
+                                  host_vif_id=host_vif_id,
+                                  allocate_addresses=allocate_addresses,
+                                  traffic_tag=traffic_tag,
+                                  tags=tags,
+                                  tenant=tenant)
+        return self.policy_api.create_or_update(port_def)
+
+    def delete(self, port_id, segment_id, network_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(port_id=port_id, segment_id=segment_id,
+                                  network_id=network_id, tenant=tenant)
+        self.policy_api.delete(port_def)
+
+    def get(self, port_id, segment_id, network_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(port_id=port_id, segment_id=segment_id,
+                                  network_id=network_id, tenant=tenant)
+        return self.policy_api.get(port_def)
+
+    def list(self, segment_id, network_id,
+             tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id, network_id=network_id,
+                                  tenant=tenant)
+        return self.policy_api.list(port_def)['results']
+
+    def update(self, port_id, segment_id, network_id, name=None,
+               description=None, tags=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(port_id=port_id, segment_id=segment_id,
+                                  network_id=network_id, tenant=tenant)
+        port_def.update_attributes_in_body(
+            name=name,
+            description=description,
+            tags=tags)
+        return self.policy_api.create_or_update(port_def)
 
 
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):

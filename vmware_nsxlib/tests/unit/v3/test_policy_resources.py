@@ -1051,3 +1051,104 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
                              'parent_path': domain_path}
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
+
+
+class TestPolicyPort(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyPort, self).setUp()
+        self.resourceApi = self.policy_lib.port
+        self.name = 'port1'
+        self.description = 'idrinkandiknowthings'
+        self.port_id = 'port-id-007'
+        self.segment_id = 'sgmt-id-007'
+        self.network_id = 'net-id-007'
+        self.vlan = 7
+        self.host_vif_id= 'parent-vif-uuid'
+        self.app_id = 'cluster.project.port1'
+        self.vif_type = nsx_constants.VIF_TYPE_CHILD
+        self.tags = [{nsx_constants.SCOPE: "project",
+                      nsx_constants.TAG: "ns1"}]
+
+    def test_create_with_id(self):
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                self.name, port_id=self.port_id, description=self.description,
+                segment_id=self.segment_id, network_id=self.network_id,
+                app_id=self.app_id, vif_type=self.vif_type,
+                allocate_addresses=policy_constants.ALLOCATE_ADDRESSES_BOTH,
+                traffic_tag=self.vlan, tags=self.tags,
+                host_vif_id=self.host_vif_id, tenant=TEST_TENANT)
+            expected_def = policy_defs.PortDef(
+                port_id=self.port_id,
+                segment_id=self.segment_id,
+                network_id=self.network_id,
+                name=self.name,
+                description=self.description,
+                app_id=self.app_id,
+                vif_type=nsx_constants.VIF_TYPE_CHILD,
+                host_vif_id=self.host_vif_id,
+                allocate_addresses=policy_constants.ALLOCATE_ADDRESSES_BOTH,
+                traffic_tag=self.vlan,
+                tags=self.tags,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_create_without_id(self):
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                self.name, description=self.description,
+                segment_id=self.segment_id, network_id=self.network_id,
+                tenant=TEST_TENANT)
+            expected_def = policy_defs.PortDef(port_id=mock.ANY,
+                                               name=self.name,
+                                               description=self.description,
+                                               segment_id=self.segment_id,
+                                               network_id=self.network_id,
+                                               tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(self.port_id, self.segment_id,
+                                    self.network_id, tenant=TEST_TENANT)
+            expected_def = policy_defs.PortDef(port_id=self.port_id,
+                                               tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(self.port_id, self.segment_id,
+                                 self.network_id, tenant=TEST_TENANT)
+            expected_def = policy_defs.PortDef(port_id=self.port_id,
+                                               tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list_by_segment(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(self.segment_id, self.network_id,
+                                  tenant=TEST_TENANT)
+            expected_def = policy_defs.PortDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        name = 'new name'
+        description = 'new desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(self.port_id,
+                                    name=name,
+                                    description=description,
+                                    segment_id=self.segment_id,
+                                    network_id=self.network_id,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.PortDef(port_id=self.port_id,
+                                               segment_id=self.segment_id,
+                                               network_id=self.network_id,
+                                               tenant=TEST_TENANT)
+            expected_dict = {'display_name': name,
+                             'description': description}
+            self.assert_called_with_def_and_dict(
+                update_call, expected_def, expected_dict)
