@@ -316,3 +316,68 @@ class TestPolicyDeploymentMap(TestPolicyApi):
         self.assert_json_call('PATCH', self.client,
                               'infra/domains/d1/domain-deployment-maps/dm1',
                               data=expected_data)
+
+
+class TestPolicyPort(TestPolicyApi):
+
+    def setUp(self):
+        super(TestPolicyPort, self).setUp()
+        self.port_id = "k8scl-ns1-pod1"
+        self.app_id = "k8scl.ns1.pod1"
+        self.segment_id = "sgmt-k8scl-ns1"
+        self.network_id = "nw-k8scl-ns1"
+        self.port_path = "infra/networks/%s/segments/%s/ports/%s" % (
+            self.network_id, self.segment_id, self.port_id)
+        self.vlan = 10
+        self.parent_vif_id = "parent-vif-uuid"
+        self.tags = [{nsx_constants.SCOPE: "project",
+                      nsx_constants.TAG: "ns1"}]
+        self.port_def = policy.PortDef(
+            port_id=self.port_id,
+            segment_id=self.segment_id,
+            network_id=self.network_id,
+            name=self.port_id,
+            description=self.port_id,
+            app_id=self.app_id,
+            vif_type=nsx_constants.VIF_TYPE_CHILD,
+            context_id=self.parent_vif_id,
+            allocate_addresses=policy_constants.ALLOCATE_ADDRESSES_BOTH,
+            traffic_tag=self.vlan,
+            tags=self.tags
+        )
+
+    def test_create(self):
+        self.policy_api.create_or_update(self.port_def)
+        self.assert_json_call('PATCH', self.client,
+                              self.port_path,
+                              data=self.port_def.get_obj_dict())
+
+    def test_delete(self):
+        self.policy_api.delete(self.port_def)
+        self.assert_json_call('DELETE', self.client,
+                              self.port_path)
+
+    def test_get(self):
+        self.policy_api.get(self.port_def)
+        self.assert_json_call('GET', self.client,
+                              self.port_path)
+
+    def test_list(self):
+        ports_path = "infra/networks/%s/segments/%s/ports" % (
+            self.network_id, self.segment_id)
+        self.policy_api.list(self.port_def)
+        self.assert_json_call('GET', self.client, ports_path)
+
+    def test_update(self):
+        updated_tags = self.tags[0].copy()
+        updated_tags[nsx_constants.TAG] = "newns"
+        updated_tags = [updated_tags]
+        port_def = policy.PortDef(
+            port_id=self.port_id, segment_id=self.segment_id,
+            network_id=self.network_id, tags=self.tags)
+        port_def.update_attributes_in_body(tags=updated_tags)
+        expected_data = {'tags': updated_tags}
+        self.policy_api.create_or_update(port_def)
+        self.assert_json_call('PATCH', self.client,
+                              self.port_path,
+                              data=expected_data)
