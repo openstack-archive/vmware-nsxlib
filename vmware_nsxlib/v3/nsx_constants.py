@@ -147,3 +147,7 @@ FEATURE_NO_DNAT_NO_SNAT = 'No DNAT/No SNAT'
 FEATURE_ENS_WITH_SEC = 'ENS with security'
 FEATURE_ICMP_STRICT = 'Strict list of supported ICMP types and codes'
 FEATURE_ROUTER_ALLOCATION_PROFILE = 'Router Allocation Profile'
+
+# NSX Tags related constants
+SCOPE = 'scope'
+TAG = 'tag'

@@ -22,6 +22,9 @@ from vmware_nsxlib.v3 import policy_constants
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
+NETWORKS_PATH_PATTERN = TENANTS_PATH_PATTERN + "networks/"
+SEGMENTS_PATH_PATTERN = NETWORKS_PATH_PATTERN + "%s/segments/"
+PORTS_PATH_PATTERN = SEGMENTS_PATH_PATTERN + "%s/ports/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
@@ -131,6 +134,59 @@ class DomainDef(ResourceDef):
     @property
     def path_pattern(self):
         return DOMAINS_PATH_PATTERN
+
+
+class PortDef(ResourceDef):
+
+    def __init__(self,
+                 port_id=None,
+                 segment_id=None,
+                 network_id=None,
+                 name=None,
+                 description=None,
+                 app_id=None,
+                 vif_type=None,
+                 context_id=None,
+                 allocate_addresses=None,
+                 traffic_tag=None,
+                 tags=None,
+                 tenant=policy_constants.POLICY_INFRA_TENANT
+                 ):
+        super(PortDef, self).__init__()
+        self.tenant = tenant
+        self.id = port_id
+        self.name = name
+        self.description = description
+        self.app_id = app_id
+        self.vif_type = vif_type
+        self.context_id = context_id
+        self.allocate_addresses = allocate_addresses
+        self.traffic_tag = traffic_tag
+        self.tags = tags
+        self.parent_ids = (tenant, network_id, segment_id)
+
+    @property
+    def path_pattern(self):
+        return PORTS_PATH_PATTERN
+
+    def get_obj_dict(self):
+        body = super(PortDef, self).get_obj_dict()
+        port_attachment = {}
+        if self.tags:
+            body['tags'] = self.tags
+        if self.traffic_tag:
+            port_attachment['traffic_tag'] = self.traffic_tag
+        if self.app_id:
+            port_attachment['app_id'] = self.app_id
+        if self.context_id:
+            port_attachment['context_id'] = self.context_id
+        if self.allocate_addresses:
+            port_attachment['allocate_addresses'] = self.allocate_addresses
+        if self.vif_type:
+            port_attachment['type'] = self.vif_type
+        if port_attachment:
+            body[policy_constants.SEGMENT_PORT_ATTACHMENT] = port_attachment
+        return body
 
 
 class Condition(object):
