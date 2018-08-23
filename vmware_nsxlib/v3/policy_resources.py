@@ -89,12 +89,15 @@ class NsxPolicyResourceBase(object):
 class NsxPolicyDomainApi(NsxPolicyResourceBase):
     """NSX Policy Domain."""
     def create_or_overwrite(self, name, domain_id=None, description=None,
+                            tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         domain_id = self._init_obj_uuid(domain_id)
         domain_def = policy_defs.DomainDef(domain_id=domain_id,
                                            name=name,
                                            description=description,
                                            tenant=tenant)
+        if tags:
+            domain_def.add_tags(tags)
         return self.policy_api.create_or_update(domain_def)
 
     def delete(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -109,12 +112,13 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
         domain_def = policy_defs.DomainDef(tenant=tenant)
         return self.policy_api.list(domain_def)['results']
 
-    def update(self, domain_id, name=None, description=None,
+    def update(self, domain_id, name=None, description=None, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         domain_def = policy_defs.DomainDef(domain_id=domain_id,
                                            tenant=tenant)
         domain_def.update_attributes_in_body(name=name,
-                                             description=description)
+                                             description=description,
+                                             tags=tags)
         # update the backend
         return self.policy_api.create_or_update(domain_def)
 
@@ -127,7 +131,7 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         cond_val=None,
         cond_key=policy_constants.CONDITION_KEY_TAG,
         cond_op=policy_constants.CONDITION_OP_EQUALS,
-        cond_member_type=policy_constants.CONDITION_MEMBER_PORT,
+        cond_member_type=policy_constants.CONDITION_MEMBER_PORT, tags=None,
         tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create a group with/without a condition.
 
@@ -150,6 +154,8 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                          description=description,
                                          conditions=conditions,
                                          tenant=tenant)
+        if tags:
+            group_def.add_tags(tags)
         return self.policy_api.create_or_update(group_def)
 
     def delete(self, domain_id, group_id,
@@ -180,7 +186,7 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                                           tenant=tenant)
 
     def update(self, domain_id, group_id, name=None, description=None,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tags=None, tenant=policy_constants.POLICY_INFRA_TENANT):
         """Update the general data of the group.
 
         Without changing the conditions
@@ -189,7 +195,8 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                          group_id=group_id,
                                          tenant=tenant)
         group_def.update_attributes_in_body(name=name,
-                                            description=description)
+                                            description=description,
+                                            tags=tags)
         # update the backend
         return self.policy_api.create_or_update(group_def)
 
@@ -436,7 +443,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                             category=policy_constants.CATEGORY_DEFAULT,
                             sequence_number=None, service_ids=None,
                             action=policy_constants.ACTION_ALLOW,
-                            source_groups=None, dest_groups=None,
+                            source_groups=None, dest_groups=None, tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap & Entry.
 
@@ -485,6 +492,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
             precedence=precedence, category=category)
+        if tags:
+            map_def.add_tags(tags)
         if last_sequence < 0:
             # if communication map is absent, we need to create it
             return self.policy_api.create_with_parent(map_def, entry_def)
@@ -527,7 +536,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def update(self, domain_id, map_id, name=None, description=None,
                sequence_number=None, service_ids=None, action=None,
                source_groups=None, dest_groups=None, precedence=None,
-               category=None,
+               category=None, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         # Get the current data of communication map & its' entry
         comm_map = self.get(domain_id, map_id, tenant=tenant)
@@ -542,6 +551,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             comm_map['category'] = category
         if precedence is not None:
             comm_map['precedence'] = precedence
+        if tags is not None:
+            comm_map['tags'] = tags
 
         if (comm_map.get('communication_entries') and
             len(comm_map['communication_entries']) == 1):
