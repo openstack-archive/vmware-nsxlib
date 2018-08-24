@@ -650,7 +650,7 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         return self.client.get(resource)
 
     def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
-               description=None, transport_zone_id=None):
+               description=None, transport_zone_id=None, allocation_pool=None):
         # TODO(salv-orlando): If possible do not manage edge clusters
         # in the main plugin logic.
         router_type = (nsx_constants.ROUTER_TYPE_TIER0 if tier_0 else
@@ -665,6 +665,9 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         if transport_zone_id:
             body['advanced_config'] = {
                 'transport_zone_id': transport_zone_id}
+        if allocation_pool:
+            body['allocation_profile'] = {
+                'allocation_pool': allocation_pool}
         return self.client.create(self.get_path(), body=body)
 
     def delete(self, lrouter_id, force=False):
