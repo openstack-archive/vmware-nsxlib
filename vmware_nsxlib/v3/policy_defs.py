@@ -377,6 +377,7 @@ class CommunicationMapEntryDef(ResourceDef):
                  scope="ANY",
                  name=None,
                  description=None,
+                 direction=None,
                  tenant=policy_constants.POLICY_INFRA_TENANT):
         super(CommunicationMapEntryDef, self).__init__()
         self.tenant = tenant
@@ -392,6 +393,7 @@ class CommunicationMapEntryDef(ResourceDef):
         self.dest_groups = self.get_groups_path(domain_id, dest_groups)
         self.service_paths = [self.get_service_path(service_id) for service_id
                               in service_ids] if service_ids else []
+        self.direction = direction
         self.parent_ids = (tenant, domain_id, map_id)
 
     # convert groups and services to full path
@@ -421,6 +423,7 @@ class CommunicationMapEntryDef(ResourceDef):
         body['services'] = self.service_paths
         body['scope'] = [self.scope]
         body['action'] = self.action
+        body['direction'] = self.direction
         return body
 
     def update_attributes_in_body(self, **kwargs):
@@ -448,6 +451,10 @@ class CommunicationMapEntryDef(ResourceDef):
         if kwargs.get('scope') is not None:
             body['scope'] = [kwargs['scope']]
             del kwargs['scope']
+
+        if kwargs.get('direction') is not None:
+            body['direction'] = [kwargs['direction']]
+            del kwargs['direction']
 
         super(CommunicationMapEntryDef, self).update_attributes_in_body(
             body=body, **kwargs)
