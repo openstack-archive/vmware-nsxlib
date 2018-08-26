@@ -403,6 +403,14 @@ class Session(utils.NsxLibApiBase):
             body['enabled'] = enabled
         return self.client.update(self.get_path(uuid), body=body)
 
+    def get_status(self, uuid, source='realtime'):
+        try:
+            return self.client.get(
+                self.get_path(uuid + '/status?source=%s' % source))
+        except Exception as e:
+            LOG.warning("No status found for session %s: %s", uuid, e)
+            return
+
 
 class Service(utils.NsxLibApiBase):
 
