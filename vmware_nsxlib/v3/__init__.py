@@ -331,7 +331,7 @@ class NsxLib(NsxLibBase):
         if (version.LooseVersion(self.get_version()) >=
                 version.LooseVersion(nsx_constants.NSX_VERSION_2_3_0)):
             # Features available since 2.3
-            if (feature == nsx_constants.FEATURE_ALLOCATION_POOL):
+            if (feature == nsx_constants.FEATURE_ROUTER_ALLOCATION_PROFILE):
                 return True
 
         if (version.LooseVersion(self.get_version()) >=
