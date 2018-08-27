@@ -1,0 +1,10 @@
+Code-Review+2: Adit Sarfaty <asarfaty@vmware.com>
+Verified+1: VMware NSX CI
+Code-Review+2: Shih-Hao Li <shihli@vmware.com>
+Workflow+1: Shih-Hao Li <shihli@vmware.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Mon, 27 Aug 2018 15:54:44 +0000
+Reviewed-on: https://review.openstack.org/596663
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
