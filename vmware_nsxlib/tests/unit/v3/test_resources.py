@@ -1207,6 +1207,26 @@ class IpPoolTestCase(BaseTestResource):
         else:
             self.fail("shouldn't happen")
 
+    def test_delete_ip_pool(self):
+        fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
+        pool = self.get_mocked_resource(response=fake_ip_pool)
+        uuid = fake_ip_pool['id']
+        pool.delete(uuid)
+        test_client.assert_json_call(
+            'delete', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s' % uuid,
+            headers=self.default_headers())
+
+    def test_force_delete_ip_pool(self):
+        fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
+        pool = self.get_mocked_resource(response=fake_ip_pool)
+        uuid = fake_ip_pool['id']
+        pool.delete(uuid, force=True)
+        test_client.assert_json_call(
+            'delete', pool,
+            'https://1.2.3.4/api/v1/pools/ip-pools/%s?force=True' % uuid,
+            headers=self.default_headers())
+
     def test_update_ip_pool_name(self):
         fake_ip_pool = test_constants.FAKE_IP_POOL.copy()
         pool = self.get_mocked_resource(response=fake_ip_pool)

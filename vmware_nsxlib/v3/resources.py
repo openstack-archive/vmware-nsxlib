@@ -569,6 +569,12 @@ class IpPool(utils.NsxLibApiBase):
 
         return self.client.create(self.get_path(), body=body)
 
+    def delete(self, pool_id, force=False):
+        url = pool_id
+        if force:
+            url += '?force=%s' % force
+        return self.client.delete(self.get_path(url))
+
     def _update_param_in_pool(self, args_dict, key, pool_data):
         # update the arg only if it exists in the args dictionary
         if key in args_dict:
