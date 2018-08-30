@@ -394,7 +394,33 @@ class NsxPolicyLib(NsxLibBase):
     def keepalive_section(self):
         return 'infra'
 
+    def get_version(self):
+        """Get the NSX Policy manager version
+
+        Currently the backend does not support it, so the nsx-manager api
+        will be used temporarily.
+        """
+        if self.nsx_version:
+            return self.nsx_version
+
+        manager_client = client.NSX3Client(
+            self.cluster,
+            nsx_api_managers=self.nsxlib_config.nsx_api_managers,
+            max_attempts=self.nsxlib_config.max_attempts,
+            url_path_base=client.NSX3Client.NSX_V1_API_PREFIX,
+            rate_limit_retry=self.nsxlib_config.rate_limit_retry)
+
+        node = manager_client.get('node')
+        self.nsx_version = node.get('node_version')
+        return self.nsx_version
+
     def feature_supported(self, feature):
+        if (version.LooseVersion(self.get_version()) >=
+                version.LooseVersion(nsx_constants.NSX_VERSION_2_4_0)):
+            # Features available since 2.4
+            if (feature == nsx_constants.FEATURE_NSX_POLICY_NETWORKING):
+                return True
+
         return (feature == nsx_constants.FEATURE_NSX_POLICY)
 
     @property
