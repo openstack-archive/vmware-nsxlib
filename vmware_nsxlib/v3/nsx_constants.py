@@ -129,14 +129,13 @@ NSX_VERSION_2_3_0 = '2.3.0'
 NSX_VERSION_2_4_0 = '2.4.0'
 NSX_VERSION_3_0_0 = '3.0.0'
 
-# Features available depending on the backend version
+# Features available depending on the NSX Manager backend version
 FEATURE_MAC_LEARNING = 'MAC Learning'
 FEATURE_DYNAMIC_CRITERIA = 'Dynamic criteria'
 FEATURE_EXCLUDE_PORT_BY_TAG = 'Exclude Port by Tag'
 FEATURE_ROUTER_FIREWALL = 'Router Firewall'
 FEATURE_LOAD_BALANCER = 'Load Balancer'
 FEATURE_DHCP_RELAY = 'DHCP Relay'
-FEATURE_NSX_POLICY = 'NSX Policy'
 FEATURE_VLAN_ROUTER_INTERFACE = 'VLAN Router Interface'
 FEATURE_RATE_LIMIT = 'Requests Rate Limit'
 FEATURE_IPSEC_VPN = 'IPSec VPN'
@@ -147,3 +146,7 @@ FEATURE_NO_DNAT_NO_SNAT = 'No DNAT/No SNAT'
 FEATURE_ENS_WITH_SEC = 'ENS with security'
 FEATURE_ICMP_STRICT = 'Strict list of supported ICMP types and codes'
 FEATURE_ROUTER_ALLOCATION_PROFILE = 'Router Allocation Profile'
+
+# Features available depending on the Policy Manager backend version
+FEATURE_NSX_POLICY = 'NSX Policy'
+FEATURE_NSX_POLICY_NETWORKING = 'NSX Policy Networking'
