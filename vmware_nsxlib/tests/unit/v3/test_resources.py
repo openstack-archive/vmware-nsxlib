@@ -925,6 +925,16 @@ class LogicalRouterTestCase(BaseTestResource):
              'advertisement/rules' % router_id),
             headers=self.default_headers())
 
+    def test_get_debug_info(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        router.get_debug_info(router_id)
+        test_client.assert_json_call(
+            'get', router,
+            ('https://1.2.3.4/api/v1/logical-routers/%s/'
+             'debug-info?format=text' % router_id),
+            headers=self.default_headers())
+
 
 class LogicalRouterPortTestCase(BaseTestResource):
 
