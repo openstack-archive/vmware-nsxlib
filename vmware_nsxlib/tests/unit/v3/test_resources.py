@@ -925,6 +925,41 @@ class LogicalRouterTestCase(BaseTestResource):
              'advertisement/rules' % router_id),
             headers=self.default_headers())
 
+    def test_get_debug_info(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        router.get_debug_info(router_id)
+        test_client.assert_json_call(
+            'get', router,
+            ('https://1.2.3.4/api/v1/logical-routers/%s/'
+             'debug-info?format=text' % router_id),
+            headers=self.default_headers())
+
+    def test_get_transportzone_id(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        faked_responds = {
+            'componentInfo':[{
+                'componentType': 'DISTRIBUTED_ROUTER_TIER0',
+                'transportZoneId': None
+            }]
+        }
+        with mock.patch.object(router.client, 'get',
+                               return_value=faked_responds),\
+             mock.patch("vmware_nsxlib.v3.core_resources.LOG.debug") as debug:
+
+             res = router.get_transportzone_id(router_id)
+             self.assertEqual(None, res)
+             debug.assert_called_once_with('OverlayTransportZone is not yet'
+                                           ' available on %s.' % router_id 
+
+        faked_responds['componentInfo'][0]['transportZoneId'] = ['faked_id']
+
+        with mock.patch.object(router.client, 'get',
+                               return_value=faked_responds):
+             res = router.get_transportzone_id(router_id)
+             self.assertEqual('faked_id', res)
+
 
 class LogicalRouterPortTestCase(BaseTestResource):
 
