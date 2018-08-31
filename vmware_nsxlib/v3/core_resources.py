@@ -649,6 +649,11 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                     logical_router_id)
         return self.client.get(resource)
 
+    def get_debug_info(self, logical_router_id):
+        resource = ('logical-routers/%s/debug-info?format=text' %
+                    logical_router_id)
+        return self.client.get(resource)
+
     def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
                description=None, transport_zone_id=None, allocation_pool=None):
         # TODO(salv-orlando): If possible do not manage edge clusters
