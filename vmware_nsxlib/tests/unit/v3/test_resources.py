@@ -925,6 +925,46 @@ class LogicalRouterTestCase(BaseTestResource):
              'advertisement/rules' % router_id),
             headers=self.default_headers())
 
+    def test_get_debug_info(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        router.get_debug_info(router_id)
+        test_client.assert_json_call(
+            'get', router,
+            ('https://1.2.3.4/api/v1/logical-routers/%s/'
+             'debug-info?format=text' % router_id),
+            headers=self.default_headers())
+
+    def test_get_transportzone_id_empty(self):
+        # Tier0 router may fail to provide TZ id if it
+        # is not yet connected with any Tier1 router
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        faked_responds = {
+            'componentInfo': [{
+                'componentType': nsx_constants.ROUTER_TYPE_TIER0_DR,
+                'transportZoneId': None
+            }]
+        }
+        with mock.patch.object(router.client, 'get',
+                               return_value=faked_responds):
+            res = router.get_transportzone_id(router_id)
+            self.assertIsNone(res)
+
+    def test_get_transportzone_id(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        faked_responds = {
+            'componentInfo': [{
+                'componentType': nsx_constants.ROUTER_TYPE_TIER0_DR,
+                'transportZoneId': ['faked_id']
+            }]
+        }
+        with mock.patch.object(router.client, 'get',
+                               return_value=faked_responds):
+            res = router.get_transportzone_id(router_id)
+            self.assertEqual('faked_id', res)
+
 
 class LogicalRouterPortTestCase(BaseTestResource):
 
