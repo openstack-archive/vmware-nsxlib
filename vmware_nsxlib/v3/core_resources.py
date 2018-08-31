@@ -649,6 +649,20 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                     logical_router_id)
         return self.client.get(resource)
 
+    def get_debug_info(self, logical_router_id):
+        resource = ('logical-routers/%s/debug-info?format=text' %
+                    logical_router_id)
+        return self.client.get(resource)
+
+    def get_transportzone_id(self, logical_router_id):
+        res = self.get_debug_info(logical_router_id)
+        for item in res['componentInfo']:
+            if item['componentType'] == 'DISTRIBUTED_ROUTER_TIER0':
+                if item['transportZoneId']:
+                    return item['transportZoneId'][0]
+        LOG.debug('OverlayTransportZone is not yet available on'
+                  ' %s.' % (logical_router_id))
+
     def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
                description=None, transport_zone_id=None, allocation_pool=None):
         # TODO(salv-orlando): If possible do not manage edge clusters
