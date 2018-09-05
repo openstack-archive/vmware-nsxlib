@@ -552,6 +552,14 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         seq_nums.sort()
         return seq_nums[-1]
 
+    def _get_seq_num(self, sequence_number, last_sequence):
+        if not sequence_number:
+            if last_sequence < 0:
+                sequence_number = 1
+            else:
+                sequence_number = last_sequence + 1
+        return sequence_number
+
     def create_or_overwrite(self, name, domain_id, map_id=None,
                             description=None, precedence=0,
                             category=policy_constants.CATEGORY_DEFAULT,
@@ -568,12 +576,6 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         this call under lock to prevent race condition where two entries
         end up with same sequence number.
         """
-        # Validate and convert inputs
-        if not service_ids:
-            # service-ids must be provided
-            err_msg = (_("Cannot create a communication map %(name)s without "
-                         "services") % {'name': name})
-            raise exceptions.ManagerError(details=err_msg)
         if map_id:
             # get the next available sequence number
             last_sequence = self._get_last_seq_num(domain_id, map_id,
@@ -582,11 +584,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             map_id = self._init_obj_uuid(map_id)
             last_sequence = -1
 
-        if not sequence_number:
-            if last_sequence < 0:
-                sequence_number = 1
-            else:
-                sequence_number = last_sequence + 1
+        sequence_number = self._get_seq_num(sequence_number, last_sequence)
 
         # Build the communication entry. Since we currently support only one
         # it will have the same id as its parent
@@ -619,6 +617,58 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         self.policy_api.create_or_update(entry_def)
         return self.get(domain_id, map_id, tenant=tenant)
 
+    def create_or_overwrite_map_only(
+        self, name, domain_id, map_id=None, description=None, precedence=0,
+        category=policy_constants.CATEGORY_DEFAULT,
+        tags=None, tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Create or update a CommunicationMap
+
+        Create a communication map without any entries, or update the
+        communication map itself, leaving the entries unchanged.
+        """
+        map_id = self._init_obj_uuid(map_id)
+        map_def = policy_defs.CommunicationMapDef(
+            domain_id=domain_id, map_id=map_id,
+            tenant=tenant, name=name, description=description,
+            precedence=precedence, category=category)
+        if tags:
+            map_def.add_tags(tags)
+
+        return self.policy_api.create_or_update(map_def)
+
+    def create_entry(self, name, domain_id, map_id, entry_id=None,
+                     description=None, sequence_number=None, service_ids=None,
+                     action=policy_constants.ACTION_ALLOW,
+                     source_groups=None, dest_groups=None,
+                     tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Create CommunicationMap Entry.
+
+        source_groups/dest_groups should be a list of group ids belonging
+        to the domain.
+        """
+        # get the next available sequence number
+        if not sequence_number:
+            last_sequence = self._get_last_seq_num(domain_id, map_id,
+                                                   tenant=tenant)
+            sequence_number = self._get_seq_num(sequence_number, last_sequence)
+        entry_id = self._init_obj_uuid(entry_id)
+
+        # Build the communication entry
+        entry_def = policy_defs.CommunicationMapEntryDef(
+            domain_id=domain_id,
+            map_id=map_id,
+            entry_id=entry_id,
+            name=name,
+            description=description,
+            sequence_number=sequence_number,
+            source_groups=source_groups,
+            dest_groups=dest_groups,
+            service_ids=service_ids,
+            action=action,
+            tenant=tenant)
+
+        return self.policy_api.create_or_update(entry_def)
+
     def delete(self, domain_id, map_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         map_def = policy_defs.CommunicationMapDef(
@@ -626,6 +676,15 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             map_id=map_id,
             tenant=tenant)
         self.policy_api.delete(map_def)
+
+    def delete_entry(self, domain_id, map_id, entry_id,
+                     tenant=policy_constants.POLICY_INFRA_TENANT):
+        entry_def = policy_defs.CommunicationMapEntryDef(
+            domain_id=domain_id,
+            map_id=map_id,
+            entry_id=entry_id,
+            tenant=tenant)
+        self.policy_api.delete(entry_def)
 
     def get(self, domain_id, map_id,
             tenant=policy_constants.POLICY_INFRA_TENANT):
