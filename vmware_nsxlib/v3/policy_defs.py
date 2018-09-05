@@ -489,8 +489,9 @@ class CommunicationMapEntryDef(ResourceDef):
         self.scope = scope
         self.source_groups = self.get_groups_path(domain_id, source_groups)
         self.dest_groups = self.get_groups_path(domain_id, dest_groups)
-        self.service_paths = [self.get_service_path(service_id) for service_id
-                              in service_ids] if service_ids else []
+        self.service_paths = ([self.get_service_path(service_id) for service_id
+                               in service_ids] if service_ids
+                              else [policy_constants.ANY_GROUP])
         self.parent_ids = (tenant, domain_id, map_id)
 
     # convert groups and services to full path
