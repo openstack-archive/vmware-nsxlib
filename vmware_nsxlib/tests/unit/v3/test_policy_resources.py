@@ -746,6 +746,183 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 api_call,
                 [expected_map_def, expected_entry_def])
 
+    def test_create_map_only(self):
+        domain_id = '111'
+        name = 'cm1'
+        description = 'desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite_map_only(
+                name, domain_id, description=description,
+                tenant=TEST_TENANT)
+
+            expected_map_def = policy_defs.CommunicationMapDef(
+                domain_id=domain_id,
+                map_id=mock.ANY,
+                name=name,
+                description=description,
+                category=policy_constants.CATEGORY_DEFAULT,
+                precedence=0,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(
+                api_call, expected_map_def)
+
+    def test_create_entry(self):
+        domain_id = '111'
+        map_id = '333'
+        name = 'cm1'
+        description = 'desc'
+        source_group = 'g1'
+        dest_group = 'g2'
+        service1_id = 'c1'
+        service2_id = 'c2'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_entry(name, domain_id, map_id,
+                                          description=description,
+                                          service_ids=[service1_id,
+                                                       service2_id],
+                                          source_groups=[source_group],
+                                          dest_groups=[dest_group],
+                                          sequence_number=1,
+                                          direction=nsx_constants.IN,
+                                          tenant=TEST_TENANT)
+
+            expected_entry_def = policy_defs.CommunicationMapEntryDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                entry_id=mock.ANY,
+                name=name,
+                description=description,
+                sequence_number=1,
+                service_ids=[service1_id, service2_id],
+                source_groups=[source_group],
+                dest_groups=[dest_group],
+                direction=nsx_constants.IN,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(
+                api_call, expected_entry_def)
+
+    def test_create_entry_no_service(self):
+        domain_id = '111'
+        map_id = '333'
+        name = 'cm1'
+        description = 'desc'
+        source_group = 'g1'
+        dest_group = 'g2'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_entry(name, domain_id, map_id,
+                                          description=description,
+                                          source_groups=[source_group],
+                                          dest_groups=[dest_group],
+                                          sequence_number=1,
+                                          tenant=TEST_TENANT)
+
+            expected_entry_def = policy_defs.CommunicationMapEntryDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                entry_id=mock.ANY,
+                name=name,
+                description=description,
+                sequence_number=1,
+                service_ids=None,
+                source_groups=[source_group],
+                dest_groups=[dest_group],
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(
+                api_call, expected_entry_def)
+
+    def test_create_entry_no_seq_num(self):
+        domain_id = '111'
+        map_id = '333'
+        name = 'cm1'
+        description = 'desc'
+        source_group = 'g1'
+        dest_group = 'g2'
+        service1_id = 'c1'
+        service2_id = 'c2'
+        seq_num = 1
+        ret_comm = {'communication_entries': [{'sequence_number': seq_num}]}
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call,\
+            mock.patch.object(self.policy_api,
+                              "get", return_value=ret_comm):
+            self.resourceApi.create_entry(name, domain_id, map_id,
+                                          description=description,
+                                          service_ids=[service1_id,
+                                                       service2_id],
+                                          source_groups=[source_group],
+                                          dest_groups=[dest_group],
+                                          tenant=TEST_TENANT)
+
+            expected_entry_def = policy_defs.CommunicationMapEntryDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                entry_id=mock.ANY,
+                name=name,
+                description=description,
+                service_ids=[service1_id, service2_id],
+                source_groups=[source_group],
+                dest_groups=[dest_group],
+                sequence_number=seq_num + 1,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(
+                api_call, expected_entry_def)
+
+    def test_create_with_entries(self):
+        domain_id = '111'
+        map_id = '222'
+        name = 'cm1'
+        description = 'desc'
+        source_group = 'g1'
+        dest_group = 'g2'
+        service_id = 'c1'
+        category = 'Emergency'
+
+        rule_id = 1
+        entry1 = self.resourceApi.build_entry(
+            'DHCP Reply', domain_id, map_id,
+            rule_id, sequence_number=rule_id, service_ids=[service_id],
+            action=policy_constants.ACTION_DENY,
+            source_groups=None,
+            dest_groups=[dest_group],
+            direction=nsx_constants.IN)
+        rule_id += 1
+        entry2 = self.resourceApi.build_entry(
+            'DHCP Request', domain_id, map_id,
+            rule_id, sequence_number=rule_id, service_ids=None,
+            action=policy_constants.ACTION_DENY,
+            source_groups=[source_group],
+            dest_groups=None,
+            direction=nsx_constants.OUT)
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_with_entries(name, domain_id,
+                                                 map_id=map_id,
+                                                 description=description,
+                                                 entries=[entry1, entry2],
+                                                 category=category,
+                                                 tenant=TEST_TENANT)
+
+            expected_def = policy_defs.CommunicationMapDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                name=name,
+                description=description,
+                category=category,
+                precedence=0,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            actual_def = api_call.call_args_list[0][0][0]
+            self.assertEqual([entry1.get_obj_dict(), entry2.get_obj_dict()],
+                             actual_def.body['communication_entries'])
+
     def test_delete(self):
         domain_id = '111'
         id = '222'
@@ -754,6 +931,20 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             expected_def = policy_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_entry(self):
+        domain_id = '111'
+        map_id = '222'
+        entry_id = '333'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete_entry(domain_id, map_id, entry_id,
+                                          tenant=TEST_TENANT)
+            expected_def = policy_defs.CommunicationMapEntryDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                entry_id=entry_id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
