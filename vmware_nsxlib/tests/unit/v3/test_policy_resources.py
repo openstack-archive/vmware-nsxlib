@@ -229,6 +229,87 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
+    def test_create_with_simple_condition(self):
+        domain_id = '111'
+        name = 'g1'
+        description = 'desc'
+        cond_val = '123'
+        cond_op = policy_constants.CONDITION_OP_EQUALS
+        cond_member_type = policy_constants.CONDITION_MEMBER_VM
+        cond_key = policy_constants.CONDITION_KEY_TAG
+
+        cond = self.resourceApi.build_condition(
+            cond_val=cond_val,
+            cond_op=cond_op,
+            cond_member_type=cond_member_type,
+            cond_key=cond_key)
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite_with_conditions(
+                name, domain_id, description=description,
+                conditions=[cond],
+                tenant=TEST_TENANT)
+            exp_cond = policy_defs.Condition(value=cond_val,
+                                             key=cond_key,
+                                             operator=cond_op,
+                                             member_type=cond_member_type)
+            expected_def = policy_defs.GroupDef(domain_id=domain_id,
+                                                group_id=mock.ANY,
+                                                name=name,
+                                                description=description,
+                                                conditions=[exp_cond],
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_create_with_nested_condition(self):
+        domain_id = '111'
+        name = 'g1'
+        description = 'desc'
+        cond_val1 = '123'
+        cond_val2 = '456'
+        cond_op = policy_constants.CONDITION_OP_EQUALS
+        cond_member_type = policy_constants.CONDITION_MEMBER_VM
+        cond_key = policy_constants.CONDITION_KEY_TAG
+
+        cond1 = self.resourceApi.build_condition(
+            cond_val=cond_val1,
+            cond_op=cond_op,
+            cond_member_type=cond_member_type,
+            cond_key=cond_key)
+        cond2 = self.resourceApi.build_condition(
+            cond_val=cond_val2,
+            cond_op=cond_op,
+            cond_member_type=cond_member_type,
+            cond_key=cond_key)
+        nested = self.resourceApi.build_nested_condition(
+            conditions=[cond1, cond2])
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite_with_conditions(
+                name, domain_id, description=description,
+                conditions=[nested],
+                tenant=TEST_TENANT)
+            exp_cond1 = policy_defs.Condition(value=cond_val1,
+                                              key=cond_key,
+                                              operator=cond_op,
+                                              member_type=cond_member_type)
+            exp_cond2 = policy_defs.Condition(value=cond_val2,
+                                              key=cond_key,
+                                              operator=cond_op,
+                                              member_type=cond_member_type)
+            and_cond = policy_defs.ConjunctionOperator()
+            nested_cond = policy_defs.NestedExpression(
+                expressions=[exp_cond1, and_cond, exp_cond2])
+            expected_def = policy_defs.GroupDef(domain_id=domain_id,
+                                                group_id=mock.ANY,
+                                                name=name,
+                                                description=description,
+                                                conditions=[nested_cond],
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
     def test_delete(self):
         domain_id = '111'
         id = '222'
@@ -285,55 +366,6 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             expected_dict = {'display_name': name,
                              'description': description}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
-
-    def test_update_condition(self):
-        domain_id = '111'
-        id = '222'
-        cond_val = '123'
-        with mock.patch.object(self.policy_api, "get",
-                               return_value={}) as get_call,\
-            mock.patch.object(self.policy_api,
-                              "create_or_update") as update_call:
-            self.resourceApi.update_condition(domain_id, id,
-                                              cond_val=cond_val,
-                                              tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=id,
-                                                tenant=TEST_TENANT)
-            exp_cond = {'resource_type': 'Condition',
-                        'member_type': policy_constants.CONDITION_MEMBER_PORT,
-                        'key': policy_constants.CONDITION_KEY_TAG,
-                        'value': cond_val,
-                        'operator': policy_constants.CONDITION_OP_EQUALS}
-            expected_dict = {'expression': [exp_cond]}
-            self.assert_called_with_def(get_call, expected_def)
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
-
-    def test_remove_condition(self):
-        domain_id = '111'
-        id = '222'
-        old_cond = {'resource_type': 'Condition',
-                    'member_type': policy_constants.CONDITION_MEMBER_PORT,
-                    'key': policy_constants.CONDITION_KEY_TAG,
-                    'value': 'abc',
-                    'operator': policy_constants.CONDITION_OP_EQUALS}
-        with mock.patch.object(
-                self.policy_api, "get",
-                return_value={'expression': [old_cond]}) as get_call,\
-            mock.patch.object(
-                self.policy_api,
-                "create_or_update") as update_call:
-            self.resourceApi.update_condition(domain_id, id,
-                                              cond_val=None,
-                                              tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=id,
-                                                tenant=TEST_TENANT)
-            expected_dict = {'expression': []}
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
 
