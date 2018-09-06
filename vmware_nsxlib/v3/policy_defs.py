@@ -249,6 +249,24 @@ class Condition(object):
                 'operator': self.operator}
 
 
+class ConjunctionOperator(object):
+    def __init__(self, operator=policy_constants.CONDITION_OP_AND):
+        self.operator = operator
+
+    def get_obj_dict(self):
+        return {'resource_type': 'ConjunctionOperator',
+                'conjunction_operator': self.operator}
+
+
+class NestedExpression(object):
+    def __init__(self, expressions=None):
+        self.expressions = expressions or []
+
+    def get_obj_dict(self):
+        return {'resource_type': 'NestedExpression',
+                'expressions': [ex.get_obj_dict() for ex in self.expressions]}
+
+
 class GroupDef(ResourceDef):
     def __init__(self,
                  domain_id=None,

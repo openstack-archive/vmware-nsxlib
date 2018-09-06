@@ -124,7 +124,7 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
 
 
 class NsxPolicyGroupApi(NsxPolicyResourceBase):
-    """NSX Policy Group (under a Domain) with a single condition."""
+    """NSX Policy Group (under a Domain) with condition/s"""
     def create_or_overwrite(
         self, name, domain_id, group_id=None,
         description=None,
@@ -147,6 +147,51 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                               member_type=cond_member_type)
             conditions = [condition]
         else:
+            conditions = []
+        group_def = policy_defs.GroupDef(domain_id=domain_id,
+                                         group_id=group_id,
+                                         name=name,
+                                         description=description,
+                                         conditions=conditions,
+                                         tenant=tenant)
+        if tags:
+            group_def.add_tags(tags)
+        return self.policy_api.create_or_update(group_def)
+
+    def build_condition(
+        self, cond_val=None,
+        cond_key=policy_constants.CONDITION_KEY_TAG,
+        cond_op=policy_constants.CONDITION_OP_EQUALS,
+        cond_member_type=policy_constants.CONDITION_MEMBER_PORT):
+        return policy_defs.Condition(value=cond_val,
+                                     key=cond_key,
+                                     operator=cond_op,
+                                     member_type=cond_member_type)
+
+    def build_nested_condition(
+        self, operator=policy_constants.CONDITION_OP_AND,
+        conditions=None):
+        expressions = []
+        for cond in conditions:
+            if len(expressions):
+                expressions.append(policy_defs.ConjunctionOperator(
+                    operator=operator))
+            expressions.append(cond)
+
+        return policy_defs.NestedExpression(expressions=expressions)
+
+    def create_or_overwrite_with_conditions(
+        self, name, domain_id, group_id=None,
+        description=None,
+        conditions=None, tags=None,
+        tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Create a group with a list of conditions.
+
+        To build the conditions in the list, build_condition
+        or build_nested_condition can be used
+        """
+        group_id = self._init_obj_uuid(group_id)
+        if not conditions:
             conditions = []
         group_def = policy_defs.GroupDef(domain_id=domain_id,
                                          group_id=group_id,
@@ -197,37 +242,6 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         group_def.update_attributes_in_body(name=name,
                                             description=description,
                                             tags=tags)
-        # update the backend
-        return self.policy_api.create_or_update(group_def)
-
-    def update_condition(
-        self, domain_id, group_id,
-        cond_val=None,
-        cond_key=policy_constants.CONDITION_KEY_TAG,
-        cond_op=policy_constants.CONDITION_OP_EQUALS,
-        cond_member_type=policy_constants.CONDITION_MEMBER_PORT,
-        tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Update/Remove the condition of a group.
-
-        Empty condition value will result a group with no condition.
-        """
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         tenant=tenant)
-
-        # Prepare the condition
-        if cond_val is not None:
-            condition = policy_defs.Condition(value=cond_val,
-                                              key=cond_key,
-                                              operator=cond_op,
-                                              member_type=cond_member_type)
-            conditions = [condition]
-        else:
-            conditions = []
-        # Get the current data, and update it with the new values
-        # We need to do that here because of the conditions data
-        group = self.get(domain_id, group_id, tenant=tenant)
-        group_def.update_attributes_in_body(body=group, conditions=conditions)
         # update the backend
         return self.policy_api.create_or_update(group_def)
 
