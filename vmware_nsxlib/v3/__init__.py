@@ -386,8 +386,8 @@ class NsxPolicyLib(NsxLibBase):
         self.ip_protocol_service = (
             policy_resources.NsxPolicyIPProtocolServiceApi(
                 self.policy_api))
-        self.network = policy_resources.NsxPolicyNetworkApi(self.policy_api)
-        self.network_segment = policy_resources.NsxPolicyNetworkSegmentApi(
+        self.tier1 = policy_resources.NsxPolicyTier1Api(self.policy_api)
+        self.tier1_segment = policy_resources.NsxPolicyTier1SegmentApi(
             self.policy_api)
         self.segment = policy_resources.NsxPolicySegmentApi(self.policy_api)
         self.comm_map = policy_resources.NsxPolicyCommunicationMapApi(
