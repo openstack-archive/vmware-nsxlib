@@ -470,68 +470,75 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
                                             protocol_number=protocol_number)
 
 
-class NsxPolicyNetworkApi(NsxPolicyResourceBase):
-    """NSX Network API """
+# TODO(annak): add/remove route specific advertisement
+class NsxPolicyTier1Api(NsxPolicyResourceBase):
+    """NSX Tier1 API """
     @property
     def entry_def(self):
-        return policy_defs.NetworkDef
+        return policy_defs.Tier1Def
 
-    def create_or_overwrite(self, name, network_id=None, description=None,
-                            provider=None,
-                            ip_addresses=None,
-                            ha_mode=policy_constants.ACTIVE_STANDBY,
+    def build_route_advertisement(self, static_routes=False, subnets=False,
+                                  nat=False, lb_vip=False, lb_snat=False):
+        return policy_defs.RouteAdvertisement(static_routes, subnets,
+                                              nat, lb_vip, lb_snat)
+
+    def create_or_overwrite(self, name, tier1_id=None, description=None,
+                            tier0=None,
                             force_whitelisting=False,
+                            failover_mode=policy_constants.NON_PREEMPTIVE,
+                            route_advertisement=None,
                             tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
-        network_id = self._init_obj_uuid(network_id)
-        network_def = self.entry_def(network_id=network_id,
-                                     name=name,
-                                     description=description,
-                                     provider=provider,
-                                     ip_addresses=ip_addresses,
-                                     ha_mode=ha_mode,
-                                     force_whitelisting=force_whitelisting,
-                                     tags=tags,
-                                     tenant=tenant)
-        return self.policy_api.create_or_update(network_def)
+        tier1_id = self._init_obj_uuid(tier1_id)
+        tier1_def = self.entry_def(tier1_id=tier1_id,
+                                   name=name,
+                                   description=description,
+                                   tier0=tier0,
+                                   force_whitelisting=force_whitelisting,
+                                   tags=tags,
+                                   failover_mode=failover_mode,
+                                   route_advertisement=route_advertisement,
+                                   tenant=tenant)
+        return self.policy_api.create_or_update(tier1_def)
 
-    def delete(self, network_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        network_def = self.entry_def(network_id=network_id, tenant=tenant)
-        self.policy_api.delete(network_def)
+    def delete(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        self.policy_api.delete(tier1_def)
 
-    def get(self, network_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        network_def = self.entry_def(network_id=network_id, tenant=tenant)
-        return self.policy_api.get(network_def)
+    def get(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self.policy_api.get(tier1_def)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
-        network_def = self.entry_def(tenant=tenant)
-        return self.policy_api.list(network_def)['results']
+        tier1_def = self.entry_def(tenant=tenant)
+        return self.policy_api.list(tier1_def)['results']
 
-    def update(self, network_id, name=None, description=None,
-               ip_addresses=None, ha_mode=None,
+    def update(self, tier1_id, name=None, description=None,
                force_whitelisting=None,
+               failover_mode=None,
+               route_advertisement=None,
                tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        network_def = policy_defs.NetworkDef(network_id=network_id,
-                                             tenant=tenant)
-        network_def.update_attributes_in_body(
+        tier1_def = policy_defs.Tier1Def(tier1_id=tier1_id,
+                                         tenant=tenant)
+        tier1_def.update_attributes_in_body(
             name=name,
             description=description,
-            ip_addresses=ip_addresses,
-            ha_mode=ha_mode,
             force_whitelisting=force_whitelisting,
+            failover_mode=failover_mode,
+            route_advertisement=route_advertisement,
             tags=tags)
-        return self.policy_api.create_or_update(network_def)
+        return self.policy_api.create_or_update(tier1_def)
 
 
-class NsxPolicyNetworkSegmentApi(NsxPolicyResourceBase):
-    """NSX Network Segment API """
+class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
+    """NSX Tier1 Segment API """
     @property
     def entry_def(self):
-        return policy_defs.NetworkSegmentDef
+        return policy_defs.Tier1SegmentDef
 
-    def create_or_overwrite(self, name, network_id=None,
+    def create_or_overwrite(self, name, tier1_id=None,
                             segment_id=None, description=None,
                             subnets=None,
                             dns_domain_name=None,
@@ -540,7 +547,7 @@ class NsxPolicyNetworkSegmentApi(NsxPolicyResourceBase):
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
         segment_id = self._init_obj_uuid(segment_id)
-        segment_def = self.entry_def(network_id=network_id,
+        segment_def = self.entry_def(tier1_id=tier1_id,
                                      segment_id=segment_id,
                                      name=name,
                                      description=description,
@@ -551,31 +558,31 @@ class NsxPolicyNetworkSegmentApi(NsxPolicyResourceBase):
                                      tenant=tenant)
         return self.policy_api.create_or_update(segment_def)
 
-    def delete(self, network_id, segment_id,
+    def delete(self, tier1_id, segment_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(network_id=network_id,
+        segment_def = self.entry_def(tier1_id=tier1_id,
                                      segment_id=segment_id,
                                      tenant=tenant)
         self.policy_api.delete(segment_def)
 
-    def get(self, network_id, segment_id,
+    def get(self, tier1_id, segment_id,
             tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(network_id=network_id,
+        segment_def = self.entry_def(tier1_id=tier1_id,
                                      segment_id=segment_id,
                                      tenant=tenant)
         return self.policy_api.get(segment_def)
 
-    def list(self, network_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(network_id=network_id, tenant=tenant)
+    def list(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self.policy_api.list(segment_def)['results']
 
-    def update(self, network_id, segment_id,
+    def update(self, tier1_id, segment_id,
                name=None, description=None,
                subnets=None, tags=None,
                dns_domain_name=None,
                vlan_ids=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(network_id, segment_id, tenant=tenant)
+        segment_def = self.entry_def(tier1_id, segment_id, tenant=tenant)
         segment_def.update_attributes_in_body(
             name=name,
             description=description,
@@ -587,12 +594,12 @@ class NsxPolicyNetworkSegmentApi(NsxPolicyResourceBase):
 
 
 class NsxPolicySegmentApi(NsxPolicyResourceBase):
-    """NSX Network Segment API """
+    """NSX Tier1 Segment API """
     @property
     def entry_def(self):
         return policy_defs.SegmentDef
 
-    def create_or_overwrite(self, name, network_id=None,
+    def create_or_overwrite(self, name,
                             segment_id=None, description=None,
                             subnets=None,
                             dns_domain_name=None,
