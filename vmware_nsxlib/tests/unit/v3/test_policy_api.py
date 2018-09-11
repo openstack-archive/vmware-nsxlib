@@ -15,6 +15,7 @@
 #
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.v3 import client
+from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import policy_defs as policy
 
@@ -205,7 +206,8 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             source_groups=["group1",
                            "group2"],
             dest_groups=["group1"],
-            service_ids=["service1"])
+            service_ids=["service1"],
+            direction=nsx_constants.IN_OUT)
 
         self.entry2 = policy.CommunicationMapEntryDef(
             'd1', 'cm2', 'en2',
@@ -213,7 +215,8 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             source_groups=["group1",
                            "group2"],
             dest_groups=["group3"],
-            service_ids=["service2"])
+            service_ids=["service2"],
+            direction=nsx_constants.IN)
 
         self.expected_data1 = {'id': 'en1',
                                'display_name': None,
@@ -227,7 +230,8 @@ class TestPolicyCommunicationMap(TestPolicyApi):
                                'destination_groups':
                                ['/infra/domains/d1/groups/group1'],
                                'services':
-                               ['/infra/services/service1']}
+                               ['/infra/services/service1'],
+                               'direction': 'IN_OUT'}
 
         self.expected_data2 = {'id': 'en2',
                                'display_name': None,
@@ -241,7 +245,8 @@ class TestPolicyCommunicationMap(TestPolicyApi):
                                'destination_groups':
                                ['/infra/domains/d1/groups/group3'],
                                'services':
-                               ['/infra/services/service2']}
+                               ['/infra/services/service2'],
+                               'direction': 'IN'}
 
     def test_create_with_one_entry(self):
         map_def = policy.CommunicationMapDef(domain_id='d1', map_id='cm1')

@@ -19,6 +19,7 @@ import mock
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib import v3
+from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import policy_defs
 
@@ -617,6 +618,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         dest_group = 'g2'
         seq_num = 7
         service_id = 'c1'
+        direction = nsx_constants.IN_OUT
         get_return_value = {'communication_entries': [{'sequence_number': 1}]}
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call,\
@@ -629,6 +631,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  service_ids=[service_id],
                                                  source_groups=[source_group],
                                                  dest_groups=[dest_group],
+                                                 direction=direction,
                                                  tenant=TEST_TENANT)
             expected_def = policy_defs.CommunicationMapDef(
                 domain_id=domain_id,
@@ -650,6 +653,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 service_ids=[service_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
+                direction=direction,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def, call_num=1)
 
