@@ -73,6 +73,9 @@ def build_args(resource_type, resource_id, args):
     from vmware_nsxlib.v3 import policy_defs
 
     args["%s_id" % resource_type] = resource_id
+    if "name" not in args:
+        args["name"] = resource_id
+
     subresources = {}
     for arg, value in args.items():
         if ":" in arg:
