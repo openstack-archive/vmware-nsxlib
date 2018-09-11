@@ -91,6 +91,9 @@ def build_args(resource_type, resource_id, args):
         resource_type = "_".join(resource_type.split("_")[1:])
 
     args["%s_id" % resource_type] = resource_id
+    if "name" not in args:
+        args["name"] = resource_id
+
     subresources = {}
     for arg, value in args.items():
         if ":" in arg:
