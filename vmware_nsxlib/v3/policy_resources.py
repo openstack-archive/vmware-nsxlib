@@ -414,17 +414,23 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
                                             icmp_code=icmp_code)
 
 
+# TODO(annak): add/remove route specific advertisement
 class NsxPolicyNetworkApi(NsxPolicyResourceBase):
     """NSX Network API """
     @property
     def entry_def(self):
         return policy_defs.NetworkDef
 
+    def build_route_advertisement(self, static_routes=False, subnets=False,
+                                  nat=False, lb_vip=False, lb_snat=False):
+        return policy_defs.RouteAdvertisement(static_routes, subnets,
+                                              nat, lb_vip, lb_snat)
+
     def create_or_overwrite(self, name, network_id=None, description=None,
                             provider=None,
-                            ip_addresses=None,
-                            ha_mode=policy_constants.ACTIVE_STANDBY,
                             force_whitelisting=False,
+                            failover_mode=policy_constants.NON_PREEMPTIVE,
+                            route_advertisement=None,
                             tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
@@ -433,9 +439,9 @@ class NsxPolicyNetworkApi(NsxPolicyResourceBase):
                                      name=name,
                                      description=description,
                                      provider=provider,
-                                     ip_addresses=ip_addresses,
-                                     ha_mode=ha_mode,
                                      force_whitelisting=force_whitelisting,
+                                     failover_mode=failover_mode,
+                                     route_advertisement=route_advertisement,
                                      tenant=tenant)
         if tags:
             network_def.add_tags(tags)
@@ -454,8 +460,9 @@ class NsxPolicyNetworkApi(NsxPolicyResourceBase):
         return self.policy_api.list(network_def)['results']
 
     def update(self, network_id, name=None, description=None,
-               ip_addresses=None, ha_mode=None,
                force_whitelisting=None,
+               failover_mode=None,
+               route_advertisement=None,
                tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         network_def = policy_defs.NetworkDef(network_id=network_id,
@@ -463,9 +470,9 @@ class NsxPolicyNetworkApi(NsxPolicyResourceBase):
         network_def.update_attributes_in_body(
             name=name,
             description=description,
-            ip_addresses=ip_addresses,
-            ha_mode=ha_mode,
             force_whitelisting=force_whitelisting,
+            failover_mode=failover_mode,
+            route_advertisement=route_advertisement,
             tags=tags)
         return self.policy_api.create_or_update(network_def)
 
