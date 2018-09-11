@@ -141,6 +141,31 @@ class DomainDef(ResourceDef):
         return DOMAINS_PATH_PATTERN
 
 
+class RouteAdvertisement(object):
+
+    types = {'static_routes': 'NETWORK_STATIC_ROUTES',
+             'subnets': 'NETWORK_SUBNETS',
+             'nat': 'TIER1_NAT',
+             'lb_vip': 'NETWORK_LB_VIP',
+             'lb_snat': 'NETWORK_LB_SNAT'}
+
+    def __init__(self,
+                 static_routes=False,
+                 subnets=False,
+                 nat=False,
+                 lb_vip=False,
+                 lb_snat=False):
+        self.static_routes = static_routes
+        self.subnets = subnets
+        self.nat = nat
+        self.lb_vip = lb_vip
+        self.lb_snat = lb_snat
+
+    def get_obj_dict(self):
+        return [value for key, value in self.types.items()
+                if getattr(self, key)]
+
+
 class NetworkDef(ResourceDef):
 
     def __init__(self,
@@ -148,24 +173,32 @@ class NetworkDef(ResourceDef):
                  name=None,
                  description=None,
                  provider=None,
-                 ip_addresses=None,
-                 ha_mode=policy_constants.ACTIVE_STANDBY,
                  force_whitelisting=False,
+                 failover_mode=policy_constants.NON_PREEMPTIVE,
+                 route_advertisement=None,
                  tenant=policy_constants.POLICY_INFRA_TENANT):
         super(NetworkDef, self).__init__()
         self.tenant = tenant
         self.id = network_id
         self.name = name
         self.description = description
+
         # TODO(annak): replace with provider path when provider is exposed
         if provider:
             self.provider = "/" + TENANTS_PATH_PATTERN % tenant + \
                             "providers/" + provider
         else:
             self.provider = None
-        self.ip_addresses = ip_addresses
-        self.ha_mode = ha_mode
+
         self.force_whitelisting = force_whitelisting
+        self.failover_mode = failover_mode
+
+        if (route_advertisement and not
+            isinstance(route_advertisement, RouteAdvertisement)):
+            raise TypeError(
+                "route_advertisement must be of type RouteAdvertisement")
+
+        self.route_adv = route_advertisement
         self.parent_ids = (tenant)
 
     @property
@@ -174,11 +207,11 @@ class NetworkDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(NetworkDef, self).get_obj_dict()
-        body['provider'] = self.provider
-        body['ha_mode'] = self.ha_mode
+        body['provider_path'] = self.provider
         body['force_whitelisting'] = self.force_whitelisting
-        if self.ip_addresses:
-            body['ip_addresses'] = self.ip_addresses
+        body['failover_mode'] = self.failover_mode
+        if self.route_adv:
+            body['route_advertisement_types'] = self.route_adv.get_obj_dict()
         return body
 
 
