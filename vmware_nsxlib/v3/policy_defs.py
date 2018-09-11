@@ -23,7 +23,7 @@ from vmware_nsxlib.v3 import policy_constants
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
 PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
-NETWORKS_PATH_PATTERN = TENANTS_PATH_PATTERN + "networks/"
+TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
@@ -153,27 +153,55 @@ class DomainDef(ResourceDef):
         return ('tenant', 'domain_id')
 
 
-class NetworkDef(ResourceDef):
+class RouteAdvertisement(object):
+
+    types = {'static_routes': 'TIER1_STATIC_ROUTES',
+             'subnets': 'TIER1_SUBNETS',
+             'nat': 'TIER1_NAT',
+             'lb_vip': 'TIER1_LB_VIP',
+             'lb_snat': 'TIER1_LB_SNAT'}
+
+    def __init__(self,
+                 static_routes=False,
+                 subnets=False,
+                 nat=False,
+                 lb_vip=False,
+                 lb_snat=False):
+        self.static_routes = static_routes
+        self.subnets = subnets
+        self.nat = nat
+        self.lb_vip = lb_vip
+        self.lb_snat = lb_snat
+
+    def get_obj_dict(self):
+        return [value for key, value in self.types.items()
+                if getattr(self, key)]
+
+
+class Tier1Def(ResourceDef):
 
     @property
     def path_pattern(self):
-        return NETWORKS_PATH_PATTERN
+        return TIER1S_PATH_PATTERN
 
     @property
     def path_ids(self):
-        return ('tenant', 'network_id')
+        return ('tenant', 'tier1_id')
 
     def get_obj_dict(self):
-        body = super(NetworkDef, self).get_obj_dict()
-        # TODO(annak): replace with provider path when provider is exposed
-        body['provider'] = "/" + TENANTS_PATH_PATTERN % self.get_tenant() + \
-                           "providers/" + self.get_attr('provider')
+        body = super(Tier1Def, self).get_obj_dict()
 
-        for attr in ('ha_mode', 'force_whitelisting'):
+        # TODO(annak): replace with provider path when provider is exposed
+        body['tier0_path'] = "/" + TENANTS_PATH_PATTERN % self.get_tenant() + \
+                             "tier-0s/" + self.get_attr('tier0')
+
+        for attr in ('failover_mode', 'force_whitelisting'):
             body[attr] = self.get_attr(attr)
 
-        if self.get_attr('ip_addresses'):
-            body['ip_addresses'] = self.get_attr('ip_addresses')
+        if self.get_attr('route_adv'):
+            body['route_advertisement_types'] = self.get_attr(
+                'route_adv').get_obj_dict()
+
         return body
 
 
@@ -204,22 +232,22 @@ class BaseSegmentDef(ResourceDef):
         return body
 
 
-class NetworkSegmentDef(BaseSegmentDef):
-    '''Network segments can not move to different network '''
+class Tier1SegmentDef(BaseSegmentDef):
+    '''Tier1 segments can not move to different tier1 '''
 
     @property
     def path_pattern(self):
-        return NETWORKS_PATH_PATTERN + "%s/segments/"
+        return TIER1S_PATH_PATTERN + "%s/segments/"
 
     @property
     def path_ids(self):
-        return ('tenant', 'network_id', 'segment_id')
+        return ('tenant', 'tier1_id', 'segment_id')
 
 
 class SegmentDef(BaseSegmentDef):
-    '''These segments don't belong to particular network.
+    '''These segments don't belong to particular tier1.
 
-       And can be attached and re-attached to different networks
+       And can be attached and re-attached to different tier1s
     '''
 
     @property
@@ -229,6 +257,15 @@ class SegmentDef(BaseSegmentDef):
     @property
     def path_ids(self):
         return ('tenant', 'segment_id')
+
+    def get_obj_dict(self):
+        body = super(SegmentDef, self).get_obj_dict()
+        if self.get_attr('tier1_id'):
+            tier1 = Tier1Def(self.get_attr('tier1_id'),
+                             self.get_tenant())
+            body['connectivity_path'] = tier1.get_resource_full_path()
+        # TODO(annak): support also tier0
+        return body
 
 
 class Condition(object):

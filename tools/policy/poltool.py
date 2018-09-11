@@ -17,21 +17,21 @@
 #
 #   Examples:
 #
-#   Create network 'test' on provider provider_test:
-#      python poltool.py -o create -r network -i test -a "name=test"
-#                        -a "provider=provider_test"
-#   List all networks:
-#       python poltool.py -o get -r network
-#   Show network 'test':
-#       python poltool.py -o get -r network -i test
-#   Create segment seg1 on network test:
-#       python poltool.py -o create -r network_segment -i "seg1" -a "name=seg1"
-#                         -a "network_id=test"
+#   Create tier1 'test' on tier0 provider_test:
+#      python poltool.py -o create -r tier1 -i test -a "name=test"
+#                        -a "tier0=provider_test"
+#   List all tier1s:
+#       python poltool.py -o get -r tier1
+#   Show tier1 'test':
+#       python poltool.py -o get -r tier1 -i test
+#   Create segment seg1 on tier1 test:
+#       python poltool.py -o create -r tier1_segment -i "seg1" -a "name=seg1"
+#                         -a "tier1_id=test"
 #                         -a "subnet:gateway_address=1.1.1.1/32"
 #   Delete segment seg1:
-#       python poltool.py -o delete -r network_segment -i "test:seg1"
-#   Delete all segments under network test:
-#       python poltool.py -o delete -r network_segment -i "test:all"
+#       python poltool.py -o delete -r tier1_segment -i "test:seg1"
+#   Delete all segments under tier1 test:
+#       python poltool.py -o delete -r tier1_segment -i "test:all"
 
 
 import sys
@@ -52,8 +52,8 @@ path.append(os.path.abspath("../../"))
 
 
 OPERATIONS = ("create", "update", "delete", "get")
-RESOURCES = ("domain", "service", "icmp_service", "group", "network",
-             "segment", "network_segment")
+RESOURCES = ("domain", "service", "icmp_service", "group", "tier1",
+             "segment", "tier1_segment")
 
 
 def get_resource_api(lib, resource_type):
@@ -86,11 +86,14 @@ def build_args(resource_type, resource_id, args):
     from vmware_nsxlib.v3 import policy_defs
 
     if "_" in resource_type:
-        # handle cases like network_segment_id
-        # type is network_segment, but id parameter is segment_id
+        # handle cases like tier1_segment_id
+        # type is tier1_segment, but id parameter is segment_id
         resource_type = "_".join(resource_type.split("_")[1:])
 
     args["%s_id" % resource_type] = resource_id
+    if "name" not in args:
+        args["name"] = resource_id
+
     subresources = {}
     for arg, value in args.items():
         if ":" in arg:
