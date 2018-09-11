@@ -18,9 +18,16 @@ python poltool.py -o create -r icmp_service -i service2 -a "name=sanity" -a "icm
 python poltool.py -o update -r icmp_service -i service2 -a "name=insane"
 python poltool.py -o get -r icmp_service -i service2
 
-# TODO: networks, segments, network segments, comm maps, enforcement points, sites
+# TIER-0 "test" needs to be pre-created for below
+# tier-1s
+python poltool.py -o create -r tier1 -i router1 -a "name=sanity" -a "tier0=test"
+python poltool.py -o update -r tier1 -i router1 -a "name=insane"
+python poltool.py -o get -r tier1 -i router1
+
+# infra segments
 
 # cleanup
+python poltool.py -o delete -r tier1 -i router1
 python poltool.py -o delete -r service -i service1
 python poltool.py -o delete -r icmp_service -i service2
 python poltool.py -o delete -r group -i "domain1:all"
