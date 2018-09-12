@@ -650,6 +650,52 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
         return self.policy_api.create_or_update(map_def)
 
+    def build_entry(self, name, domain_id, map_id, entry_id,
+                    description=None,
+                    sequence_number=None, service_ids=None,
+                    action=policy_constants.ACTION_ALLOW,
+                    source_groups=None, dest_groups=None,
+                    direction=None,
+                    tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Get the definition of a single map entry"""
+        return policy_defs.CommunicationMapEntryDef(
+            domain_id=domain_id,
+            map_id=map_id,
+            entry_id=entry_id,
+            name=name,
+            description=description,
+            sequence_number=sequence_number,
+            source_groups=source_groups,
+            dest_groups=dest_groups,
+            service_ids=service_ids,
+            action=action,
+            direction=direction,
+            tenant=tenant)
+
+    def create_with_entries(
+        self, name, domain_id, map_id=None,
+        description=None, precedence=0,
+        category=policy_constants.CATEGORY_DEFAULT,
+        entries=None, tags=None,
+        tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Create CommunicationMap with entries"""
+
+        map_id = self._init_obj_uuid(map_id)
+
+        map_def = policy_defs.CommunicationMapDef(
+            domain_id=domain_id, map_id=map_id,
+            tenant=tenant, name=name, description=description,
+            precedence=precedence, category=category)
+        if tags:
+            map_def.add_tags(tags)
+        map_def.body = map_def.get_obj_dict()
+        # update the entries with the map id
+        if entries:
+            map_def.body['communication_entries'] = [
+                e.get_obj_dict() for e in entries]
+
+        return self.policy_api.create_or_update(map_def)
+
     def create_entry(self, name, domain_id, map_id, entry_id=None,
                      description=None, sequence_number=None, service_ids=None,
                      action=policy_constants.ACTION_ALLOW,

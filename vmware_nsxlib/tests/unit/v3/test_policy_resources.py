@@ -904,6 +904,55 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             self.assert_called_with_def(
                 api_call, expected_entry_def)
 
+    def test_create_with_entries(self):
+        domain_id = '111'
+        map_id = '222'
+        name = 'cm1'
+        description = 'desc'
+        source_group = 'g1'
+        dest_group = 'g2'
+        service_id = 'c1'
+        category = 'Emergency'
+
+        rule_id = 1
+        entry1 = self.resourceApi.build_entry(
+            'DHCP Reply', domain_id, map_id,
+            rule_id, sequence_number=rule_id, service_ids=[service_id],
+            action=policy_constants.ACTION_DENY,
+            source_groups=None,
+            dest_groups=[dest_group],
+            direction=nsx_constants.IN)
+        rule_id += 1
+        entry2 = self.resourceApi.build_entry(
+            'DHCP Request', domain_id, map_id,
+            rule_id, sequence_number=rule_id, service_ids=None,
+            action=policy_constants.ACTION_DENY,
+            source_groups=[source_group],
+            dest_groups=None,
+            direction=nsx_constants.OUT)
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_with_entries(name, domain_id,
+                                                 map_id=map_id,
+                                                 description=description,
+                                                 entries=[entry1, entry2],
+                                                 category=category,
+                                                 tenant=TEST_TENANT)
+
+            expected_def = policy_defs.CommunicationMapDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                name=name,
+                description=description,
+                category=category,
+                precedence=0,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            actual_def = api_call.call_args_list[0][0][0]
+            self.assertEqual([entry1.get_obj_dict(), entry2.get_obj_dict()],
+                             actual_def.body['communication_entries'])
+
     def test_delete(self):
         domain_id = '111'
         id = '222'
