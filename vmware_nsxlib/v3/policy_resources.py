@@ -435,6 +435,52 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
                                             icmp_code=icmp_code)
 
 
+class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
+    """NSX Policy Service with a single IPProtocol service entry.
+
+    Note the nsx-policy backend supports multiple service entries per service.
+    At this point this is not supported here.
+    """
+    @property
+    def entry_def(self):
+        return policy_defs.IPProtocolServiceEntryDef
+
+    def create_or_overwrite(self, name, service_id=None, description=None,
+                            protocol_number=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        service_id = self._init_obj_uuid(service_id)
+        # service name cannot contain spaces or slashes
+        name = self._canonize_name(name)
+        service_def = policy_defs.ServiceDef(service_id=service_id,
+                                             name=name,
+                                             description=description,
+                                             tenant=tenant)
+        # NOTE(asarfaty) We set the service entry display name (which is also
+        # used as the id) to be the same as the service name. In case we
+        # support multiple service entries, we need the name to be unique.
+        entry_def = policy_defs.IPProtocolServiceEntryDef(
+            service_id=service_id,
+            name=name,
+            description=description,
+            protocol_number=protocol_number,
+            tenant=tenant)
+
+        return self.policy_api.create_with_parent(service_def, entry_def)
+
+    def _update_service_entry(self, service_id, srv_entry,
+                              name=None, description=None,
+                              protocol_number=None,
+                              tenant=policy_constants.POLICY_INFRA_TENANT):
+        entry_id = srv_entry['id']
+        entry_def = policy_defs.IPProtocolServiceEntryDef(
+            service_id=service_id,
+            service_entry_id=entry_id,
+            tenant=tenant)
+        entry_def.update_attributes_in_body(body=srv_entry, name=name,
+                                            description=description,
+                                            protocol_number=protocol_number)
+
+
 class NsxPolicyNetworkApi(NsxPolicyResourceBase):
     """NSX Network API """
     @property
