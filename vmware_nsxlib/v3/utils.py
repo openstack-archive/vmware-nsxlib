@@ -24,7 +24,9 @@ import tenacity
 from tenacity import _utils as tenacity_utils
 
 from vmware_nsxlib._i18n import _
+from vmware_nsxlib.v3 import constants
 from vmware_nsxlib.v3 import exceptions as nsxlib_exceptions
+from vmware_nsxlib.v3 import nsx_constants
 
 LOG = log.getLogger(__name__)
 
@@ -521,3 +523,57 @@ class NsxLibApiBase(object):
                  'tag': project_name[:MAX_TAG_LEN]},
                 {'scope': 'os-api-version',
                  'tag': self.nsxlib_config.plugin_ver}]
+
+
+# Some utilities for services translations & validations
+# both for the nsx manager & policy manager
+def validate_dhcp_params(icmp_type, icmp_code, icmp_version=4, strict=False):
+    if icmp_version != 4:
+        # ICMPv6 is currently not supported
+        return
+    if icmp_type:
+        if (strict and icmp_type not in
+                constants.IPV4_ICMP_STRICT_TYPES):
+            raise nsxlib_exceptions.InvalidInput(
+                operation='create_rule',
+                arg_val=icmp_type,
+                arg_name='icmp_type')
+        if icmp_type not in constants.IPV4_ICMP_TYPES:
+            raise nsxlib_exceptions.InvalidInput(
+                operation='create_rule',
+                arg_val=icmp_type,
+                arg_name='icmp_type')
+        if (icmp_code and strict and icmp_code not in
+                constants.IPV4_ICMP_STRICT_TYPES[icmp_type]):
+            raise nsxlib_exceptions.InvalidInput(
+                operation='create_rule',
+                arg_val=icmp_code,
+                arg_name='icmp_code for this icmp_type')
+        if (icmp_code and icmp_code not in
+                constants.IPV4_ICMP_TYPES[icmp_type]):
+            raise nsxlib_exceptions.InvalidInput(
+                operation='create_rule',
+                arg_val=icmp_code,
+                arg_name='icmp_code for this icmp_type')
+
+
+def get_l4_protocol_name(protocol_number):
+    if protocol_number is None:
+        return
+    protocol_number = constants.IP_PROTOCOL_MAP.get(protocol_number,
+                                                    protocol_number)
+    try:
+        protocol_number = int(protocol_number)
+    except ValueError:
+        raise nsxlib_exceptions.InvalidInput(
+            operation='create_rule',
+            arg_val=protocol_number,
+            arg_name='protocol')
+    if protocol_number == 6:
+        return nsx_constants.TCP
+    elif protocol_number == 17:
+        return nsx_constants.UDP
+    elif protocol_number == 1:
+        return nsx_constants.ICMPV4
+    else:
+        return protocol_number

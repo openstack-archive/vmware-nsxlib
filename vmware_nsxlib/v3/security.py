@@ -24,7 +24,6 @@ from oslo_log import log
 from oslo_log import versionutils
 from oslo_utils import excutils
 
-from vmware_nsxlib.v3 import constants
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants as consts
 from vmware_nsxlib.v3 import utils
@@ -291,34 +290,13 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             else consts.OUT
         )
 
-    def _get_l4_protocol_name(self, protocol_number):
-        if protocol_number is None:
-            return
-        protocol_number = constants.IP_PROTOCOL_MAP.get(protocol_number,
-                                                        protocol_number)
-        try:
-            protocol_number = int(protocol_number)
-        except ValueError:
-            raise exceptions.InvalidInput(
-                operation='create_rule',
-                arg_val=protocol_number,
-                arg_name='protocol')
-        if protocol_number == 6:
-            return consts.TCP
-        elif protocol_number == 17:
-            return consts.UDP
-        elif protocol_number == 1:
-            return consts.ICMPV4
-        else:
-            return protocol_number
-
     def get_nsservice(self, resource_type, **properties):
         service = {'resource_type': resource_type}
         service.update(properties)
         return {'service': service}
 
     def _decide_service(self, sg_rule):
-        l4_protocol = self._get_l4_protocol_name(sg_rule['protocol'])
+        l4_protocol = utils.get_l4_protocol_name(sg_rule['protocol'])
 
         if l4_protocol in [consts.TCP, consts.UDP]:
             # If port_range_min is not specified then we assume all ports are
@@ -343,30 +321,8 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             icmp_code = sg_rule['port_range_max']
             icmp_strict = self.nsxlib.feature_supported(
                 consts.FEATURE_ICMP_STRICT)
-            if icmp_type:
-                if (icmp_strict and icmp_type not in
-                        constants.IPV4_ICMP_STRICT_TYPES):
-                    raise exceptions.InvalidInput(
-                        operation='create_rule',
-                        arg_val=icmp_type,
-                        arg_name='icmp_type')
-                if icmp_type not in constants.IPV4_ICMP_TYPES:
-                        raise exceptions.InvalidInput(
-                            operation='create_rule',
-                            arg_val=icmp_type,
-                            arg_name='icmp_type')
-                if (icmp_code and icmp_strict and icmp_code not in constants.
-                        IPV4_ICMP_STRICT_TYPES[icmp_type]):
-                    raise exceptions.InvalidInput(
-                        operation='create_rule',
-                        arg_val=icmp_code,
-                        arg_name='icmp_code for this icmp_type')
-                if (icmp_code and icmp_code not in
-                        constants.IPV4_ICMP_TYPES[icmp_type]):
-                        raise exceptions.InvalidInput(
-                            operation='create_rule',
-                            arg_val=icmp_code,
-                            arg_name='icmp_code for this icmp_type')
+            utils.validate_dhcp_params(icmp_type, icmp_code, icmp_version=4,
+                                       strict=icmp_strict)
 
             return self.get_nsservice(
                 consts.ICMP_TYPE_NSSERVICE,

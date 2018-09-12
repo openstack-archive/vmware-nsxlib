@@ -441,6 +441,37 @@ class IcmpServiceEntryDef(ServiceEntryDef):
             body=body, **kwargs)
 
 
+class IPProtocolServiceEntryDef(ServiceEntryDef):
+    def __init__(self,
+                 service_id=None,
+                 service_entry_id=None,
+                 name=None,
+                 description=None,
+                 protocol_number=None,
+                 tenant=policy_constants.POLICY_INFRA_TENANT):
+        super(IPProtocolServiceEntryDef, self).__init__()
+        self.tenant = tenant
+        self.id = service_entry_id
+        self.name = name
+        self.description = description
+        self.protocol_number = protocol_number
+        self.parent_ids = (tenant, service_id)
+
+    def get_obj_dict(self):
+        body = super(IPProtocolServiceEntryDef, self).get_obj_dict()
+        body['resource_type'] = 'IPProtocolServiceEntry'
+        return body
+
+    def update_attributes_in_body(self, **kwargs):
+        # Fix params that need special conversions
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
+
+        super(IPProtocolServiceEntryDef, self).update_attributes_in_body(
+            body=body, **kwargs)
+
+
 class CommunicationMapDef(ResourceDef):
     def __init__(self,
                  map_id=None,
