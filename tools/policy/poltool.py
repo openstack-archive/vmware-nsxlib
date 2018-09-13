@@ -25,13 +25,13 @@
 #   Show network 'test':
 #       python poltool.py -o get -r network -i test
 #   Create segment seg1 on network test:
-#       python poltool.py -o create -r segment -i "seg1" -a "name=seg1"
+#       python poltool.py -o create -r network_segment -i "seg1" -a "name=seg1"
 #                         -a "network_id=test"
 #                         -a "subnet:gateway_address=1.1.1.1/32"
 #   Delete segment seg1:
-#       python poltool.py -o delete -r segment -i "test:seg1"
+#       python poltool.py -o delete -r network_segment -i "test:seg1"
 #   Delete all segments under network test:
-#       python poltool.py -o delete -r segment -i "test:all"
+#       python poltool.py -o delete -r network_segment -i "test:all"
 
 
 import copy
@@ -45,7 +45,8 @@ path.append(os.path.abspath("../../"))
 
 
 OPERATIONS = ("create", "update", "delete", "get")
-RESOURCES = ("domain", "service", "group", "network", "segment")
+RESOURCES = ("domain", "service", "group", "network",
+             "segment", "network_segment")
 
 
 def get_resource_api(lib, resource_type):
@@ -58,19 +59,29 @@ def build_ids(resource_id):
 
 def get_resource(lib, resource_type, resource_id):
 
+    from vmware_nsxlib.v3 import exceptions as exc
     api = get_resource_api(lib, resource_type)
 
     ids = build_ids(resource_id)
-    if ids[-1] == "all":
-        result = api.list(*ids[:-1])
-    else:
-        result = api.get(*ids)
+    try:
+        if ids[-1] == "all":
+            result = api.list(*ids[:-1])
+        else:
+            result = api.get(*ids)
+    except exc.ResourceNotFound:
+        print("Resource of type %s %s not found" % (resource_type, ids))
+        sys.exit(2)
 
     return result
 
 
 def build_args(resource_type, resource_id, args):
     from vmware_nsxlib.v3 import policy_defs
+
+    if "_" in resource_type:
+        # handle cases like network_segment_id
+        # type is network_segment, but id parameter is segment_id
+        resource_type = "_".join(resource_type.split("_")[1:])
 
     args["%s_id" % resource_type] = resource_id
     subresources = {}
