@@ -196,7 +196,40 @@ class Subnet(object):
 
 
 # TODO(annak) - add advanced config when supported by platform
-class SegmentDef(ResourceDef):
+class BaseSegmentDef(ResourceDef):
+    def __init__(self,
+                 segment_id=None,
+                 name=None,
+                 description=None,
+                 subnets=None,
+                 dns_domain_name=None,
+                 vlan_ids=None,
+                 tenant=policy_constants.POLICY_INFRA_TENANT):
+        super(BaseSegmentDef, self).__init__()
+        self.tenant = tenant
+        self.id = segment_id
+        self.name = name
+        self.description = description
+        self.dns_domain_name = dns_domain_name
+        self.vlan_ids = vlan_ids
+        self.subnets = subnets
+        self.parent_ids = (tenant)
+
+    def get_obj_dict(self):
+        body = super(BaseSegmentDef, self).get_obj_dict()
+        if self.subnets:
+            body['subnets'] = [subnet.get_obj_dict()
+                               for subnet in self.subnets]
+        if self.dns_domain_name:
+            body['domain_name'] = self.dns_domain_name
+        if self.vlan_ids:
+            body['vlan_ids'] = self.vlan_ids
+        return body
+
+
+class NetworkSegmentDef(BaseSegmentDef):
+    '''Network segments can not move to different network '''
+
     def __init__(self,
                  network_id,
                  segment_id=None,
@@ -206,30 +239,24 @@ class SegmentDef(ResourceDef):
                  dns_domain_name=None,
                  vlan_ids=None,
                  tenant=policy_constants.POLICY_INFRA_TENANT):
-        super(SegmentDef, self).__init__()
-        self.tenant = tenant
-        self.id = segment_id
-        self.name = name
-        self.description = description
-        self.dns_domain_name = dns_domain_name
-        self.vlan_ids = vlan_ids
-        self.subnets = subnets
+        super(NetworkSegmentDef, self).__init__(segment_id, name, description,
+                                                subnets, dns_domain_name, vlan_ids)
         self.parent_ids = (tenant, network_id)
 
     @property
     def path_pattern(self):
         return NETWORKS_PATH_PATTERN + "%s/segments/"
 
-    def get_obj_dict(self):
-        body = super(SegmentDef, self).get_obj_dict()
-        if self.subnets:
-            body['subnets'] = [subnet.get_obj_dict()
-                               for subnet in self.subnets]
-        if self.dns_domain_name:
-            body['domain_name'] = self.dns_domain_name
-        if self.vlan_ids:
-            body['vlan_ids'] = self.vlan_ids
-        return body
+
+class SegmentDef(BaseSegmentDef):
+    '''These segments don't belong to particular network.
+
+       And can be attached and re-attached to different networks
+    '''
+
+    @property
+    def path_pattern(self):
+        return TENANTS_PATH_PATTERN + "segments/"
 
 
 class Condition(object):
