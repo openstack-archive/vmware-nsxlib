@@ -537,11 +537,11 @@ class NsxPolicyNetworkApi(NsxPolicyResourceBase):
         return self.policy_api.create_or_update(network_def)
 
 
-class NsxPolicySegmentApi(NsxPolicyResourceBase):
+class NsxPolicyNetworkSegmentApi(NsxPolicyResourceBase):
     """NSX Network Segment API """
     @property
     def entry_def(self):
-        return policy_defs.SegmentDef
+        return policy_defs.NetworkSegmentDef
 
     def create_or_overwrite(self, name, network_id=None,
                             segment_id=None, description=None,
@@ -585,6 +585,63 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                vlan_ids=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(network_id, segment_id, tenant=tenant)
+        segment_def.update_attributes_in_body(
+            name=name,
+            description=description,
+            subnets=subnets,
+            dns_domain_name=dns_domain_name,
+            vlan_ids=vlan_ids,
+            tags=tags)
+        return self.policy_api.create_or_update(segment_def)
+
+
+class NsxPolicySegmentApi(NsxPolicyResourceBase):
+    """NSX Network Segment API """
+    @property
+    def entry_def(self):
+        return policy_defs.SegmentDef
+
+    def create_or_overwrite(self, name, network_id=None,
+                            segment_id=None, description=None,
+                            subnets=None,
+                            dns_domain_name=None,
+                            vlan_ids=None,
+                            tags=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        segment_id = self._init_obj_uuid(segment_id)
+        segment_def = self.entry_def(segment_id=segment_id,
+                                     name=name,
+                                     description=description,
+                                     subnets=subnets,
+                                     dns_domain_name=dns_domain_name,
+                                     vlan_ids=vlan_ids,
+                                     tenant=tenant)
+        if tags:
+            segment_def.add_tags(tags)
+        return self.policy_api.create_or_update(segment_def)
+
+    def delete(self, segment_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(segment_id, tenant=tenant)
+        self.policy_api.delete(segment_def)
+
+    def get(self, segment_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(segment_id, tenant=tenant)
+        return self.policy_api.get(segment_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tenant=tenant)
+        return self.policy_api.list(segment_def)['results']
+
+    def update(self, segment_id,
+               name=None, description=None,
+               subnets=None, tags=None,
+               dns_domain_name=None,
+               vlan_ids=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(segment_id, tenant=tenant)
         segment_def.update_attributes_in_body(
             name=name,
             description=description,
