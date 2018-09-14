@@ -38,6 +38,30 @@ class NsxPolicyResourceBase(object):
     def __init__(self, policy_api):
         self.policy_api = policy_api
 
+    def _create_or_overwrite(self, **kwargs):
+        object_id = self._init_obj_uuid(kwargs[self.object_id_marker])
+        kwargs[self.object_id_marker] = object_id
+
+        tags = None
+        if 'tags' in kwargs:
+            tags = kwargs['tags']
+            del kwargs['tags']
+
+        object_def = self.entry_def(**kwargs)
+        if tags:
+            object_def.add_tags(tags)
+        return self.policy_api.create_or_update(object_def)
+
+    @property
+    @abc.abstractmethod
+    def entry_def(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def object_id_marker(self):
+        pass
+
     @abc.abstractmethod
     def list(self, *args, **kwargs):
         pass
@@ -88,17 +112,23 @@ class NsxPolicyResourceBase(object):
 
 class NsxPolicyDomainApi(NsxPolicyResourceBase):
     """NSX Policy Domain."""
+
+    @property
+    def entry_def(self):
+        return policy_defs.DomainDef
+
+    @property
+    def object_id_marker(self):
+        return 'domain_id'
+
     def create_or_overwrite(self, name, domain_id=None, description=None,
                             tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
-        domain_id = self._init_obj_uuid(domain_id)
-        domain_def = policy_defs.DomainDef(domain_id=domain_id,
-                                           name=name,
-                                           description=description,
-                                           tenant=tenant)
-        if tags:
-            domain_def.add_tags(tags)
-        return self.policy_api.create_or_update(domain_def)
+        return self._create_or_overwrite(name=name,
+                                         domain_id=domain_id,
+                                         description=description,
+                                         tags=tags,
+                                         tenant=tenant)
 
     def delete(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         domain_def = policy_defs.DomainDef(domain_id, tenant=tenant)
@@ -124,6 +154,14 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
 
 
 class NsxPolicyGroupApi(NsxPolicyResourceBase):
+    @property
+    def entry_def(self):
+        return policy_defs.GroupDef
+
+    @property
+    def object_id_marker(self):
+        return 'group_id'
+
     """NSX Policy Group (under a Domain) with a single condition."""
     def create_or_overwrite(
         self, name, domain_id, group_id=None,
@@ -335,6 +373,10 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     def entry_def(self):
         return policy_defs.L4ServiceEntryDef
 
+    @property
+    def object_id_marker(self):
+        return 'service_id'
+
     def create_or_overwrite(self, name, service_id=None, description=None,
                             protocol=policy_constants.TCP, dest_ports=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -382,6 +424,10 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
     def entry_def(self):
         return policy_defs.IcmpServiceEntryDef
 
+    @property
+    def object_id_marker(self):
+        return 'service_id'
+
     def create_or_overwrite(self, name, service_id=None, description=None,
                             version=4, icmp_type=None, icmp_code=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -426,6 +472,10 @@ class NsxPolicyNetworkApi(NsxPolicyResourceBase):
     @property
     def entry_def(self):
         return policy_defs.NetworkDef
+
+    @property
+    def object_id_marker(self):
+        return 'network_id'
 
     def create_or_overwrite(self, name, network_id=None, description=None,
                             provider=None,
@@ -482,6 +532,10 @@ class NsxPolicyNetworkSegmentApi(NsxPolicyResourceBase):
     @property
     def entry_def(self):
         return policy_defs.NetworkSegmentDef
+
+    @property
+    def object_id_marker(self):
+        return 'segment_id'
 
     def create_or_overwrite(self, name, network_id=None,
                             segment_id=None, description=None,
@@ -541,6 +595,10 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
     def entry_def(self):
         return policy_defs.SegmentDef
 
+    @property
+    def object_id_marker(self):
+        return 'segment_id'
+
     def create_or_overwrite(self, name, network_id=None,
                             segment_id=None, description=None,
                             subnets=None,
@@ -593,6 +651,15 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
 
 
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
+
+    @property
+    def entry_def(self):
+        return policy_defs.CommunicationMapDef
+
+    @property
+    def object_id_marker(self):
+        return 'map_id'
+
     """NSX Policy CommunicationMap (Under a Domain)."""
     def _get_last_seq_num(self, domain_id, map_id,
                           tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -765,6 +832,14 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
     """NSX Policy Enforcement Point."""
 
+    @property
+    def entry_def(self):
+        return policy_defs.EnforcementPointDef
+
+    @property
+    def object_id_marker(self):
+        return 'ep_id'
+
     def create_or_overwrite(self, name, ep_id=None, description=None,
                             ip_address=None, username=None,
                             password=None, thumbprint=None,
@@ -842,6 +917,14 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
 
 class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
     """NSX Policy Deployment Map."""
+
+    @property
+    def entry_def(self):
+        return policy_defs.DeploymentMapDef
+
+    @property
+    def object_id_marker(self):
+        return 'map_id'
 
     def create_or_overwrite(self, name, map_id=None, description=None,
                             ep_id=None, domain_id=None,

@@ -111,6 +111,7 @@ def create_resource(lib, resource_type, resource_id, args):
     args = build_args(resource_type, resource_id, args)
     api = get_resource_api(lib, resource_type)
 
+    print(args)
     api.create_or_overwrite(**args)
 
 
