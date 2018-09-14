@@ -41,7 +41,7 @@ class NsxPolicyLibTestCase(unittest.TestCase):
         # verify the resource definition class
         self.assertEqual(expected_def.__class__, actual_def.__class__)
         # verify the resource definition tenant
-        self.assertEqual(expected_def.tenant, actual_def.tenant)
+        self.assertEqual(expected_def.get_tenant(), actual_def.get_tenant())
         # verify the resource definition values
         self.assertEqual(expected_def.get_obj_dict(),
                          actual_def.get_obj_dict())
@@ -339,7 +339,8 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(domain_id, name,
                                                tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.GroupDef(domain_id, tenant=TEST_TENANT)
+            expected_def = policy_defs.GroupDef(domain_id=domain_id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
@@ -419,12 +420,10 @@ class TestPolicyService(NsxPolicyLibTestCase):
 
     def test_delete(self):
         id = '111'
-        with mock.patch.object(self.policy_api, "delete") as api_call,\
-            mock.patch.object(self.policy_api, "get") as get_call:
+        with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
             expected_def = policy_defs.ServiceDef(service_id=id,
                                                   tenant=TEST_TENANT)
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
@@ -541,12 +540,10 @@ class TestPolicyIcmpService(NsxPolicyLibTestCase):
 
     def test_delete(self):
         id = '111'
-        with mock.patch.object(self.policy_api, "delete") as api_call,\
-            mock.patch.object(self.policy_api, "get") as get_call:
+        with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
             expected_def = policy_defs.ServiceDef(service_id=id,
                                                   tenant=TEST_TENANT)
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
@@ -667,12 +664,10 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
 
     def test_delete(self):
         id = '111'
-        with mock.patch.object(self.policy_api, "delete") as api_call,\
-            mock.patch.object(self.policy_api, "get") as get_call:
+        with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
             expected_def = policy_defs.ServiceDef(service_id=id,
                                                   tenant=TEST_TENANT)
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
@@ -800,6 +795,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=map_id,
                 entry_id=map_id,
                 name=name,
+                action=policy_constants.ACTION_ALLOW,
                 description=description,
                 sequence_number=seq_num,
                 service_ids=[service_id],
@@ -847,6 +843,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=map_id,
                 entry_id=map_id,
                 name=name,
+                action=policy_constants.ACTION_ALLOW,
                 description=description,
                 sequence_number=1,
                 service_ids=[service_id],
@@ -886,6 +883,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 domain_id=domain_id,
                 map_id=mock.ANY,
                 entry_id=mock.ANY,
+                action=policy_constants.ACTION_ALLOW,
                 name=name,
                 description=description,
                 sequence_number=1,
@@ -931,7 +929,9 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         service2_id = 'c2'
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
-            self.resourceApi.create_entry(name, domain_id, map_id,
+            self.resourceApi.create_entry(name=name,
+                                          domain_id=domain_id,
+                                          map_id=map_id,
                                           description=description,
                                           service_ids=[service1_id,
                                                        service2_id],
@@ -946,6 +946,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=map_id,
                 entry_id=mock.ANY,
                 name=name,
+                action=policy_constants.ACTION_ALLOW,
                 description=description,
                 sequence_number=1,
                 service_ids=[service1_id, service2_id],
@@ -978,6 +979,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=map_id,
                 entry_id=mock.ANY,
                 name=name,
+                action=policy_constants.ACTION_ALLOW,
                 description=description,
                 sequence_number=1,
                 service_ids=None,
@@ -1016,6 +1018,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=map_id,
                 entry_id=mock.ANY,
                 name=name,
+                action=policy_constants.ACTION_ALLOW,
                 description=description,
                 service_ids=[service1_id, service2_id],
                 source_groups=[source_group],

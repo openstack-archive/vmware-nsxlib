@@ -1,0 +1,27 @@
+# domains
+python poltool.py -o create -r domain -i domain1 -a "name=sanity"
+python poltool.py -o update -r domain -i domain1 -a "name=insane"
+python poltool.py -o get -r domain -i domain1
+python poltool.py -o get -r domain
+
+# groups
+python poltool.py -o create -r group -i group1 -a "name=sanity" -a "domain_id=domain1" -a "cond_val=sanity"
+python poltool.py -o update -r group -i group1 -a "name=insane" -a "domain_id=domain1" -a "description=stuff"
+python poltool.py -o get -r group -i "domain1:all"
+python poltool.py -o get -r group -i "domain1:group1"
+
+# services
+python poltool.py -o create -r service -i service1 -a "name=sanity" -a "protocol=UDP"
+python poltool.py -o update -r service -i service1 -a "name=insane" -a "protocol=TCP"
+python poltool.py -o get -r service -i service1
+python poltool.py -o create -r icmp_service -i service2 -a "name=sanity" -a "icmp_type=9"
+python poltool.py -o update -r icmp_service -i service2 -a "name=insane"
+python poltool.py -o get -r icmp_service -i service2
+
+# TODO: networks, segments, network segments, comm maps, enforcement points, sites
+
+# cleanup
+python poltool.py -o delete -r service -i service1
+python poltool.py -o delete -r icmp_service -i service2
+python poltool.py -o delete -r group -i "domain1:all"
+python poltool.py -o delete -r domain -i domain1

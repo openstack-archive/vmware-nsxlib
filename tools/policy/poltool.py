@@ -34,18 +34,25 @@
 #       python poltool.py -o delete -r network_segment -i "test:all"
 
 
+import sys
+
+from sys import path
+
 import copy
 import getopt
 import json
 import os
-import sys
-from sys import path
 
+import requests
+
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 path.append(os.path.abspath("../../"))
 
 
 OPERATIONS = ("create", "update", "delete", "get")
-RESOURCES = ("domain", "service", "group", "network",
+RESOURCES = ("domain", "service", "icmp_service", "group", "network",
              "segment", "network_segment")
 
 
