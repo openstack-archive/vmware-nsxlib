@@ -95,17 +95,17 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
         domain_def = policy_defs.DomainDef(domain_id=domain_id,
                                            name=name,
                                            description=description,
+                                           tags=tags,
                                            tenant=tenant)
-        if tags:
-            domain_def.add_tags(tags)
+
         return self.policy_api.create_or_update(domain_def)
 
     def delete(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        domain_def = policy_defs.DomainDef(domain_id, tenant=tenant)
+        domain_def = policy_defs.DomainDef(domain_id=domain_id, tenant=tenant)
         self.policy_api.delete(domain_def)
 
     def get(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        domain_def = policy_defs.DomainDef(domain_id, tenant=tenant)
+        domain_def = policy_defs.DomainDef(domain_id=domain_id, tenant=tenant)
         return self.policy_api.get(domain_def)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -153,9 +153,8 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                          name=name,
                                          description=description,
                                          conditions=conditions,
+                                         tags=tags,
                                          tenant=tenant)
-        if tags:
-            group_def.add_tags(tags)
         return self.policy_api.create_or_update(group_def)
 
     def build_condition(
@@ -198,9 +197,8 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                          name=name,
                                          description=description,
                                          conditions=conditions,
+                                         tags=tags,
                                          tenant=tenant)
-        if tags:
-            group_def.add_tags(tags)
         return self.policy_api.create_or_update(group_def)
 
     def delete(self, domain_id, group_id,
@@ -265,15 +263,6 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
         """Delete the service with all its entries"""
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              tenant=tenant)
-        service = self.policy_api.get(service_def)
-        # first delete all the service entries
-        if 'service_entries' in service:
-            for entry in service['service_entries']:
-                entry_def = self.entry_def(
-                    service_id=service_id,
-                    service_entry_id=entry['id'],
-                    tenant=tenant)
-                self.policy_api.delete(entry_def)
         self.policy_api.delete(service_def)
 
     def get(self, service_id,
@@ -503,17 +492,16 @@ class NsxPolicyNetworkApi(NsxPolicyResourceBase):
                                      ip_addresses=ip_addresses,
                                      ha_mode=ha_mode,
                                      force_whitelisting=force_whitelisting,
+                                     tags=tags,
                                      tenant=tenant)
-        if tags:
-            network_def.add_tags(tags)
         return self.policy_api.create_or_update(network_def)
 
     def delete(self, network_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        network_def = self.entry_def(network_id, tenant=tenant)
+        network_def = self.entry_def(network_id=network_id, tenant=tenant)
         self.policy_api.delete(network_def)
 
     def get(self, network_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        network_def = self.entry_def(network_id, tenant=tenant)
+        network_def = self.entry_def(network_id=network_id, tenant=tenant)
         return self.policy_api.get(network_def)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -559,23 +547,26 @@ class NsxPolicyNetworkSegmentApi(NsxPolicyResourceBase):
                                      subnets=subnets,
                                      dns_domain_name=dns_domain_name,
                                      vlan_ids=vlan_ids,
+                                     tags=tags,
                                      tenant=tenant)
-        if tags:
-            segment_def.add_tags(tags)
         return self.policy_api.create_or_update(segment_def)
 
     def delete(self, network_id, segment_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(network_id, segment_id, tenant=tenant)
+        segment_def = self.entry_def(network_id=network_id,
+                                     segment_id=segment_id,
+                                     tenant=tenant)
         self.policy_api.delete(segment_def)
 
     def get(self, network_id, segment_id,
             tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(network_id, segment_id, tenant=tenant)
+        segment_def = self.entry_def(network_id=network_id,
+                                     segment_id=segment_id,
+                                     tenant=tenant)
         return self.policy_api.get(segment_def)
 
     def list(self, network_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(network_id, tenant=tenant)
+        segment_def = self.entry_def(network_id=network_id, tenant=tenant)
         return self.policy_api.list(segment_def)['results']
 
     def update(self, network_id, segment_id,
@@ -616,19 +607,18 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                                      subnets=subnets,
                                      dns_domain_name=dns_domain_name,
                                      vlan_ids=vlan_ids,
+                                     tags=tags,
                                      tenant=tenant)
-        if tags:
-            segment_def.add_tags(tags)
         return self.policy_api.create_or_update(segment_def)
 
     def delete(self, segment_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(segment_id, tenant=tenant)
+        segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         self.policy_api.delete(segment_def)
 
     def get(self, segment_id,
             tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(segment_id, tenant=tenant)
+        segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         return self.policy_api.get(segment_def)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -641,7 +631,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                dns_domain_name=None,
                vlan_ids=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        segment_def = self.entry_def(segment_id, tenant=tenant)
+        segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         segment_def.update_attributes_in_body(
             name=name,
             description=description,
@@ -723,9 +713,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            precedence=precedence, category=category)
-        if tags:
-            map_def.add_tags(tags)
+            precedence=precedence, category=category, tags=tags)
         if last_sequence < 0:
             # if communication map is absent, we need to create it
             return self.policy_api.create_with_parent(map_def, entry_def)
@@ -748,9 +736,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            precedence=precedence, category=category)
-        if tags:
-            map_def.add_tags(tags)
+            precedence=precedence, category=category, tags=tags)
 
         return self.policy_api.create_or_update(map_def)
 
@@ -790,9 +776,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            precedence=precedence, category=category)
-        if tags:
-            map_def.add_tags(tags)
+            precedence=precedence, category=category, tags=tags)
         map_def.body = map_def.get_obj_dict()
         # update the entries with the map id
         if entries:
@@ -927,7 +911,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def get_realized_state(self, domain_id, map_id, ep_id,
                            tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.CommunicationMapDef(map_id, domain_id,
+        map_def = policy_defs.CommunicationMapDef(map_id=map_id,
+                                                  domain_id=domain_id,
                                                   tenant=tenant)
         path = map_def.get_realized_state_path(ep_id)
         return self._get_realized_state(path)
