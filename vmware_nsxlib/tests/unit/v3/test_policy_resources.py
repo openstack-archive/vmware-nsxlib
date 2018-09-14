@@ -41,7 +41,7 @@ class NsxPolicyLibTestCase(unittest.TestCase):
         # verify the resource definition class
         self.assertEqual(expected_def.__class__, actual_def.__class__)
         # verify the resource definition tenant
-        self.assertEqual(expected_def.tenant, actual_def.tenant)
+        self.assertEqual(expected_def.get_tenant(), actual_def.get_tenant())
         # verify the resource definition values
         self.assertEqual(expected_def.get_obj_dict(),
                          actual_def.get_obj_dict())

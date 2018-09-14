@@ -41,22 +41,22 @@ class TestPolicyDomain(TestPolicyApi):
 
     def test_create(self):
         domain_def = policy.DomainDef(
-            'archaea',
-            'prokaryotic cells',
-            'typically characterized by membrane lipids')
+            domain_id='archaea',
+            name='prokaryotic cells',
+            description='typically characterized by membrane lipids')
         self.policy_api.create_or_update(domain_def)
         self.assert_json_call('PATCH', self.client,
                               'infra/domains/archaea',
                               data=domain_def.get_obj_dict())
 
     def test_delete(self):
-        domain_def = policy.DomainDef('bacteria')
+        domain_def = policy.DomainDef(domain_id='bacteria')
         self.policy_api.delete(domain_def)
         self.assert_json_call('DELETE', self.client,
                               'infra/domains/bacteria')
 
     def test_get(self):
-        domain_def = policy.DomainDef('eukarya')
+        domain_def = policy.DomainDef(domain_id='eukarya')
         self.policy_api.get(domain_def)
         self.assert_json_call('GET', self.client,
                               'infra/domains/eukarya')
@@ -71,21 +71,21 @@ class TestPolicyGroup(TestPolicyApi):
 
     def test_create(self):
         group_def = policy.GroupDef(
-            'eukarya',
-            'cats',
-            'felis catus')
+            domain_id='eukarya',
+            group_id='cats',
+            name='felis catus')
         self.policy_api.create_or_update(group_def)
         self.assert_json_call('PATCH', self.client,
                               'infra/domains/eukarya/groups/cats',
                               data=group_def.get_obj_dict())
 
     def test_create_with_domain(self):
-        domain_def = policy.DomainDef('eukarya',
-                                      'eukarya',
-                                      'dude with cell membranes')
-        group_def = policy.GroupDef('eukarya',
-                                    'cats',
-                                    'Ailuropoda melanoleuca')
+        domain_def = policy.DomainDef(domain_id='eukarya',
+                                      name='eukarya',
+                                      description='dude with cell membranes')
+        group_def = policy.GroupDef(domain_id='eukarya',
+                                    group_id='cats',
+                                    name='Ailuropoda melanoleuca')
 
         self.policy_api.create_with_parent(domain_def, group_def)
         data = domain_def.get_obj_dict()
@@ -95,8 +95,8 @@ class TestPolicyGroup(TestPolicyApi):
                               data=data)
 
     def test_create_with_single_tag(self):
-        domain_def = policy.DomainDef('eukarya')
-        group_def = policy.GroupDef('eukarya', 'dogs',
+        domain_def = policy.DomainDef(domain_id='eukarya')
+        group_def = policy.GroupDef(domain_id='eukarya', group_id='dogs',
                                     conditions=policy.Condition('spaniel'))
         self.policy_api.create_with_parent(domain_def, group_def)
         data = domain_def.get_obj_dict()
@@ -121,14 +121,14 @@ class TestPolicyGroup(TestPolicyApi):
                               data=expected_data)
 
     def test_create_with_multi_tag(self):
-        domain_def = policy.DomainDef('eukarya')
+        domain_def = policy.DomainDef(domain_id='eukarya')
         pines = policy.Condition(
             'pine',
             operator=policy_constants.CONDITION_OP_CONTAINS)
         maples = policy.Condition(
             'maple',
             operator=policy_constants.CONDITION_OP_STARTS_WITH)
-        group_def = policy.GroupDef('eukarya', 'trees',
+        group_def = policy.GroupDef(domain_id='eukarya', group_id='trees',
                                     conditions=[pines, maples])
         self.policy_api.create_with_parent(domain_def, group_def)
         data = domain_def.get_obj_dict()
@@ -147,16 +147,16 @@ class TestPolicyGroup(TestPolicyApi):
 class TestPolicyService(TestPolicyApi):
 
     def test_create(self):
-        service_def = policy.ServiceDef('roomservice')
+        service_def = policy.ServiceDef(service_id='roomservice')
         self.policy_api.create_or_update(service_def)
         self.assert_json_call('PATCH', self.client,
                               'infra/services/roomservice',
                               data=service_def.get_obj_dict())
 
     def test_create_l4_with_parent(self):
-        service_def = policy.ServiceDef('roomservice')
-        entry_def = policy.L4ServiceEntryDef('roomservice',
-                                             'http',
+        service_def = policy.ServiceDef(service_id='roomservice')
+        entry_def = policy.L4ServiceEntryDef(service_id='roomservice',
+                                             entry_id='http',
                                              name='room http',
                                              dest_ports=[80, 8080])
 
@@ -176,20 +176,17 @@ class TestPolicyService(TestPolicyApi):
                               data=expected_data)
 
     def test_create_icmp_with_parent(self):
-        service_def = policy.ServiceDef('icmpservice')
-        entry_def = policy.IcmpServiceEntryDef('icmpservice',
-                                               'icmp',
+        service_def = policy.ServiceDef(name='icmpservice')
+        entry_def = policy.IcmpServiceEntryDef(service_id='icmpservice',
+                                               entry_id='icmp',
                                                name='icmpv4')
 
         self.policy_api.create_with_parent(service_def, entry_def)
         expected_entry = {'id': 'icmp',
                           'resource_type': 'ICMPTypeServiceEntry',
                           'display_name': 'icmpv4',
-                          'description': None,
                           'protocol': 'ICMPv4'}
         expected_data = {'id': 'icmpservice',
-                         'display_name': None,
-                         'description': None,
                          'service_entries': [expected_entry]}
         self.assert_json_call('PATCH', self.client,
                               'infra/services/icmpservice',
@@ -201,7 +198,10 @@ class TestPolicyCommunicationMap(TestPolicyApi):
     def setUp(self):
         super(TestPolicyCommunicationMap, self).setUp()
         self.entry1 = policy.CommunicationMapEntryDef(
-            'd1', 'cm1', 'en1',
+            domain_id='d1',
+            map_id='cm1',
+            entry_id='en1',
+            action='ALLOW',
             sequence_number=12,
             source_groups=["group1",
                            "group2"],
@@ -210,7 +210,10 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             direction=nsx_constants.IN_OUT)
 
         self.entry2 = policy.CommunicationMapEntryDef(
-            'd1', 'cm2', 'en2',
+            domain_id='d1',
+            map_id='cm2',
+            entry_id='en2',
+            action='ALLOW',
             sequence_number=13,
             source_groups=["group1",
                            "group2"],
@@ -219,11 +222,8 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             direction=nsx_constants.IN)
 
         self.expected_data1 = {'id': 'en1',
-                               'display_name': None,
-                               'description': None,
                                'sequence_number': 12,
                                'action': 'ALLOW',
-                               'scope': ['ANY'],
                                'source_groups':
                                ['/infra/domains/d1/groups/group1',
                                 '/infra/domains/d1/groups/group2'],
@@ -234,11 +234,8 @@ class TestPolicyCommunicationMap(TestPolicyApi):
                                'direction': 'IN_OUT'}
 
         self.expected_data2 = {'id': 'en2',
-                               'display_name': None,
-                               'description': None,
                                'sequence_number': 13,
                                'action': 'ALLOW',
-                               'scope': ['ANY'],
                                'source_groups':
                                ['/infra/domains/d1/groups/group1',
                                 '/infra/domains/d1/groups/group2'],
@@ -289,13 +286,13 @@ class TestPolicyCommunicationMap(TestPolicyApi):
 class TestPolicyEnforcementPoint(TestPolicyApi):
 
     def test_create(self):
-        ep_def = policy.EnforcementPointDef('ep1', name='The Point',
+        ep_def = policy.EnforcementPointDef(ep_id='ep1', name='The Point',
                                             ip_address='1.1.1.1',
                                             username='admin',
                                             password='a')
 
         self.policy_api.create_or_update(ep_def)
-        ep_path = policy.EnforcementPointDef('ep1').get_resource_path()
+        ep_path = policy.EnforcementPointDef(ep_id='ep1').get_resource_path()
         self.assert_json_call('PATCH', self.client,
                               ep_path,
                               data=ep_def.get_obj_dict())
@@ -304,7 +301,9 @@ class TestPolicyEnforcementPoint(TestPolicyApi):
 class TestPolicyDeploymentMap(TestPolicyApi):
 
     def test_create(self):
-        map_def = policy.DeploymentMapDef('dm1', domain_id='d1', ep_id='ep1')
+        map_def = policy.DeploymentMapDef(map_id='dm1',
+                                          domain_id='d1',
+                                          ep_id='ep1')
 
         self.policy_api.create_or_update(map_def)
         ep_path = policy.EnforcementPointDef('ep1').get_resource_full_path()
