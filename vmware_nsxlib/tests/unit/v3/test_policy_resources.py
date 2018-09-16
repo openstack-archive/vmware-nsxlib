@@ -784,6 +784,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  source_groups=[source_group],
                                                  dest_groups=[dest_group],
                                                  direction=direction,
+                                                 logged=True,
                                                  tenant=TEST_TENANT)
             expected_def = policy_defs.CommunicationMapDef(
                 domain_id=domain_id,
@@ -806,6 +807,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 direction=direction,
+                logged=True,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def, call_num=1)
 
@@ -852,6 +854,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 service_ids=[service_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
+                logged=False,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def, call_num=1)
 
@@ -892,6 +895,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 service_ids=[service1_id, service2_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_defs(
@@ -952,6 +956,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 direction=nsx_constants.IN,
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -983,6 +988,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 service_ids=None,
                 source_groups=[source_group],
                 dest_groups=[dest_group],
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1009,6 +1015,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                        service2_id],
                                           source_groups=[source_group],
                                           dest_groups=[dest_group],
+                                          logged=False,
                                           tenant=TEST_TENANT)
 
             expected_entry_def = policy_defs.CommunicationMapEntryDef(
@@ -1021,6 +1028,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 sequence_number=seq_num + 1,
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(

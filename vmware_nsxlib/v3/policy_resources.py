@@ -626,7 +626,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                             sequence_number=None, service_ids=None,
                             action=policy_constants.ACTION_ALLOW,
                             source_groups=None, dest_groups=None,
-                            direction=None, tags=None,
+                            direction=None, logged=False, tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap & Entry.
 
@@ -660,6 +660,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             service_ids=service_ids,
             action=action,
             direction=direction,
+            logged=logged,
             tenant=tenant)
 
         map_def = policy_defs.CommunicationMapDef(
@@ -701,7 +702,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                     sequence_number=None, service_ids=None,
                     action=policy_constants.ACTION_ALLOW,
                     source_groups=None, dest_groups=None,
-                    direction=None,
+                    direction=None, logged=False,
                     tenant=policy_constants.POLICY_INFRA_TENANT):
         """Get the definition of a single map entry"""
         return policy_defs.CommunicationMapEntryDef(
@@ -716,6 +717,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             service_ids=service_ids,
             action=action,
             direction=direction,
+            logged=logged,
             tenant=tenant)
 
     def create_with_entries(
@@ -746,6 +748,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                      description=None, sequence_number=None, service_ids=None,
                      action=policy_constants.ACTION_ALLOW,
                      source_groups=None, dest_groups=None, direction=None,
+                     logged=False,
                      tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap Entry.
 
@@ -772,6 +775,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             service_ids=service_ids,
             action=action,
             direction=direction,
+            logged=logged,
             tenant=tenant)
 
         return self.policy_api.create_or_update(entry_def)
@@ -818,7 +822,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def update(self, domain_id, map_id, name=None, description=None,
                sequence_number=None, service_ids=None, action=None,
                source_groups=None, dest_groups=None, precedence=None,
-               category=None, direction=None, tags=None,
+               category=None, direction=None, logged=False, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         # Get the current data of communication map & its' entry
         comm_map = self.get(domain_id, map_id, tenant=tenant)
@@ -852,7 +856,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                 dest_groups=dest_groups,
                 sequence_number=sequence_number,
                 action=action,
-                direction=direction)
+                direction=direction,
+                logged=logged)
         else:
             LOG.error("Cannot update communication map %s - expected 1 entry",
                       map_id)
