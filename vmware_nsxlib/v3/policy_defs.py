@@ -249,6 +249,15 @@ class Condition(object):
                 'operator': self.operator}
 
 
+class IPAddressExpression(object):
+    def __init__(self, ip_addresses):
+        self.ip_addresses = ip_addresses
+
+    def get_obj_dict(self):
+        return {'resource_type': 'IPAddressExpression',
+                'ip_addresses': self.ip_addresses}
+
+
 class ConjunctionOperator(object):
     def __init__(self, operator=policy_constants.CONDITION_OP_AND):
         self.operator = operator
