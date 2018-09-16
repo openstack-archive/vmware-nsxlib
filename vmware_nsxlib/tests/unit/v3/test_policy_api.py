@@ -231,7 +231,8 @@ class TestPolicyCommunicationMap(TestPolicyApi):
                                ['/infra/domains/d1/groups/group1'],
                                'services':
                                ['/infra/services/service1'],
-                               'direction': 'IN_OUT'}
+                               'direction': 'IN_OUT',
+                               'logged': False}
 
         self.expected_data2 = {'id': 'en2',
                                'display_name': None,
@@ -246,7 +247,8 @@ class TestPolicyCommunicationMap(TestPolicyApi):
                                ['/infra/domains/d1/groups/group3'],
                                'services':
                                ['/infra/services/service2'],
-                               'direction': 'IN'}
+                               'direction': 'IN',
+                               'logged': False}
 
     def test_create_with_one_entry(self):
         map_def = policy.CommunicationMapDef(domain_id='d1', map_id='cm1')
