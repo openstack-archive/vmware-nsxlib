@@ -168,6 +168,9 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                      operator=cond_op,
                                      member_type=cond_member_type)
 
+    def build_ip_address_expression(self, ip_addresses):
+        return policy_defs.IPAddressExpression(ip_addresses)
+
     def build_nested_condition(
         self, operator=policy_constants.CONDITION_OP_AND,
         conditions=None):

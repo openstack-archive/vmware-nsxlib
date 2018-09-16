@@ -310,6 +310,29 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
+    def test_create_with_ip_expression(self):
+        domain_id = '111'
+        name = 'g1'
+        description = 'desc'
+        cidr = '1.1.1.0/24'
+
+        cond = self.resourceApi.build_ip_address_expression([cidr])
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite_with_conditions(
+                name, domain_id, description=description,
+                conditions=[cond],
+                tenant=TEST_TENANT)
+            exp_cond = policy_defs.IPAddressExpression([cidr])
+            expected_def = policy_defs.GroupDef(domain_id=domain_id,
+                                                group_id=mock.ANY,
+                                                name=name,
+                                                description=description,
+                                                conditions=[exp_cond],
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
     def test_delete(self):
         domain_id = '111'
         id = '222'
