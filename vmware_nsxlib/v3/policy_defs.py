@@ -514,7 +514,7 @@ class CommunicationMapDef(ResourceDef):
     def __init__(self,
                  map_id=None,
                  domain_id=None,
-                 category=policy_constants.CATEGORY_DEFAULT,
+                 category=policy_constants.CATEGORY_APPLICATION,
                  name=None,
                  precedence=0,
                  description=None,
