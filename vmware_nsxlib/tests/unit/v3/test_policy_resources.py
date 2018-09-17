@@ -814,7 +814,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=map_id,
                 name=name,
                 description=description,
-                category=policy_constants.CATEGORY_DEFAULT,
+                category=policy_constants.CATEGORY_APPLICATION,
                 precedence=0,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -904,7 +904,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=mock.ANY,
                 name=name,
                 description=description,
-                category=policy_constants.CATEGORY_DEFAULT,
+                category=policy_constants.CATEGORY_APPLICATION,
                 precedence=0,
                 tenant=TEST_TENANT)
 
@@ -940,7 +940,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=mock.ANY,
                 name=name,
                 description=description,
-                category=policy_constants.CATEGORY_DEFAULT,
+                category=policy_constants.CATEGORY_APPLICATION,
                 precedence=0,
                 tenant=TEST_TENANT)
 

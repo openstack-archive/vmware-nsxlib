@@ -625,7 +625,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def create_or_overwrite(self, name, domain_id, map_id=None,
                             description=None, precedence=0,
-                            category=policy_constants.CATEGORY_DEFAULT,
+                            category=policy_constants.CATEGORY_APPLICATION,
                             sequence_number=None, service_ids=None,
                             action=policy_constants.ACTION_ALLOW,
                             source_groups=None, dest_groups=None,
@@ -683,7 +683,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def create_or_overwrite_map_only(
         self, name, domain_id, map_id=None, description=None, precedence=0,
-        category=policy_constants.CATEGORY_DEFAULT,
+        category=policy_constants.CATEGORY_APPLICATION,
         tags=None, tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create or update a CommunicationMap
 
@@ -726,7 +726,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def create_with_entries(
         self, name, domain_id, map_id=None,
         description=None, precedence=0,
-        category=policy_constants.CATEGORY_DEFAULT,
+        category=policy_constants.CATEGORY_APPLICATION,
         entries=None, tags=None,
         tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap with entries"""
