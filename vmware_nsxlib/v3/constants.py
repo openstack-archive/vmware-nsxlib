@@ -113,6 +113,7 @@ IPV4_ICMP_TYPES = {0: [0],  # Echo reply
                    }
 # Supported strict ICMP types and their codes
 IPV4_ICMP_STRICT_TYPES = {0: [0],  # Echo reply
+                          3: range(0, 16), # Destination unreachable
                           8: [0],  # Echo request
                           9: [0],  # Router advertisement
                           10: [0],  # Router Selection
