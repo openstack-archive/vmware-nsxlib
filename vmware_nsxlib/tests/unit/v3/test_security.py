@@ -241,8 +241,8 @@ class TestNsxLibFirewallSection(nsxlib_testcase.NsxLibTestCase):
                 'ethertype': 'IPv4',
                 'protocol': 'icmp',
                 'direction': 'egress',
-                'port_range_min': 4,
-                'port_range_max': 0,
+                'port_range_min': 9,
+                'port_range_max': 16,
                 'remote_ip_prefix': None}
         rules = [rule]
         section_id = 'section-id'
