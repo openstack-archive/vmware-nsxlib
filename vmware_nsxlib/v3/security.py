@@ -520,7 +520,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             resource = '%s/rules' % self.get_path(section_id)
             params = '?operation=%s' % operation
             if (version.LooseVersion(self.nsxlib.get_version()) >=
-                version.LooseVersion(consts.NSX_VERSION_2_3_0)):
+                version.LooseVersion(consts.NSX_VERSION_2_4_0)):
                 rule['_revision'] = self.get(section_id)['_revision']
             return self._create_with_retry(resource + params, rule)
         return do_add_rule()
@@ -532,7 +532,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             resource = '%s/rules' % self.get_path(section_id)
             params = '?action=create_multiple&operation=%s' % operation
             if (version.LooseVersion(self.nsxlib.get_version()) >=
-                version.LooseVersion(consts.NSX_VERSION_2_3_0)):
+                version.LooseVersion(consts.NSX_VERSION_2_4_0)):
                 rev_id = self.get(section_id)['_revision']
                 for rule in rules:
                     rule['_revision'] = rev_id
