@@ -53,7 +53,7 @@ path.append(os.path.abspath("../../"))
 
 OPERATIONS = ("create", "update", "delete", "get")
 RESOURCES = ("domain", "service", "icmp_service", "group", "tier1",
-             "segment", "tier1_segment")
+             "segment", "tier1_segment", "segment_port")
 
 
 def get_resource_api(lib, resource_type):
