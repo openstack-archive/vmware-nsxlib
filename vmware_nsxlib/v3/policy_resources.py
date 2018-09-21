@@ -469,7 +469,6 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
                                             protocol_number=protocol_number)
 
 
-# TODO(annak): add/remove route specific advertisement
 class NsxPolicyTier1Api(NsxPolicyResourceBase):
     """NSX Tier1 API """
     @property
@@ -516,9 +515,9 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
     def update(self, tier1_id, name=None, description=None,
                force_whitelisting=None,
                failover_mode=None,
-               route_advertisement=None,
                tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
+
         tier1_def = policy_defs.Tier1Def(tier1_id=tier1_id,
                                          tenant=tenant)
         tier1_def.update_attributes_in_body(
@@ -526,8 +525,27 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
             description=description,
             force_whitelisting=force_whitelisting,
             failover_mode=failover_mode,
-            route_advertisement=route_advertisement,
             tags=tags)
+        return self.policy_api.create_or_update(tier1_def)
+
+    def update_route_advertisement(
+        self, tier1_id,
+        static_routes=None,
+        subnets=None,
+        nat=None,
+        lb_vip=None,
+        lb_snat=None,
+        tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        tier1_dict = self.get(tier1_id, tenant)
+        route_adv = self.entry_def.get_route_adv(tier1_dict)
+        route_adv.update(static_routes=static_routes,
+                         subnets=subnets,
+                         nat=nat,
+                         lb_vip=lb_vip,
+                         lb_snat=lb_snat)
+        tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant,
+                                   route_adv=route_adv)
         return self.policy_api.create_or_update(tier1_def)
 
 
@@ -577,7 +595,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
 
 
 class NsxPolicySegmentApi(NsxPolicyResourceBase):
-    """NSX Tier1 Segment API """
+    """NSX Infra Segment API """
     @property
     def entry_def(self):
         return policy_defs.SegmentDef
@@ -617,6 +635,96 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tenant=tenant)
         return self.policy_api.list(segment_def)['results']
+
+
+class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
+    """NSX Segment Port API """
+    @property
+    def entry_def(self):
+        return policy_defs.SegmentPortDef
+
+    def build_address_binding(self, ip_address, mac_address,
+                              vlan_id=None):
+        return policy_defs.PortAddressBinding(ip_address,
+                                              mac_address,
+                                              vlan_id)
+
+    def create_or_overwrite(self, name,
+                            segment_id,
+                            port_id=None,
+                            description=None,
+                            address_bindings=None,
+                            attachment_type=None,
+                            vif_id=None,
+                            app_id=None,
+                            context_id=None,
+                            traffic_tag=None,
+                            allocate_addresses=None,
+                            tags=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        port_id = self._init_obj_uuid(port_id)
+        port_def = self.entry_def(segment_id=segment_id,
+                                  port_id=port_id,
+                                  name=name,
+                                  description=description,
+                                  address_bindings=address_bindings,
+                                  attachment_type=attachment_type,
+                                  vif_id=vif_id,
+                                  app_id=app_id,
+                                  context_id=context_id,
+                                  allocate_addresses=allocate_addresses,
+                                  tags=tags,
+                                  tenant=tenant)
+        return self.policy_api.create_or_update(port_def)
+
+    def delete(self, segment_id, port_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+        self.policy_api.delete(port_def)
+
+    def get(self, segment_id, port_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+        return self.policy_api.get(port_def)
+
+    def list(self, segment_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id, tenant=tenant)
+        return self.policy_api.list(port_def)['results']
+
+    def detach(self, segment_id, port_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        port_def = self.entry_def(segment_id=segment_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+        port_def.update_attributes_in_body(attachment={})
+        return self.policy_api.create_or_update(port_def)
+
+    def attach(self, segment_id, port_id,
+               attachment_type,
+               vif_id,
+               allocate_addresses,
+               app_id=None,
+               context_id=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        port_def = self.entry_def(segment_id=segment_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+
+        port_def.update_attributes_in_body(
+            attachment_type=attachment_type,
+            allocate_addresses=allocate_addresses,
+            vif_id=vif_id,
+            app_id=app_id,
+            context_id=context_id)
+
+        return self.policy_api.create_or_update(port_def)
 
 
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):

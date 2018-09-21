@@ -22,6 +22,7 @@ from vmware_nsxlib.v3 import policy_constants
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
+SEGMENTS_PATH_PATTERN = TENANTS_PATH_PATTERN + "segments/"
 PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
@@ -84,7 +85,6 @@ class ResourceDef(object):
     def get_resource_path(self):
         resource_id = self.get_id()
         if resource_id:
-            print(self.get_section_path() + resource_id)
             return self.get_section_path() + resource_id
         return self.get_section_path()
 
@@ -161,21 +161,28 @@ class RouteAdvertisement(object):
              'lb_vip': 'TIER1_LB_VIP',
              'lb_snat': 'TIER1_LB_SNAT'}
 
-    def __init__(self,
-                 static_routes=False,
-                 subnets=False,
-                 nat=False,
-                 lb_vip=False,
-                 lb_snat=False):
-        self.static_routes = static_routes
-        self.subnets = subnets
-        self.nat = nat
-        self.lb_vip = lb_vip
-        self.lb_snat = lb_snat
+    def __init__(self, **kwargs):
+        self.attrs = kwargs
 
     def get_obj_dict(self):
         return [value for key, value in self.types.items()
-                if getattr(self, key)]
+                if self.attrs.get(key) is True]
+
+    def set_obj_dict(self, obj_dict):
+        # This initializes object based on list coming from backend
+        # f.e. [TIER1_NAT, TIER1_LB_SNAT]
+
+        # TODO(annak): for now platform does not return adv types
+        # check this when issue is fixed
+        for key, value in self.types.items():
+            self.attrs[key] = value in obj_dict
+
+    def update(self, **kwargs):
+        # "None" will be passed as value when user does not specify adv type
+        # True/False will be passed when user wants to switch adv ON/OFF
+        for key, value in kwargs.items():
+            if value is not None:
+                self.attrs[key] = value
 
 
 class Tier1Def(ResourceDef):
@@ -205,6 +212,13 @@ class Tier1Def(ResourceDef):
                 'route_adv').get_obj_dict()
 
         return body
+
+    @staticmethod
+    def get_route_adv(obj_dict):
+        route_adv = RouteAdvertisement()
+        if 'route_advertisement_types' in obj_dict:
+            route_adv.set_obj_dict(obj_dict['route_advertisement_types'])
+        return route_adv
 
 
 class Subnet(object):
@@ -254,7 +268,7 @@ class SegmentDef(BaseSegmentDef):
 
     @property
     def path_pattern(self):
-        return TENANTS_PATH_PATTERN + "segments/"
+        return SEGMENTS_PATH_PATTERN
 
     @property
     def path_ids(self):
@@ -267,6 +281,52 @@ class SegmentDef(BaseSegmentDef):
                              tenant=self.get_tenant())
             body['connectivity_path'] = tier1.get_resource_full_path()
         # TODO(annak): support also tier0
+        return body
+
+
+class PortAddressBinding(object):
+    def __init__(self, ip_address, mac_address, vlan_id=None):
+        self.ip_address = ip_address
+        self.mac_address = mac_address
+        self.vlan_id = vlan_id
+
+    def get_obj_dict(self):
+        return {'ip_address': self.ip_address,
+                'mac_address': self.mac_address,
+                'vlan_id': self.vlan_id}
+
+
+class SegmentPortDef(ResourceDef):
+    '''Infra segment port'''
+
+    @property
+    def path_pattern(self):
+        return SEGMENTS_PATH_PATTERN + "%s/ports/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'segment_id', 'port_id')
+
+    def get_obj_dict(self):
+        body = super(SegmentPortDef, self).get_obj_dict()
+        address_bindings = self.get_attr('address_bindings')
+        if address_bindings:
+            body['address_bindings'] = [binding.get_obj_dict()
+                                        for binding in address_bindings]
+        attachment = {}
+        if self.get_attr('attachment_type'):
+            # TODO(annak): add validations when we understand all
+            # use cases. Consider child classes for different
+            # attachment types.
+            attachment = {'type': self.get_attr('attachment_type')}
+        if self.get_attr('vif_id'):
+            attachment['id'] = self.get_attr('vif_id')
+        for attr in ('context_id', 'app_id', 'traffic_tag'):
+            if self.get_attr(attr):
+                attachment[attr] = self.get_attr(attr)
+
+        if attachment:
+            body['attachment'] = attachment
         return body
 
 

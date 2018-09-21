@@ -53,7 +53,7 @@ path.append(os.path.abspath("../../"))
 
 OPERATIONS = ("create", "update", "delete", "get")
 RESOURCES = ("domain", "service", "icmp_service", "group", "tier1",
-             "segment", "tier1_segment")
+             "segment", "tier1_segment", "segment_port")
 
 
 def get_resource_api(lib, resource_type):
@@ -82,7 +82,7 @@ def get_resource(lib, resource_type, resource_id):
     return result
 
 
-def build_args(resource_type, resource_id, args):
+def build_args(resource_type, resource_id, args, add_name=True):
     from vmware_nsxlib.v3 import policy_defs
 
     if "_" in resource_type:
@@ -91,7 +91,7 @@ def build_args(resource_type, resource_id, args):
         resource_type = "_".join(resource_type.split("_")[1:])
 
     args["%s_id" % resource_type] = resource_id
-    if "name" not in args:
+    if "name" not in args and add_name:
         args["name"] = resource_id
 
     subresources = {}
@@ -126,10 +126,19 @@ def create_resource(lib, resource_type, resource_id, args):
 
 def update_resource(lib, resource_type, resource_id, args):
 
-    args = build_args(resource_type, resource_id, args)
+    args = build_args(resource_type, resource_id, args, add_name=False)
     api = get_resource_api(lib, resource_type)
 
     api.update(**args)
+
+
+def custom_operation(lib, op, resource_type, resource_id, args):
+
+    args = build_args(resource_type, resource_id, args, add_name=False)
+    api = get_resource_api(lib, resource_type)
+
+    func = getattr(api, op)
+    func(**args)
 
 
 def delete_resource(lib, resource_type, resource_id):
@@ -179,8 +188,7 @@ def main(argv=sys.argv):
         if opt in ('-o'):
             op = val
             if op not in OPERATIONS:
-                print("Choose operation from %s" % (OPERATIONS,))
-                sys.exit(1)
+                print("Running custom operation %s" % op)
 
         elif opt in ('-p'):
             policy_ip = val
@@ -222,7 +230,8 @@ def main(argv=sys.argv):
         delete_resource(nsxlib, resource_type, resource_id)
     elif op == 'update':
         update_resource(nsxlib, resource_type, resource_id, resource_args)
-
+    else:
+        custom_operation(nsxlib, op, resource_type, resource_id, resource_args)
 
 if __name__ == "__main__":
     sys.exit(main())
