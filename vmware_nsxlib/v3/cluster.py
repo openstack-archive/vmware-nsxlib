@@ -402,13 +402,7 @@ class ClusteredAPI(object):
 
         def _create_conn(p):
             def _conn():
-                # called when a pool needs to create a new connection
-                try:
-                    return self._http_provider.new_connection(self, p)
-                except Exception as e:
-                    if self._http_provider.is_conn_open_exception(e):
-                        LOG.warning("Timeout while trying to open a "
-                                    "connection with %s", p)
+                return self._http_provider.new_connection(self, p)
 
             return _conn
 
@@ -491,11 +485,6 @@ class ClusteredAPI(object):
     def _validate(self, endpoint):
         try:
             with endpoint.pool.item() as conn:
-                if not conn:
-                    LOG.warning("No connection established with endpoint "
-                                "%(ep)s. ", {'ep': endpoint})
-                    endpoint.set_state(EndpointState.DOWN)
-                    return
                 self._http_provider.validate_connection(self, endpoint, conn)
                 endpoint.set_state(EndpointState.UP)
         except exceptions.ClientCertificateNotTrusted:
