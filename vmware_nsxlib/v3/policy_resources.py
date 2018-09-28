@@ -549,6 +549,70 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         return self.policy_api.create_or_update(tier1_def)
 
 
+class NsxPolicyTier0Api(NsxPolicyResourceBase):
+    """NSX Tier0 API """
+    @property
+    def entry_def(self):
+        return policy_defs.Tier0Def
+
+    def create_or_overwrite(self, name, tier0_id=None, description=None,
+                            ha_mode=policy_constants.ACTIVE_ACTIVE,
+                            failover_mode=policy_constants.NON_PREEMPTIVE,
+                            dhcp_config=None,
+                            force_whitelisting=False,
+                            default_rule_logging=False,
+                            transit_subnets=None,
+                            tags=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        tier0_id = self._init_obj_uuid(tier0_id)
+        tier0_def = self.entry_def(tier0_id=tier0_id,
+                                   name=name,
+                                   description=description,
+                                   ha_mode=ha_mode,
+                                   failover_mode=failover_mode,
+                                   dhcp_config=dhcp_config,
+                                   force_whitelisting=force_whitelisting,
+                                   default_rule_logging=default_rule_logging,
+                                   transit_subnets=transit_subnets,
+                                   tags=tags,
+                                   tenant=tenant)
+        return self.policy_api.create_or_update(tier0_def)
+
+    def delete(self, tier0_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
+        self.policy_api.delete(tier0_def)
+
+    def get(self, tier0_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
+        return self.policy_api.get(tier0_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier0_def = self.entry_def(tenant=tenant)
+        return self.policy_api.list(tier0_def)['results']
+
+    def update(self, tier0_id, name=None, description=None,
+               failover_mode=None,
+               dhcp_config=None,
+               force_whitelisting=None,
+               default_rule_logging=None,
+               transit_subnets=None,
+               tags=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier0_def = policy_defs.Tier1Def(tier0_id=tier0_id,
+                                         tenant=tenant)
+        tier0_def.update_attributes_in_body(
+            name=name,
+            description=description,
+            failover_mode=failover_mode,
+            dhcp_config=dhcp_config,
+            force_whitelisting=force_whitelisting,
+            default_rule_logging=default_rule_logging,
+            transit_subnets=transit_subnets,
+            tags=tags)
+        return self.policy_api.create_or_update(tier0_def)
+
+
 class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
     """NSX Tier1 Segment API """
     @property
