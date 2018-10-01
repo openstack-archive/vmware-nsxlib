@@ -573,7 +573,7 @@ class EnforcementPointDef(ResourceDef):
     @property
     def path_pattern(self):
         return (TENANTS_PATH_PATTERN +
-                'deployment-zones/default/enforcement-points/')
+                'sites/default/enforcement-points/')
 
     @property
     def path_ids(self):
