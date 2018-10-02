@@ -24,6 +24,7 @@ from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import policy_defs
+from vmware_nsxlib.v3 import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -911,6 +912,31 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
         # re-read the map from the backend to return the current data
         return self.get(domain_id, map_id, tenant=tenant)
+
+    def update_entries_logged(self, domain_id, map_id, logged,
+                              tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Update all communication map entries logged flags"""
+        map_def = policy_defs.CommunicationMapDef(
+            domain_id=domain_id,
+            map_id=map_id,
+            tenant=tenant)
+        map_path = map_def.get_resource_path()
+
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.policy_api.client.max_attempts)
+        def _update():
+            # Get the current data of communication map & its' entries
+            comm_map = self.policy_api.get(map_def)
+            # Update the field in all the entries
+            if comm_map.get('communication_entries'):
+                for comm_entry in comm_map['communication_entries']:
+                    comm_entry['logged'] = logged
+            # Update the entire map at the NSX
+            self.policy_api.client.update(map_path, comm_map)
+            return comm_map
+
+        return _update()
 
     def get_realized_state(self, domain_id, map_id, ep_id,
                            tenant=policy_constants.POLICY_INFRA_TENANT):
