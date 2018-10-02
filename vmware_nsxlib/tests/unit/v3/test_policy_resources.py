@@ -1195,6 +1195,26 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             self.assert_called_with_def_and_dict(
                 update_call, expected_map_def, expected_map_dict)
 
+    def test_update_entries_logged(self):
+        domain_id = '111'
+        map_id = '222'
+        dummy_map = {'communication_entries': [{'logged': False}]}
+        updated_map = {'communication_entries': [{'logged': True}]}
+        map_def = policy_defs.CommunicationMapDef(
+            domain_id=domain_id,
+            map_id=map_id,
+            tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api, "get",
+                               return_value=dummy_map),\
+            mock.patch.object(self.policy_api.client,
+                              "update") as update_call:
+            self.resourceApi.update_entries_logged(
+                domain_id, map_id,
+                logged=True,
+                tenant=TEST_TENANT)
+            update_call.assert_called_once_with(
+                map_def.get_resource_path(), updated_map)
+
     def test_get_realized(self):
         domain_id = 'd1'
         map_id = '111'
