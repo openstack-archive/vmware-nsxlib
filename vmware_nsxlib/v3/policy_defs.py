@@ -820,9 +820,9 @@ class NsxPolicyApi(object):
         path = resource_def.get_resource_path()
         self.client.delete(path)
 
-    def get(self, resource_def):
+    def get(self, resource_def, silent=False):
         path = resource_def.get_resource_path()
-        return self.client.get(path)
+        return self.client.get(path, silent=silent)
 
     def list(self, resource_def):
         path = resource_def.get_section_path()
