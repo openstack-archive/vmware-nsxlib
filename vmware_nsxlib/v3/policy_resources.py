@@ -101,9 +101,10 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
         domain_def = policy_defs.DomainDef(domain_id=domain_id, tenant=tenant)
         self.policy_api.delete(domain_def)
 
-    def get(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def get(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
         domain_def = policy_defs.DomainDef(domain_id=domain_id, tenant=tenant)
-        return self.policy_api.get(domain_def)
+        return self.policy_api.get(domain_def, silent=silent)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         domain_def = policy_defs.DomainDef(tenant=tenant)
@@ -209,11 +210,11 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         self.policy_api.delete(group_def)
 
     def get(self, domain_id, group_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
         group_def = policy_defs.GroupDef(domain_id=domain_id,
                                          group_id=group_id,
                                          tenant=tenant)
-        return self.policy_api.get(group_def)
+        return self.policy_api.get(group_def, silent=silent)
 
     def list(self, domain_id,
              tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -266,10 +267,10 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
         self.policy_api.delete(service_def)
 
     def get(self, service_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              tenant=tenant)
-        return self.policy_api.get(service_def)
+        return self.policy_api.get(service_def, silent=silent)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         service_def = policy_defs.ServiceDef(tenant=tenant)
@@ -506,9 +507,10 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         self.policy_api.delete(tier1_def)
 
-    def get(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def get(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
-        return self.policy_api.get(tier1_def)
+        return self.policy_api.get(tier1_def, silent=silent)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         tier1_def = self.entry_def(tenant=tenant)
@@ -566,11 +568,11 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
         self.policy_api.delete(segment_def)
 
     def get(self, tier1_id, segment_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
         segment_def = self.entry_def(tier1_id=tier1_id,
                                      segment_id=segment_id,
                                      tenant=tenant)
-        return self.policy_api.get(segment_def)
+        return self.policy_api.get(segment_def, silent=silent)
 
     def list(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
@@ -611,9 +613,9 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         self.policy_api.delete(segment_def)
 
     def get(self, segment_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
-        return self.policy_api.get(segment_def)
+        return self.policy_api.get(segment_def, silent=silent)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tenant=tenant)
@@ -817,12 +819,12 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         self.policy_api.delete(entry_def)
 
     def get(self, domain_id, map_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
-        return self.policy_api.get(map_def)
+        return self.policy_api.get(map_def, silent=silent)
 
     def get_by_name(self, domain_id, name,
                     tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -954,10 +956,10 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
         self.policy_api.delete(ep_def)
 
     def get(self, ep_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
         ep_def = policy_defs.EnforcementPointDef(
             ep_id=ep_id, tenant=tenant)
-        return self.policy_api.get(ep_def)
+        return self.policy_api.get(ep_def, silent=silent)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         ep_def = policy_defs.EnforcementPointDef(tenant=tenant)
@@ -1027,14 +1029,14 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
         self.policy_api.delete(map_def)
 
     def get(self, map_id, domain_id=None,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
         if not domain_id:
             # domain_id must be provided
             err_msg = (_("Cannot get deployment maps without a domain"))
             raise exceptions.ManagerError(details=err_msg)
         map_def = policy_defs.DeploymentMapDef(
             map_id=map_id, domain_id=domain_id, tenant=tenant)
-        return self.policy_api.get(map_def)
+        return self.policy_api.get(map_def, silent=silent)
 
     def list(self, domain_id=None,
              tenant=policy_constants.POLICY_INFRA_TENANT):
