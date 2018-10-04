@@ -26,6 +26,9 @@ SEGMENTS_PATH_PATTERN = TENANTS_PATH_PATTERN + "segments/"
 PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
+LB_VIRTUAL_SERVERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-virtual-servers/"
+LBSERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-services/"
+LBPOOL_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-pools/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
@@ -407,6 +410,117 @@ class SegmentPortDef(ResourceDef):
             body['attachment'] = attachment
         return body
 
+
+class LbClientSslProfileBinding(object):
+    def __init__(self, actions, display_name, match_conditions,
+                 match_strategy, phase):
+        self.actions = actions
+        self.display_name = display_name
+        self.match_conditions = match_conditions
+        self.match_strategy = match_strategy
+        self.phase = phase
+
+    def get_obj_dict(self):
+        return {'actions': self.actions,
+                'display_name': self.display_name,
+                'match_conditions': self.match_conditions,
+                'match_strategy': self.match_strategy,
+                'phase': self.phase}
+
+
+class LbRuleDef(object):
+    def __init__(self, actions, display_name, match_conditions,
+                 match_strategy, phase):
+        self.actions = actions
+        self.display_name = display_name
+        self.match_conditions = match_conditions
+        self.match_strategy = match_strategy
+        self.phase = phase
+
+    def get_obj_dict(self):
+        return {'actions': self.actions,
+                'display_name': self.display_name,
+                'match_conditions': self.match_conditions,
+                'match_strategy': self.match_strategy,
+                'phase': self.phase}
+
+
+class LBPoolMember(object):
+    def __init__(self, ip_address, port, display_name=None):
+        self.display_name = display_name
+        self.ip_address = ip_address
+        self.port = port
+
+    def get_obj_dict(self):
+        body = {'ip_address': self.ip_address,
+                'port': self.port}
+        if self.display_name:
+            body['display_name'] = self.display_name
+        return body
+
+
+class LbPoolDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBPOOL_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_pool_id')
+
+    @staticmethod
+    def resource_type():
+        return 'LBPool'
+
+
+class LbVirtualServerDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LB_VIRTUAL_SERVERS_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lbvs_id')
+
+    @staticmethod
+    def resource_type():
+        return 'LbVirtualServer'
+
+
+class LbServiceDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBSERVICES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_service_id')
+
+    @staticmethod
+    def resource_type():
+        return 'LBService'
+
+    def get_obj_dict(self):
+        body = super(LbServiceDef, self).get_obj_dict()
+        # TODO(gordonz): add properties here
+        return body
+
+
+class LbServiceStatisticsDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBSERVICES_PATH_PATTERN + '%s/statistics/'
+
+
+class LbServiceUsageDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBSERVICES_PATH_PATTERN + '%s/service-usage/'
 
 class Condition(object):
     def __init__(self, value, key=policy_constants.CONDITION_KEY_TAG,

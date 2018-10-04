@@ -53,8 +53,9 @@ path.append(os.path.abspath("../../"))
 
 OPERATIONS = ("create", "update", "delete", "get")
 RESOURCES = ("domain", "service", "icmp_service", "group", "tier1",
-             "segment", "tier1_segment", "segment_port")
-
+             "segment", "tier1_segment", "segment_port",
+             "loadbalancer")
+SECONDARY_RESOURCES = ("service")
 
 def get_resource_api(lib, resource_type):
     return getattr(lib, resource_type)
@@ -85,10 +86,10 @@ def get_resource(lib, resource_type, resource_id):
 def build_args(resource_type, resource_id, args, add_name=True):
     from vmware_nsxlib.v3 import policy_defs
 
-    if "_" in resource_type:
-        # handle cases like tier1_segment_id
-        # type is tier1_segment, but id parameter is segment_id
-        resource_type = "_".join(resource_type.split("_")[1:])
+    #if "_" in resource_type:
+    #    # handle cases like tier1_segment_id
+    #    # type is tier1_segment, but id parameter is segment_id
+    #    resource_type = "_".join(resource_type.split("_")[1:])
 
     args["%s_id" % resource_type] = resource_id
     if "name" not in args and add_name:
@@ -172,6 +173,7 @@ def main(argv=sys.argv):
     resource_type = None
     resource_id = None
     resource_args = {}
+    secondary_resource_type = None
 
     policy_ip = os.environ.get('NSX_POLICY_IP')
     policy_username = os.environ.get('NSX_POLICY_USERNAME')
@@ -184,7 +186,7 @@ def main(argv=sys.argv):
     usage = "Usage: %s -o <operation> -r <resource type> " \
             "-i <resource id> -a <arg name=value>" % argv[0]
     try:
-        opts, args = getopt.getopt(argv[1:], "o:r:i:a:")
+        opts, args = getopt.getopt(argv[1:], "o:r:i:a:s:")
     except getopt.GetoptError:
         print(usage)
         sys.exit(1)
@@ -215,6 +217,12 @@ def main(argv=sys.argv):
 
             resource_args[arg[0]] = arg[1]
 
+        elif opt in ('-s'):
+            secondary_resource_type = val
+            if secondary_resource_type not in SECONDARY_RESOURCES:
+                print("Choose resource from %s" % (SECONDARY_RESOURCES,))
+                sys.exit(1)
+
     print("Performing %s operation on %s %s" %
           (op, resource_type, resource_id))
     nsxlib_config = config.NsxLibConfig(
@@ -222,6 +230,10 @@ def main(argv=sys.argv):
         username=policy_username,
         password=policy_password)
     nsxlib = v3.NsxPolicyLib(nsxlib_config)
+
+    if secondary_resource_type:
+        nsxlib = getattr(nsxlib, resource_type)
+        resource_type = secondary_resource_type
 
     if op == 'get':
         if not resource_id:
