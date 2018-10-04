@@ -29,6 +29,7 @@ from vmware_nsxlib.v3 import native_dhcp
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_defs
 from vmware_nsxlib.v3 import policy_resources
+from vmware_nsxlib.v3 import policy_load_balancer
 from vmware_nsxlib.v3 import resources
 from vmware_nsxlib.v3 import router
 from vmware_nsxlib.v3 import security
@@ -420,6 +421,8 @@ class NsxPolicyLib(NsxLibBase):
             policy_resources.NsxIpDiscoveryProfileApi(self.policy_api))
         self.mac_discovery_profile = (
             policy_resources.NsxMacDiscoveryProfileApi(self.policy_api))
+        self.loadbalancer = policy_load_balancer.NsxPolicyLoadBalancerApi(
+            self.policy_api)
 
     @property
     def keepalive_section(self):
