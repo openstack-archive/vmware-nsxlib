@@ -24,6 +24,7 @@ from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import policy_defs
+from vmware_nsxlib.v3 import policy_transaction as policy_trans
 from vmware_nsxlib.v3 import utils
 
 LOG = logging.getLogger(__name__)
@@ -141,6 +142,16 @@ class NsxPolicyResourceBase(object):
             # resource not deployed yet
             LOG.warning("No realized state found for %s", path)
 
+    # TODO(annak): support create with parent
+    def _create_or_store(self, policy_def):
+        transaction = policy_trans.NsxPolicyTransaction.get_current()
+        if transaction:
+            # Store this def for batch apply for this transaction
+            transaction.store_def(policy_def)
+        else:
+            # No transaction - apply now
+            self.policy_api.create_or_update(policy_def)
+
 
 class NsxPolicyDomainApi(NsxPolicyResourceBase):
     """NSX Policy Domain."""
@@ -158,8 +169,7 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
                                            tags=tags,
                                            tenant=tenant)
 
-        self.policy_api.create_or_update(domain_def)
-        return domain_id
+        self._create_or_store(domain_def)
 
     def delete(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         domain_def = policy_defs.DomainDef(domain_id=domain_id, tenant=tenant)
@@ -219,8 +229,7 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                          conditions=conditions,
                                          tags=tags,
                                          tenant=tenant)
-        self.policy_api.create_or_update(group_def)
-        return group_id
+        self._create_or_store(group_def)
 
     def build_condition(
         self, cond_val=None,
@@ -267,7 +276,7 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                          conditions=conditions,
                                          tags=tags,
                                          tenant=tenant)
-        return self.policy_api.create_or_update(group_def)
+        self._create_or_store(group_def)
 
     def delete(self, domain_id, group_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -539,8 +548,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    failover_mode=failover_mode,
                                    route_advertisement=route_advertisement,
                                    tenant=tenant)
-        self.policy_api.create_or_update(tier1_def)
-        return tier1_id
+        self._create_or_store(tier1_def)
 
     def delete(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
@@ -585,6 +593,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                          nat=nat,
                          lb_vip=lb_vip,
                          lb_snat=lb_snat)
+
         tier1_def = self.entry_def(tier1_id=tier1_id,
                                    route_adv=route_adv,
                                    tenant=tenant)
@@ -683,8 +692,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                                      default_rule_logging=default_rule_logging,
                                      tags=tags,
                                      tenant=tenant)
-        self.policy_api.create_or_update(segment_def)
-        return segment_id
+        self._create_or_store(segment_def)
 
     def delete(self, tier1_id, segment_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -754,8 +762,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                                      vlan_ids=vlan_ids,
                                      tags=tags,
                                      tenant=tenant)
-        self.policy_api.create_or_update(segment_def)
-        return segment_id
+        self._create_or_store(segment_def)
 
     def delete(self, segment_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -826,8 +833,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                                   allocate_addresses=allocate_addresses,
                                   tags=tags,
                                   tenant=tenant)
-        self.policy_api.create_or_update(port_def)
-        return port_id
+        self._create_or_store(port_def)
 
     def delete(self, segment_id, port_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -978,9 +984,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             return self.policy_api.create_with_parent(map_def, entry_def)
 
         # TODO(asarfaty) combine both calls together
-        self.policy_api.create_or_update(map_def)
-        self.policy_api.create_or_update(entry_def)
-        return map_id
+        self._create_or_store(map_def)
+        self._create_or_store(entry_def)
 
     def create_or_overwrite_map_only(
         self, name, domain_id, map_id=None, description=None, precedence=0,
@@ -1038,8 +1043,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             tenant=tenant, name=name, description=description,
             precedence=precedence, category=category, tags=tags)
 
-        self.policy_api.create_with_parent(map_def, entries)
-        return map_id
+        self._create_or_store(map_def)
 
     def create_entry(self, name, domain_id, map_id, entry_id=None,
                      description=None, sequence_number=None, service_ids=None,
@@ -1075,8 +1079,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             logged=logged,
             tenant=tenant)
 
-        self.policy_api.create_or_update(entry_def)
-        return entry_id
+        self._create_or_store(entry_def)
 
     def delete(self, domain_id, map_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -1209,8 +1212,7 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
             edge_cluster_id=edge_cluster_id,
             transport_zone_id=transport_zone_id,
             tenant=tenant)
-        self.policy_api.create_or_update(ep_def)
-        return ep_id
+        self._create_or_store(ep_def)
 
     def delete(self, ep_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -1281,8 +1283,7 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
             ep_id=ep_id,
             domain_id=domain_id,
             tenant=tenant)
-        self.policy_api.create_or_update(map_def)
-        return map_id
+        self._create_or_store(map_def)
 
     def delete(self, map_id, domain_id=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
