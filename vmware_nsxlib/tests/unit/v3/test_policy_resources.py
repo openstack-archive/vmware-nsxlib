@@ -374,25 +374,6 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
-    def test_update(self):
-        domain_id = '111'
-        id = '222'
-        name = 'new name'
-        description = 'new desc'
-        with mock.patch.object(self.policy_api,
-                               "create_or_update") as update_call:
-            self.resourceApi.update(domain_id, id,
-                                    name=name,
-                                    description=description,
-                                    tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=id,
-                                                tenant=TEST_TENANT)
-            expected_dict = {'display_name': name,
-                             'description': description}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
-
     def test_get_realized(self):
         domain_id = 'd1'
         id = 'g1'
