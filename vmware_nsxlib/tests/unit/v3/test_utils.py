@@ -290,6 +290,59 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
         _update_max_tags.assert_called_with(3)
         _update_msx_nsg_criteria.assert_called_with(3)
 
+    def test_get_resource_path(self):
+        resource_type = 'virtual_server'
+        resource_id = 'test_id'
+        expected = '/%s/lb-virtual-servers/test_id'
+        path = utils._get_resource_path(resource_type, resource_id)
+        self.assertEqual(expected, path)
+
+        resource_type = 'lb_services'
+        resource_id = 'test_id'
+        expected = '/%s/lb-services/test_id'
+        path = utils._get_resource_path(resource_type, resource_id)
+        self.assertEqual(expected, path)
+
+        resource_type = 'lb_pool'
+        resource_id = 'test_id'
+        expected = '/%s/lb-pools/test_id'
+        path = utils._get_resource_path(resource_type, resource_id)
+        self.assertEqual(expected, path)
+
+        resource_type = 'app_profile'
+        resource_id = 'test_id'
+        expected = '/%s/lb-app-profiles/test_id'
+        path = utils._get_resource_path(resource_type, resource_id)
+        self.assertEqual(expected, path)
+
+        resource_type = 'client_ssl_profile'
+        resource_id = 'test_id'
+        expected = '/%s/lb-client-ssl-profiles/test_id'
+        path = utils._get_resource_path(resource_type, resource_id)
+        self.assertEqual(expected, path)
+
+        resource_type = 'persistence_profile'
+        resource_id = 'test_id'
+        expected = '/%s/lb-persistence-profiles/test_id'
+        path = utils._get_resource_path(resource_type, resource_id)
+        self.assertEqual(expected, path)
+
+        resource_type = 'cert'
+        resource_id = 'test_id'
+        expected = '/%s/certificates/test_id'
+        path = utils._get_resource_path(resource_type, resource_id)
+        self.assertEqual(expected, path)
+
+    def set_attr_from_id(self):
+        body = {'prop_id': 'test_id'}
+        id_attr = 'prop_id'
+        resource_type = 'virtual_server'
+        attr = 'prop_path'
+        tenant = 'tenant'
+        expected = {'prop_path': '/tenant/lb-virtual-servers/test_id'}
+        utils.set_attr_from_id(body, id_attr, resource_type, attr, tenant)
+        self.assertEqual(expected, body)
+
 
 class NsxFeaturesTestCase(nsxlib_testcase.NsxLibTestCase):
 
