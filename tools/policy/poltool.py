@@ -121,12 +121,36 @@ def build_args(resource_type, resource_id, args, add_name=True):
     return args
 
 
-def create_resource(lib, resource_type, resource_id, args):
+def create_resource(lib, transaction, count, resource_type, resource_id, args):
+
+    from vmware_nsxlib.v3 import policy_transaction as trans
 
     args = build_args(resource_type, resource_id, args)
     api = get_resource_api(lib, resource_type)
 
-    api.create_or_overwrite(**args)
+    def create_multiple():
+        if count == 1:
+            api.create_or_overwrite(**args)
+
+        else:
+            for i in range(1, count + 1):
+                new_args = copy.deepcopy(args)
+                print(args)
+                if 'name' in args:
+                    new_args['name'] = "%s%d" % (args['name'], i)
+
+                id_marker = resource_type + '_id'
+                if id_marker in args:
+                    new_args[id_marker] = "%s%d" % (args[id_marker], i)
+
+                api.create_or_overwrite(**new_args)
+
+    if transaction:
+        with trans.NsxPolicyTransaction():
+            create_multiple()
+
+    else:
+        create_multiple()
 
 
 def update_resource(lib, resource_type, resource_id, args):
@@ -184,10 +208,13 @@ def main(argv=sys.argv):
     usage = "Usage: %s -o <operation> -r <resource type> " \
             "-i <resource id> -a <arg name=value>" % argv[0]
     try:
-        opts, args = getopt.getopt(argv[1:], "o:r:i:a:")
+        opts, args = getopt.getopt(argv[1:], "to:r:i:a:c:")
     except getopt.GetoptError:
         print(usage)
         sys.exit(1)
+
+    transaction = False
+    count = 1
 
     for opt, val in opts:
         if opt in ('-o'):
@@ -197,6 +224,12 @@ def main(argv=sys.argv):
 
         elif opt in ('-p'):
             policy_ip = val
+
+        elif opt in ('-t'):
+            transaction = True
+
+        elif opt in ('-c'):
+            count = val
 
         elif opt in ('-r'):
             resource_type = val
@@ -230,7 +263,8 @@ def main(argv=sys.argv):
 
         print(json.dumps(result, indent=4))
     elif op == 'create':
-        create_resource(nsxlib, resource_type, resource_id, resource_args)
+        create_resource(nsxlib, transaction, int(count),
+                        resource_type, resource_id, resource_args)
     elif op == 'delete':
         delete_resource(nsxlib, resource_type, resource_id)
     elif op == 'update':
