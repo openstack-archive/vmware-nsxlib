@@ -750,6 +750,7 @@ class NsxPolicyApi(object):
         if not body:
             body = resource_def.get_obj_dict()
         self.client.patch(path, body)
+        # TODO(annak): consider removing this - extra transaction every time
         return self.client.get(path)
 
     def create_with_parent(self, parent_def, resource_def):
