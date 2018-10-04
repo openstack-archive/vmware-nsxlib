@@ -28,6 +28,13 @@ SEGMENTS_PATH_PATTERN = TENANTS_PATH_PATTERN + "segments/"
 PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
+LB_VIRTUAL_SERVERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-virtual-servers/"
+LBSERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-services/"
+LBPOOL_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-pools/"
+LBAPP_PROFILE_PATTERN = TENANTS_PATH_PATTERN + "lb-app-profiles/"
+LBCLIENT_SSL_PROFILE_PATTERN = TENANTS_PATH_PATTERN + "lb-client-ssl-profiles/"
+LBPERSISTENCE_PROFILE_PATTERN = \
+    TENANTS_PATH_PATTERN + "lb-persistence-profiles/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 ENFORCEMENT_POINT_PATTERN = (TENANTS_PATH_PATTERN +
                              "sites/default/enforcement-points/")
@@ -624,6 +631,263 @@ class IpPoolBlockSubnetDef(ResourceDef):
             self._set_attr_if_specified(
                 body, 'ip_block_path', value=ip_block_path)
         return body
+
+
+class LbRuleDef(object):
+    def __init__(self, actions, match_conditions, display_name=None,
+                 match_strategy=None, phase=None):
+        self.actions = actions
+        self.display_name = display_name
+        self.match_conditions = match_conditions
+        self.match_strategy = match_strategy
+        self.phase = phase
+
+    def get_obj_dict(self):
+        lb_rule = {
+            'actions': self.actions,
+            'match_conditions': self.match_conditions}
+        if self.display_name:
+            lb_rule['display_name'] = self.display_name
+        if self.match_strategy:
+            lb_rule['match_strategy'] = self.match_strategy
+        if self.phase:
+            lb_rule['phase'] = self.phase
+
+
+class LBPoolMember(object):
+    def __init__(self, ip_address, port=None, display_name=None,
+                 weight=None):
+        self.display_name = display_name
+        self.ip_address = ip_address
+        self.port = port
+        self.weight=weight
+
+    def get_obj_dict(self):
+        body = {'ip_address': self.ip_address}
+        if self.display_name:
+            body['display_name'] = self.display_name
+        if self.ip_address:
+            body['port'] = self.port
+        if self.weight:
+            body['weight'] = self.weight
+        return body
+
+
+class LBClientSslProfileDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBCLIENT_SSL_PROFILE_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_client_ssl_profile_id')
+
+    @staticmethod
+    def resource_type():
+        return "LBClientSslProfile"
+
+    def get_obj_dict(self):
+        body = super(LBClientSslProfileDef, self).get_obj_dict()
+        self._set_attr_if_specified(body, 'protocols')
+        return body
+
+
+class LBCookiePersistenceProfileDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBPERSISTENCE_PROFILE_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_cookie_persistence_profile_id')
+
+    @staticmethod
+    def resource_type():
+        return "LBCookiePersistenceProfile"
+
+    def get_obj_dict(self):
+        body = super(LBCookiePersistenceProfileDef, self).get_obj_dict()
+        self._set_attrs_if_specified(
+            body, ['cookie_garble', 'cookie_mode', 'cookie_name',
+                   'cookie_path', 'cookie_time', 'persistence_shared'])
+        return body
+
+
+class LBSourceIpPersistenceProfileDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBPERSISTENCE_PROFILE_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_source_ip_persistence_profile_id')
+
+    @staticmethod
+    def resource_type():
+        return "LBSourceIpPersistenceProfile"
+
+    def get_obj_dict(self):
+        body = super(LBSourceIpPersistenceProfileDef, self).get_obj_dict()
+        self._set_attrs_if_specified(
+            body, ['ha_persistence_mirroring_enabled', 'persistence_shared',
+                   'purge', 'timeout'])
+        return body
+
+
+class LBHttpProfileDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBAPP_PROFILE_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_http_profile_id')
+
+    @staticmethod
+    def resource_type():
+        return "LBHttpProfile"
+
+    def get_obj_dict(self):
+        body = super(LBHttpProfileDef, self).get_obj_dict()
+        self._set_attrs_if_specified(
+            body, ['idle_timeout', 'http_redirect_to_https',
+                   'http_redirect_to', 'idle_timeout', 'ntlm',
+                   'request_body_size', 'request_header_size',
+                   'response_timeout', 'x_forwarded_for'])
+        return body
+
+
+class LBFastTcpProfile(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBAPP_PROFILE_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_fast_tcp_profile_id')
+
+    @staticmethod
+    def resource_type():
+        return "LBFastTcpProfile"
+
+    def get_obj_dict(self):
+        body = super(LBFastTcpProfile, self).get_obj_dict()
+        self._set_attrs_if_specified(
+            body, ['idle_timeout', 'http_redirect_to_https',
+                   'http_redirect_to', 'idle_timeout', 'ntlm',
+                   'request_body_size', 'request_header_size',
+                   'response_timeout', 'x_forwarded_for'])
+        return body
+
+
+class LBFastUdpProfile(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBAPP_PROFILE_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_fast_udp_profile_id')
+
+    @staticmethod
+    def resource_type():
+        return "LBFastUdpProfile"
+
+    def get_obj_dict(self):
+        body = super(LBFastUdpProfile, self).get_obj_dict()
+        self._set_attrs_if_specified(
+            body, ['idle_timeout', 'http_redirect_to_https',
+                   'http_redirect_to', 'idle_timeout', 'ntlm',
+                   'request_body_size', 'request_header_size',
+                   'response_timeout', 'x_forwarded_for'])
+        return body
+
+
+class LbPoolDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBPOOL_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_pool_id')
+
+    @staticmethod
+    def resource_type():
+        return 'LBPool'
+
+    def get_obj_dict(self):
+        body = super(LbPoolDef, self).get_obj_dict()
+        self._set_attrs_if_specified(
+            body, ['members', 'active_monitor_paths',
+                   'algorithm', 'member_group', 'snat_translation'])
+        return body
+
+
+class LbVirtualServerDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LB_VIRTUAL_SERVERS_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'virtual_server_id')
+
+    @staticmethod
+    def resource_type():
+        return 'LBVirtualServer'
+
+    def get_obj_dict(self):
+        body = super(LbVirtualServerDef, self).get_obj_dict()
+        self._set_attrs_if_specified(
+            body, ['rules', 'application_profile_path',
+                   'ip_address', 'lb_service_path',
+                   'client_ssl_profile_binding', 'pool_path',
+                   'lb_persistence_profile_path', 'ports',
+                   'server_ssl_profile_binding'])
+        return body
+
+
+class LbServiceDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBSERVICES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_service_id')
+
+    @staticmethod
+    def resource_type():
+        return 'LBService'
+
+    def get_obj_dict(self):
+        body = super(LbServiceDef, self).get_obj_dict()
+        self._set_attr_if_specified(body, 'size')
+        return body
+
+
+class LbServiceStatisticsDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBSERVICES_PATH_PATTERN + '%s/statistics/'
+
+
+class LbServiceUsageDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return LBSERVICES_PATH_PATTERN + '%s/service-usage/'
 
 
 class Condition(object):
