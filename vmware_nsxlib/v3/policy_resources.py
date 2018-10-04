@@ -96,6 +96,7 @@ class NsxPolicyResourceBase(object):
     def _init_def(self, **kwargs):
         """Helper for update function - ignore attrs without explicit value"""
         args = self._get_user_args(**kwargs)
+        print("??", args)
         return self.entry_def(**args)
 
     def _init_parent_def(self, **kwargs):
@@ -219,6 +220,547 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
                      description=description,
                      tags=tags,
                      tenant=tenant)
+
+
+class NsxPolicyLoadBalancerLBHttpProfileApi(NsxPolicyResourceBase):
+    """NSX Policy Lb app profile"""
+
+    @property
+    def entry_def(self):
+        return policy_defs.LBHttpProfileDef
+
+    def create_or_overwrite(self, name,
+                            lb_http_profile_id=None,
+                            description=IGNORE,
+                            http_redirect_to_https=IGNORE,
+                            http_redirect_to=IGNORE,
+                            idle_timeout=IGNORE,
+                            ntlm=IGNORE,
+                            request_body_size=IGNORE,
+                            request_header_size=IGNORE,
+                            response_header_size=IGNORE,
+                            response_timeout=IGNORE,
+                            x_forwarded_for=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        print("hey", idle_timeout)
+        lb_http_profile_id = self._init_obj_uuid(lb_http_profile_id)
+        lb_app_profile_def = self._init_def(
+            lb_http_profile_id=lb_http_profile_id,
+            name=name,
+            description=description,
+            http_redirect_to_https=http_redirect_to_https,
+            http_redirect_to=http_redirect_to,
+            idle_timeout=idle_timeout,
+            ntlm=ntlm,
+            request_body_size=request_body_size,
+            request_header_size=request_header_size,
+            response_header_size=response_header_size,
+            response_timeout=response_timeout,
+            x_forwarded_for=x_forwarded_for,
+            tags=tags,
+            tenant=tenant)
+        print(lb_app_profile_def.body, lb_app_profile_def.get_obj_dict())
+        self.policy_api.create_or_update(lb_app_profile_def)
+        return lb_http_profile_id
+
+    def delete(self, lb_http_profile_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(
+            lb_http_profile_id=lb_http_profile_id,
+            tenant=tenant)
+        self.policy_api.delete(lb_app_profile_def)
+
+    def get(self, lb_http_profile_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(
+            lb_http_profile_id=lb_http_profile_id,
+            tenant=tenant)
+        self.policy_api.get(lb_app_profile_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(tenant=tenant)
+        return self._list(lb_app_profile_def)
+
+    def update(self, lb_http_profile_id,
+               name=IGNORE,
+               description=IGNORE,
+               http_redirect_to_https=IGNORE,
+               http_redirect_to=IGNORE,
+               idle_timeout=IGNORE,
+               ntlm=IGNORE,
+               request_body_size=IGNORE,
+               request_header_size=IGNORE,
+               response_header_size=IGNORE,
+               response_timeout=IGNORE,
+               x_forwarded_for=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(
+            lb_http_profile_id=lb_http_profile_id,
+            name=name,
+            description=description,
+            http_redirect_to_https=http_redirect_to_https,
+            http_redirect_to=http_redirect_to,
+            idle_timeout=idle_timeout,
+            ntlm=ntlm,
+            request_body_size=request_body_size,
+            request_header_size=request_header_size,
+            response_header_size=response_header_size,
+            response_timeout=response_timeout,
+            x_forwarded_for=x_forwarded_for,
+            tags=tags,
+            tenant=tenant)
+
+
+class NsxPolicyLoadBalancerLBFastTcpProfileApi(NsxPolicyResourceBase):
+    """NSX Policy Lb app profile"""
+
+    @property
+    def entry_def(self):
+        return policy_defs.LBFastTcpProfile
+
+    def create_or_overwrite(self, name,
+                            lb_fast_tcp_profile_id=None,
+                            description=IGNORE,
+                            http_redirect_to_https=IGNORE,
+                            http_redirect_to=IGNORE,
+                            idle_timeout=IGNORE,
+                            ntlm=IGNORE,
+                            request_body_size=IGNORE,
+                            request_header_size=IGNORE,
+                            response_header_size=IGNORE,
+                            response_timeout=IGNORE,
+                            x_forwarded_for=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_fast_tcp_profile_id = self._init_obj_uuid(lb_fast_tcp_profile_id)
+        lb_app_profile_def = self._init_def(
+            lb_fast_tcp_profile_id=lb_fast_tcp_profile_id,
+            name=name,
+            description=description,
+            http_redirect_to_https=http_redirect_to_https,
+            http_redirect_to=http_redirect_to,
+            idle_timeout=idle_timeout,
+            ntlm=ntlm,
+            request_body_size=request_body_size,
+            request_header_size=request_header_size,
+            response_header_size=response_header_size,
+            response_timeout=response_timeout,
+            x_forwarded_for=x_forwarded_for,
+            tags=tags,
+            tenant=tenant)
+        self.policy_api.create_or_update(lb_app_profile_def)
+        return lb_fast_tcp_profile_id
+
+    def delete(self, lb_fast_tcp_profile_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(
+            lb_fast_tcp_profile_id=lb_fast_tcp_profile_id,
+            tenant=tenant)
+        self.policy_api.delete(lb_app_profile_def)
+
+    def get(self, lb_fast_tcp_profile_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(
+            lb_fast_tcp_profile_id=lb_fast_tcp_profile_id,
+            tenant=tenant)
+        self.policy_api.get(lb_app_profile_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(tenant=tenant)
+        return self._list(lb_app_profile_def)
+
+    def update(self, lb_fast_tcp_profile_id,
+               name=IGNORE,
+               description=IGNORE,
+               http_redirect_to_https=IGNORE,
+               http_redirect_to=IGNORE,
+               idle_timeout=IGNORE,
+               ntlm=IGNORE,
+               request_body_size=IGNORE,
+               request_header_size=IGNORE,
+               response_header_size=IGNORE,
+               response_timeout=IGNORE,
+               x_forwarded_for=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(
+            lb_fast_tcp_profile_id=lb_fast_tcp_profile_id,
+            name=name,
+            description=description,
+            http_redirect_to_https=http_redirect_to_https,
+            http_redirect_to=http_redirect_to,
+            idle_timeout=idle_timeout,
+            ntlm=ntlm,
+            request_body_size=request_body_size,
+            request_header_size=request_header_size,
+            response_header_size=response_header_size,
+            response_timeout=response_timeout,
+            x_forwarded_for=x_forwarded_for,
+            tags=tags,
+            tenant=tenant)
+
+
+class NsxPolicyLoadBalancerLBFastUdpProfileApi(NsxPolicyResourceBase):
+    """NSX Policy Lb app profile"""
+
+    @property
+    def entry_def(self):
+        return policy_defs.LBFastUdpProfile
+
+    def create_or_overwrite(self, name,
+                            lb_fast_udp_profile_id=None,
+                            description=IGNORE,
+                            http_redirect_to_https=IGNORE,
+                            http_redirect_to=IGNORE,
+                            idle_timeout=IGNORE,
+                            ntlm=IGNORE,
+                            request_body_size=IGNORE,
+                            request_header_size=IGNORE,
+                            response_header_size=IGNORE,
+                            response_timeout=IGNORE,
+                            x_forwarded_for=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_fast_udp_profile_id = self._init_obj_uuid(lb_fast_udp_profile_id)
+        lb_app_profile_def = self._init_def(
+            lb_fast_udp_profile_id=lb_fast_udp_profile_id,
+            name=name,
+            description=description,
+            http_redirect_to_https=http_redirect_to_https,
+            http_redirect_to=http_redirect_to,
+            idle_timeout=idle_timeout,
+            ntlm=ntlm,
+            request_body_size=request_body_size,
+            request_header_size=request_header_size,
+            response_header_size=response_header_size,
+            response_timeout=response_timeout,
+            x_forwarded_for=x_forwarded_for,
+            tags=tags,
+            tenant=tenant)
+        self.policy_api.create_or_update(lb_app_profile_def)
+        return lb_fast_udp_profile_id
+
+    def delete(self, lb_fast_udp_profile_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(
+            lb_fast_udp_profile_id=lb_fast_udp_profile_id,
+            tenant=tenant)
+        self.policy_api.delete(lb_app_profile_def)
+
+    def get(self, lb_fast_udp_profile_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(
+            lb_fast_udp_profile_id=lb_fast_udp_profile_id,
+            tenant=tenant)
+        self.policy_api.get(lb_app_profile_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_app_profile_def = self.entry_def(tenant=tenant)
+        return self._list(lb_app_profile_def)
+
+    def update(self, lb_fast_udp_profile_id,
+               name=IGNORE,
+               description=IGNORE,
+               http_redirect_to_https=IGNORE,
+               http_redirect_to=IGNORE,
+               idle_timeout=IGNORE,
+               ntlm=IGNORE,
+               request_body_size=IGNORE,
+               request_header_size=IGNORE,
+               response_header_size=IGNORE,
+               response_timeout=IGNORE,
+               x_forwarded_for=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(
+            lb_fast_udp_profile_id=lb_fast_udp_profile_id,
+            name=name,
+            description=description,
+            http_redirect_to_https=http_redirect_to_https,
+            http_redirect_to=http_redirect_to,
+            idle_timeout=idle_timeout,
+            ntlm=ntlm,
+            request_body_size=request_body_size,
+            request_header_size=request_header_size,
+            response_header_size=response_header_size,
+            response_timeout=response_timeout,
+            x_forwarded_for=x_forwarded_for,
+            tags=tags,
+            tenant=tenant)
+
+
+class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
+    """NSX Policy LBService."""
+    @property
+    def entry_def(self):
+        return policy_defs.LbPoolDef
+
+    def create_or_overwrite(self, name, lb_pool_id=None, description=None,
+                            tags=None, members=None, active_monitor_paths=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_pool_id = self._init_obj_uuid(lb_pool_id)
+        lb_pool_def = policy_defs.LbPoolDef(
+            lb_pool_id=lb_pool_id,
+            name=name,
+            description=description,
+            tags=tags,
+            members=members,
+            active_monitor_paths=active_monitor_paths,
+            tenant=tenant)
+
+        self.policy_api.create_or_update(lb_pool_def)
+        return lb_pool_id
+
+    def delete(self, lb_pool_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_pool_def = policy_defs.LbPoolDef(
+            lb_pool_id=lb_pool_id, tenant=tenant)
+        self.policy_api.delete(lb_pool_def)
+
+    def get(self, lb_pool_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
+        lb_pool_def = policy_defs.LbPoolDef(
+            lb_pool_id=lb_pool_id, tenant=tenant)
+        return self.policy_api.get(lb_pool_def, silent=silent)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_pool_def = policy_defs.LbPoolDef(tenant=tenant)
+        return self.policy_api.list(lb_pool_def)['results']
+
+    def update(self, lb_pool_id, name=None, description=None, tags=None,
+               members=None, active_monitor_paths=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(lb_pool_id=lb_pool_id,
+                     name=name,
+                     description=description,
+                     tags=tags,
+                     members=members,
+                     active_monitor_paths=active_monitor_paths,
+                     tenant=tenant)
+
+    def add_monitor_to_pool(self, pool_id, active_monitor_paths,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_pool_def = policy_defs.LbPoolDef(
+            lb_pool_id=pool_id, tenant=tenant)
+        lb_pool = self.policy_api.get(lb_pool_def)
+        monitor_paths = lb_pool.get('active_monitor_paths', [])
+        monitor_paths.extend(active_monitor_paths)
+        return self.policy_api.update(
+            pool_id, active_monitor_paths=monitor_paths)
+
+
+    def remove_monitor_from_pool(self, pool_id, monitor_path,
+                                 tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_pool_def = policy_defs.LbPoolDef(
+            lb_pool_id=pool_id, tenant=tenant)
+        lb_pool = self.policy_api.get(lb_pool_def)
+        monitor_paths = lb_pool.get('active_monitor_paths', [])
+        monitor_paths = filter(lambda x: x!=monitor_path, monitor_paths)
+        return self.policy_api.update(
+            pool_id, active_monitor_paths=monitor_paths)
+
+    def update_pool_with_members(self, pool_id, members):
+        return self.policy_api.update(
+            pool_id, members=members)
+
+    def creeate_pool_member(self, pool_id, ip_address, port, display_name,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_pool_member = policy_defs.LBPoolMember(ip_address, port,
+                                                  display_name=display_name)
+        lb_pool_def = policy_defs.LbPoolDef(
+            lb_pool_id=pool_id, tenant=tenant)
+        lb_pool = self.policy_api.get(lb_pool_def)
+        lb_pool_members = lb_pool.get('members', [])
+        lb_pool_members.append(lb_pool_member.get_obj_dict())
+        self.update_pool_with_members(pool_id, lb_pool_members)
+        return lb_pool_member
+
+    def remove_pool_member(self, pool_id, ip_address, port,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_pool_def = policy_defs.LbPoolDef(
+            lb_pool_id=pool_id, tenant=tenant)
+        lb_pool = self.policy_api.get(lb_pool_def)
+        lb_pool_members = lb_pool.get('members', [])
+        lb_pool_members = filter(
+            lambda x:x.get('ip_address')!=ip_address or x.get('port')!=port,
+            lb_pool_members)
+        self.update_pool_with_members(pool_id, lb_pool_members)
+
+
+class NsxPolicyLoadBalancerServiceApi(NsxPolicyResourceBase):
+    """NSX Policy LBService."""
+    @property
+    def entry_def(self):
+        return policy_defs.LbServiceDef
+
+    def create_or_overwrite(self, name, lb_service_id=None, description=None,
+                            tags=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_service_id = self._init_obj_uuid(lb_service_id)
+        lb_service_def = policy_defs.LbServiceDef(lb_service_id=lb_service_id,
+                                                  name=name,
+                                                  description=description,
+                                                  tags=tags,
+                                                  tenant=tenant)
+
+        self.policy_api.create_or_update(lb_service_def)
+        return lb_service_id
+
+    def delete(self, lb_service_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_service_def = policy_defs.LbServiceDef(
+            lb_service_id=lb_service_id, tenant=tenant)
+        self.policy_api.delete(lb_service_def)
+
+    def get(self, lb_service_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
+        lb_service_def = policy_defs.LbServiceDef(
+            lb_service_id=lb_service_id, tenant=tenant)
+        return self.policy_api.get(lb_service_def, silent=silent)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        lb_service_def = policy_defs.LbServiceDef(tenant=tenant)
+        return self.policy_api.list(lb_service_def)['results']
+
+    def update(self, lb_service_id, name=None, description=None, tags=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(lb_service_id=lb_service_id,
+                     name=name,
+                     description=description,
+                     tags=tags,
+                     tenant=tenant)
+
+    def get_status(self, lb_service_id):
+        lb_service_status_def = policy_defs.LbServiceStatisticsDef(
+            lb_service_id=lb_service_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT)
+        return self.policy_api.get(lb_service_status_def)
+
+    def get_usage(self, lb_service_id):
+        lb_service_status_def = policy_defs.LbServiceUsageDef(
+            lb_service_id=lb_service_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT)
+        return self.policy_api.get(lb_service_status_def)
+
+
+class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
+    """NSX Policy LoadBalancerVirtualServers"""
+
+    @property
+    def entry_def(self):
+        return policy_defs.LbVirtualServerDef
+
+    def create_or_overwrite(self, name, lbvs_id=None, description=None,
+                            lb_rules=None, application_profile_path=None,
+                            ip_address=None, lb_service_path=None,
+                            client_ssl_profile_binding=None, pool_path=None,
+                            persistence_profile_path=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        lbvs_id = self._init_obj_uuid(lbvs_id)
+        lbvs_def = policy_defs.LbVirtualServerDef(
+            lbvs_id=lbvs_id,
+            name=name,
+            description=description,
+            tenant=tenant,
+            lb_rules=lb_rules,
+            application_profile_path=application_profile_path,
+            ip_address=ip_address,
+            lb_service_path=lb_service_path,
+            client_ssl_profile_binding=client_ssl_profile_binding,
+            pool_path=pool_path,
+            persistence_profile_path=persistence_profile_path
+        )
+        return self.policy_api.create_or_update(lbvs_def)
+
+    def delete(self, lbvs_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        lbvs_def = policy_defs.LbVirtualServerDef(lbvs_id, tenant=tenant)
+        self.policy_api.delete(lbvs_def)
+
+    def get(self, lbvs_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        lbvs_def = policy_defs.LbVirtualServerDef(lbvs_id, tenant=tenant)
+        return self.policy_api.get(lbvs_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        lbvs_def = policy_defs.LbVirtualServerDef(tenant=tenant)
+        return self.policy_api.list(lbvs_def)['results']
+
+    def update(self, lbvs_id, name=None, description=None,
+               lb_rules=None, application_profile_path=None,
+               ip_address=None, lb_service_path=None,
+               client_ssl_profile_binding=None, pool_path=None,
+               persistence_profile_path=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        lbvs_def = policy_defs.LbVirtualServerDef(lbvs_id=lbvs_id,
+                                                  tenant=tenant)
+        lbvs_def.update_attributes_in_body(
+            name=name,
+            description=description,
+            lb_rules=lb_rules,
+            application_profile_path=application_profile_path,
+            ip_address=ip_address,
+            lb_service_path=lb_service_path,
+            client_ssl_profile_binding=client_ssl_profile_binding,
+            pool_path=pool_path,
+            persistence_profile_path=persistence_profile_path
+        )
+        # update the backend
+        return self.policy_api.create_or_update(lbvs_def)
+
+    def update_virtual_server_with_pool(self, virtual_server_id, pool_id):
+        return self.update(virtual_server_id, pool_path=pool_id)
+
+    def update_virtual_server_with_profiles(self, virtual_server_id,
+                                            application_profile_path=None,
+                                            persistence_profile_path=None):
+        return self.update(virtual_server_id,
+                           application_profile_path=application_profile_path,
+                           persistence_profile_path=persistence_profile_path)
+
+    def update_virtual_server_with_vip(self, virtual_server_id, vip):
+        return self.update(virtual_server_id, ip_address=vip)
+
+    def create_lb_rule(self, virtual_server_id, actions=None,
+                       display_name=None, match_conditions=None,
+                       match_strategy=None, phase=None):
+        lb_rule = policy_defs.LbRuleDef(actions, display_name,
+                                        match_conditions, match_strategy,
+                                        phase)
+        lbvs_def = policy_defs.LbVirtualServerDef(
+            virtual_server_id, tenant=policy_constants.POLICY_INFRA_TENANT)
+        body = self.policy_api.get(lbvs_def)
+        lb_rules = body['lb_rules']
+        lb_rules.append(lb_rule.get_obj_dict())
+        return self.update(virtual_server_id, lb_rules=lb_rules)
+
+    def remove_lb_rule(self, virtual_server_id, lb_rule_name):
+        lbvs_def = policy_defs.LbVirtualServerDef(
+            virtual_server_id, tenant=policy_constants.POLICY_INFRA_TENANT)
+        body = self.policy_api.get(lbvs_def)
+        lb_rules = body['lb_rules']
+        lb_rules = filter(lambda x: x['display_name']!=lb_rule_name, lb_rules)
+        return self.update(virtual_server_id, lb_rules=lb_rules)
+
+    def update_client_ssl_profile_binding(self, virtual_server_id,
+                                          client_ssl_profile_binding):
+        return self.update(
+            virtual_server_id,
+            client_ssl_profile_binding=client_ssl_profile_binding)
+
+
+class NsxPolicyLoadBalancerApi(object):
+    """This is the class that have all load balancer policy apis"""
+    def __init__(self, policy_api):
+        self.lb_http_profile = NsxPolicyLoadBalancerLBHttpProfileApi(
+            policy_api)
+        self.lb_fast_tcp_profile = NsxPolicyLoadBalancerLBFastTcpProfileApi(
+            policy_api)
+        self.lb_fast_udp_profile = NsxPolicyLoadBalancerLBFastUdpProfileApi(
+            policy_api)
+        self.lb_service = NsxPolicyLoadBalancerServiceApi(policy_api)
+        self.virtual_server = NsxPolicyLoadBalancerVirtualServerAPI(policy_api)
+        self.pool = NsxPolicyLoadBalancerPoolApi(policy_api)
 
 
 class NsxPolicyGroupApi(NsxPolicyResourceBase):

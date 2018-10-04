@@ -1878,3 +1878,366 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
+
+
+class TestPolicyLBHttpProfileApi(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBHttpProfileApi, self).setUp()
+        self.resourceApi = self.policy_lib.loadbalancer.lb_http_profile
+
+    def test_create_with_id(self):
+        name = 'd1'
+        description = 'desc'
+        id = '111'
+        http_redirect_to_https = False
+        http_redirect_to = "sample-url"
+        idle_timeout = 100
+        ntlm = False
+        request_body_size = 1025
+        request_header_size = 10
+        response_header_size = 10
+        response_timeout = 10
+        x_forwarded_for = 'INSERT'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name,
+                lb_http_profile_id=id,
+                description=description,
+                http_redirect_to_https=http_redirect_to_https,
+                http_redirect_to=http_redirect_to,
+                idle_timeout=idle_timeout,
+                ntlm=ntlm,
+                request_body_size=request_body_size,
+                request_header_size=request_header_size,
+                response_header_size=response_header_size,
+                response_timeout=response_timeout,
+                x_forwarded_for=x_forwarded_for,
+                tenant=TEST_TENANT)
+            expected_def = policy_defs.LBHttpProfileDef(
+                lb_http_profile_id=id,
+                name=name,
+                description=description,
+                http_redirect_to_https=http_redirect_to_https,
+                http_redirect_to=http_redirect_to,
+                idle_timeout=idle_timeout,
+                ntlm=ntlm,
+                request_body_size=request_body_size,
+                request_header_size=request_header_size,
+                response_header_size=response_header_size,
+                response_timeout=response_timeout,
+                x_forwarded_for=x_forwarded_for,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_create_without_id(self):
+        name = 'd1'
+        description = 'desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name, description=description,
+                                                 tenant=TEST_TENANT)
+            expected_def = policy_defs.LBHttpProfileDef(
+                lb_http_profile_id=mock.ANY,
+                name=name,
+                description=description,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.LBHttpProfileDef(
+                lb_http_profile_id=id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.LBHttpProfileDef(
+                lb_http_profile_id=id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 'd1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = policy_defs.LBHttpProfileDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.LBHttpProfileDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        id = '111'
+        name = 'new name'
+        description = 'new desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    description=description,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.LBHttpProfileDef(
+                lb_http_profile_id=id,
+                name=name,
+                description=description,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+
+
+class TestPolicyLBService(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBService, self).setUp()
+        self.resourceApi = self.policy_lib.loadbalancer.service
+
+    def test_create_with_id(self):
+        name = 'd1'
+        description = 'desc'
+        id = '111'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 lb_service_id=id,
+                                                 description=description,
+                                                 tenant=TEST_TENANT)
+            expected_def = policy_defs.LbServiceDef(lb_service_id=id,
+                                                    name=name,
+                                                    description=description,
+                                                    tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_create_without_id(self):
+        name = 'd1'
+        description = 'desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name, description=description,
+                                                 tenant=TEST_TENANT)
+            expected_def = policy_defs.LbServiceDef(lb_service_id=mock.ANY,
+                                                    name=name,
+                                                    description=description,
+                                                    tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.LbServiceDef(lb_service_id=id,
+                                                    tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.LbServiceDef(lb_service_id=id,
+                                                    tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 'd1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = policy_defs.LbServiceDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.LbServiceDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        id = '111'
+        name = 'new name'
+        description = 'new desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    description=description,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.LbServiceDef(lb_service=id,
+                                                    name=name,
+                                                    description=description,
+                                                    tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+
+
+class TestPolicyLBVirtualServer(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBVirtualServer, self).setUp()
+        self.resourceApi = self.policy_lib.loadbalancer.virtual_server
+
+    def test_create_with_id(self):
+        name = 'd1'
+        description = 'desc'
+        id = '111'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 lbvs_id=id,
+                                                 description=description,
+                                                 tenant=TEST_TENANT)
+            expected_def = policy_defs.LbVirtualServerDef(
+                lbvs_id=id, name=name, description=description,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_create_without_id(self):
+        name = 'd1'
+        description = 'desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name, description=description,
+                                                 tenant=TEST_TENANT)
+            expected_def = policy_defs.LbVirtualServerDef(
+                lbvs_id=mock.ANY, name=name, description=description,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.LbVirtualServerDef(lbvs_id=id,
+                                                          tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.LbVirtualServerDef(lbvs_id=id,
+                                                          tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 'd1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = policy_defs.LbVirtualServerDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.LbVirtualServerDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        id = '111'
+        name = 'new name'
+        description = 'new desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    description=description,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.LbVirtualServerDef(
+                lbvs_id=id, name=name, description=description,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+
+
+class TestPolicyLBPool(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBPool, self).setUp()
+        self.resourceApi = self.policy_lib.loadbalancer.pool
+
+    def test_create_with_id(self):
+        name = 'd1'
+        description = 'desc'
+        id = '111'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 lb_pool_id=id,
+                                                 description=description,
+                                                 tenant=TEST_TENANT)
+            expected_def = policy_defs.LbPoolDef(
+                lb_pool_id=id, name=name, description=description,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_create_without_id(self):
+        name = 'd1'
+        description = 'desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name, description=description,
+                                                 tenant=TEST_TENANT)
+            expected_def = policy_defs.LbPoolDef(
+                lb_pool_id=mock.ANY, name=name, description=description,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.LbPoolDef(lb_pool_id=id,
+                                                 tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.LbPoolDef(lb_pool_id=id,
+                                                 tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 'd1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = policy_defs.LbPoolDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.LbPoolDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        id = '111'
+        name = 'new name'
+        description = 'new desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    description=description,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.LbPoolDef(
+                lb_pool_id=id, name=name, description=description,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)

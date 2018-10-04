@@ -408,6 +408,9 @@ class NsxPolicyLib(NsxLibBase):
             self.policy_api)
         self.ip_block = policy_resources.NsxPolicyIpBlockApi(self.policy_api)
         self.ip_pool = policy_resources.NsxPolicyIpPoolApi(self.policy_api)
+        self.loadbalancer = (
+                policy_resources.NsxPolicyLoadBalancerApi(
+                    self.policy_api))
 
     @property
     def keepalive_section(self):
