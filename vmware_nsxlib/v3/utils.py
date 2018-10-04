@@ -594,3 +594,36 @@ def get_l4_protocol_name(protocol_number):
         return nsx_constants.ICMPV4
     else:
         return protocol_number
+
+
+def _get_resource_path(resource_type, resource_id):
+    PREFIX = "/%s/"
+    LB_VIRTUAL_SERVERS_PATH_PATTERN = PREFIX + "lb-virtual-servers/"
+    LB_SERVICES_PATH_PATTERN = PREFIX + "lb-services/"
+    LB_POOL_PATH_PATTERN = PREFIX + "lb-pools/"
+    LB_APP_PROFILE_PATTERN = PREFIX + "lb-app-profiles/"
+    LB_CLIENT_SSL_PROFILE_PATTERN = (PREFIX +
+                                     "lb-client-ssl-profiles/")
+    LB_PERSISTENCE_PROFILE_PATTERN = (PREFIX +
+                                      "lb-persistence-profiles/")
+    CERT_PATTERN = (PREFIX + "certificates/")
+
+    _mapping = {'virtual_server': LB_VIRTUAL_SERVERS_PATH_PATTERN,
+                'lb_service': LB_SERVICES_PATH_PATTERN,
+                'lb_pool': LB_POOL_PATH_PATTERN,
+                'app_profile': LB_APP_PROFILE_PATTERN,
+                'client_ssl_profile': LB_CLIENT_SSL_PROFILE_PATTERN,
+                'persistence_profile': LB_PERSISTENCE_PROFILE_PATTERN,
+                'cert': CERT_PATTERN}
+    if resource_type not in _mapping:
+        return None
+    return _mapping[resource_type] + resource_id
+
+
+# Helper to set path when passed with resource id
+def set_attr_from_id(body, id_attr, resource_type, attr, tenant):
+    if id_attr in body:
+        id = body[id_attr]
+        path = _get_resource_path(resource_type, id) % tenant
+        body[attr] = path
+        body.pop(id_attr)
