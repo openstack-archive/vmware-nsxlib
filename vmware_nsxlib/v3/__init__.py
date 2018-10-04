@@ -420,6 +420,8 @@ class NsxPolicyLib(NsxLibBase):
             policy_resources.NsxIpDiscoveryProfileApi(self.policy_api))
         self.mac_discovery_profile = (
             policy_resources.NsxMacDiscoveryProfileApi(self.policy_api))
+        self.loadbalancer = policy_resources.NsxPolicyLoadBalancerApi(
+            self.policy_api)
 
     @property
     def keepalive_section(self):
