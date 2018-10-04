@@ -13,31 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
-from vmware_nsxlib.v3 import client
+from vmware_nsxlib.tests.unit.v3 import policy_testcase
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import policy_defs as policy
 
-BASE_POLICY_URI = "https://1.2.3.4/policy/api/v1/"
 
-
-class TestPolicyApi(nsxlib_testcase.NsxClientTestCase):
-
-    def setUp(self):
-        self.client = self.new_mocked_client(client.NSX3Client,
-                                             url_prefix='policy/api/v1/')
-        self.policy_api = policy.NsxPolicyApi(self.client)
-
-        super(TestPolicyApi, self).setUp()
-
-    def assert_json_call(self, method, client, url, data=None):
-        url = BASE_POLICY_URI + url
-        return super(TestPolicyApi, self).assert_json_call(
-            method, client, url, data=data)
-
-
-class TestPolicyDomain(TestPolicyApi):
+class TestPolicyDomain(policy_testcase.TestPolicyApi):
 
     def test_create(self):
         domain_def = policy.DomainDef(
@@ -67,7 +49,7 @@ class TestPolicyDomain(TestPolicyApi):
         self.assert_json_call('GET', self.client, 'infra/domains')
 
 
-class TestPolicyGroup(TestPolicyApi):
+class TestPolicyGroup(policy_testcase.TestPolicyApi):
 
     def test_create(self):
         group_def = policy.GroupDef(
@@ -142,7 +124,7 @@ class TestPolicyGroup(TestPolicyApi):
                               'infra/domains/eukarya/groups/giraffe')
 
 
-class TestPolicyService(TestPolicyApi):
+class TestPolicyService(policy_testcase.TestPolicyApi):
 
     def test_create(self):
         service_def = policy.ServiceDef(service_id='roomservice')
@@ -194,7 +176,7 @@ class TestPolicyService(TestPolicyApi):
                               data=expected_data)
 
 
-class TestPolicyCommunicationMap(TestPolicyApi):
+class TestPolicyCommunicationMap(policy_testcase.TestPolicyApi):
 
     def setUp(self):
         super(TestPolicyCommunicationMap, self).setUp()
@@ -286,7 +268,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
                               'rules/en2')
 
 
-class TestPolicyEnforcementPoint(TestPolicyApi):
+class TestPolicyEnforcementPoint(policy_testcase.TestPolicyApi):
 
     def test_create(self):
         ep_def = policy.EnforcementPointDef(ep_id='ep1', name='The Point',
@@ -301,7 +283,7 @@ class TestPolicyEnforcementPoint(TestPolicyApi):
                               data=ep_def.get_obj_dict())
 
 
-class TestPolicyTransportZone(TestPolicyApi):
+class TestPolicyTransportZone(policy_testcase.TestPolicyApi):
 
     def test_get(self):
         tz_def = policy.TransportZoneDef(tz_id='tz1', ep_id='default')
@@ -310,7 +292,7 @@ class TestPolicyTransportZone(TestPolicyApi):
         self.assert_json_call('GET', self.client, tz_path)
 
 
-class TestPolicyDeploymentMap(TestPolicyApi):
+class TestPolicyDeploymentMap(policy_testcase.TestPolicyApi):
 
     def test_create(self):
         map_def = policy.DeploymentMapDef(map_id='dm1',

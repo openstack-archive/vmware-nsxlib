@@ -1,0 +1,164 @@
+# Copyright 2017 VMware, Inc.
+# All Rights Reserved
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+#
+
+import threading
+
+from vmware_nsxlib._i18n import _
+
+from vmware_nsxlib.v3 import exceptions
+from vmware_nsxlib.v3 import policy_constants
+from vmware_nsxlib.v3 import policy_defs
+
+
+class NsxPolicyTransactionException(exceptions.NsxLibException):
+    message = _("Policy Transaction Error: %(msg)s")
+
+
+class NsxPolicyTransaction(object):
+    # stores current transaction per thread
+    # nested transactions not supported
+
+    data = threading.local()
+
+    def __init__(self):
+        # For now only infra tenant is supported
+        self.defs = [policy_defs.TenantDef(
+            tenant=policy_constants.POLICY_INFRA_TENANT)]
+        self.client = None
+
+    def __enter__(self):
+        if self.get_current():
+            raise NsxPolicyTransactionException(
+                "Nested transactions not supported")
+
+        self.data.instance = self
+        return self
+
+    def __exit__(self, e_type, e_value, e_traceback):
+        # Always reset transaction regardless of exceptions
+        self.data.instance = None
+
+        if e_type:
+            # If exception occured in the "with" block, raise it
+            # without applying to backend
+            return False
+
+        # exception might happen here and will be raised
+        self.apply_defs()
+
+    def store_def(self, resource_def, client):
+        if self.client and client != self.client:
+            raise NsxPolicyTransactionException(
+                "All operations under transaction must have same client")
+
+        self.client = client
+        # TODO(annak): raise exception for different tenants
+        self.defs.append(resource_def)
+
+    def _sort_defs(self):
+        sorted_defs = []
+
+        while len(self.defs):
+            for resource_def in self.defs:
+                if resource_def in sorted_defs:
+                    continue
+
+                # We want all parents to appear before the child
+                if not resource_def.path_defs():
+                    # top level resource
+                    sorted_defs.append(resource_def)
+                    continue
+
+                parent_type = resource_def.path_defs()[-1]
+                parents = [d for d in self.defs if isinstance(d, parent_type)]
+                missing_parents = [d for d in parents if d not in sorted_defs]
+
+                if not missing_parents:
+                    # All parents are appended to sorted list, child can go in
+                    sorted_defs.append(resource_def)
+
+            unsorted = [d for d in self.defs if d not in sorted_defs]
+            self.defs = unsorted
+
+        self.defs = sorted_defs
+
+    def _find_parent_in_dict(self, d, resource_def, level=1):
+
+        if len(resource_def.path_defs()) <= level:
+            return
+
+        parent_type = resource_def.path_defs()[level]
+        is_leaf = (level + 1 == len(resource_def.path_defs()))
+        resource_type = parent_type.resource_type()
+        parent_id = resource_def.get_attr(resource_def.path_ids[level])
+        # iterate over all objects in d, and look for resource type
+        for child in d:
+            if resource_type in child and child[resource_type]:
+                parent = child[resource_type]
+                # If resource type matches, check for id
+                if parent['id'] == parent_id:
+                    if is_leaf:
+                        return parent
+                    if 'children' in parent:
+                        return self._find_parent_in_dict(
+                            parent['children'], resource_def, level + 1)
+
+                    # Parent not found - for now, raise an exception
+                    # Support for this will come later
+                    # TODO(annak): remove this when missing parent body is
+                    # created on demand
+                    raise NsxPolicyTransactionException(
+                        "Transactional create is supported for infra level"
+                        " objects and their children")
+
+    def apply_defs(self):
+        # TODO(annak): find longest common URL, for now always
+        # applying on tenant level
+
+        if not self.defs:
+            return
+
+        self._sort_defs()
+
+        top_def = self.defs[0]
+        url = top_def.get_resource_path()
+        body = {'resource_type': top_def.resource_type()}
+        # iterate over defs (except top level def)
+        for resource_def in self.defs[1:]:
+            parent_dict = None
+            if 'children' in body:
+                parent_dict = self._find_parent_in_dict(body['children'],
+                                                        resource_def)
+
+            if not parent_dict:
+                parent_dict = body
+
+            if 'children' not in parent_dict:
+                parent_dict['children'] = []
+
+            resource_type = resource_def.resource_type()
+            parent_dict['children'].append({
+                'resource_type': 'Child%s' % resource_type,
+                resource_type: resource_def.get_obj_dict()
+            })
+
+        if body:
+            self.client.patch(url, body)
+
+    @staticmethod
+    def get_current():
+        if hasattr(NsxPolicyTransaction.data, 'instance'):
+            return NsxPolicyTransaction.data.instance
