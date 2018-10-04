@@ -808,7 +808,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         direction = nsx_constants.IN_OUT
         get_return_value = {'rules': [{'sequence_number': 1}]}
         with mock.patch.object(self.policy_api,
-                               "create_or_update") as api_call,\
+                               "create_with_parent") as api_call,\
             mock.patch.object(self.policy_api, "get",
                               return_value=get_return_value):
             self.resourceApi.create_or_overwrite(name, domain_id,
@@ -821,7 +821,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  direction=direction,
                                                  logged=True,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs.CommunicationMapDef(
+            map_def = policy_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
@@ -829,9 +829,8 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 category=policy_constants.CATEGORY_APPLICATION,
                 precedence=0,
                 tenant=TEST_TENANT)
-            self.assert_called_with_def(api_call, expected_def)
 
-            expected_def = policy_defs.CommunicationMapEntryDef(
+            entry_def = policy_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id='entry',
@@ -845,7 +844,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 direction=direction,
                 logged=True,
                 tenant=TEST_TENANT)
-            self.assert_called_with_def(api_call, expected_def, call_num=1)
+            self.assert_called_with_defs(api_call, [map_def, entry_def])
 
     def test_create_first_seqnum(self):
         domain_id = '111'
@@ -858,7 +857,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         category = 'Emergency'
         get_return_value = {'rules': []}
         with mock.patch.object(self.policy_api,
-                               "create_or_update") as api_call, \
+                               "create_with_parent") as api_call, \
             mock.patch.object(self.resourceApi, "get",
                               return_value=get_return_value):
             self.resourceApi.create_or_overwrite(name, domain_id,
@@ -871,7 +870,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  logged=False,
                                                  tenant=TEST_TENANT)
 
-            expected_def = policy_defs.CommunicationMapDef(
+            map_def = policy_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
@@ -879,9 +878,8 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 category=category,
                 precedence=0,
                 tenant=TEST_TENANT)
-            self.assert_called_with_def(api_call, expected_def)
 
-            expected_def = policy_defs.CommunicationMapEntryDef(
+            entry_def = policy_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id='entry',
@@ -894,7 +892,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 dest_groups=[dest_group],
                 logged=False,
                 tenant=TEST_TENANT)
-            self.assert_called_with_def(api_call, expected_def, call_num=1)
+            self.assert_called_with_defs(api_call, [map_def, entry_def])
 
     def test_create_without_seqnum(self):
         domain_id = '111'
