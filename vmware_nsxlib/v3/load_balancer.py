@@ -464,6 +464,10 @@ class Service(LoadBalancerBase):
                                              'statistics', source)
         return self.client.get(object_url)
 
+    def get_usage(self, service_id):
+        object_url = '%s/%s/%s' %  (self.resource, service_id, 'usage')
+        return self.client.get(object_url)
+
 
 class LoadBalancer(object):
     """This is the class that have all load balancer resource clients"""

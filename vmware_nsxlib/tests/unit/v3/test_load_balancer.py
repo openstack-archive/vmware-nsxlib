@@ -560,3 +560,10 @@ class TestService(nsxlib_testcase.NsxClientTestCase):
             self.nsxlib.load_balancer.service.delete(fake_service['id'])
             delete.assert_called_with(
                 'loadbalancer/services/%s' % fake_service['id'])
+
+    def test_get_usage(self):
+        with mock.patch.object(self.nsxlib.client, 'get') as get:
+            fake_service = consts.FAKE_SERVICE.copy()
+            self.nsxlib.load_balancer.service.get_usage(fake_service['id'])
+            get.assert_called_with(
+                'loadbalancer/services/%s/usage' % fake_service['id'])
