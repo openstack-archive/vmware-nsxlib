@@ -152,6 +152,7 @@ class TestPolicyService(TestPolicyApi):
     def test_create_l4_with_parent(self):
         service_def = policy.ServiceDef(service_id='roomservice')
         entry_def = policy.L4ServiceEntryDef(service_id='roomservice',
+                                             protocol='TCP',
                                              entry_id='http',
                                              name='room http',
                                              dest_ports=[80, 8080])
@@ -172,6 +173,7 @@ class TestPolicyService(TestPolicyApi):
         service_def = policy.ServiceDef(name='icmpservice',
                                         service_id='icmpservice')
         entry_def = policy.IcmpServiceEntryDef(service_id='icmpservice',
+                                               version=4,
                                                entry_id='icmp',
                                                name='icmpv4')
 
