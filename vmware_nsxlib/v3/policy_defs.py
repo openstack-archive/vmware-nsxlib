@@ -142,6 +142,15 @@ class ResourceDef(object):
 
         return obj_body[entries_path][0]
 
+    def bodyless(self):
+        """Return True if args contain only keys and meta attrs"""
+
+        meta = ['resource_type']
+        meta.extend(self.path_ids)
+        body_args = [key for key in self.attrs.keys()
+                     if key not in meta]
+        return len(body_args) == 0
+
 
 class DomainDef(ResourceDef):
 
@@ -347,7 +356,8 @@ class SegmentPortDef(ResourceDef):
             attachment = {'type': self.get_attr('attachment_type')}
         if self.get_attr('vif_id'):
             attachment['id'] = self.get_attr('vif_id')
-        for attr in ('context_id', 'app_id', 'traffic_tag'):
+        for attr in ('context_id', 'app_id',
+                     'traffic_tag', 'allocate_addresses'):
             if self.get_attr(attr):
                 attachment[attr] = self.get_attr(attr)
 
@@ -452,8 +462,10 @@ class ServiceDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(ServiceDef, self).get_obj_dict()
-        body['service_entries'] = [entry.get_obj_dict()
-                                   for entry in self.service_entries]
+        entries = [entry.get_obj_dict()
+                   for entry in self.service_entries]
+        if entries:
+            body['service_entries'] = entries
         return body
 
     @staticmethod
@@ -486,44 +498,18 @@ class L4ServiceEntryDef(ServiceEntryDef):
             body['destination_ports'] = self.get_attr('dest_ports')
         return body
 
-    def update_attributes_in_body(self, **kwargs):
-        # Fix params that need special conversions
-        body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-
-        if kwargs.get('protocol') is not None:
-            body['l4_protocol'] = kwargs['protocol'].upper()
-            del kwargs['protocol']
-        if kwargs.get('dest_ports') is not None:
-            body['destination_ports'] = kwargs['dest_ports']
-            del kwargs['dest_ports']
-        super(L4ServiceEntryDef, self).update_attributes_in_body(
-            body=body, **kwargs)
-
 
 class IcmpServiceEntryDef(ServiceEntryDef):
 
     def get_obj_dict(self):
         body = super(IcmpServiceEntryDef, self).get_obj_dict()
         body['resource_type'] = 'ICMPTypeServiceEntry'
-        body['protocol'] = 'ICMPv' + str(self.attrs.get('version', '4'))
+        if self.get_attr('version'):
+            body['protocol'] = 'ICMPv' + str(self.get_attr('version'))
         for attr in ('icmp_type', 'icmp_code'):
             if self.get_attr(attr):
                 body[attr] = self.get_attr(attr)
         return body
-
-    def update_attributes_in_body(self, **kwargs):
-        # Fix params that need special conversions
-        body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-
-        if kwargs.get('version') is not None:
-            body['protocol'] = 'ICMPv' + str(kwargs.get('version'))
-            del kwargs['version']
-        super(IcmpServiceEntryDef, self).update_attributes_in_body(
-            body=body, **kwargs)
 
 
 class IPProtocolServiceEntryDef(ServiceEntryDef):
@@ -531,17 +517,9 @@ class IPProtocolServiceEntryDef(ServiceEntryDef):
     def get_obj_dict(self):
         body = super(IPProtocolServiceEntryDef, self).get_obj_dict()
         body['resource_type'] = 'IPProtocolServiceEntry'
-        body['protocol_number'] = self.get_attr('protocol_number')
+        if self.get_attr('protocol_number'):
+            body['protocol_number'] = self.get_attr('protocol_number')
         return body
-
-    def update_attributes_in_body(self, **kwargs):
-        # Fix params that need special conversions
-        body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-
-        super(IPProtocolServiceEntryDef, self).update_attributes_in_body(
-            body=body, **kwargs)
 
 
 class CommunicationMapDef(ResourceDef):
