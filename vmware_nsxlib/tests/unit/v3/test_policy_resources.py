@@ -150,11 +150,10 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
                                     description=description,
                                     tenant=TEST_TENANT)
             expected_def = policy_defs.DomainDef(domain_id=id,
+                                                 name=name,
+                                                 description=description,
                                                  tenant=TEST_TENANT)
-            expected_dict = {'display_name': name,
-                             'description': description}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
+            self.assert_called_with_def(update_call, expected_def)
 
 
 class TestPolicyGroup(NsxPolicyLibTestCase):
@@ -387,11 +386,11 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                     tenant=TEST_TENANT)
             expected_def = policy_defs.GroupDef(domain_id=domain_id,
                                                 group_id=id,
+                                                name=name,
+                                                description=description,
                                                 tenant=TEST_TENANT)
-            expected_dict = {'display_name': name,
-                             'description': description}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
+            self.assert_called_with_def(
+                update_call, expected_def)
 
     def test_get_realized(self):
         domain_id = 'd1'
@@ -721,10 +720,8 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
         id = '111'
         name = 'new_name'
         description = 'new desc'
-        with mock.patch.object(self.policy_api, "get",
-                               return_value={}) as get_call,\
-            mock.patch.object(self.policy_api,
-                              "create_or_update") as update_call:
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     name=name,
                                     description=description,
@@ -733,7 +730,6 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
                                                   tenant=TEST_TENANT)
             expected_dict = {'display_name': name,
                              'description': description}
-            self.assert_called_with_def(get_call, expected_def)
             self.assert_called_with_def_and_dict(
                 update_call, expected_def, expected_dict)
 
@@ -742,35 +738,21 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
         name = 'newName'
         description = 'new desc'
         protocol_number = 3
-        service_entry_id = '222'
-        service_entry = {'id': service_entry_id}
 
-        with mock.patch.object(
-            self.policy_api, "get",
-            return_value={'service_entries': [service_entry]}) as get_call,\
-            mock.patch.object(self.policy_api,
-                              "create_or_update") as update_call,\
-            mock.patch.object(self.policy_api, "list",
-                              return_value={'results': []}):
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as service_update_call:
             self.resourceApi.update(id,
                                     name=name,
                                     description=description,
                                     protocol_number=protocol_number,
                                     tenant=TEST_TENANT)
             # get will be called for the entire service
-            expected_def = policy_defs.ServiceDef(service_id=id,
-                                                  tenant=TEST_TENANT)
-            self.assert_called_with_def(get_call, expected_def)
+            service_def = policy_defs.ServiceDef(service_id=id,
+                                                 display_name=name,
+                                                 description=description,
+                                                 tenant=TEST_TENANT)
 
-            expected_dict = {'display_name': name,
-                             'description': description,
-                             'service_entries': [{
-                                 'id': service_entry_id,
-                                 'display_name': name,
-                                 'description': description,
-                                 'protocol_number': protocol_number}]}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
+            self.assert_called_with_def(service_update_call, service_def)
 
 
 class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
@@ -1189,6 +1171,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 domain_id=domain_id,
                 map_id=map_id,
                 tenant=TEST_TENANT)
+
             expected_map_dict = {'display_name': name,
                                  'description': description}
             self.assert_called_with_def(get_call, expected_map_def)
@@ -1415,13 +1398,11 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
                                     ep_id=ep_id,
                                     domain_id=domain_id,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.DeploymentMapDef(map_id=id,
-                                                        tenant=TEST_TENANT)
-            domain_path = "/%s/domains/%s" % (TEST_TENANT, domain_id)
-            ep_path = ("/%s/sites/default/"
-                       "enforcement-points/%s" % (TEST_TENANT, ep_id))
-            expected_dict = {'display_name': name,
-                             'enforcement_point_path': ep_path,
-                             'parent_path': domain_path}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
+            expected_def = policy_defs.DeploymentMapDef(
+                map_id=id,
+                name=name,
+                ep_id=ep_id,
+                domain_id=domain_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(
+                update_call, expected_def)
