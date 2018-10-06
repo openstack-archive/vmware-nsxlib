@@ -347,7 +347,8 @@ class SegmentPortDef(ResourceDef):
             attachment = {'type': self.get_attr('attachment_type')}
         if self.get_attr('vif_id'):
             attachment['id'] = self.get_attr('vif_id')
-        for attr in ('context_id', 'app_id', 'traffic_tag'):
+        for attr in ('context_id', 'app_id',
+                     'traffic_tag', 'allocate_addresses'):
             if self.get_attr(attr):
                 attachment[attr] = self.get_attr(attr)
 

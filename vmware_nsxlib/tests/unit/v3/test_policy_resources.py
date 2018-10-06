@@ -150,11 +150,10 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
                                     description=description,
                                     tenant=TEST_TENANT)
             expected_def = policy_defs.DomainDef(domain_id=id,
+                                                 name=name,
+                                                 description=description,
                                                  tenant=TEST_TENANT)
-            expected_dict = {'display_name': name,
-                             'description': description}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
+            self.assert_called_with_def(update_call, expected_def)
 
 
 class TestPolicyGroup(NsxPolicyLibTestCase):
@@ -387,11 +386,11 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                     tenant=TEST_TENANT)
             expected_def = policy_defs.GroupDef(domain_id=domain_id,
                                                 group_id=id,
+                                                name=name,
+                                                description=description,
                                                 tenant=TEST_TENANT)
-            expected_dict = {'display_name': name,
-                             'description': description}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
+            self.assert_called_with_def(
+                update_call, expected_def)
 
     def test_get_realized(self):
         domain_id = 'd1'
@@ -1189,6 +1188,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 domain_id=domain_id,
                 map_id=map_id,
                 tenant=TEST_TENANT)
+
             expected_map_dict = {'display_name': name,
                                  'description': description}
             self.assert_called_with_def(get_call, expected_map_def)
@@ -1415,13 +1415,11 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
                                     ep_id=ep_id,
                                     domain_id=domain_id,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.DeploymentMapDef(map_id=id,
-                                                        tenant=TEST_TENANT)
-            domain_path = "/%s/domains/%s" % (TEST_TENANT, domain_id)
-            ep_path = ("/%s/sites/default/"
-                       "enforcement-points/%s" % (TEST_TENANT, ep_id))
-            expected_dict = {'display_name': name,
-                             'enforcement_point_path': ep_path,
-                             'parent_path': domain_path}
-            self.assert_called_with_def_and_dict(
-                update_call, expected_def, expected_dict)
+            expected_def = policy_defs.DeploymentMapDef(
+                map_id=id,
+                name=name,
+                ep_id=ep_id,
+                domain_id=domain_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(
+                update_call, expected_def)
