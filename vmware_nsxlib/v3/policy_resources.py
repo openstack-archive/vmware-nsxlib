@@ -36,8 +36,14 @@ class NsxPolicyResourceBase(object):
     declaring the basic apis each policy resource should support,
     and implement some common apis and utilities
     """
+    SINGLE_ENTRY_ID = 'entry'
+
     def __init__(self, policy_api):
         self.policy_api = policy_api
+
+    @property
+    def entry_def(self):
+        pass
 
     @abc.abstractmethod
     def list(self, *args, **kwargs):
@@ -53,7 +59,60 @@ class NsxPolicyResourceBase(object):
 
     @abc.abstractmethod
     def create_or_overwrite(self, *args, **kwargs):
+        """Create new or overwrite existing resource
+
+           Create would list keys and attributes, set defaults and
+           perform nesessary validations.
+           If object with same IDs exists on backend, it will
+           be overriden.
+        """
         pass
+
+    @abc.abstractmethod
+    def update(self, *args, **kwargs):
+        """Update existing resource
+
+           Update is different from create since it specifies only
+           attributes than need changing. Non-updateble attributes
+           should not be listed as update arguments.
+           Create_or_overwrite is not
+           good enough since it sets defaults, and thus would return
+           non-default values to default if not specified in kwargs.
+        """
+        pass
+
+    def _init_def_for_update(self, **kwargs):
+        """Helper for update function - ignore attrs with value=None"""
+        args = {key: value for key, value in kwargs.items()
+                if value is not None}
+        return self.entry_def(**args)
+
+    def _get_and_update_def(self, **kwargs):
+        """Helper for update function - ignore attrs with value=None"""
+        args = {key: value for key, value in kwargs.items()
+                if value is not None}
+        resource_def = self.entry_def(**args)
+        body = self.policy_api.get(resource_def)
+        if body:
+            resource_def.set_obj_dict(body)
+
+        return resource_def
+
+    def _init_parent_def_for_update(self, **kwargs):
+        """Helper for update function - ignore attrs with value=None"""
+        args = {key: value for key, value in kwargs.items()
+                if value is not None}
+        return self.parent_entry_def(**args)
+
+    def _update(self, **kwargs):
+        """Helper for update function - ignore attrs with value=None"""
+
+        policy_def = self._init_def_for_update(**kwargs)
+        if policy_def.bodyless():
+            # Nothing to update - only keys provided in kwargs
+            return
+
+        return self.policy_api.create_or_update(policy_def)
 
     @staticmethod
     def _init_obj_uuid(obj_uuid):
@@ -85,6 +144,10 @@ class NsxPolicyResourceBase(object):
 
 class NsxPolicyDomainApi(NsxPolicyResourceBase):
     """NSX Policy Domain."""
+    @property
+    def entry_def(self):
+        return policy_defs.DomainDef
+
     def create_or_overwrite(self, name, domain_id=None, description=None,
                             tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -112,17 +175,19 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
 
     def update(self, domain_id, name=None, description=None, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        domain_def = policy_defs.DomainDef(domain_id=domain_id,
-                                           tenant=tenant)
-        domain_def.update_attributes_in_body(name=name,
-                                             description=description,
-                                             tags=tags)
-        # update the backend
-        return self.policy_api.create_or_update(domain_def)
+        return self._update(domain_id=domain_id,
+                            name=name,
+                            description=description,
+                            tags=tags,
+                            tenant=tenant)
 
 
 class NsxPolicyGroupApi(NsxPolicyResourceBase):
     """NSX Policy Group (under a Domain) with condition/s"""
+    @property
+    def entry_def(self):
+        return policy_defs.GroupDef
+
     def create_or_overwrite(
         self, name, domain_id, group_id=None,
         description=None,
@@ -231,18 +296,12 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
 
     def update(self, domain_id, group_id, name=None, description=None,
                tags=None, tenant=policy_constants.POLICY_INFRA_TENANT):
-        """Update the general data of the group.
-
-        Without changing the conditions
-        """
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         tenant=tenant)
-        group_def.update_attributes_in_body(name=name,
-                                            description=description,
-                                            tags=tags)
-        # update the backend
-        return self.policy_api.create_or_update(group_def)
+        return self._update(domain_id=domain_id,
+                            group_id=group_id,
+                            name=name,
+                            description=description,
+                            tags=tags,
+                            tenant=tenant)
 
     def get_realized_state(self, domain_id, group_id, ep_id,
                            tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -259,6 +318,11 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
     Note the nsx-policy backend supports multiple service entries per service.
     At this point this is not supported here.
     """
+
+    @property
+    def parent_entry_def(self):
+        return policy_defs.ServiceDef
+
     def delete(self, service_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         """Delete the service with all its entries"""
@@ -283,51 +347,6 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
         path = service_def.get_realized_state_path(ep_id)
         return self._get_realized_state(path)
 
-    # TODO(asarfaty) currently service update doesn't work
-    def update(self, service_id, name=None, description=None,
-               tenant=policy_constants.POLICY_INFRA_TENANT,
-               **kwargs):
-        # service name cannot contain spaces or slashes
-        if name:
-            name = self._canonize_name(name)
-
-        # Get the current data of service & its' service entry
-        service = self.get(service_id, tenant=tenant)
-        # update the relevant data service itself:
-        # TODO(asarfaty): currently updating the service itself doesn't work
-        if name is not None:
-            service['display_name'] = name
-        if description is not None:
-            service['description'] = description
-
-        if (service.get('service_entries') and
-            len(service['service_entries']) == 1):
-            # update the service entry body
-            self._update_service_entry(
-                service_id, service['service_entries'][0],
-                name=name, description=description, **kwargs)
-        else:
-            LOG.error("Cannot update service %s - expected 1 service "
-                      "entry", service_id)
-
-        # update the backend
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             tenant=tenant)
-        service_def.body = service
-        self.policy_api.create_or_update(service_def)
-        # return the updated service
-        return self.get(service_id, tenant=tenant)
-
-    def get_by_name(self, name, *args, **kwargs):
-        # service name cannot contain spaces or slashes
-        name = self._canonize_name(name)
-        return super(NsxPolicyServiceBase, self).get_by_name(
-            name, *args, **kwargs)
-
-    @property
-    def entry_def(self):
-        pass
-
 
 class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     """NSX Policy Service with a single L4 service entry.
@@ -335,6 +354,7 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     Note the nsx-policy backend supports multiple service entries per service.
     At this point this is not supported here.
     """
+
     @property
     def entry_def(self):
         return policy_defs.L4ServiceEntryDef
@@ -343,37 +363,39 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
                             protocol=policy_constants.TCP, dest_ports=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
-        # service name cannot contain spaces or slashes
-        name = self._canonize_name(name)
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              name=name,
                                              description=description,
                                              tenant=tenant)
-        # NOTE(asarfaty) We set the service entry display name (which is also
-        # used as the id) to be the same as the service name. In case we
-        # support multiple service entries, we need the name to be unique.
         entry_def = policy_defs.L4ServiceEntryDef(
             service_id=service_id,
-            name=name,
-            description=description,
+            entry_id=self.SINGLE_ENTRY_ID,
+            name=self.SINGLE_ENTRY_ID,
             protocol=protocol,
             dest_ports=dest_ports,
             tenant=tenant)
 
         return self.policy_api.create_with_parent(service_def, entry_def)
 
-    def _update_service_entry(self, service_id, srv_entry,
-                              name=None, description=None,
-                              protocol=None, dest_ports=None,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
-        entry_id = srv_entry['id']
-        entry_def = policy_defs.L4ServiceEntryDef(service_id=service_id,
-                                                  service_entry_id=entry_id,
-                                                  tenant=tenant)
-        entry_def.update_attributes_in_body(body=srv_entry, name=name,
-                                            description=description,
-                                            protocol=protocol,
-                                            dest_ports=dest_ports)
+    def update(self, service_id,
+               name=None, description=None,
+               protocol=None, dest_ports=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        parent_def = self._init_parent_def_for_update(
+            service_id=service_id,
+            name=name,
+            description=description,
+            tenant=tenant)
+
+        entry_def = self._get_and_update_def(
+            service_id=service_id,
+            entry_id=self.SINGLE_ENTRY_ID,
+            protocol=protocol,
+            dest_ports=dest_ports,
+            tenant=tenant)
+
+        return self.policy_api.create_with_parent(parent_def, entry_def)
 
 
 class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
@@ -390,19 +412,14 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
                             version=4, icmp_type=None, icmp_code=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
-        # service name cannot contain spaces or slashes
-        name = self._canonize_name(name)
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              name=name,
                                              description=description,
                                              tenant=tenant)
-        # NOTE(asarfaty) We set the service entry display name (which is also
-        # used as the id) to be the same as the service name. In case we
-        # support multiple service entries, we need the name to be unique.
         entry_def = policy_defs.IcmpServiceEntryDef(
             service_id=service_id,
-            name=name,
-            description=description,
+            entry_id=self.SINGLE_ENTRY_ID,
+            name=self.SINGLE_ENTRY_ID,
             version=version,
             icmp_type=icmp_type,
             icmp_code=icmp_code,
@@ -410,19 +427,26 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
 
         return self.policy_api.create_with_parent(service_def, entry_def)
 
-    def _update_service_entry(self, service_id, srv_entry,
-                              name=None, description=None,
-                              version=None, icmp_type=None, icmp_code=None,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
-        entry_id = srv_entry['id']
-        entry_def = policy_defs.IcmpServiceEntryDef(service_id=service_id,
-                                                    service_entry_id=entry_id,
-                                                    tenant=tenant)
-        entry_def.update_attributes_in_body(body=srv_entry, name=name,
-                                            description=description,
-                                            version=version,
-                                            icmp_type=icmp_type,
-                                            icmp_code=icmp_code)
+    def update(self, service_id,
+               name=None, description=None,
+               version=None, icmp_type=None, icmp_code=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        parent_def = self._init_parent_def_for_update(
+            service_id=service_id,
+            name=name,
+            description=description,
+            tenant=tenant)
+
+        entry_def = self._get_and_update_def(
+            service_id=service_id,
+            entry_id=self.SINGLE_ENTRY_ID,
+            version=version,
+            icmp_type=icmp_type,
+            icmp_code=icmp_code,
+            tenant=tenant)
+
+        return self.policy_api.create_with_parent(parent_def, entry_def)
 
 
 class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
@@ -439,36 +463,37 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
                             protocol_number=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
-        # service name cannot contain spaces or slashes
-        name = self._canonize_name(name)
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              name=name,
                                              description=description,
                                              tenant=tenant)
-        # NOTE(asarfaty) We set the service entry display name (which is also
-        # used as the id) to be the same as the service name. In case we
-        # support multiple service entries, we need the name to be unique.
         entry_def = policy_defs.IPProtocolServiceEntryDef(
             service_id=service_id,
-            name=name,
-            description=description,
+            entry_id=self.SINGLE_ENTRY_ID,
+            name=self.SINGLE_ENTRY_ID,
             protocol_number=protocol_number,
             tenant=tenant)
 
         return self.policy_api.create_with_parent(service_def, entry_def)
 
-    def _update_service_entry(self, service_id, srv_entry,
-                              name=None, description=None,
-                              protocol_number=None,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
-        entry_id = srv_entry['id']
-        entry_def = policy_defs.IPProtocolServiceEntryDef(
+    def update(self, service_id,
+               name=None, description=None,
+               protocol_number=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        parent_def = self._init_parent_def_for_update(
             service_id=service_id,
-            service_entry_id=entry_id,
+            name=name,
+            description=description,
             tenant=tenant)
-        entry_def.update_attributes_in_body(body=srv_entry, name=name,
-                                            description=description,
-                                            protocol_number=protocol_number)
+
+        entry_def = self._get_and_update_def(
+            service_id=service_id,
+            entry_id=self.SINGLE_ENTRY_ID,
+            protocol_number=protocol_number,
+            tenant=tenant)
+
+        return self.policy_api.create_with_parent(parent_def, entry_def)
 
 
 class NsxPolicyTier1Api(NsxPolicyResourceBase):
@@ -479,8 +504,11 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
     def build_route_advertisement(self, static_routes=False, subnets=False,
                                   nat=False, lb_vip=False, lb_snat=False):
-        return policy_defs.RouteAdvertisement(static_routes, subnets,
-                                              nat, lb_vip, lb_snat)
+        return policy_defs.RouteAdvertisement(static_routes=static_routes,
+                                              subnets=subnets,
+                                              nat=nat,
+                                              lb_vip=lb_vip,
+                                              lb_snat=lb_snat)
 
     def create_or_overwrite(self, name, tier1_id=None, description=None,
                             tier0=None,
@@ -521,15 +549,13 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
-        tier1_def = policy_defs.Tier1Def(tier1_id=tier1_id,
-                                         tenant=tenant)
-        tier1_def.update_attributes_in_body(
-            name=name,
-            description=description,
-            force_whitelisting=force_whitelisting,
-            failover_mode=failover_mode,
-            tags=tags)
-        return self.policy_api.create_or_update(tier1_def)
+        return self._update(tier1_id=tier1_id,
+                            name=name,
+                            description=description,
+                            force_whitelisting=force_whitelisting,
+                            failover_mode=failover_mode,
+                            tags=tags,
+                            tenant=tenant)
 
     def update_route_advertisement(
         self, tier1_id,
@@ -547,8 +573,9 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                          nat=nat,
                          lb_vip=lb_vip,
                          lb_snat=lb_snat)
-        tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant,
-                                   route_adv=route_adv)
+        tier1_def = self.entry_def(tier1_id=tier1_id,
+                                   route_adv=route_adv,
+                                   tenant=tenant)
         return self.policy_api.create_or_update(tier1_def)
 
 
@@ -602,18 +629,17 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                transit_subnets=None,
                tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        tier0_def = policy_defs.Tier1Def(tier0_id=tier0_id,
-                                         tenant=tenant)
-        tier0_def.update_attributes_in_body(
-            name=name,
-            description=description,
-            failover_mode=failover_mode,
-            dhcp_config=dhcp_config,
-            force_whitelisting=force_whitelisting,
-            default_rule_logging=default_rule_logging,
-            transit_subnets=transit_subnets,
-            tags=tags)
-        return self.policy_api.create_or_update(tier0_def)
+
+        return self._update(tier0_id=tier0_id,
+                            name=name,
+                            description=description,
+                            failover_mode=failover_mode,
+                            dhcp_config=dhcp_config,
+                            force_whitelisting=force_whitelisting,
+                            default_rule_logging=default_rule_logging,
+                            transit_subnets=transit_subnets,
+                            tags=tags,
+                            tenant=tenant)
 
 
 class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
@@ -622,7 +648,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
     def entry_def(self):
         return policy_defs.Tier1SegmentDef
 
-    def create_or_overwrite(self, name, tier1_id=None,
+    def create_or_overwrite(self, name, tier1_id,
                             segment_id=None, description=None,
                             subnets=None,
                             dns_domain_name=None,
@@ -659,6 +685,25 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
     def list(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self.policy_api.list(segment_def)['results']
+
+    def update(self, tier1_id, segment_id,
+               name=None,
+               description=None,
+               subnets=None,
+               dns_domain_name=None,
+               vlan_ids=None,
+               tags=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        return self._update(tier1_id=tier1_id,
+                            segment_id=segment_id,
+                            name=name,
+                            description=description,
+                            subnets=subnets,
+                            dns_domain_name=dns_domain_name,
+                            vlan_ids=vlan_ids,
+                            tags=tags,
+                            tenant=tenant)
 
 
 class NsxPolicySegmentApi(NsxPolicyResourceBase):
@@ -702,6 +747,21 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tenant=tenant)
         return self.policy_api.list(segment_def)['results']
+
+    def update(self, segment_id, name=None, description=None,
+               tier1_id=None, subnets=None, dns_domain_name=None,
+               vlan_ids=None, tags=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        return self._update(segment_id=segment_id,
+                            name=name,
+                            description=description,
+                            tier1_id=tier1_id,
+                            subnets=subnets,
+                            dns_domain_name=dns_domain_name,
+                            vlan_ids=vlan_ids,
+                            tags=tags,
+                            tenant=tenant)
 
 
 class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
@@ -763,6 +823,21 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         port_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         return self.policy_api.list(port_def)['results']
 
+    def update(self, segment_id, port_id,
+               name=None,
+               description=None,
+               address_bindings=None,
+               tags=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        return self._update(segment_id=segment_id,
+                            port_id=port_id,
+                            name=name,
+                            description=description,
+                            address_bindings=address_bindings,
+                            tags=tags,
+                            tenant=tenant)
+
     def detach(self, segment_id, port_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
@@ -796,6 +871,14 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
 
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     """NSX Policy CommunicationMap (Under a Domain)."""
+    @property
+    def entry_def(self):
+        return policy_defs.CommunicationMapEntryDef
+
+    @property
+    def parent_entry_def(self):
+        return policy_defs.CommunicationMapDef
+
     def _get_last_seq_num(self, domain_id, map_id,
                           tenant=policy_constants.POLICY_INFRA_TENANT):
         # get the current entries, and choose the next unused sequence number
@@ -850,7 +933,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         entry_def = policy_defs.CommunicationMapEntryDef(
             domain_id=domain_id,
             map_id=map_id,
-            entry_id=map_id,
+            entry_id=self.SINGLE_ENTRY_ID,
             name=name,
             description=description,
             sequence_number=sequence_number,
@@ -929,13 +1012,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
             precedence=precedence, category=category, tags=tags)
-        map_def.body = map_def.get_obj_dict()
-        # update the entries with the map id
-        if entries:
-            map_def.body['communication_entries'] = [
-                e.get_obj_dict() for e in entries]
 
-        return self.policy_api.create_or_update(map_def)
+        return self.policy_api.create_with_parent(map_def, entries)
 
     def create_entry(self, name, domain_id, map_id, entry_id=None,
                      description=None, sequence_number=None, service_ids=None,
@@ -1017,46 +1095,31 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                source_groups=None, dest_groups=None, precedence=None,
                category=None, direction=None, logged=False, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        # Get the current data of communication map & its' entry
-        comm_map = self.get(domain_id, map_id, tenant=tenant)
-        # update the communication map itself:
-        comm_def = policy_defs.CommunicationMapDef(
-            domain_id=domain_id, map_id=map_id, tenant=tenant)
-        if name is not None:
-            comm_map['display_name'] = name
-        if description is not None:
-            comm_map['description'] = description
-        if category is not None:
-            comm_map['category'] = category
-        if precedence is not None:
-            comm_map['precedence'] = precedence
-        if tags is not None:
-            comm_map['tags'] = tags
 
-        if (comm_map.get('communication_entries') and
-            len(comm_map['communication_entries']) == 1):
-            # update the entry body
-            comm_entry = comm_map['communication_entries'][0]
-            entry_id = comm_entry['id']
-            entry_def = policy_defs.CommunicationMapEntryDef(
-                domain_id=domain_id, map_id=map_id, entry_id=entry_id,
-                tenant=tenant)
-            entry_def.update_attributes_in_body(
-                body=comm_entry, name=name,
-                description=description,
-                service_ids=service_ids,
-                source_groups=source_groups,
-                dest_groups=dest_groups,
-                sequence_number=sequence_number,
-                action=action,
-                direction=direction,
-                logged=logged)
-        else:
-            LOG.error("Cannot update communication map %s - expected 1 entry",
-                      map_id)
+        parent_def = self._init_parent_def_for_update(
+            domain_id=domain_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            category=category,
+            precedence=precedence,
+            tags=tags,
+            tenant=tenant)
 
-        comm_def.body = comm_map
-        self.policy_api.create_or_update(comm_def)
+        entry_def = self._get_and_update_def(
+            domain_id=domain_id,
+            map_id=map_id,
+            entry_id=self.SINGLE_ENTRY_ID,
+            service_ids=service_ids,
+            source_groups=source_groups,
+            dest_groups=dest_groups,
+            sequence_number=sequence_number,
+            action=action,
+            direction=direction,
+            logged=logged,
+            tenant=tenant)
+
+        self.policy_api.create_with_parent(parent_def, entry_def)
 
         # re-read the map from the backend to return the current data
         return self.get(domain_id, map_id, tenant=tenant)
@@ -1097,6 +1160,10 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
 class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
     """NSX Policy Enforcement Point."""
+
+    @property
+    def entry_def(self):
+        return policy_defs.EnforcementPointDef
 
     def create_or_overwrite(self, name, ep_id=None, description=None,
                             ip_address=None, username=None,
@@ -1151,19 +1218,19 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
             err_msg = (_("Cannot update an enforcement point without "
                          "username and password"))
             raise exceptions.ManagerError(details=err_msg)
+
         # Get the original body because ip & thumbprint are mandatory
-        body = self.get(ep_id)
-        ep_def = policy_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
-        ep_def.update_attributes_in_body(body=body,
-                                         name=name,
-                                         description=description,
-                                         ip_address=ip_address,
-                                         username=username,
-                                         password=password,
-                                         edge_cluster_id=edge_cluster_id,
-                                         transport_zone_id=transport_zone_id,
-                                         thumbprint=thumbprint)
-        # update the backend
+        ep_def = self._get_and_update_def(ep_id=ep_id,
+                                          name=name,
+                                          description=description,
+                                          ip_address=ip_address,
+                                          username=username,
+                                          password=password,
+                                          edge_cluster_id=edge_cluster_id,
+                                          transport_zone_id=transport_zone_id,
+                                          thumbprint=thumbprint,
+                                          tenant=tenant)
+
         return self.policy_api.create_or_update(ep_def)
 
     def get_realized_state(self, ep_id,
@@ -1175,6 +1242,9 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
 
 class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
     """NSX Policy Deployment Map."""
+    @property
+    def entry_def(self):
+        return policy_defs.DeploymentMapDef
 
     def create_or_overwrite(self, name, map_id=None, description=None,
                             ep_id=None, domain_id=None,
@@ -1223,11 +1293,10 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
     def update(self, map_id, name=None, description=None,
                ep_id=None, domain_id=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.DeploymentMapDef(
-            map_id=map_id, domain_id=domain_id, tenant=tenant)
-        map_def.update_attributes_in_body(name=name,
-                                          description=description,
-                                          ep_id=ep_id,
-                                          domain_id=domain_id)
-        # update the backend
-        return self.policy_api.create_or_update(map_def)
+
+        return self._update(map_id=map_id,
+                            name=name,
+                            description=description,
+                            ep_id=ep_id,
+                            domain_id=domain_id,
+                            tenant=tenant)
