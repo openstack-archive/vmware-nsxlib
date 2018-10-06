@@ -95,6 +95,7 @@ def build_args(resource_type, resource_id, args, add_name=True):
         args["name"] = resource_id
 
     subresources = {}
+    multivalues = {}
     for arg, value in args.items():
         if ":" in arg:
             tokens = arg.split(":")
@@ -106,6 +107,10 @@ def build_args(resource_type, resource_id, args, add_name=True):
                 subresources[tokens[0]] = {}
             subresources[tokens[0]][tokens[1]] = copy.copy(value)
             del args[arg]
+        if "," in value:
+            multivalues[arg] = value.split(',')
+
+    args.update(multivalues)
 
     for sub, sub_args in subresources.items():
         if sub == "subnet":
