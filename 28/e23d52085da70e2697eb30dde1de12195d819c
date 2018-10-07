@@ -1,0 +1,10 @@
+Code-Review+2: Abhishek Raut <rauta@vmware.com>
+Verified+1: VMware NSX CI
+Code-Review+2: Salvatore Orlando <salv.orlando@gmail.com>
+Workflow+1: Salvatore Orlando <salv.orlando@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Sun, 07 Oct 2018 06:25:46 +0000
+Reviewed-on: https://review.openstack.org/607532
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
