@@ -27,7 +27,7 @@ TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
-REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/%s-%s"
+REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/DOMAIN-%s-%s"
 REALIZED_STATE_COMM_MAP = (REALIZED_STATE_EF +
                            "firewalls/firewall-sections/%s.%s")
 REALIZED_STATE_SERVICE = REALIZED_STATE_EF + "services/nsservices/services:%s"

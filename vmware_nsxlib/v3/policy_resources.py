@@ -78,7 +78,7 @@ class NsxPolicyResourceBase(object):
             result = self.policy_api.get_by_path(path)
             if result and result.get('state'):
                 return result['state']
-        except exceptions.BackendResourceNotFound:
+        except exceptions.ResourceNotFound:
             # resource not deployed yet
             LOG.warning("No realized state found for %s", path)
 
