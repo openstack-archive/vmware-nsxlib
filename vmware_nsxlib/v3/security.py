@@ -321,7 +321,7 @@ class NsxLibFirewallSection(utils.NsxLibApiBase):
             icmp_code = sg_rule['port_range_max']
             icmp_strict = self.nsxlib.feature_supported(
                 consts.FEATURE_ICMP_STRICT)
-            utils.validate_dhcp_params(icmp_type, icmp_code, icmp_version=4,
+            utils.validate_icmp_params(icmp_type, icmp_code, icmp_version=4,
                                        strict=icmp_strict)
 
             return self.get_nsservice(
