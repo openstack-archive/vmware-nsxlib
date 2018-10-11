@@ -527,7 +527,7 @@ class NsxLibApiBase(object):
 
 # Some utilities for services translations & validations
 # both for the nsx manager & policy manager
-def validate_dhcp_params(icmp_type, icmp_code, icmp_version=4, strict=False):
+def validate_icmp_params(icmp_type, icmp_code, icmp_version=4, strict=False):
     if icmp_version != 4:
         # ICMPv6 is currently not supported
         return
