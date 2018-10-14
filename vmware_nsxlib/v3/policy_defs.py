@@ -24,6 +24,7 @@ TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
 SEGMENTS_PATH_PATTERN = TENANTS_PATH_PATTERN + "segments/"
 PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
+TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
@@ -183,6 +184,31 @@ class RouteAdvertisement(object):
         for key, value in kwargs.items():
             if value is not None:
                 self.attrs[key] = value
+
+
+class Tier0Def(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return TIER0S_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier0_id')
+
+    def get_obj_dict(self):
+        body = super(Tier0Def, self).get_obj_dict()
+
+        for attr in ('ha_mode', 'failover_mode', 'force_whitelisting',
+                     'default_rule_logging', 'transit_subnets'):
+            body[attr] = self.get_attr(attr)
+
+        # TODO(annak): path of dhcp config
+        if self.get_attr('dhcp_config'):
+            body['dhcp_config_path'] = self.get_attr(
+                'dhcp_config').get_obj_dict()
+
+        return body
 
 
 class Tier1Def(ResourceDef):
