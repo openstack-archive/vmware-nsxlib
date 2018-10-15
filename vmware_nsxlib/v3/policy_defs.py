@@ -27,12 +27,16 @@ PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
+DHCP_SERVERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "dhcp-server-configs/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
 REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/DOMAIN-%s-%s"
 REALIZED_STATE_COMM_MAP = (REALIZED_STATE_EF +
                            "firewalls/firewall-sections/%s.%s")
 REALIZED_STATE_SERVICE = REALIZED_STATE_EF + "services/nsservices/services:%s"
+EDGE_CLUSTER_PATH = ("/" + TENANTS_PATH_PATTERN +
+                     "sites/default/enforcement-points/%s/edge-clusters/%s")
+DEFAULT_EP_ID = 'default'
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -787,6 +791,32 @@ class DeploymentMapDef(ResourceDef):
 
         super(DeploymentMapDef, self).update_attributes_in_body(
             body=body, **kwargs)
+
+
+class DhcpServerConfig(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return DHCP_SERVERS_PATH_PATTERN
+
+    @staticmethod
+    def resource_type():
+        return 'DhcpServerConfig'
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'config_id')
+
+    def get_obj_dict(self):
+        body = super(DhcpServerConfig, self).get_obj_dict()
+        if self.get_attr('edge_cluster_id'):
+            # TODO(asarfaty): use non-default Enforcement-Point?
+            body['edge_cluster_path'] = EDGE_CLUSTER_PATH % (
+                self.get_tenant(), DEFAULT_EP_ID,
+                self.get_attr('edge_cluster_id'))
+        self._set_attrs_in_body(body, ['server_address', 'lease_time'])
+
+        return body
 
 
 class NsxPolicyApi(object):
