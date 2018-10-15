@@ -27,6 +27,7 @@ PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
+DHCP_SERVERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "dhcp-server-configs/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
 REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/DOMAIN-%s-%s"
@@ -787,6 +788,22 @@ class DeploymentMapDef(ResourceDef):
 
         super(DeploymentMapDef, self).update_attributes_in_body(
             body=body, **kwargs)
+
+
+class DhcpServerConfig(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return DHCP_SERVERS_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'dhcp_server_id')
+
+    def get_obj_dict(self):
+        body = super(DhcpServerConfig, self).get_obj_dict()
+        body['resource_type'] = 'DhcpServerConfig'
+        return body
 
 
 class NsxPolicyApi(object):
