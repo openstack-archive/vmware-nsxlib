@@ -27,6 +27,7 @@ PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
+DHCP_SERVERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "dhcp-server-configs/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
 REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/DOMAIN-%s-%s"
@@ -760,6 +761,31 @@ class DeploymentMapDef(ResourceDef):
             del kwargs['ep_id']
 
         super(DeploymentMapDef, self).update_attributes_in_body(
+            body=body, **kwargs)
+
+
+class DhcpServerConfig(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return DHCP_SERVERS_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'dhcp_server_id')
+
+    def get_obj_dict(self):
+        body = super(DhcpServerConfig, self).get_obj_dict()
+        body['resource_type'] = 'DhcpServerConfig'
+        return body
+
+    def update_attributes_in_body(self, **kwargs):
+        body = self._get_body_from_kwargs(**kwargs)
+        if 'body' in kwargs:
+            del kwargs['body']
+        # Fix params that need special conversions
+        # DEBUG ADIT edge-id path?
+        super(DhcpServerConfig, self).update_attributes_in_body(
             body=body, **kwargs)
 
 

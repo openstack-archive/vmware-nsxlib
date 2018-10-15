@@ -399,6 +399,8 @@ class NsxPolicyLib(NsxLibBase):
             self.policy_api)
         self.deployment_map = policy_resources.NsxPolicyDeploymentMapApi(
             self.policy_api)
+        self.dhcp_server_config = policy_resources.NsxPolicyDhcpServerConfig(
+            self.policy_api)
 
     @property
     def keepalive_section(self):

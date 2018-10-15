@@ -1231,3 +1231,50 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
                                           domain_id=domain_id)
         # update the backend
         return self.policy_api.create_or_update(map_def)
+
+
+class NsxPolicyDhcpServerConfig(NsxPolicyResourceBase):
+    """NSX Policy DHCP server config."""
+
+    def create_or_overwrite(self, name, config_id=None, description=None,
+                            server_address=None, edge_cluster_id=None,
+                            lease_time=None, tags=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        config_id = self._init_obj_uuid(config_id)
+        config_def = policy_defs.DhcpServerConfig(
+            config_id=config_id,
+            name=name,
+            description=description,
+            server_address=server_address,
+            edge_cluster_id=edge_cluster_id,
+            lease_time=lease_time,
+            tags=tags,
+            tenant=tenant)
+        return self.policy_api.create_or_update(config_def)
+
+    def delete(self, config_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        config_def = policy_defs.DhcpServerConfig(
+            config_id=config_id, tenant=tenant)
+        self.policy_api.delete(config_def)
+
+    def get(self, config_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
+        config_def = policy_defs.DhcpServerConfig(
+            config_id=config_id, tenant=tenant)
+        return self.policy_api.get(config_def, silent=silent)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        config_def = policy_defs.DhcpServerConfig(tenant=tenant)
+        return self.policy_api.list(config_def)['results']
+
+    # def update(self, config_id, name=None, description=None,
+    #            ep_id=None, domain_id=None,
+    #            tenant=policy_constants.POLICY_INFRA_TENANT):
+    #     config_def = policy_defs.DhcpServerConfig(
+    #         config_id=config_id, domain_id=domain_id, tenant=tenant)
+    #     config_def.update_attributes_in_body(name=name,
+    #                                       description=description,
+    #                                       ep_id=ep_id,
+    #                                       domain_id=domain_id)
+    #     # update the backend
+    #     return self.policy_api.create_or_update(config_def)
