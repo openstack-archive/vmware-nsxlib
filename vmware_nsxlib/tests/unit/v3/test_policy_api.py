@@ -318,3 +318,43 @@ class TestPolicyDeploymentMap(TestPolicyApi):
         self.assert_json_call('PATCH', self.client,
                               'infra/domains/d1/domain-deployment-maps/dm1',
                               data=expected_data)
+
+
+class TestPolicyDhcpServerConfig(TestPolicyApi):
+
+    def test_create(self):
+        dhcp_def = policy.DhcpServerConfig(config_id='dhcp1',
+                                           edge_cluster_id='ec1',
+                                           description='desc1',
+                                           server_address='1.1.1.1/20',
+                                           lease_time=500)
+
+        self.policy_api.create_or_update(dhcp_def)
+        ec_path = policy.EDGE_CLUSTER_PATH % ('infra', 'default', 'ec1')
+        expected_data = {'id': 'dhcp1',
+                         'resource_type': 'DhcpServerConfig',
+                         'description': 'desc1',
+                         'server_address': '1.1.1.1/20',
+                         'description': 'desc1',
+                         'lease_time': 500,
+                         'edge_cluster_path': ec_path}
+        self.assert_json_call('PATCH', self.client,
+                              'infra/dhcp-server-configs/dhcp1',
+                              data=expected_data)
+
+    def test_delete(self):
+        dhcp_def = policy.DhcpServerConfig(config_id='dhcp1')
+        self.policy_api.delete(dhcp_def)
+        self.assert_json_call('DELETE', self.client,
+                              'infra/dhcp-server-configs/dhcp1')
+
+    def test_get(self):
+        dhcp_def = policy.DhcpServerConfig(config_id='dhcp1')
+        self.policy_api.get(dhcp_def)
+        self.assert_json_call('GET', self.client,
+                              'infra/dhcp-server-configs/dhcp1')
+
+    def test_list(self):
+        dhcp_def = policy.DhcpServerConfig()
+        self.policy_api.list(dhcp_def)
+        self.assert_json_call('GET', self.client, 'infra/dhcp-server-configs')

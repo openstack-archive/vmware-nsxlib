@@ -1568,3 +1568,78 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
+
+
+class TestPolicyDhcpServerConfig(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyDhcpServerConfig, self).setUp()
+        self.resourceApi = self.policy_lib.dhcp_server_config
+
+    def test_create(self):
+        name = 'd1'
+        description = 'desc'
+        id = '111'
+        addr = '1.1.1.1/20'
+        lease_time = 500
+        ec_id = 'ec1'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 config_id=id,
+                                                 description=description,
+                                                 server_address=addr,
+                                                 lease_time=lease_time,
+                                                 edge_cluster_id=ec_id,
+                                                 tenant=TEST_TENANT)
+            expected_def = policy_defs.DhcpServerConfig(
+                config_id=id,
+                name=name,
+                description=description,
+                server_address=addr,
+                lease_time=lease_time,
+                edge_cluster_id=ec_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.DhcpServerConfig(config_id=id,
+                                                        tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.DhcpServerConfig(config_id=id,
+                                                        tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.DhcpServerConfig(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        id = '111'
+        name = 'new name'
+        description = 'new desc'
+        addr = '1.1.1.1/20'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    description=description,
+                                    server_address=addr,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.DhcpServerConfig(
+                config_id=id,
+                name=name,
+                description=description,
+                server_address=addr,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)

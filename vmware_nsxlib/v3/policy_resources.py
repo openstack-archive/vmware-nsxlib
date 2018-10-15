@@ -62,9 +62,9 @@ class NsxPolicyResourceBase(object):
         """Create new or overwrite existing resource
 
            Create would list keys and attributes, set defaults and
-           perform nesessary validations.
+           perform necessary validations.
            If object with same IDs exists on backend, it will
-           be overriden.
+           be overridden.
         """
         pass
 
@@ -1316,4 +1316,65 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
                      description=description,
                      ep_id=ep_id,
                      domain_id=domain_id,
+                     tenant=tenant)
+
+
+class NsxPolicyDhcpServerConfig(NsxPolicyResourceBase):
+    """NSX Policy DHCP server config."""
+
+    @property
+    def entry_def(self):
+        return policy_defs.DhcpServerConfig
+
+    def create_or_overwrite(self, name, config_id=None, description=None,
+                            server_address=None, edge_cluster_id=None,
+                            lease_time=None, tags=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        if server_address is None:
+            # server_address must be provided
+            err_msg = (_("Cannot create or update a DHCP server config "
+                         "without server_address"))
+            raise exceptions.ManagerError(details=err_msg)
+
+        config_id = self._init_obj_uuid(config_id)
+        config_def = policy_defs.DhcpServerConfig(
+            config_id=config_id,
+            name=name,
+            description=description,
+            server_address=server_address,
+            edge_cluster_id=edge_cluster_id,
+            lease_time=lease_time,
+            tags=tags,
+            tenant=tenant)
+        return self.policy_api.create_or_update(config_def)
+
+    def delete(self, config_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        config_def = policy_defs.DhcpServerConfig(
+            config_id=config_id, tenant=tenant)
+        self.policy_api.delete(config_def)
+
+    def get(self, config_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
+        config_def = policy_defs.DhcpServerConfig(
+            config_id=config_id, tenant=tenant)
+        return self.policy_api.get(config_def, silent=silent)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        config_def = policy_defs.DhcpServerConfig(tenant=tenant)
+        return self.policy_api.list(config_def)['results']
+
+    def update(self, config_id, name=None, description=None,
+               server_address=None, edge_cluster_id=None, lease_time=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        if server_address is None:
+            # server_address must be provided
+            err_msg = (_("Cannot create or update a DHCP server config "
+                         "without server_address"))
+            raise exceptions.ManagerError(details=err_msg)
+        self._update(config_id=config_id,
+                     name=name,
+                     description=description,
+                     server_address=server_address,
+                     edge_cluster_id=edge_cluster_id,
+                     lease_time=lease_time,
                      tenant=tenant)
