@@ -378,8 +378,8 @@ class ClusteredAPI(object):
 
     def __init__(self, providers,
                  http_provider,
-                 min_conns_per_pool=1,
-                 max_conns_per_pool=500,
+                 min_conns_per_pool=0,
+                 max_conns_per_pool=20,
                  keepalive_interval=33):
 
         self._http_provider = http_provider
