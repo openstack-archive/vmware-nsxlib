@@ -47,6 +47,9 @@ class ResourceDef(object):
 
     def get_obj_dict(self):
         body = {}
+        if self.resource_type():
+            body['resource_type'] = self.resource_type()
+
         if 'name' in self.attrs:
             body['display_name'] = self.attrs['name']
 
@@ -64,6 +67,10 @@ class ResourceDef(object):
 
     @abc.abstractproperty
     def path_ids(self):
+        pass
+
+    @staticmethod
+    def resource_type():
         pass
 
     def get_id(self):
@@ -153,6 +160,10 @@ class DomainDef(ResourceDef):
     def path_ids(self):
         return ('tenant', 'domain_id')
 
+    @staticmethod
+    def resource_type():
+        return 'Domain'
+
 
 class RouteAdvertisement(object):
 
@@ -196,6 +207,10 @@ class Tier0Def(ResourceDef):
     def path_ids(self):
         return ('tenant', 'tier0_id')
 
+    @staticmethod
+    def resource_type():
+        return 'Tier0'
+
     def get_obj_dict(self):
         body = super(Tier0Def, self).get_obj_dict()
 
@@ -220,6 +235,10 @@ class Tier1Def(ResourceDef):
     @property
     def path_ids(self):
         return ('tenant', 'tier1_id')
+
+    @staticmethod
+    def resource_type():
+        return 'Tier1'
 
     def get_obj_dict(self):
         body = super(Tier1Def, self).get_obj_dict()
@@ -272,6 +291,10 @@ class BaseSegmentDef(ResourceDef):
             if self.get_attr(attr):
                 body[attr] = self.get_attr(attr)
         return body
+
+    @staticmethod
+    def resource_type():
+        return 'Segment'
 
 
 class Tier1SegmentDef(BaseSegmentDef):
@@ -332,6 +355,10 @@ class SegmentPortDef(ResourceDef):
     @property
     def path_ids(self):
         return ('tenant', 'segment_id', 'port_id')
+
+    @staticmethod
+    def resource_type():
+        return 'SegmentPort'
 
     def get_obj_dict(self):
         body = super(SegmentPortDef, self).get_obj_dict()
@@ -410,6 +437,10 @@ class GroupDef(ResourceDef):
     def path_ids(self):
         return ('tenant', 'domain_id', 'group_id')
 
+    @staticmethod
+    def resource_type():
+        return 'Group'
+
     def get_obj_dict(self):
         body = super(GroupDef, self).get_obj_dict()
         conds = self.get_attr('conditions')
@@ -450,6 +481,10 @@ class ServiceDef(ResourceDef):
     def path_ids(self):
         return ('tenant', 'service_id')
 
+    @staticmethod
+    def resource_type():
+        return 'Service'
+
     def get_obj_dict(self):
         body = super(ServiceDef, self).get_obj_dict()
         body['service_entries'] = [entry.get_obj_dict()
@@ -478,9 +513,12 @@ class ServiceEntryDef(ResourceDef):
 
 class L4ServiceEntryDef(ServiceEntryDef):
 
+    @staticmethod
+    def resource_type():
+        return 'L4PortSetServiceEntry'
+
     def get_obj_dict(self):
         body = super(L4ServiceEntryDef, self).get_obj_dict()
-        body['resource_type'] = 'L4PortSetServiceEntry'
         body['l4_protocol'] = self.attrs.get('protocol', 'TCP')
         if self.get_attr('dest_ports'):
             body['destination_ports'] = self.get_attr('dest_ports')
@@ -504,9 +542,12 @@ class L4ServiceEntryDef(ServiceEntryDef):
 
 class IcmpServiceEntryDef(ServiceEntryDef):
 
+    @staticmethod
+    def resource_type():
+        return 'ICMPTypeServiceEntry'
+
     def get_obj_dict(self):
         body = super(IcmpServiceEntryDef, self).get_obj_dict()
-        body['resource_type'] = 'ICMPTypeServiceEntry'
         body['protocol'] = 'ICMPv' + str(self.attrs.get('version', '4'))
         for attr in ('icmp_type', 'icmp_code'):
             if self.get_attr(attr):
@@ -528,9 +569,12 @@ class IcmpServiceEntryDef(ServiceEntryDef):
 
 class IPProtocolServiceEntryDef(ServiceEntryDef):
 
+    @staticmethod
+    def resource_type():
+        return 'IPProtocolServiceEntry'
+
     def get_obj_dict(self):
         body = super(IPProtocolServiceEntryDef, self).get_obj_dict()
-        body['resource_type'] = 'IPProtocolServiceEntry'
         body['protocol_number'] = self.get_attr('protocol_number')
         return body
 
@@ -553,6 +597,10 @@ class CommunicationMapDef(ResourceDef):
     @property
     def path_ids(self):
         return ('tenant', 'domain_id', 'map_id')
+
+    @staticmethod
+    def resource_type():
+        return 'CommunicationMap'
 
     def get_realized_state_path(self, ep_id):
         return REALIZED_STATE_COMM_MAP % (self.get_tenant(), ep_id,
@@ -601,6 +649,10 @@ class CommunicationMapEntryDef(ResourceDef):
     @property
     def path_ids(self):
         return ('tenant', 'domain_id', 'map_id', 'entry_id')
+
+    @staticmethod
+    def resource_type():
+        return 'CommunicationEntry'
 
     def get_obj_dict(self):
         body = super(CommunicationMapEntryDef, self).get_obj_dict()
@@ -665,6 +717,10 @@ class EnforcementPointDef(ResourceDef):
     def path_ids(self):
         return ('tenant', 'ep_id')
 
+    @staticmethod
+    def resource_type():
+        return 'EnforcementPoint'
+
     def get_obj_dict(self):
         body = super(EnforcementPointDef, self).get_obj_dict()
         body['id'] = self.get_id()
@@ -683,7 +739,6 @@ class EnforcementPointDef(ResourceDef):
             body['connection_info']['transport_zone_ids'] = [
                 self.get_attr('transport_zone_id')]
 
-        body['resource_type'] = 'EnforcementPoint'
         return body
 
     def update_attributes_in_body(self, **kwargs):
@@ -727,6 +782,10 @@ class DeploymentMapDef(ResourceDef):
     @property
     def path_ids(self):
         return ('tenant', 'domain_id', 'map_id')
+
+    @staticmethod
+    def resource_type():
+        return 'DeploymentMap'
 
     def get_obj_dict(self):
         body = super(DeploymentMapDef, self).get_obj_dict()

@@ -109,8 +109,10 @@ class TestPolicyGroup(TestPolicyApi):
                               'resource_type': 'Condition',
                               'key': 'Tag'}
         expected_group = {'id': 'dogs',
+                          'resource_type': 'Group',
                           'expression': [expected_condition]}
         expected_data = {'id': 'eukarya',
+                         'resource_type': 'Domain',
                          'groups': [expected_group]}
         self.assert_json_call('PATCH', self.client,
                               'infra/domains/eukarya',
@@ -163,6 +165,7 @@ class TestPolicyService(TestPolicyApi):
                           'l4_protocol': 'TCP',
                           'destination_ports': [80, 8080]}
         expected_data = {'id': 'roomservice',
+                         'resource_type': 'Service',
                          'service_entries': [expected_entry]}
         self.assert_json_call('PATCH', self.client,
                               'infra/services/roomservice',
@@ -181,6 +184,7 @@ class TestPolicyService(TestPolicyApi):
                           'display_name': 'icmpv4',
                           'protocol': 'ICMPv4'}
         expected_data = {'id': 'icmpservice',
+                         'resource_type': 'Service',
                          'display_name': 'icmpservice',
                          'service_entries': [expected_entry]}
         self.assert_json_call('PATCH', self.client,
@@ -217,6 +221,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             direction=nsx_constants.IN)
 
         self.expected_data1 = {'id': 'en1',
+                               'resource_type': 'CommunicationEntry',
                                'sequence_number': 12,
                                'action': 'ALLOW',
                                'source_groups':
@@ -229,6 +234,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
                                'direction': 'IN_OUT'}
 
         self.expected_data2 = {'id': 'en2',
+                               'resource_type': 'CommunicationEntry',
                                'sequence_number': 13,
                                'action': 'ALLOW',
                                'source_groups':
@@ -304,6 +310,7 @@ class TestPolicyDeploymentMap(TestPolicyApi):
         ep_path = policy.EnforcementPointDef(
             ep_id='ep1').get_resource_full_path()
         expected_data = {'id': 'dm1',
+                         'resource_type': 'DeploymentMap',
                          'enforcement_point_path': ep_path}
 
         self.assert_json_call('PATCH', self.client,
