@@ -32,7 +32,6 @@ from vmware_nsxlib.v3 import utils
 LOG = log.getLogger(__name__)
 
 PORT_SG_SCOPE = 'os-security-group'
-MAX_NSGROUPS_CRITERIA_TAGS = 10
 
 
 class NsxLibNsGroup(utils.NsxLibApiBase):
@@ -70,9 +69,9 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
         return '%(name)s - %(id)s' % security_group
 
     def get_lport_tags(self, secgroups):
-        if len(secgroups) > MAX_NSGROUPS_CRITERIA_TAGS:
+        if len(secgroups) > utils.MAX_NSGROUPS_CRITERIA_TAGS:
             raise exceptions.NumberOfNsgroupCriteriaTagsReached(
-                max_num=MAX_NSGROUPS_CRITERIA_TAGS)
+                max_num=utils.MAX_NSGROUPS_CRITERIA_TAGS)
         tags = []
         for sg in secgroups:
             tags = utils.add_v3_tag(tags, PORT_SG_SCOPE, sg)
