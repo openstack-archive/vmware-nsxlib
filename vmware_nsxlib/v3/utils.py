@@ -36,6 +36,7 @@ TagLimits = collections.namedtuple('TagLimits',
 MAX_RESOURCE_TYPE_LEN = 20
 MAX_TAG_LEN = 40
 MAX_TAGS = 15
+MAX_NSGROUPS_CRITERIA_TAGS = 10
 
 DEFAULT_MAX_ATTEMPTS = 10
 DEFAULT_CACHE_AGE_SEC = 600
@@ -74,10 +75,16 @@ def _update_max_tags(max_tags):
     MAX_TAGS = max_tags
 
 
+def _update_max_nsgroups_criteria_tags(max_tags):
+    global MAX_NSGROUPS_CRITERIA_TAGS
+    MAX_NSGROUPS_CRITERIA_TAGS = max(10, max_tags - 5)
+
+
 def update_tag_limits(limits):
     _update_resource_length(limits.scope_length)
     _update_tag_length(limits.tag_length)
     _update_max_tags(limits.max_tags)
+    _update_max_nsgroups_criteria_tags(limits.max_tags)
 
 
 def _validate_resource_type_length(resource_type):

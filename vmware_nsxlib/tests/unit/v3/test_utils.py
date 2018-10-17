@@ -265,16 +265,19 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
         self.assertRaises(exceptions.NsxLibInvalidInput, func_to_fail, 99)
         self.assertEqual(max_retries, total_count['val'])
 
+    @mock.patch.object(utils, '_update_max_nsgroups_criteria_tags')
     @mock.patch.object(utils, '_update_max_tags')
     @mock.patch.object(utils, '_update_tag_length')
     @mock.patch.object(utils, '_update_resource_length')
     def test_update_limits(self, _update_resource_length,
-                           _update_tag_length, _update_max_tags):
+                           _update_tag_length, _update_max_tags,
+                           _update_msx_nsg_criteria):
         limits = utils.TagLimits(1, 2, 3)
         utils.update_tag_limits(limits)
         _update_resource_length.assert_called_with(1)
         _update_tag_length.assert_called_with(2)
         _update_max_tags.assert_called_with(3)
+        _update_msx_nsg_criteria.assert_called_with(3)
 
 
 class NsxFeaturesTestCase(nsxlib_testcase.NsxLibTestCase):
