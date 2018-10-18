@@ -806,7 +806,6 @@ class NsxPolicyApi(object):
         if not body:
             body = resource_def.get_obj_dict()
         self.client.patch(path, body)
-        return self.client.get(path)
 
     def create_with_parent(self, parent_def, resource_def):
         path = parent_def.get_resource_path()
@@ -818,7 +817,6 @@ class NsxPolicyApi(object):
             child_dict_key = resource_def.get_last_section_dict_key
             body[child_dict_key] = [resource_def.get_obj_dict()]
         self.client.patch(path, body)
-        return self.client.get(path)
 
     def delete(self, resource_def):
         path = resource_def.get_resource_path()
