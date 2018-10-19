@@ -901,7 +901,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         # between the entries under the same communication map
         try:
             com_map = self.get(domain_id, map_id, tenant=tenant)
-            com_entries = com_map.get('communication_entries')
+            com_entries = com_map.get('rules')
         except exceptions.ResourceNotFound:
             return -1
         if not com_entries:
@@ -1156,8 +1156,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             # Get the current data of communication map & its' entries
             comm_map = self.policy_api.get(map_def)
             # Update the field in all the entries
-            if comm_map.get('communication_entries'):
-                for comm_entry in comm_map['communication_entries']:
+            if comm_map.get('rules'):
+                for comm_entry in comm_map['rules']:
                     comm_entry['logged'] = logged
             # Update the entire map at the NSX
             self.policy_api.client.update(map_path, comm_map)

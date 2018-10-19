@@ -584,7 +584,7 @@ class CommunicationMapDef(ResourceDef):
 
     @property
     def path_pattern(self):
-        return (DOMAINS_PATH_PATTERN + "%s/communication-maps/")
+        return (DOMAINS_PATH_PATTERN + "%s/security-policies/")
 
     @property
     def path_ids(self):
@@ -592,7 +592,7 @@ class CommunicationMapDef(ResourceDef):
 
     @staticmethod
     def resource_type():
-        return 'CommunicationMap'
+        return 'SecurityPolicy'
 
     def get_realized_state_path(self, ep_id):
         return REALIZED_STATE_COMM_MAP % (self.get_tenant(), ep_id,
@@ -636,7 +636,7 @@ class CommunicationMapEntryDef(ResourceDef):
     @property
     def path_pattern(self):
         return (DOMAINS_PATH_PATTERN +
-                "%s/communication-maps/%s/communication-entries/")
+                "%s/security-policies/%s/rules/")
 
     @property
     def path_ids(self):
@@ -644,7 +644,7 @@ class CommunicationMapEntryDef(ResourceDef):
 
     @staticmethod
     def resource_type():
-        return 'CommunicationEntry'
+        return 'Rule'
 
     def get_obj_dict(self):
         body = super(CommunicationMapEntryDef, self).get_obj_dict()

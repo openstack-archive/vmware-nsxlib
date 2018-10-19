@@ -223,7 +223,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
             direction=nsx_constants.IN)
 
         self.expected_data1 = {'id': 'en1',
-                               'resource_type': 'CommunicationEntry',
+                               'resource_type': 'Rule',
                                'sequence_number': 12,
                                'action': 'ALLOW',
                                'source_groups':
@@ -236,7 +236,7 @@ class TestPolicyCommunicationMap(TestPolicyApi):
                                'direction': 'IN_OUT'}
 
         self.expected_data2 = {'id': 'en2',
-                               'resource_type': 'CommunicationEntry',
+                               'resource_type': 'Rule',
                                'sequence_number': 13,
                                'action': 'ALLOW',
                                'source_groups':
@@ -253,9 +253,9 @@ class TestPolicyCommunicationMap(TestPolicyApi):
 
         self.policy_api.create_with_parent(map_def, self.entry1)
         expected_data = map_def.get_obj_dict()
-        expected_data['communication_entries'] = [self.expected_data1]
+        expected_data['rules'] = [self.expected_data1]
         self.assert_json_call('PATCH', self.client,
-                              'infra/domains/d1/communication-maps/cm1',
+                              'infra/domains/d1/security-policies/cm1',
                               data=expected_data)
 
     def test_create_with_two_entries(self):
@@ -264,26 +264,26 @@ class TestPolicyCommunicationMap(TestPolicyApi):
         self.policy_api.create_with_parent(map_def,
                                            [self.entry1, self.entry2])
         expected_data = map_def.get_obj_dict()
-        expected_data['communication_entries'] = [self.expected_data1,
-                                                  self.expected_data2]
+        expected_data['rules'] = [self.expected_data1,
+                                  self.expected_data2]
         self.assert_json_call('PATCH', self.client,
-                              'infra/domains/d1/communication-maps/cm1',
+                              'infra/domains/d1/security-policies/cm1',
                               data=expected_data)
 
     def test_update_entry(self):
         self.policy_api.create_or_update(self.entry1)
 
         self.assert_json_call('PATCH', self.client,
-                              'infra/domains/d1/communication-maps/cm1/'
-                              'communication-entries/en1',
+                              'infra/domains/d1/security-policies/cm1/'
+                              'rules/en1',
                               data=self.expected_data1)
 
     def test_delete_entry(self):
         self.policy_api.delete(self.entry2)
 
         self.assert_json_call('DELETE', self.client,
-                              'infra/domains/d1/communication-maps/cm2/'
-                              'communication-entries/en2')
+                              'infra/domains/d1/security-policies/cm2/'
+                              'rules/en2')
 
 
 class TestPolicyEnforcementPoint(TestPolicyApi):

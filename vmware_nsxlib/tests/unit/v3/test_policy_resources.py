@@ -800,7 +800,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         seq_num = 7
         service_id = 'c1'
         direction = nsx_constants.IN_OUT
-        get_return_value = {'communication_entries': [{'sequence_number': 1}]}
+        get_return_value = {'rules': [{'sequence_number': 1}]}
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call,\
             mock.patch.object(self.policy_api, "get",
@@ -850,7 +850,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         dest_group = 'g2'
         service_id = 'c1'
         category = 'Emergency'
-        get_return_value = {'communication_entries': []}
+        get_return_value = {'rules': []}
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call, \
             mock.patch.object(self.resourceApi, "get",
@@ -1038,7 +1038,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         service1_id = 'c1'
         service2_id = 'c2'
         seq_num = 1
-        ret_comm = {'communication_entries': [{'sequence_number': seq_num}]}
+        ret_comm = {'rules': [{'sequence_number': seq_num}]}
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call,\
             mock.patch.object(self.policy_api,
@@ -1216,8 +1216,8 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
     def test_update_entries_logged(self):
         domain_id = '111'
         map_id = '222'
-        dummy_map = {'communication_entries': [{'logged': False}]}
-        updated_map = {'communication_entries': [{'logged': True}]}
+        dummy_map = {'rules': [{'logged': False}]}
+        updated_map = {'rules': [{'logged': True}]}
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id,
             map_id=map_id,
