@@ -66,6 +66,17 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
                      'tag': nsxlib_testcase.PLUGIN_VER}]
         self.assertEqual(expected, result)
 
+    def test_build_v3_api_version_project_tag(self):
+        proj = 'project_x'
+        result = self.nsxlib.build_v3_api_version_project_tag(proj)
+        expected = [{'scope': nsxlib_testcase.PLUGIN_SCOPE,
+                     'tag': nsxlib_testcase.PLUGIN_TAG},
+                    {'scope': 'os-api-version',
+                     'tag': nsxlib_testcase.PLUGIN_VER},
+                    {'scope': 'os-project-name',
+                     'tag': proj}]
+        self.assertEqual(expected, result)
+
     def test_is_internal_resource(self):
         project_tag = self.nsxlib.build_v3_tags_payload(
             {'id': 'fake_id',
