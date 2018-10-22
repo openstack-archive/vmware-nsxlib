@@ -424,16 +424,19 @@ class TestPolicyService(NsxPolicyLibTestCase):
         description = 'desc'
         protocol = policy_constants.TCP
         dest_ports = [81, 82]
+        tags = [{'scope': 'a', 'tag': 'b'}]
         with mock.patch.object(self.policy_api,
                                "create_with_parent") as api_call:
             self.resourceApi.create_or_overwrite(name,
                                                  description=description,
                                                  protocol=protocol,
                                                  dest_ports=dest_ports,
+                                                 tags=tags,
                                                  tenant=TEST_TENANT)
             exp_srv_def = policy_defs.ServiceDef(service_id=mock.ANY,
                                                  name=name,
                                                  description=description,
+                                                 tags=tags,
                                                  tenant=TEST_TENANT)
             exp_entry_def = policy_defs.L4ServiceEntryDef(
                 service_id=mock.ANY,
@@ -482,6 +485,7 @@ class TestPolicyService(NsxPolicyLibTestCase):
         name = 'newName'
         description = 'new desc'
         protocol = 'tcp'
+        tags = [{'scope': 'a', 'tag': 'b'}]
         entry_body = {'id': 'entry',
                       'l4_protocol': protocol}
 
@@ -494,10 +498,12 @@ class TestPolicyService(NsxPolicyLibTestCase):
             self.resourceApi.update(id,
                                     name=name,
                                     description=description,
+                                    tags=tags,
                                     tenant=TEST_TENANT)
             service_def = policy_defs.ServiceDef(service_id=id,
                                                  name=name,
                                                  description=description,
+                                                 tags=tags,
                                                  tenant=TEST_TENANT)
             entry_def = policy_defs.L4ServiceEntryDef(
                 service_id=id,
