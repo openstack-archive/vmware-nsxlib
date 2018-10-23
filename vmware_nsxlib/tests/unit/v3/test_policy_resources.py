@@ -1471,9 +1471,9 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         self.resourceApi = self.policy_lib.tier1
 
     def test_create(self):
-        name = 'ep'
+        name = 'test'
         description = 'desc'
-        tier0_id = 'tz1'
+        tier0_id = '111'
         route_adv = self.resourceApi.build_route_advertisement(
             lb_vip=True,
             lb_snat=True)
@@ -1515,7 +1515,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
-        name = 'ep1'
+        name = 'test'
         with mock.patch.object(
             self.policy_api, "list",
             return_value={'results': [{'display_name': name}]}) as api_call:
@@ -1565,6 +1565,89 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
 
             expected_def = policy_defs.Tier1Def(tier1_id=id,
                                                 route_adv=new_adv,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(
+                update_call, expected_def)
+
+
+class TestPolicyTier0(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyTier0, self).setUp()
+        self.resourceApi = self.policy_lib.tier0
+
+    def test_create(self):
+        name = 'test'
+        description = 'desc'
+        dhcp_config = '111'
+        subnets = ["2.2.2.0/24"]
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, description=description,
+                dhcp_config=dhcp_config,
+                force_whitelisting=True,
+                default_rule_logging=True,
+                transit_subnets=subnets,
+                tenant=TEST_TENANT)
+
+            expected_def = policy_defs.Tier0Def(
+                tier0_id=mock.ANY,
+                name=name,
+                description=description,
+                dhcp_config=dhcp_config,
+                default_rule_logging=True,
+                force_whitelisting=True,
+                ha_mode=policy_constants.ACTIVE_ACTIVE,
+                failover_mode=policy_constants.NON_PREEMPTIVE,
+                transit_subnets=subnets,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier0Def(tier0_id=id,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier0Def(tier0_id=id,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 'test'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = policy_defs.Tier0Def(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier0Def(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier0Def(tier0_id=id,
+                                                name=name,
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)

@@ -664,8 +664,10 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
     def create_or_overwrite(self, name, tier1_id,
                             segment_id=None, description=None,
                             subnets=None,
+                            dhcp_config=None,
                             dns_domain_name=None,
                             vlan_ids=None,
+                            default_rule_logging=False,
                             tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
@@ -675,8 +677,10 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                                      name=name,
                                      description=description,
                                      subnets=subnets,
+                                     dhcp_config=dhcp_config,
                                      dns_domain_name=dns_domain_name,
                                      vlan_ids=vlan_ids,
+                                     default_rule_logging=default_rule_logging,
                                      tags=tags,
                                      tenant=tenant)
         self.policy_api.create_or_update(segment_def)
@@ -704,8 +708,10 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                name=None,
                description=None,
                subnets=None,
+               dhcp_config=None,
                dns_domain_name=None,
                vlan_ids=None,
+               default_rule_logging=None,
                tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
@@ -714,8 +720,10 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                      name=name,
                      description=description,
                      subnets=subnets,
+                     dhcp_config=dhcp_config,
                      dns_domain_name=dns_domain_name,
                      vlan_ids=vlan_ids,
+                     default_rule_logging=default_rule_logging,
                      tags=tags,
                      tenant=tenant)
 

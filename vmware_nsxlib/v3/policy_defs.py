@@ -218,7 +218,22 @@ class RouteAdvertisement(object):
                 self.attrs[key] = value
 
 
-class Tier0Def(ResourceDef):
+class RouterDef(ResourceDef):
+    def get_obj_dict(self):
+        body = super(RouterDef, self).get_obj_dict()
+
+        self._set_attrs_in_body(body, ['failover_mode', 'force_whitelisting',
+                                       'default_rule_logging'])
+
+        # TODO(annak): change to path of dhcp config when dhcp config
+        # def is introduced
+        if self.get_attr('dhcp_config'):
+            body['dhcp_config_paths'] = [self.get_attr('dhcp_config')]
+
+        return body
+
+
+class Tier0Def(RouterDef):
 
     @property
     def path_pattern(self):
@@ -236,20 +251,12 @@ class Tier0Def(ResourceDef):
         body = super(Tier0Def, self).get_obj_dict()
 
         self._set_attrs_in_body(body,
-                                ['ha_mode', 'failover_mode',
-                                 'force_whitelisting',
-                                 'default_rule_logging',
-                                 'transit_subnets'])
-
-        # TODO(annak): path of dhcp config
-        if self.get_attr('dhcp_config'):
-            body['dhcp_config_path'] = self.get_attr(
-                'dhcp_config').get_obj_dict()
+                                ['ha_mode', 'transit_subnets'])
 
         return body
 
 
-class Tier1Def(ResourceDef):
+class Tier1Def(RouterDef):
 
     @property
     def path_pattern(self):
@@ -271,8 +278,6 @@ class Tier1Def(ResourceDef):
         if tier0:
             tenant = TENANTS_PATH_PATTERN % self.get_tenant()
             body['tier0_path'] = "/%stier-0s/%s" % (tenant, tier0)
-
-        self._set_attrs_in_body(body, ['failover_mode', 'force_whitelisting'])
 
         if self.get_attr('route_adv'):
             body['route_advertisement_types'] = self.get_attr(
