@@ -250,6 +250,10 @@ class RouterLib(object):
             route['destination'],
             route['nexthop'])
 
+    def change_status_edge_firewall(self, nsx_router_id, action):
+        return self.nsxlib.logical_router.change_status_edge_firewall(
+            nsx_router_id, action)
+
     def delete_static_routes(self, nsx_router_id, route):
         return self.nsxlib.logical_router.delete_static_route_by_values(
             nsx_router_id, dest_cidr=route['destination'],
