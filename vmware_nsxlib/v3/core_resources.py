@@ -569,6 +569,11 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
             body['display_name'] = display_name
         return self.client.create(resource, body)
 
+    def change_edge_firewall_status(self, logical_router_id, action):
+        resource = 'firewall/status/logical_routers/%s?action=%s' % (
+            logical_router_id, action)
+        return self.client.create(resource)
+
     def add_static_route(self, logical_router_id, dest_cidr, nexthop):
         resource = ('logical-routers/%s/routing/static-routes' %
                     logical_router_id)
