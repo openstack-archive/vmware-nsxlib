@@ -639,10 +639,35 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
 
         return self._update_resource(resource, kwargs, retry=True)
 
-    def update_advertisement_rules(self, logical_router_id, rules):
+    def update_advertisement_rules(self, logical_router_id, rules,
+                                   name_prefix=None):
+        """Update the router advertisement rules
+
+        If name_prefix is None, replace the entire list of NSX rules with the
+        new given 'rules'.
+        Else - delete the NSX rules with this name prefix, and add 'rules' to
+        the rest.
+        """
         resource = ('logical-routers/%s/routing/advertisement/rules' %
                     logical_router_id)
-        return self._update_resource(resource, {'rules': rules}, retry=True)
+        callback = None
+
+        def update_payload_cbk(revised_payload, requested_payload):
+            # delete rules with this prefix:
+            new_rules = []
+            for rule in revised_payload['rules']:
+                if (not rule.get('display_name') or
+                    not rule['display_name'].startswith(name_prefix)):
+                    new_rules.append(rule)
+            # add new rules
+            new_rules.extend(requested_payload['rules'])
+            revised_payload['rules'] = new_rules
+            del requested_payload['rules']
+
+        if name_prefix:
+            callback = update_payload_cbk
+        return self._update_resource(resource, {'rules': rules}, retry=True,
+                                     update_payload_cbk=callback)
 
     def get_advertisement_rules(self, logical_router_id):
         resource = ('logical-routers/%s/routing/advertisement/rules' %
