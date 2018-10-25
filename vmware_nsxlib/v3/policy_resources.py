@@ -363,11 +363,13 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
 
     def create_or_overwrite(self, name, service_id=None, description=None,
                             protocol=policy_constants.TCP, dest_ports=None,
+                            tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              name=name,
                                              description=description,
+                                             tags=tags,
                                              tenant=tenant)
         entry_def = policy_defs.L4ServiceEntryDef(
             service_id=service_id,
@@ -382,8 +384,7 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
 
     def update(self, service_id,
                name=None, description=None,
-               protocol=None, dest_ports=None,
-               tags=None,
+               protocol=None, dest_ports=None, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def_for_update(
@@ -415,11 +416,13 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
 
     def create_or_overwrite(self, name, service_id=None, description=None,
                             version=4, icmp_type=None, icmp_code=None,
+                            tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              name=name,
                                              description=description,
+                                             tags=tags,
                                              tenant=tenant)
         entry_def = policy_defs.IcmpServiceEntryDef(
             service_id=service_id,
@@ -435,8 +438,7 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
 
     def update(self, service_id,
                name=None, description=None,
-               version=None, icmp_type=None, icmp_code=None,
-               tags=None,
+               version=None, icmp_type=None, icmp_code=None, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def_for_update(
@@ -468,12 +470,13 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
         return policy_defs.IPProtocolServiceEntryDef
 
     def create_or_overwrite(self, name, service_id=None, description=None,
-                            protocol_number=None,
+                            protocol_number=None, tags=None,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
         service_def = policy_defs.ServiceDef(service_id=service_id,
                                              name=name,
                                              description=description,
+                                             tags=tags,
                                              tenant=tenant)
         entry_def = policy_defs.IPProtocolServiceEntryDef(
             service_id=service_id,
@@ -487,8 +490,7 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
 
     def update(self, service_id,
                name=None, description=None,
-               protocol_number=None,
-               tags=None,
+               protocol_number=None, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def_for_update(
