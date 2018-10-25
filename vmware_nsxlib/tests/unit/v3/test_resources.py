@@ -842,6 +842,16 @@ class LogicalRouterTestCase(BaseTestResource):
                     (router_id, rule_id)),
                 headers=self.default_headers())
 
+    def test_change_edge_firewall(self):
+        router = self.get_mocked_resource()
+        router_id = test_constants.FAKE_ROUTER_UUID
+        router.change_edge_firewall_status(router_id, nsx_constants.FW_DISABLE)
+        test_client.assert_json_call(
+            'post', router,
+            ('https://1.2.3.4/api/v1/firewall/status/logical_routers/%s'
+                '?action=%s' % (router_id, nsx_constants.FW_DISABLE)),
+            headers=self.default_headers())
+
     def test_update_advertisement(self):
         router = self.get_mocked_resource()
         router_id = test_constants.FAKE_ROUTER_UUID
