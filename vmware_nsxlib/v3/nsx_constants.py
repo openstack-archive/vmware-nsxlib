@@ -69,6 +69,10 @@ FW_ACTION_ALLOW = 'ALLOW'
 FW_ACTION_DROP = 'DROP'
 FW_ACTION_REJECT = 'REJECT'
 
+# firewall disable/enable
+FW_ENABLE = 'enable_firewall'
+FW_DISABLE = 'disable_firewall'
+
 # nsgroup members update actions
 NSGROUP_ADD_MEMBERS = 'ADD_MEMBERS'
 NSGROUP_REMOVE_MEMBERS = 'REMOVE_MEMBERS'
