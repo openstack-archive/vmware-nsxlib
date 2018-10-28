@@ -141,6 +141,9 @@ class NsxPolicyResourceBase(object):
             # resource not deployed yet
             LOG.warning("No realized state found for %s", path)
 
+    def _list(self, obj_def):
+        return self.policy_api.list(obj_def).get('results', [])
+
 
 class NsxPolicyDomainApi(NsxPolicyResourceBase):
     """NSX Policy Domain."""
@@ -172,7 +175,7 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         domain_def = policy_defs.DomainDef(tenant=tenant)
-        return self.policy_api.list(domain_def)['results']
+        return self._list(domain_def)
 
     def update(self, domain_id, name=None, description=None, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -288,7 +291,7 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         """List all the groups of a specific domain."""
         group_def = policy_defs.GroupDef(domain_id=domain_id,
                                          tenant=tenant)
-        return self.policy_api.list(group_def)['results']
+        return self._list(group_def)
 
     def get_by_name(self, domain_id, name,
                     tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -340,7 +343,7 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         service_def = policy_defs.ServiceDef(tenant=tenant)
-        return self.policy_api.list(service_def)['results']
+        return self._list(service_def)
 
     def get_realized_state(self, service_id, ep_id,
                            tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -555,7 +558,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         tier1_def = self.entry_def(tenant=tenant)
-        return self.policy_api.list(tier1_def)['results']
+        return self._list(tier1_def)
 
     def update(self, tier1_id, name=None, description=None,
                force_whitelisting=None,
@@ -634,7 +637,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         tier0_def = self.entry_def(tenant=tenant)
-        return self.policy_api.list(tier0_def)['results']
+        return self._list(tier0_def)
 
     def update(self, tier0_id, name=None, description=None,
                failover_mode=None,
@@ -704,7 +707,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
 
     def list(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
-        return self.policy_api.list(segment_def)['results']
+        return self._list(segment_def)
 
     def update(self, tier1_id, segment_id,
                name=None,
@@ -771,7 +774,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tenant=tenant)
-        return self.policy_api.list(segment_def)['results']
+        return self._list(segment_def)
 
     def update(self, segment_id, name=None, description=None,
                tier1_id=None, subnets=None, dns_domain_name=None,
@@ -847,7 +850,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
 
     def list(self, segment_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         port_def = self.entry_def(segment_id=segment_id, tenant=tenant)
-        return self.policy_api.list(port_def)['results']
+        return self._list(port_def)
 
     def update(self, segment_id, port_id,
                name=None,
@@ -1117,7 +1120,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id,
             tenant=tenant)
-        return self.policy_api.list(map_def)['results']
+        return self._list(map_def)
 
     def update(self, domain_id, map_id, name=None, description=None,
                sequence_number=None, service_ids=None, action=None,
@@ -1228,7 +1231,7 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         ep_def = policy_defs.EnforcementPointDef(tenant=tenant)
-        return self.policy_api.list(ep_def)['results']
+        return self._list(ep_def)
 
     def update(self, ep_id, name=None, description=None,
                ip_address=None, username=None,
@@ -1315,7 +1318,7 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
             raise exceptions.ManagerError(details=err_msg)
         map_def = policy_defs.DeploymentMapDef(domain_id=domain_id,
                                                tenant=tenant)
-        return self.policy_api.list(map_def)['results']
+        return self._list(map_def)
 
     def update(self, map_id, name=None, description=None,
                ep_id=None, domain_id=None,
