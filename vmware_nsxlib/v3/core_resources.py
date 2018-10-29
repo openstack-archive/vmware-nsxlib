@@ -776,10 +776,10 @@ class NsxLibEdgeCluster(utils.NsxLibApiBase):
 
 class NsxLibTransportZone(utils.NsxLibApiBase):
 
-    TRANSPORT_TYPE_VLAN = 'VLAN'
-    TRANSPORT_TYPE_OVERLAY = 'OVERLAY'
-    HOST_SWITCH_MODE_ENS = 'ENS'
-    HOST_SWITCH_MODE_STANDARD = 'STANDARD'
+    TRANSPORT_TYPE_VLAN = nsx_constants.TRANSPORT_TYPE_VLAN
+    TRANSPORT_TYPE_OVERLAY = nsx_constants.TRANSPORT_TYPE_OVERLAY
+    HOST_SWITCH_MODE_ENS = nsx_constants.HOST_SWITCH_MODE_ENS
+    HOST_SWITCH_MODE_STANDARD = nsx_constants.HOST_SWITCH_MODE_STANDARD
 
     @property
     def uri_segment(self):

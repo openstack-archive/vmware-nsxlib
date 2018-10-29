@@ -27,6 +27,9 @@ PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
+ENFORCEMENT_POINT_PATTERN = (TENANTS_PATH_PATTERN +
+                             "sites/default/enforcement-points/")
+TRANSPORT_ZONE_PATTERN = ENFORCEMENT_POINT_PATTERN + "%s/transport-zones/"
 REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
                      "realized-state/enforcement-points/%s/")
 REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/DOMAIN-%s-%s"
@@ -354,6 +357,12 @@ class SegmentDef(BaseSegmentDef):
             tier1 = Tier1Def(tier1_id=self.get_attr('tier1_id'),
                              tenant=self.get_tenant())
             body['connectivity_path'] = tier1.get_resource_full_path()
+        if self.get_attr('transport_zone_id'):
+            tz = TransportZoneDef(
+                tz_id=self.get_attr('transport_zone_id'),
+                ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+                tenant=self.get_tenant())
+            body['transport_zone_path'] = tz.get_resource_full_path()
         # TODO(annak): support also tier0
         return body
 
@@ -705,8 +714,7 @@ class EnforcementPointDef(ResourceDef):
 
     @property
     def path_pattern(self):
-        return (TENANTS_PATH_PATTERN +
-                'sites/default/enforcement-points/')
+        return ENFORCEMENT_POINT_PATTERN
 
     @property
     def path_ids(self):
@@ -742,6 +750,21 @@ class EnforcementPointDef(ResourceDef):
 
     def get_realized_state_path(self):
         return REALIZED_STATE_EF % (self.get_tenant(), self.get_id())
+
+
+class TransportZoneDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return TRANSPORT_ZONE_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'ep_id', 'tz_id')
+
+    @staticmethod
+    def resource_type():
+        return 'PolicyTransportZone'
 
 
 # Currently assumes one deployment point per id

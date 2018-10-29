@@ -400,6 +400,8 @@ class NsxPolicyLib(NsxLibBase):
             self.policy_api)
         self.enforcement_point = policy_resources.NsxPolicyEnforcementPointApi(
             self.policy_api)
+        self.transport_zone = policy_resources.NsxPolicyTransportZoneApi(
+            self.policy_api)
         self.deployment_map = policy_resources.NsxPolicyDeploymentMapApi(
             self.policy_api)
 
