@@ -301,6 +301,15 @@ class TestPolicyEnforcementPoint(TestPolicyApi):
                               data=ep_def.get_obj_dict())
 
 
+class TestPolicyTransportZone(TestPolicyApi):
+
+    def test_get(self):
+        tz_def = policy.TransportZoneDef(tz_id='tz1', ep_id='default')
+        self.policy_api.get(tz_def)
+        tz_path = tz_def.get_resource_path()
+        self.assert_json_call('GET', self.client, tz_path)
+
+
 class TestPolicyDeploymentMap(TestPolicyApi):
 
     def test_create(self):
