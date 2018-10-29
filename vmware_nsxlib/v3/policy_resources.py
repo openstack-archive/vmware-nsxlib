@@ -22,6 +22,7 @@ import six
 
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
+from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import policy_defs
 from vmware_nsxlib.v3 import utils
@@ -1264,6 +1265,78 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
         ep_def = policy_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
         path = ep_def.get_realized_state_path()
         return self._get_realized_state(path)
+
+
+class NsxPolicyTransportZoneApi(NsxPolicyResourceBase):
+    """NSX Policy Enforcement Point."""
+
+    TZ_TYPE_OVERLAY = 'OVERLAY_STANDARD'
+    TZ_TYPE_ENS = 'OVERLAY_ENS'
+    TZ_TYPE_VLAN = 'VLAN_BACKED'
+
+    @property
+    def entry_def(self):
+        return policy_defs.TransportZoneDef
+
+    def get(self, tz_id, ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
+        tz_def = policy_defs.TransportZoneDef(
+            ep_id=ep_id, tz_id=tz_id, tenant=tenant)
+        return self.policy_api.get(tz_def, silent=silent)
+
+    def get_tz_type(self, tz_id,
+                    ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+                    tenant=policy_constants.POLICY_INFRA_TENANT):
+        tz = self.get(tz_id, ep_id=ep_id, tenant=tenant)
+        return tz.get('tz_type')
+
+    def get_transport_type(self, tz_id,
+                    ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+                    tenant=policy_constants.POLICY_INFRA_TENANT):
+        """This api is consistent with the nsx manager resource api"""
+        tz_type = self.get_tz_type(tz_id, ep_id=ep_id, tenant=tenant)
+        if tz_type == TZ_TYPE_VLAN:
+            return nsx_constants.TRANSPORT_TYPE_VLAN
+        else:
+            return nsx_constants.TRANSPORT_TYPE_OVERLAY
+
+    def get_host_switch_mode(self, uuid):
+        """This api is consistent with the nsx manager resource api"""
+        tz_type = self.get_tz_type(tz_id, ep_id=ep_id, tenant=tenant)
+        if tz_type == TZ_TYPE_ENS:
+            return nsx_constants.HOST_SWITCH_MODE_ENS
+        else:
+            return nsx_constants.HOST_SWITCH_MODE_STANDARD
+
+    def list(self, ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+             tenant=policy_constants.POLICY_INFRA_TENANT):
+        tz_def = policy_defs.TransportZoneDef(ep_id=ep_id, tenant=tenant)
+        return self.policy_api.list(tz_def).get('results', [])
+
+    def get_by_name(self, name,
+                    ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+                    tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Return first group matched by name"""
+        return super(NsxPolicyTransportZoneApi, self).get_by_name(
+            name, ep_id, tenant=tenant)
+
+    def create_or_overwrite(self, name, tz_id=None,
+                            ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
+
+    def update(self, tz_id,
+               ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
+
+    def delete(self, tz_id,
+               ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
 
 
 class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):

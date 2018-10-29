@@ -1470,6 +1470,49 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
                 update_call, expected_def)
 
 
+class TestPolicyTransportZone(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyTransportZone, self).setUp()
+        self.resourceApi = self.policy_lib.transport_zone
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = policy_defs.TransportZoneDef(tz_id=id,
+                                                        tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 'tz1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = policy_defs.TransportZoneDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_tz_type(self):
+        id = '111'
+        tz_type = self.resourceApi.TZ_TYPE_OVERLAY
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={'tz_type': tz_type}) as api_call:
+            actual_tz_type = self.resourceApi.get_tz_type(
+                id, tenant=TEST_TENANT)
+            expected_def = policy_defs.TransportZoneDef(tz_id=id,
+                                                        tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual(tz_type, actual_tz_type)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.TransportZoneDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+
 class TestPolicyTier1(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
