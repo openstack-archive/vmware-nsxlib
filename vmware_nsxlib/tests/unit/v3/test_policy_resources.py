@@ -399,18 +399,32 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
 
     def test_get_realized(self):
         domain_id = 'd1'
-        id = 'g1'
-        ep_id = 'ef1'
-        result = {'state': policy_constants.STATE_REALIZED}
+        group_id = 'g1'
+        result = [{'state': policy_constants.STATE_REALIZED}]
         with mock.patch.object(
-            self.policy_api, "get_by_path",
+            self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
             state = self.resourceApi.get_realized_state(
-                domain_id, id, ep_id, tenant=TEST_TENANT)
+                domain_id, group_id, tenant=TEST_TENANT)
             self.assertEqual(policy_constants.STATE_REALIZED, state)
-            expected_path = policy_defs.REALIZED_STATE_GROUP % (
-                TEST_TENANT, ep_id, domain_id, id)
-            api_get.assert_called_once_with(expected_path)
+            path = "/%s/domains/%s/groups/%s" % (
+                TEST_TENANT, domain_id, group_id)
+            api_get.assert_called_once_with(path)
+
+
+    def test_get_realized_id(self):
+        domain_id = 'd1'
+        group_id = 'g1'
+        result = [{'state': policy_constants.STATE_REALIZED}]
+        with mock.patch.object(
+            self.policy_api, "get_realized_entities",
+            return_value=result) as api_get:
+            state = self.resourceApi.get_realized_state(
+                domain_id, group_id, tenant=TEST_TENANT)
+            self.assertEqual(policy_constants.STATE_REALIZED, state)
+            path = "/%s/domains/%s/groups/%s" % (
+                TEST_TENANT, domain_id, group_id)
+            api_get.assert_called_once_with(path)
 
 
 class TestPolicyService(NsxPolicyLibTestCase):
@@ -1242,17 +1256,16 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
     def test_get_realized(self):
         domain_id = 'd1'
         map_id = '111'
-        ep_id = 'ef1'
-        result = {'state': policy_constants.STATE_REALIZED}
+        result = [{'state': policy_constants.STATE_REALIZED}]
         with mock.patch.object(
-            self.policy_api, "get_by_path",
+            self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
             state = self.resourceApi.get_realized_state(
-                domain_id, map_id, ep_id, tenant=TEST_TENANT)
+                domain_id, map_id, tenant=TEST_TENANT)
             self.assertEqual(policy_constants.STATE_REALIZED, state)
-            expected_path = policy_defs.REALIZED_STATE_COMM_MAP % (
-                TEST_TENANT, ep_id, domain_id, map_id)
-            api_get.assert_called_once_with(expected_path)
+            path = "/%s/domains/%s/security-policies/%s" % (
+                TEST_TENANT, domain_id, map_id)
+            api_get.assert_called_once_with(path)
 
 
 class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
@@ -1367,16 +1380,16 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
 
     def test_get_realized(self):
         ep_id = 'ef1'
-        result = {'state': policy_constants.STATE_REALIZED}
+        result = [{'state': policy_constants.STATE_REALIZED}]
         with mock.patch.object(
-            self.policy_api, "get_by_path",
+            self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
             state = self.resourceApi.get_realized_state(
                 ep_id, tenant=TEST_TENANT)
             self.assertEqual(policy_constants.STATE_REALIZED, state)
-            expected_path = policy_defs.REALIZED_STATE_EF % (
+            path = "/%s/sites/default/enforcement-points/%s" % (
                 TEST_TENANT, ep_id)
-            api_get.assert_called_once_with(expected_path)
+            api_get.assert_called_once_with(path)
 
 
 class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
