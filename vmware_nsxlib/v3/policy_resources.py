@@ -563,15 +563,16 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
     def update(self, tier1_id, name=None, description=None,
                force_whitelisting=None,
-               failover_mode=None,
+               failover_mode=None, tier0=None,
                tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-
+        # TODO(asarfaty): Support tier0=None fore reseting the tier0 value
         self._update(tier1_id=tier1_id,
                      name=name,
                      description=description,
                      force_whitelisting=force_whitelisting,
                      failover_mode=failover_mode,
+                     tier0=tier0,
                      tags=tags,
                      tenant=tenant)
 

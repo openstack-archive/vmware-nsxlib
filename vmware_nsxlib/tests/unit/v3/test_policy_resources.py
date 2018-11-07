@@ -1608,13 +1608,15 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
     def test_update(self):
         id = '111'
         name = 'new name'
+        tier0 = 'tier0'
         with mock.patch.object(self.policy_api,
                                "create_or_update") as update_call:
             self.resourceApi.update(id,
-                                    name=name,
+                                    name=name, tier0=tier0,
                                     tenant=TEST_TENANT)
             expected_def = policy_defs.Tier1Def(tier1_id=id,
                                                 name=name,
+                                                tier0=tier0,
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
