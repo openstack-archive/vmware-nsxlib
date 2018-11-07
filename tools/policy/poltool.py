@@ -51,7 +51,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 path.append(os.path.abspath("../../"))
 
 
-OPERATIONS = ("create", "update", "delete", "get")
+OPERATIONS = ("create", "update", "delete", "get", "state")
 RESOURCES = ("domain", "service", "icmp_service", "group", "tier1",
              "segment", "tier1_segment", "segment_port")
 
@@ -163,6 +163,21 @@ def delete_resource(lib, resource_type, resource_id):
         api.delete(*ids)
 
 
+def get_realized_state_for_resource(lib, resource_type, resource_id):
+    from vmware_nsxlib.v3 import exceptions as exc
+
+    api = get_resource_api(lib, resource_type)
+
+    ids = build_ids(resource_id)
+    try:
+        result = api.get_realization_info(*ids)
+    except exc.ResourceNotFound:
+        print("Resource of type %s %s not found" % (resource_type, ids))
+        sys.exit(2)
+
+    return result
+
+
 def main(argv=sys.argv):
 
     from vmware_nsxlib import v3
@@ -235,6 +250,10 @@ def main(argv=sys.argv):
         delete_resource(nsxlib, resource_type, resource_id)
     elif op == 'update':
         update_resource(nsxlib, resource_type, resource_id, resource_args)
+    elif op == 'state':
+        result = get_realized_state_for_resource(
+            nsxlib, resource_type, resource_id)
+        print(json.dumps(result, indent=4))
     else:
         custom_operation(nsxlib, op, resource_type, resource_id, resource_args)
 
