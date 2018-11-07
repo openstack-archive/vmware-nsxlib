@@ -27,12 +27,8 @@ PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
 TIER1S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-1s/"
 SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
-REALIZED_STATE_EF = (TENANTS_PATH_PATTERN +
-                     "realized-state/enforcement-points/%s/")
-REALIZED_STATE_GROUP = REALIZED_STATE_EF + "groups/nsgroups/DOMAIN-%s-%s"
-REALIZED_STATE_COMM_MAP = (REALIZED_STATE_EF +
-                           "firewalls/firewall-sections/%s.%s")
-REALIZED_STATE_SERVICE = REALIZED_STATE_EF + "services/nsservices/services:%s"
+
+REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -487,11 +483,6 @@ class GroupDef(ResourceDef):
             del kwargs['conditions']
         super(GroupDef, self).update_attributes_in_body(body=body, **kwargs)
 
-    def get_realized_state_path(self, ep_id):
-        return REALIZED_STATE_GROUP % (self.get_tenant(), ep_id,
-                                       self.get_attr('domain_id'),
-                                       self.get_id())
-
 
 class ServiceDef(ResourceDef):
     def __init__(self, **kwargs):
@@ -521,10 +512,6 @@ class ServiceDef(ResourceDef):
     @staticmethod
     def sub_entries_path():
         return ServiceEntryDef().get_last_section_dict_key
-
-    def get_realized_state_path(self, ep_id):
-        return REALIZED_STATE_SERVICE % (self.get_tenant(), ep_id,
-                                         self.get_id())
 
 
 class ServiceEntryDef(ResourceDef):
@@ -598,11 +585,6 @@ class CommunicationMapDef(ResourceDef):
     @staticmethod
     def resource_type():
         return 'SecurityPolicy'
-
-    def get_realized_state_path(self, ep_id):
-        return REALIZED_STATE_COMM_MAP % (self.get_tenant(), ep_id,
-                                          self.get_attr('domain_id'),
-                                          self.get_id())
 
     def get_obj_dict(self):
         body = super(CommunicationMapDef, self).get_obj_dict()
@@ -740,9 +722,6 @@ class EnforcementPointDef(ResourceDef):
 
         return body
 
-    def get_realized_state_path(self):
-        return REALIZED_STATE_EF % (self.get_tenant(), self.get_id())
-
 
 # Currently assumes one deployment point per id
 class DeploymentMapDef(ResourceDef):
@@ -837,3 +816,13 @@ class NsxPolicyApi(object):
 
     def get_by_path(self, path):
         return self.client.get(path)
+
+    def get_realization_entities(self, path):
+        return self.client.list(REALIZATION_PATH % path)
+
+    def get_realization_entity(self, path):
+        # Return first realization entity if exists
+        # Useful for resources with single realization entity
+        entities = self.get_realization_entities(path)
+        if entities:
+            return entities[0]
