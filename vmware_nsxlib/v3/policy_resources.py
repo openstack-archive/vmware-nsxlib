@@ -630,6 +630,21 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 
+    def get_realized_state(self, tier1_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realized_state(segment_def)
+
+    def get_realized_id(self, tier1_id,
+                        tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realized_id(segment_def)
+
+    def get_realization_info(self, tier1_id,
+                             tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realization_info(segment_def)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
@@ -1372,6 +1387,8 @@ class NsxPolicyTransportZoneApi(NsxPolicyResourceBase):
 
     def get(self, tz_id, ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
             tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
+        import traceback
+        print "DEBUG ADIT NsxPolicyTransportZoneApi get %s" % traceback.print_stack() 
         tz_def = policy_defs.TransportZoneDef(
             ep_id=ep_id, tz_id=tz_id, tenant=tenant)
         return self.policy_api.get(tz_def, silent=silent)
