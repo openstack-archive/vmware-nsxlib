@@ -663,6 +663,42 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 
+    def set_edge_cluster(self, tier1_id, edge_cluster_path,
+                         tenant=policy_constants.POLICY_INFRA_TENANT):
+        # Supporting only a single locale-service per router for now
+        # with the same id as the router id
+        t1service_def = policy_defs.Tier1LocaleServiceDef(
+            tier1_id=tier1_id,
+            service_id=tier1_id,
+            edge_cluster_path=edge_cluster_path,
+            tenant=policy_constants.POLICY_INFRA_TENANT)
+        self.policy_api.create_or_update(t1service_def)
+
+    def remove_edge_cluster(self, tier1_id,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        # Supporting only a single locale-service per router for now
+        # with the same id as the router id
+        t1service_def = policy_defs.Tier1LocaleServiceDef(
+            tier1_id=tier1_id,
+            service_id=tier1_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT)
+        self.policy_api.delete(t1service_def)
+
+    def get_realized_state(self, tier1_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realized_state(segment_def)
+
+    def get_realized_id(self, tier1_id,
+                        tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realized_id(segment_def)
+
+    def get_realization_info(self, tier1_id,
+                             tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realization_info(segment_def)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
@@ -727,6 +763,17 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                      transit_subnets=transit_subnets,
                      tags=tags,
                      tenant=tenant)
+
+    def get_edge_cluster(self, tier0_id,
+                         tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Get the edge_cluster path of a Tier0 router"""
+        t0service_def = policy_defs.Tier0LocaleServiceDef(
+            tier0_id=tier0_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT)
+        services = self.policy_api.list(t0service_def)['results']
+        for srv in services:
+            if 'edge_cluster_path' in srv:
+                return srv['edge_cluster_path']
 
 
 class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
