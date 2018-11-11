@@ -630,6 +630,21 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 
+    def get_realized_state(self, tier1_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realized_state(segment_def)
+
+    def get_realized_id(self, tier1_id,
+                        tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realized_id(segment_def)
+
+    def get_realization_info(self, tier1_id,
+                             tenant=policy_constants.POLICY_INFRA_TENANT):
+        segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._get_realization_info(segment_def)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
