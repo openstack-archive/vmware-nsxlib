@@ -30,6 +30,7 @@ SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "services/"
 ENFORCEMENT_POINT_PATTERN = (TENANTS_PATH_PATTERN +
                              "sites/default/enforcement-points/")
 TRANSPORT_ZONE_PATTERN = ENFORCEMENT_POINT_PATTERN + "%s/transport-zones/"
+EDGE_CLUSTER_PATTERN = ENFORCEMENT_POINT_PATTERN + "%s/edge-clusters/"
 
 REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
 
@@ -290,6 +291,40 @@ class Tier1Def(RouterDef):
         if 'route_advertisement_types' in obj_dict:
             route_adv.set_obj_dict(obj_dict['route_advertisement_types'])
         return route_adv
+
+
+class RouterLocaleServiceDef(ResourceDef):
+
+    @staticmethod
+    def resource_type():
+        return 'LocaleServices'
+
+    def get_obj_dict(self):
+        body = super(RouterLocaleServiceDef, self).get_obj_dict()
+        self._set_attrs_in_body(body, ['edge_cluster_path'])
+        return body
+
+
+class Tier0LocaleServiceDef(RouterLocaleServiceDef):
+
+    @property
+    def path_pattern(self):
+        return TIER0S_PATH_PATTERN + "%s/locale-services/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier0_id', 'service_id')
+
+
+class Tier1LocaleServiceDef(RouterLocaleServiceDef):
+
+    @property
+    def path_pattern(self):
+        return TIER1S_PATH_PATTERN + "%s/locale-services/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier1_id', 'service_id')
 
 
 class Subnet(object):
