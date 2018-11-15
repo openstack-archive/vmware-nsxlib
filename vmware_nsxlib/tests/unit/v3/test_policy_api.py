@@ -309,3 +309,21 @@ class TestPolicyDeploymentMap(policy_testcase.TestPolicyApi):
         self.assert_json_call('PATCH', self.client,
                               'infra/domains/d1/domain-deployment-maps/dm1',
                               data=expected_data)
+
+
+class TestPolicyTier1(policy_testcase.TestPolicyApi):
+
+    def test_create(self):
+        name = 'test'
+        description = 'desc'
+        tier0_id = '000'
+        tier1_id = '111'
+        tier1_def = policy.Tier1Def(
+            tier1_id=tier1_id,
+            name=name, description=description,
+            tier0=tier0_id)
+        self.policy_api.create_or_update(tier1_def)
+        tier1_path = tier1_def.get_resource_path()
+        self.assert_json_call('PATCH', self.client,
+                              tier1_path,
+                              data=tier1_def.get_obj_dict())
