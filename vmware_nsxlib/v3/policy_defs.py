@@ -525,17 +525,6 @@ class GroupDef(ResourceDef):
                                       for condition in conds]
         return body
 
-    def update_attributes_in_body(self, **kwargs):
-        body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-        # Fix params that need special conversions
-        if kwargs.get('conditions') is not None:
-            body['expression'] = [cond.get_obj_dict()
-                                  for cond in kwargs['conditions']]
-            del kwargs['conditions']
-        super(GroupDef, self).update_attributes_in_body(body=body, **kwargs)
-
 
 class ServiceDef(ResourceDef):
     def __init__(self, **kwargs):

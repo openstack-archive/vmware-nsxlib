@@ -30,6 +30,8 @@ from vmware_nsxlib.v3 import utils
 
 LOG = logging.getLogger(__name__)
 
+UNSET = '#unset#'
+
 
 @six.add_metaclass(abc.ABCMeta)
 class NsxPolicyResourceBase(object):
@@ -86,13 +88,13 @@ class NsxPolicyResourceBase(object):
     def _init_def_for_update(self, **kwargs):
         """Helper for update function - ignore attrs with value=None"""
         args = {key: value for key, value in kwargs.items()
-                if value is not None}
+                if value != UNSET}
         return self.entry_def(**args)
 
     def _get_and_update_def(self, **kwargs):
         """Helper for update function - ignore attrs with value=None"""
         args = {key: value for key, value in kwargs.items()
-                if value is not None}
+                if value != UNSET}
         resource_def = self.entry_def(**args)
         body = self.policy_api.get(resource_def)
         if body:
@@ -103,7 +105,7 @@ class NsxPolicyResourceBase(object):
     def _init_parent_def_for_update(self, **kwargs):
         """Helper for update function - ignore attrs with value=None"""
         args = {key: value for key, value in kwargs.items()
-                if value is not None}
+                if value != UNSET}
         return self.parent_entry_def(**args)
 
     def _update(self, **kwargs):
@@ -202,7 +204,9 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
         domain_def = policy_defs.DomainDef(tenant=tenant)
         return self._list(domain_def)
 
-    def update(self, domain_id, name=None, description=None, tags=None,
+    def update(self, domain_id, name=UNSET,
+               description=UNSET,
+               tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         self._update(domain_id=domain_id,
                      name=name,
@@ -325,8 +329,9 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         return super(NsxPolicyGroupApi, self).get_by_name(name, domain_id,
                                                           tenant=tenant)
 
-    def update(self, domain_id, group_id, name=None, description=None,
-               tags=None, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def update(self, domain_id, group_id,
+               name=UNSET, description=UNSET,
+               tags=UNSET, tenant=policy_constants.POLICY_INFRA_TENANT):
         self._update(domain_id=domain_id,
                      group_id=group_id,
                      name=name,
@@ -436,8 +441,8 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
         return service_id
 
     def update(self, service_id,
-               name=None, description=None,
-               protocol=None, dest_ports=None, tags=None,
+               name=UNSET, description=UNSET,
+               protocol=UNSET, dest_ports=UNSET, tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def_for_update(
@@ -490,8 +495,9 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
         return service_id
 
     def update(self, service_id,
-               name=None, description=None,
-               version=None, icmp_type=None, icmp_code=None, tags=None,
+               name=UNSET, description=UNSET,
+               version=UNSET, icmp_type=UNSET,
+               icmp_code=UNSET, tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def_for_update(
@@ -542,8 +548,8 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
         return service_id
 
     def update(self, service_id,
-               name=None, description=None,
-               protocol_number=None, tags=None,
+               name=UNSET, description=UNSET,
+               protocol_number=UNSET, tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def_for_update(
@@ -610,10 +616,10 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         tier1_def = self.entry_def(tenant=tenant)
         return self._list(tier1_def)
 
-    def update(self, tier1_id, name=None, description=None,
-               force_whitelisting=None,
-               failover_mode=None, tier0=None,
-               tags=None,
+    def update(self, tier1_id, name=UNSET, description=UNSET,
+               force_whitelisting=UNSET,
+               failover_mode=UNSET, tier0=UNSET,
+               tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         # TODO(asarfaty): Support tier0=None fore reseting the tier0 value
         self._update(tier1_id=tier1_id,
@@ -691,13 +697,13 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         tier0_def = self.entry_def(tenant=tenant)
         return self._list(tier0_def)
 
-    def update(self, tier0_id, name=None, description=None,
-               failover_mode=None,
-               dhcp_config=None,
-               force_whitelisting=None,
-               default_rule_logging=None,
-               transit_subnets=None,
-               tags=None,
+    def update(self, tier0_id, name=UNSET, description=UNSET,
+               failover_mode=UNSET,
+               dhcp_config=UNSET,
+               force_whitelisting=UNSET,
+               default_rule_logging=UNSET,
+               transit_subnets=UNSET,
+               tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(tier0_id=tier0_id,
@@ -762,14 +768,14 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
         return self._list(segment_def)
 
     def update(self, tier1_id, segment_id,
-               name=None,
-               description=None,
-               subnets=None,
-               dhcp_config=None,
-               dns_domain_name=None,
-               vlan_ids=None,
-               default_rule_logging=None,
-               tags=None,
+               name=UNSET,
+               description=UNSET,
+               subnets=UNSET,
+               dhcp_config=UNSET,
+               dns_domain_name=UNSET,
+               vlan_ids=UNSET,
+               default_rule_logging=UNSET,
+               tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(tier1_id=tier1_id,
@@ -830,9 +836,10 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         segment_def = self.entry_def(tenant=tenant)
         return self._list(segment_def)
 
-    def update(self, segment_id, name=None, description=None,
-               tier1_id=None, subnets=None, dns_domain_name=None,
-               vlan_ids=None, tags=None,
+    def update(self, segment_id, name=UNSET, description=UNSET,
+               tier1_id=UNSET, subnets=UNSET,
+               dns_domain_name=UNSET,
+               vlan_ids=UNSET, tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(segment_id=segment_id,
@@ -922,10 +929,10 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         return self._list(port_def)
 
     def update(self, segment_id, port_id,
-               name=None,
-               description=None,
-               address_bindings=None,
-               tags=None,
+               name=UNSET,
+               description=UNSET,
+               address_bindings=UNSET,
+               tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(segment_id=segment_id,
@@ -1207,10 +1214,13 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             tenant=tenant)
         return self._list(map_def)
 
-    def update(self, domain_id, map_id, name=None, description=None,
-               sequence_number=None, service_ids=None, action=None,
-               source_groups=None, dest_groups=None, precedence=None,
-               category=None, direction=None, logged=False, tags=None,
+    def update(self, domain_id, map_id,
+               name=UNSET, description=UNSET,
+               sequence_number=UNSET, service_ids=UNSET,
+               action=UNSET,
+               source_groups=UNSET, dest_groups=UNSET,
+               precedence=UNSET, category=UNSET,
+               direction=UNSET, logged=UNSET, tags=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def_for_update(
@@ -1331,10 +1341,10 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
         ep_def = policy_defs.EnforcementPointDef(tenant=tenant)
         return self._list(ep_def)
 
-    def update(self, ep_id, name=None, description=None,
-               ip_address=None, username=None,
-               password=None, thumbprint=None,
-               edge_cluster_id=None, transport_zone_id=None,
+    def update(self, ep_id, name=UNSET, description=UNSET,
+               ip_address=UNSET, username=UNSET,
+               password=UNSET, thumbprint=UNSET,
+               edge_cluster_id=UNSET, transport_zone_id=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         """Update the enforcement point.
 
@@ -1496,8 +1506,8 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
                                                tenant=tenant)
         return self._list(map_def)
 
-    def update(self, map_id, name=None, description=None,
-               ep_id=None, domain_id=None,
+    def update(self, map_id, name=UNSET, description=UNSET,
+               ep_id=UNSET, domain_id=UNSET,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(map_id=map_id,
