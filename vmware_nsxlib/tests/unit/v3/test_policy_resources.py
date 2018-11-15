@@ -898,6 +898,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id='entry',
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 sequence_number=1,
                 service_ids=[service_id],
@@ -939,6 +940,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=mock.ANY,
                 entry_id=mock.ANY,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 name=name,
                 description=description,
                 sequence_number=1,
@@ -1008,6 +1010,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 direction=nsx_constants.IN,
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1035,11 +1038,13 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id=mock.ANY,
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 sequence_number=1,
                 service_ids=None,
                 source_groups=[source_group],
                 dest_groups=[dest_group],
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1075,11 +1080,13 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id=mock.ANY,
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 service_ids=[service1_id, service2_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 sequence_number=seq_num + 1,
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1630,6 +1637,41 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
+
+    def test_update_ignore_tier0(self):
+        id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier1Def(tier1_id=id,
+                                                name=name,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+            # make sure tier0 is not in the body
+            actual_def = update_call.call_args_list[0][0][0]
+            self.assertNotIn('tier0_path', actual_def.get_obj_dict())
+
+    def test_update_unset_tier0(self):
+        id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    tier0=None,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier1Def(tier1_id=id,
+                                                name=name,
+                                                tier0=None,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+            # make sure tier0 is in the body with value None
+            actual_def = update_call.call_args_list[0][0][0]
+            self.assertIn('tier0_path', actual_def.get_obj_dict())
+            self.assertEqual("", actual_def.get_obj_dict()['tier0_path'])
 
     def test_update_route_adv(self):
         id = '111'
