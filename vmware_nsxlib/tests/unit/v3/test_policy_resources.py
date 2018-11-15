@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-import unittest
 
 import mock
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
+from vmware_nsxlib.tests.unit.v3 import policy_testcase
 from vmware_nsxlib import v3
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_constants
@@ -26,7 +26,7 @@ from vmware_nsxlib.v3 import policy_defs
 TEST_TENANT = 'test'
 
 
-class NsxPolicyLibTestCase(unittest.TestCase):
+class NsxPolicyLibTestCase(policy_testcase.TestPolicyApi):
 
     def setUp(self, *args, **kwargs):
         super(NsxPolicyLibTestCase, self).setUp()
@@ -34,6 +34,7 @@ class NsxPolicyLibTestCase(unittest.TestCase):
         nsxlib_config = nsxlib_testcase.get_default_nsxlib_config()
         self.policy_lib = v3.NsxPolicyLib(nsxlib_config)
         self.policy_api = self.policy_lib.policy_api
+        self.policy_api.client = self.client
 
         self.maxDiff = None
 
@@ -159,6 +160,22 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
                                                  description=description,
                                                  tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
+
+    def test_unset(self):
+        domain_id = '111'
+        self.resourceApi.update(domain_id,
+                                description=None,
+                                tags=None,
+                                tenant=TEST_TENANT)
+
+        expected_body = {'id': domain_id,
+                         'resource_type': 'Domain',
+                         'description': None,
+                         'tags': None}
+
+        self.assert_json_call('PATCH', self.client,
+                              '%s/domains/%s' % (TEST_TENANT, domain_id),
+                              data=expected_body)
 
 
 class TestPolicyGroup(NsxPolicyLibTestCase):
@@ -397,6 +414,28 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assert_called_with_def(
                 update_call, expected_def)
 
+    def test_unset(self):
+        domain_id = '111'
+        group_id = '222'
+        description = 'new'
+
+        self.resourceApi.update(domain_id,
+                                group_id,
+                                name=None,
+                                description=description,
+                                tenant=TEST_TENANT)
+
+        expected_body = {'id': group_id,
+                         'resource_type': 'Group',
+                         'display_name': None,
+                         'description': description}
+
+        self.assert_json_call('PATCH', self.client,
+                              '%s/domains/%s/groups/%s' % (TEST_TENANT,
+                                                           domain_id,
+                                                           group_id),
+                              data=expected_body)
+
     def test_get_realized(self):
         domain_id = 'd1'
         group_id = 'g1'
@@ -560,6 +599,34 @@ class TestPolicyService(NsxPolicyLibTestCase):
 
             self.assert_called_with_defs(
                 update_call, [service_def, entry_def])
+
+    def test_unset(self):
+        name = 'hello'
+        service_id = '111'
+
+        # Until policy PATCH is fixed to accept partial update, we
+        # call get on child entry
+        with mock.patch.object(
+            self.policy_api, "get",
+            return_value={'display_name': name}):
+            self.resourceApi.update(service_id,
+                                    description=None,
+                                    dest_ports=None,
+                                    tenant=TEST_TENANT)
+
+        expected_body = {'id': service_id,
+                         'description': None,
+                         'resource_type': 'Service',
+                         'service_entries': [{
+                             'display_name': name,
+                             'id': 'entry',
+                             'resource_type': 'L4PortSetServiceEntry',
+                             'destination_ports': None}]
+                         }
+
+        self.assert_json_call('PATCH', self.client,
+                              '%s/services/%s' % (TEST_TENANT, service_id),
+                              data=expected_body)
 
 
 class TestPolicyIcmpService(NsxPolicyLibTestCase):
@@ -896,6 +963,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id='entry',
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 sequence_number=1,
                 service_ids=[service_id],
@@ -936,6 +1004,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=mock.ANY,
                 entry_id=mock.ANY,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 name=name,
                 description=description,
                 sequence_number=1,
@@ -1004,6 +1073,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 direction=nsx_constants.IN,
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1031,11 +1101,13 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id=mock.ANY,
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 sequence_number=1,
                 service_ids=None,
                 source_groups=[source_group],
                 dest_groups=[dest_group],
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1071,11 +1143,13 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id=mock.ANY,
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 service_ids=[service1_id, service2_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 sequence_number=seq_num + 1,
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1224,6 +1298,42 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 tenant=TEST_TENANT)
 
             self.assert_called_with_defs(update_call, [map_def, entry_def])
+
+    def test_unset(self):
+        name = 'hello'
+        domain_id = 'test'
+        map_id = '111'
+        dest_groups = ['/infra/stuff']
+
+        # Until policy PATCH is fixed to accept partial update, we
+        # call get on child entry
+        with mock.patch.object(
+            self.policy_api, "get",
+            return_value={'display_name': name,
+                          'source_groups': ['/infra/other/stuff'],
+                          'destination_groups': dest_groups}):
+            self.resourceApi.update(domain_id, map_id,
+                                    description=None,
+                                    source_groups=None,
+                                    service_ids=None,
+                                    tenant=TEST_TENANT)
+
+        expected_body = {'id': map_id,
+                         'description': None,
+                         'resource_type': 'SecurityPolicy',
+                         'rules': [{
+                             'display_name': name,
+                             'id': 'entry',
+                             'resource_type': 'Rule',
+                             'services': ["ANY"],
+                             'source_groups': ["ANY"],
+                             'destination_groups': dest_groups}]
+                         }
+
+        url = '%s/domains/%s/security-policies/%s' % (TEST_TENANT,
+                                                      domain_id,
+                                                      map_id)
+        self.assert_json_call('PATCH', self.client, url, data=expected_body)
 
     def test_update_entries_logged(self):
         domain_id = '111'
@@ -1625,6 +1735,41 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
+
+    def test_update_ignore_tier0(self):
+        id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier1Def(tier1_id=id,
+                                                name=name,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+            # make sure tier0 is not in the body
+            actual_def = update_call.call_args_list[0][0][0]
+            self.assertNotIn('tier0_path', actual_def.get_obj_dict())
+
+    def test_update_unset_tier0(self):
+        id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    tier0=None,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier1Def(tier1_id=id,
+                                                name=name,
+                                                tier0=None,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+            # make sure tier0 is in the body with value None
+            actual_def = update_call.call_args_list[0][0][0]
+            self.assertIn('tier0_path', actual_def.get_obj_dict())
+            self.assertEqual("", actual_def.get_obj_dict()['tier0_path'])
 
     def test_update_route_adv(self):
         id = '111'
