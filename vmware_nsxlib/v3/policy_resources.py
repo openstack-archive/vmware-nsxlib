@@ -30,6 +30,8 @@ from vmware_nsxlib.v3 import utils
 
 LOG = logging.getLogger(__name__)
 
+IGNORE = '#ignore#'
+
 
 @six.add_metaclass(abc.ABCMeta)
 class NsxPolicyResourceBase(object):
@@ -83,16 +85,23 @@ class NsxPolicyResourceBase(object):
         """
         pass
 
-    def _init_def_for_update(self, **kwargs):
-        """Helper for update function - ignore attrs with value=None"""
-        args = {key: value for key, value in kwargs.items()
-                if value is not None}
+    def _get_user_args(self, **kwargs):
+        return {key: value for key, value in kwargs.items()
+                if value != IGNORE}
+
+    def _init_def(self, **kwargs):
+        """Helper for update function - ignore attrs without explicit value"""
+        args = self._get_user_args(**kwargs)
         return self.entry_def(**args)
 
+    def _init_parent_def(self, **kwargs):
+        """Helper for update function - ignore attrs without explicit value"""
+        args = self._get_user_args(**kwargs)
+        return self.parent_entry_def(**args)
+
     def _get_and_update_def(self, **kwargs):
-        """Helper for update function - ignore attrs with value=None"""
-        args = {key: value for key, value in kwargs.items()
-                if value is not None}
+        """Helper for update function - ignore attrs without explicit value"""
+        args = self._get_user_args(**kwargs)
         resource_def = self.entry_def(**args)
         body = self.policy_api.get(resource_def)
         if body:
@@ -100,16 +109,10 @@ class NsxPolicyResourceBase(object):
 
         return resource_def
 
-    def _init_parent_def_for_update(self, **kwargs):
-        """Helper for update function - ignore attrs with value=None"""
-        args = {key: value for key, value in kwargs.items()
-                if value is not None}
-        return self.parent_entry_def(**args)
-
     def _update(self, **kwargs):
-        """Helper for update function - ignore attrs with value=None"""
+        """Helper for update function - ignore attrs without explicit value"""
 
-        policy_def = self._init_def_for_update(**kwargs)
+        policy_def = self._init_def(**kwargs)
         if policy_def.bodyless():
             # Nothing to update - only keys provided in kwargs
             return
@@ -176,15 +179,16 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
     def entry_def(self):
         return policy_defs.DomainDef
 
-    def create_or_overwrite(self, name, domain_id=None, description=None,
-                            tags=None,
+    def create_or_overwrite(self, name, domain_id=None,
+                            description=IGNORE,
+                            tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         domain_id = self._init_obj_uuid(domain_id)
-        domain_def = policy_defs.DomainDef(domain_id=domain_id,
-                                           name=name,
-                                           description=description,
-                                           tags=tags,
-                                           tenant=tenant)
+        domain_def = self._init_def(domain_id=domain_id,
+                                    name=name,
+                                    description=description,
+                                    tags=tags,
+                                    tenant=tenant)
 
         self._create_or_store(domain_def)
         return domain_id
@@ -202,7 +206,9 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
         domain_def = policy_defs.DomainDef(tenant=tenant)
         return self._list(domain_def)
 
-    def update(self, domain_id, name=None, description=None, tags=None,
+    def update(self, domain_id, name=IGNORE,
+               description=IGNORE,
+               tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         self._update(domain_id=domain_id,
                      name=name,
@@ -219,11 +225,12 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
 
     def create_or_overwrite(
         self, name, domain_id, group_id=None,
-        description=None,
+        description=IGNORE,
         cond_val=None,
         cond_key=policy_constants.CONDITION_KEY_TAG,
         cond_op=policy_constants.CONDITION_OP_EQUALS,
-        cond_member_type=policy_constants.CONDITION_MEMBER_PORT, tags=None,
+        cond_member_type=policy_constants.CONDITION_MEMBER_PORT,
+        tags=IGNORE,
         tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create a group with/without a condition.
 
@@ -240,13 +247,13 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
             conditions = [condition]
         else:
             conditions = []
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         name=name,
-                                         description=description,
-                                         conditions=conditions,
-                                         tags=tags,
-                                         tenant=tenant)
+        group_def = self._init_def(domain_id=domain_id,
+                                   group_id=group_id,
+                                   name=name,
+                                   description=description,
+                                   conditions=conditions,
+                                   tags=tags,
+                                   tenant=tenant)
         self._create_or_store(group_def)
         return group_id
 
@@ -277,8 +284,8 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
 
     def create_or_overwrite_with_conditions(
         self, name, domain_id, group_id=None,
-        description=None,
-        conditions=None, tags=None,
+        description=IGNORE,
+        conditions=IGNORE, tags=IGNORE,
         tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create a group with a list of conditions.
 
@@ -288,13 +295,13 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         group_id = self._init_obj_uuid(group_id)
         if not conditions:
             conditions = []
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         name=name,
-                                         description=description,
-                                         conditions=conditions,
-                                         tags=tags,
-                                         tenant=tenant)
+        group_def = self._init_def(domain_id=domain_id,
+                                   group_id=group_id,
+                                   name=name,
+                                   description=description,
+                                   conditions=conditions,
+                                   tags=tags,
+                                   tenant=tenant)
         self._create_or_store(group_def)
         return group_id
 
@@ -325,8 +332,9 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         return super(NsxPolicyGroupApi, self).get_by_name(name, domain_id,
                                                           tenant=tenant)
 
-    def update(self, domain_id, group_id, name=None, description=None,
-               tags=None, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def update(self, domain_id, group_id,
+               name=IGNORE, description=IGNORE,
+               tags=IGNORE, tenant=policy_constants.POLICY_INFRA_TENANT):
         self._update(domain_id=domain_id,
                      group_id=group_id,
                      name=name,
@@ -414,33 +422,34 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     def entry_def(self):
         return policy_defs.L4ServiceEntryDef
 
-    def create_or_overwrite(self, name, service_id=None, description=None,
-                            protocol=policy_constants.TCP, dest_ports=None,
-                            tags=None,
+    def create_or_overwrite(self, name, service_id=None,
+                            description=IGNORE,
+                            protocol=policy_constants.TCP,
+                            dest_ports=IGNORE,
+                            tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             name=name,
-                                             description=description,
-                                             tags=tags,
-                                             tenant=tenant)
-        entry_def = policy_defs.L4ServiceEntryDef(
-            service_id=service_id,
-            entry_id=self.SINGLE_ENTRY_ID,
-            name=self.SINGLE_ENTRY_ID,
-            protocol=protocol,
-            dest_ports=dest_ports,
-            tenant=tenant)
+        service_def = self._init_parent_def(service_id=service_id,
+                                            name=name,
+                                            description=description,
+                                            tags=tags,
+                                            tenant=tenant)
+        entry_def = self._init_def(service_id=service_id,
+                                   entry_id=self.SINGLE_ENTRY_ID,
+                                   name=self.SINGLE_ENTRY_ID,
+                                   protocol=protocol,
+                                   dest_ports=dest_ports,
+                                   tenant=tenant)
 
         self._create_or_store(service_def, entry_def)
         return service_id
 
     def update(self, service_id,
-               name=None, description=None,
-               protocol=None, dest_ports=None, tags=None,
+               name=IGNORE, description=IGNORE,
+               protocol=IGNORE, dest_ports=IGNORE, tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
-        parent_def = self._init_parent_def_for_update(
+        parent_def = self._init_parent_def(
             service_id=service_id,
             name=name,
             description=description,
@@ -467,17 +476,18 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
     def entry_def(self):
         return policy_defs.IcmpServiceEntryDef
 
-    def create_or_overwrite(self, name, service_id=None, description=None,
-                            version=4, icmp_type=None, icmp_code=None,
-                            tags=None,
+    def create_or_overwrite(self, name, service_id=None,
+                            description=IGNORE,
+                            version=4, icmp_type=IGNORE, icmp_code=IGNORE,
+                            tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             name=name,
-                                             description=description,
-                                             tags=tags,
-                                             tenant=tenant)
-        entry_def = policy_defs.IcmpServiceEntryDef(
+        service_def = self._init_parent_def(service_id=service_id,
+                                            name=name,
+                                            description=description,
+                                            tags=tags,
+                                            tenant=tenant)
+        entry_def = self._init_def(
             service_id=service_id,
             entry_id=self.SINGLE_ENTRY_ID,
             name=self.SINGLE_ENTRY_ID,
@@ -490,11 +500,12 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
         return service_id
 
     def update(self, service_id,
-               name=None, description=None,
-               version=None, icmp_type=None, icmp_code=None, tags=None,
+               name=IGNORE, description=IGNORE,
+               version=IGNORE, icmp_type=IGNORE,
+               icmp_code=IGNORE, tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
-        parent_def = self._init_parent_def_for_update(
+        parent_def = self._init_parent_def(
             service_id=service_id,
             name=name,
             description=description,
@@ -522,16 +533,17 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
     def entry_def(self):
         return policy_defs.IPProtocolServiceEntryDef
 
-    def create_or_overwrite(self, name, service_id=None, description=None,
-                            protocol_number=None, tags=None,
+    def create_or_overwrite(self, name, service_id=None,
+                            description=IGNORE,
+                            protocol_number=IGNORE, tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             name=name,
-                                             description=description,
-                                             tags=tags,
-                                             tenant=tenant)
-        entry_def = policy_defs.IPProtocolServiceEntryDef(
+        service_def = self._init_parent_def(service_id=service_id,
+                                            name=name,
+                                            description=description,
+                                            tags=tags,
+                                            tenant=tenant)
+        entry_def = self._init_def(
             service_id=service_id,
             entry_id=self.SINGLE_ENTRY_ID,
             name=self.SINGLE_ENTRY_ID,
@@ -542,11 +554,11 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
         return service_id
 
     def update(self, service_id,
-               name=None, description=None,
-               protocol_number=None, tags=None,
+               name=IGNORE, description=IGNORE,
+               protocol_number=IGNORE, tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
-        parent_def = self._init_parent_def_for_update(
+        parent_def = self._init_parent_def(
             service_id=service_id,
             name=name,
             description=description,
@@ -576,16 +588,17 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                               lb_vip=lb_vip,
                                               lb_snat=lb_snat)
 
-    def create_or_overwrite(self, name, tier1_id=None, description=None,
-                            tier0=None,
-                            force_whitelisting=False,
+    def create_or_overwrite(self, name, tier1_id=None,
+                            description=IGNORE,
+                            tier0=IGNORE,
+                            force_whitelisting=IGNORE,
                             failover_mode=policy_constants.NON_PREEMPTIVE,
-                            route_advertisement=None,
-                            tags=None,
+                            route_advertisement=IGNORE,
+                            tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
         tier1_id = self._init_obj_uuid(tier1_id)
-        tier1_def = self.entry_def(tier1_id=tier1_id,
+        tier1_def = self._init_def(tier1_id=tier1_id,
                                    name=name,
                                    description=description,
                                    tier0=tier0,
@@ -610,12 +623,11 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         tier1_def = self.entry_def(tenant=tenant)
         return self._list(tier1_def)
 
-    def update(self, tier1_id, name=None, description=None,
-               force_whitelisting=None,
-               failover_mode=None, tier0=None,
-               tags=None,
+    def update(self, tier1_id, name=IGNORE, description=IGNORE,
+               force_whitelisting=IGNORE,
+               failover_mode=IGNORE, tier0=IGNORE,
+               tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        # TODO(asarfaty): Support tier0=None fore reseting the tier0 value
         self._update(tier1_id=tier1_id,
                      name=name,
                      description=description,
@@ -654,18 +666,19 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
     def entry_def(self):
         return policy_defs.Tier0Def
 
-    def create_or_overwrite(self, name, tier0_id=None, description=None,
+    def create_or_overwrite(self, name, tier0_id=None,
+                            description=IGNORE,
                             ha_mode=policy_constants.ACTIVE_ACTIVE,
                             failover_mode=policy_constants.NON_PREEMPTIVE,
-                            dhcp_config=None,
-                            force_whitelisting=False,
-                            default_rule_logging=False,
-                            transit_subnets=None,
-                            tags=None,
+                            dhcp_config=IGNORE,
+                            force_whitelisting=IGNORE,
+                            default_rule_logging=IGNORE,
+                            transit_subnets=IGNORE,
+                            tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
         tier0_id = self._init_obj_uuid(tier0_id)
-        tier0_def = self.entry_def(tier0_id=tier0_id,
+        tier0_def = self._init_def(tier0_id=tier0_id,
                                    name=name,
                                    description=description,
                                    ha_mode=ha_mode,
@@ -691,13 +704,13 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         tier0_def = self.entry_def(tenant=tenant)
         return self._list(tier0_def)
 
-    def update(self, tier0_id, name=None, description=None,
-               failover_mode=None,
-               dhcp_config=None,
-               force_whitelisting=None,
-               default_rule_logging=None,
-               transit_subnets=None,
-               tags=None,
+    def update(self, tier0_id, name=IGNORE, description=IGNORE,
+               failover_mode=IGNORE,
+               dhcp_config=IGNORE,
+               force_whitelisting=IGNORE,
+               default_rule_logging=IGNORE,
+               transit_subnets=IGNORE,
+               tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(tier0_id=tier0_id,
@@ -719,17 +732,18 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
         return policy_defs.Tier1SegmentDef
 
     def create_or_overwrite(self, name, tier1_id,
-                            segment_id=None, description=None,
-                            subnets=None,
-                            dhcp_config=None,
-                            dns_domain_name=None,
-                            vlan_ids=None,
-                            default_rule_logging=False,
-                            tags=None,
+                            segment_id=None,
+                            description=IGNORE,
+                            subnets=IGNORE,
+                            dhcp_config=IGNORE,
+                            dns_domain_name=IGNORE,
+                            vlan_ids=IGNORE,
+                            default_rule_logging=IGNORE,
+                            tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
         segment_id = self._init_obj_uuid(segment_id)
-        segment_def = self.entry_def(tier1_id=tier1_id,
+        segment_def = self._init_def(tier1_id=tier1_id,
                                      segment_id=segment_id,
                                      name=name,
                                      description=description,
@@ -762,14 +776,14 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
         return self._list(segment_def)
 
     def update(self, tier1_id, segment_id,
-               name=None,
-               description=None,
-               subnets=None,
-               dhcp_config=None,
-               dns_domain_name=None,
-               vlan_ids=None,
-               default_rule_logging=None,
-               tags=None,
+               name=IGNORE,
+               description=IGNORE,
+               subnets=IGNORE,
+               dhcp_config=IGNORE,
+               dns_domain_name=IGNORE,
+               vlan_ids=IGNORE,
+               default_rule_logging=IGNORE,
+               tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(tier1_id=tier1_id,
@@ -793,17 +807,17 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
 
     def create_or_overwrite(self, name,
                             segment_id=None,
-                            tier1_id=None,
-                            description=None,
-                            subnets=None,
-                            dns_domain_name=None,
-                            vlan_ids=None,
-                            transport_zone_id=None,
-                            tags=None,
+                            tier1_id=IGNORE,
+                            description=IGNORE,
+                            subnets=IGNORE,
+                            dns_domain_name=IGNORE,
+                            vlan_ids=IGNORE,
+                            transport_zone_id=IGNORE,
+                            tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
         segment_id = self._init_obj_uuid(segment_id)
-        segment_def = self.entry_def(segment_id=segment_id,
+        segment_def = self._init_def(segment_id=segment_id,
                                      name=name,
                                      description=description,
                                      tier1_id=tier1_id,
@@ -830,9 +844,10 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         segment_def = self.entry_def(tenant=tenant)
         return self._list(segment_def)
 
-    def update(self, segment_id, name=None, description=None,
-               tier1_id=None, subnets=None, dns_domain_name=None,
-               vlan_ids=None, tags=None,
+    def update(self, segment_id, name=IGNORE, description=IGNORE,
+               tier1_id=IGNORE, subnets=IGNORE,
+               dns_domain_name=IGNORE,
+               vlan_ids=IGNORE, tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(segment_id=segment_id,
@@ -876,19 +891,19 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
     def create_or_overwrite(self, name,
                             segment_id,
                             port_id=None,
-                            description=None,
-                            address_bindings=None,
-                            attachment_type=None,
-                            vif_id=None,
-                            app_id=None,
-                            context_id=None,
-                            traffic_tag=None,
-                            allocate_addresses=None,
-                            tags=None,
+                            description=IGNORE,
+                            address_bindings=IGNORE,
+                            attachment_type=IGNORE,
+                            vif_id=IGNORE,
+                            app_id=IGNORE,
+                            context_id=IGNORE,
+                            traffic_tag=IGNORE,
+                            allocate_addresses=IGNORE,
+                            tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
         port_id = self._init_obj_uuid(port_id)
-        port_def = self.entry_def(segment_id=segment_id,
+        port_def = self._init_def(segment_id=segment_id,
                                   port_id=port_id,
                                   name=name,
                                   description=description,
@@ -922,10 +937,10 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         return self._list(port_def)
 
     def update(self, segment_id, port_id,
-               name=None,
-               description=None,
-               address_bindings=None,
-               tags=None,
+               name=IGNORE,
+               description=IGNORE,
+               address_bindings=IGNORE,
+               tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(segment_id=segment_id,
@@ -1019,12 +1034,13 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         return last_sequence + 1
 
     def create_or_overwrite(self, name, domain_id, map_id=None,
-                            description=None,
+                            description=IGNORE,
                             category=policy_constants.CATEGORY_APPLICATION,
-                            sequence_number=None, service_ids=None,
+                            sequence_number=None, service_ids=IGNORE,
                             action=policy_constants.ACTION_ALLOW,
-                            source_groups=None, dest_groups=None,
-                            direction=None, logged=False, tags=None,
+                            source_groups=IGNORE, dest_groups=IGNORE,
+                            direction=nsx_constants.IN_OUT,
+                            logged=IGNORE, tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap & Entry.
 
@@ -1048,7 +1064,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
         # Build the communication entry. Since we currently support only one
         # it will have the same id as its parent
-        entry_def = policy_defs.CommunicationMapEntryDef(
+        entry_def = self._init_def(
             domain_id=domain_id,
             map_id=map_id,
             entry_id=self.SINGLE_ENTRY_ID,
@@ -1063,7 +1079,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             logged=logged,
             tenant=tenant)
 
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = self._init_parent_def(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
             category=category, tags=tags)
@@ -1081,7 +1097,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         communication map itself, leaving the entries unchanged.
         """
         map_id = self._init_obj_uuid(map_id)
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = self._init_parent_def(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
             category=category, tags=tags)
@@ -1094,23 +1110,22 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                     sequence_number=None, service_ids=None,
                     action=policy_constants.ACTION_ALLOW,
                     source_groups=None, dest_groups=None,
-                    direction=None, logged=False,
+                    direction=nsx_constants.IN_OUT, logged=False,
                     tenant=policy_constants.POLICY_INFRA_TENANT):
         """Get the definition of a single map entry"""
-        return policy_defs.CommunicationMapEntryDef(
-            domain_id=domain_id,
-            map_id=map_id,
-            entry_id=entry_id,
-            name=name,
-            description=description,
-            sequence_number=sequence_number,
-            source_groups=source_groups,
-            dest_groups=dest_groups,
-            service_ids=service_ids,
-            action=action,
-            direction=direction,
-            logged=logged,
-            tenant=tenant)
+        return self._init_def(domain_id=domain_id,
+                              map_id=map_id,
+                              entry_id=entry_id,
+                              name=name,
+                              description=description,
+                              sequence_number=sequence_number,
+                              source_groups=source_groups,
+                              dest_groups=dest_groups,
+                              service_ids=service_ids,
+                              action=action,
+                              direction=direction,
+                              logged=logged,
+                              tenant=tenant)
 
     def create_with_entries(
         self, name, domain_id, map_id=None,
@@ -1122,19 +1137,19 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
         map_id = self._init_obj_uuid(map_id)
 
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = self._init_parent_def(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
             category=category, tags=tags)
 
-        # TODO(annak): support transactional create
         self.policy_api.create_with_parent(map_def, entries)
         return map_id
 
     def create_entry(self, name, domain_id, map_id, entry_id=None,
                      description=None, sequence_number=None, service_ids=None,
                      action=policy_constants.ACTION_ALLOW,
-                     source_groups=None, dest_groups=None, direction=None,
+                     source_groups=None, dest_groups=None,
+                     direction=nsx_constants.IN_OUT,
                      logged=False,
                      tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap Entry.
@@ -1150,27 +1165,26 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         entry_id = self._init_obj_uuid(entry_id)
 
         # Build the communication entry
-        entry_def = policy_defs.CommunicationMapEntryDef(
-            domain_id=domain_id,
-            map_id=map_id,
-            entry_id=entry_id,
-            name=name,
-            description=description,
-            sequence_number=sequence_number,
-            source_groups=source_groups,
-            dest_groups=dest_groups,
-            service_ids=service_ids,
-            action=action,
-            direction=direction,
-            logged=logged,
-            tenant=tenant)
+        entry_def = self._init_def(domain_id=domain_id,
+                                   map_id=map_id,
+                                   entry_id=entry_id,
+                                   name=name,
+                                   description=description,
+                                   sequence_number=sequence_number,
+                                   source_groups=source_groups,
+                                   dest_groups=dest_groups,
+                                   service_ids=service_ids,
+                                   action=action,
+                                   direction=direction,
+                                   logged=logged,
+                                   tenant=tenant)
 
         self._create_or_store(entry_def)
         return entry_id
 
     def delete(self, domain_id, map_id,
                tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = self._init_parent_def(
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
@@ -1207,13 +1221,16 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             tenant=tenant)
         return self._list(map_def)
 
-    def update(self, domain_id, map_id, name=None, description=None,
-               sequence_number=None, service_ids=None, action=None,
-               source_groups=None, dest_groups=None,
-               category=None, direction=None, logged=False, tags=None,
+    def update(self, domain_id, map_id,
+               name=IGNORE, description=IGNORE,
+               sequence_number=IGNORE, service_ids=IGNORE,
+               action=IGNORE,
+               source_groups=IGNORE, dest_groups=IGNORE,
+               category=IGNORE,
+               direction=IGNORE, logged=IGNORE, tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
-        parent_def = self._init_parent_def_for_update(
+        parent_def = self._init_parent_def(
             domain_id=domain_id,
             map_id=map_id,
             name=name,
@@ -1290,27 +1307,27 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
     def entry_def(self):
         return policy_defs.EnforcementPointDef
 
-    def create_or_overwrite(self, name, ep_id=None, description=None,
-                            ip_address=None, username=None,
-                            password=None, thumbprint=None,
-                            edge_cluster_id=None, transport_zone_id=None,
+    def create_or_overwrite(self, name, ep_id=None, description=IGNORE,
+                            ip_address=IGNORE, username=IGNORE,
+                            password=IGNORE, thumbprint=IGNORE,
+                            edge_cluster_id=IGNORE,
+                            transport_zone_id=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         if not ip_address or not username or password is None:
             err_msg = (_("Cannot create an enforcement point without "
                          "ip_address, username and password"))
             raise exceptions.ManagerError(details=err_msg)
         ep_id = self._init_obj_uuid(ep_id)
-        ep_def = policy_defs.EnforcementPointDef(
-            ep_id=ep_id,
-            name=name,
-            description=description,
-            ip_address=ip_address,
-            username=username,
-            password=password,
-            thumbprint=thumbprint,
-            edge_cluster_id=edge_cluster_id,
-            transport_zone_id=transport_zone_id,
-            tenant=tenant)
+        ep_def = self._init_def(ep_id=ep_id,
+                                name=name,
+                                description=description,
+                                ip_address=ip_address,
+                                username=username,
+                                password=password,
+                                thumbprint=thumbprint,
+                                edge_cluster_id=edge_cluster_id,
+                                transport_zone_id=transport_zone_id,
+                                tenant=tenant)
         self._create_or_store(ep_def)
         return ep_id
 
@@ -1330,10 +1347,10 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
         ep_def = policy_defs.EnforcementPointDef(tenant=tenant)
         return self._list(ep_def)
 
-    def update(self, ep_id, name=None, description=None,
-               ip_address=None, username=None,
-               password=None, thumbprint=None,
-               edge_cluster_id=None, transport_zone_id=None,
+    def update(self, ep_id, name=IGNORE, description=IGNORE,
+               ip_address=IGNORE, username=IGNORE,
+               password=IGNORE, thumbprint=IGNORE,
+               edge_cluster_id=IGNORE, transport_zone_id=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
         """Update the enforcement point.
 
@@ -1450,8 +1467,9 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
     def entry_def(self):
         return policy_defs.DeploymentMapDef
 
-    def create_or_overwrite(self, name, map_id=None, description=None,
-                            ep_id=None, domain_id=None,
+    def create_or_overwrite(self, name, map_id=None,
+                            description=IGNORE,
+                            ep_id=IGNORE, domain_id=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
         map_id = self._init_obj_uuid(map_id)
         map_def = policy_defs.DeploymentMapDef(
@@ -1495,8 +1513,8 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
                                                tenant=tenant)
         return self._list(map_def)
 
-    def update(self, map_id, name=None, description=None,
-               ep_id=None, domain_id=None,
+    def update(self, map_id, name=IGNORE, description=IGNORE,
+               ep_id=IGNORE, domain_id=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
         self._update(map_id=map_id,
