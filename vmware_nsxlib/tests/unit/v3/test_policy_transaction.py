@@ -45,7 +45,8 @@ class TestPolicyTransaction(policy_testcase.TestPolicyApi):
               'tags': tags}
 
         d2 = {'resource_type': 'Domain', 'id': 'domain2',
-              'display_name': 'd2', 'description': 'no tags'}
+              'display_name': 'd2', 'description': 'no tags',
+              'tags': None}
         with trans.NsxPolicyTransaction():
 
             for d in (d1, d2):
@@ -68,20 +69,23 @@ class TestPolicyTransaction(policy_testcase.TestPolicyApi):
         tags = [{'scope': 'color', 'tag': 'green'}]
         g1 = {'resource_type': 'Group', 'id': 'group1',
               'display_name': 'g1',
-              'description': 'first group'}
+              'description': 'first group',
+              'tags': None}
         g2 = {'resource_type': 'Group', 'id': 'group2',
               'description': 'second group',
               'display_name': 'g2',
               'tags': tags}
         g3 = {'resource_type': 'Group', 'id': 'group3',
               'display_name': 'g3',
-              'description': 'third group'}
+              'description': 'third group',
+              'tags': None}
         d1 = {'resource_type': 'Domain', 'id': 'domain1',
               'display_name': 'd1', 'description': 'first domain',
               'tags': tags}
 
         d2 = {'resource_type': 'Domain', 'id': 'domain2',
-              'display_name': 'd2', 'description': 'no tags'}
+              'display_name': 'd2', 'description': 'no tags',
+              'tags': None}
 
         with trans.NsxPolicyTransaction():
 
