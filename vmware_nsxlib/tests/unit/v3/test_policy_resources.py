@@ -898,6 +898,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id='entry',
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 sequence_number=1,
                 service_ids=[service_id],
@@ -939,6 +940,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=mock.ANY,
                 entry_id=mock.ANY,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 name=name,
                 description=description,
                 sequence_number=1,
@@ -1008,6 +1010,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 direction=nsx_constants.IN,
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1035,11 +1038,13 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id=mock.ANY,
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 sequence_number=1,
                 service_ids=None,
                 source_groups=[source_group],
                 dest_groups=[dest_group],
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1075,11 +1080,13 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 entry_id=mock.ANY,
                 name=name,
                 action=policy_constants.ACTION_ALLOW,
+                direction=nsx_constants.IN_OUT,
                 description=description,
                 service_ids=[service1_id, service2_id],
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 sequence_number=seq_num + 1,
+                logged=False,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
