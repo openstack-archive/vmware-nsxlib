@@ -20,6 +20,8 @@ import six
 
 from vmware_nsxlib.v3 import policy_constants
 
+UNSET = "#None#"
+
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
 SEGMENTS_PATH_PATTERN = TENANTS_PATH_PATTERN + "segments/"
@@ -50,11 +52,14 @@ class ResourceDef(object):
             body['resource_type'] = self.resource_type()
 
         if 'name' in self.attrs:
-            body['display_name'] = self.attrs['name']
+            if self.attr_set('name'):
+                body['display_name'] = self.get_attr('name')
+            else:
+                body['display_name'] = ""
 
-        for attr in ('description', 'tags'):
-            if self.get_attr(attr):
-                body[attr] = self.attrs[attr]
+        self._set_attrs_in_body(body, ['description'])
+        self._set_complex_attrs_in_body(body, ['tags'], [])
+
         resource_id = self.get_id()
         if resource_id:
             body['id'] = resource_id
@@ -88,6 +93,9 @@ class ResourceDef(object):
 
     def get_attr(self, attr):
         return self.attrs.get(attr)
+
+    def attr_set(self, attr):
+        return self.attrs.get(attr) != UNSET
 
     def get_tenant(self):
         if self.attrs.get('tenant'):
@@ -127,24 +135,18 @@ class ResourceDef(object):
     def _set_attrs_in_body(self, body, attr_list):
         for attr in attr_list:
             if self.get_attr(attr):
-                body[attr] = self.get_attr(attr)
-
-    def update_attributes_in_body(self, **kwargs):
-        self.body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-        for key, value in six.iteritems(kwargs):
-            if key == 'body':
-                continue
-            if value is not None:
-                if key == 'name':
-                    self.body['display_name'] = value
+                if self.get_attr(attr) == UNSET:
+                    body[attr] = None
                 else:
-                    self.body[key] = value
-        entries_path = self.sub_entries_path()
-        # make sure service entries are there
-        if entries_path and entries_path not in self.body:
-            self.body[entries_path] = []
+                    body[attr] = self.get_attr(attr)
+
+    def _set_complex_attrs_in_body(self, body, attr_list, empty_value):
+        for attr in attr_list:
+            if self.get_attr(attr):
+                if self.get_attr(attr) == UNSET:
+                    body[attr] = empty_value
+                else:
+                    body[attr] = self.get_attr(attr)
 
     @classmethod
     def get_single_entry(cls, obj_body):
@@ -259,7 +261,10 @@ class RouterDef(ResourceDef):
         # TODO(annak): change to path of dhcp config when dhcp config
         # def is introduced
         if self.get_attr('dhcp_config'):
-            body['dhcp_config_paths'] = [self.get_attr('dhcp_config')]
+            if self.attr_set('dhcp_config'):
+                body['dhcp_config_paths'] = []
+            else:
+                body['dhcp_config_paths'] = [self.get_attr('dhcp_config')]
 
         return body
 
@@ -305,10 +310,13 @@ class Tier1Def(RouterDef):
         body = super(Tier1Def, self).get_obj_dict()
 
         # TODO(annak): replace with provider path when provider is exposed
-        tier0 = self.get_attr('tier0')
-        if tier0:
-            tenant = TENANTS_PATH_PATTERN % self.get_tenant()
-            body['tier0_path'] = "/%stier-0s/%s" % (tenant, tier0)
+        if self.get_attr('tier0'):
+            if self.attr_set('tier0'):
+                tier0 = self.get_attr('tier0')
+                tenant = TENANTS_PATH_PATTERN % self.get_tenant()
+                body['tier0_path'] = "/%stier-0s/%s" % (tenant, tier0)
+            else:
+                body['tier0_path'] = ""
 
         if self.get_attr('route_adv'):
             body['route_advertisement_types'] = self.get_attr(
@@ -343,8 +351,12 @@ class BaseSegmentDef(ResourceDef):
     def get_obj_dict(self):
         body = super(BaseSegmentDef, self).get_obj_dict()
         if self.get_attr('subnets'):
-            body['subnets'] = [subnet.get_obj_dict()
-                               for subnet in self.get_attr('subnets')]
+            if self.attr_set('subnets'):
+                body['subnets'] = [subnet.get_obj_dict()
+                                   for subnet in self.get_attr('subnets')]
+            else:
+                body['subnets'] = []
+
         self._set_attrs_in_body(body, ['domain_name', 'vlan_ids'])
         return body
 
@@ -388,15 +400,23 @@ class SegmentDef(BaseSegmentDef):
     def get_obj_dict(self):
         body = super(SegmentDef, self).get_obj_dict()
         if self.get_attr('tier1_id'):
-            tier1 = Tier1Def(tier1_id=self.get_attr('tier1_id'),
-                             tenant=self.get_tenant())
-            body['connectivity_path'] = tier1.get_resource_full_path()
+            if self.attr_set('tier1_id'):
+                tier1 = Tier1Def(tier1_id=self.get_attr('tier1_id'),
+                                 tenant=self.get_tenant())
+                body['connectivity_path'] = tier1.get_resource_full_path()
+            else:
+                body['connectivity_path'] = ""
+
         if self.get_attr('transport_zone_id'):
-            tz = TransportZoneDef(
-                tz_id=self.get_attr('transport_zone_id'),
-                ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-                tenant=self.get_tenant())
-            body['transport_zone_path'] = tz.get_resource_full_path()
+
+            if self.attr_set('transport_zone_id'):
+                tz = TransportZoneDef(
+                    tz_id=self.get_attr('transport_zone_id'),
+                    ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+                    tenant=self.get_tenant())
+                body['transport_zone_path'] = tz.get_resource_full_path()
+            else:
+                body['transport_zone_path'] = ""
         # TODO(annak): support also tier0
         return body
 
@@ -442,6 +462,11 @@ class SegmentPortDef(ResourceDef):
             # TODO(annak): add validations when we understand all
             # use cases. Consider child classes for different
             # attachment types.
+
+            if not self.attr_set('attachment_type'):
+                body['attachment'] = {}
+                return body
+
             attachment = {'type': self.get_attr('attachment_type')}
         if self.get_attr('vif_id'):
             attachment['id'] = self.get_attr('vif_id')
@@ -519,22 +544,14 @@ class GroupDef(ResourceDef):
         body = super(GroupDef, self).get_obj_dict()
         conds = self.get_attr('conditions')
         if conds:
-            conds = conds if isinstance(conds, list) else [conds]
-            if conds:
+            if self.attr_set('conditions'):
+                conds = conds if isinstance(conds, list) else [conds]
                 body['expression'] = [condition.get_obj_dict()
                                       for condition in conds]
-        return body
+            else:
+                body['expression'] = []
 
-    def update_attributes_in_body(self, **kwargs):
-        body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-        # Fix params that need special conversions
-        if kwargs.get('conditions') is not None:
-            body['expression'] = [cond.get_obj_dict()
-                                  for cond in kwargs['conditions']]
-            del kwargs['conditions']
-        super(GroupDef, self).update_attributes_in_body(body=body, **kwargs)
+        return body
 
 
 class ServiceDef(ResourceDef):
@@ -596,7 +613,10 @@ class L4ServiceEntryDef(ServiceEntryDef):
             body['l4_protocol'] = self.get_attr('protocol')
 
         if self.get_attr('dest_ports'):
-            body['destination_ports'] = self.get_attr('dest_ports')
+            if self.attr_set('dest_ports'):
+                body['destination_ports'] = self.get_attr('dest_ports')
+            else:
+                body['destination_ports'] = []
         return body
 
 
@@ -612,9 +632,7 @@ class IcmpServiceEntryDef(ServiceEntryDef):
         if self.get_attr('version'):
             body['protocol'] = 'ICMPv' + str(self.get_attr('version'))
 
-        for attr in ('icmp_type', 'icmp_code'):
-            if self.get_attr(attr):
-                body[attr] = self.get_attr(attr)
+        self._set_attrs_in_body(body, ['icmp_type', 'icmp_code'])
         return body
 
 
@@ -650,9 +668,7 @@ class CommunicationMapDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(CommunicationMapDef, self).get_obj_dict()
-        for attr in ('category', 'precedence'):
-            if self.get_attr(attr):
-                body[attr] = self.get_attr(attr)
+        self._set_attrs_in_body(body, ['category', 'precedence'])
 
         return body
 
@@ -701,6 +717,7 @@ class CommunicationMapEntryDef(ResourceDef):
     def get_obj_dict(self):
         body = super(CommunicationMapEntryDef, self).get_obj_dict()
         domain_id = self.get_attr('domain_id')
+
         body['source_groups'] = self.get_groups_path(
             domain_id, self.get_attr('source_groups'))
         body['destination_groups'] = self.get_groups_path(
@@ -710,41 +727,11 @@ class CommunicationMapEntryDef(ResourceDef):
                                        'action', 'direction', 'logged'])
 
         service_ids = self.get_attr('service_ids')
-        body['services'] = self.get_services_path(service_ids)
+        if self.attr_set('service_ids'):
+            body['services'] = self.get_services_path(service_ids)
+        else:
+            body['services'] = []
         return body
-
-    def update_attributes_in_body(self, **kwargs):
-        body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-        # Fix params that need special conversions
-        if kwargs.get('service_ids') is not None:
-            body['services'] = [self.get_service_path(service_id) for
-                                service_id in kwargs['service_ids']]
-            del kwargs['service_ids']
-
-        if kwargs.get('dest_groups') is not None:
-            groups = self.get_groups_path(
-                self.domain_id, kwargs['dest_groups'])
-            body['destination_groups'] = groups
-            del kwargs['dest_groups']
-
-        if kwargs.get('source_groups') is not None:
-            groups = self.get_groups_path(
-                self.domain_id, kwargs['source_groups'])
-            body['source_groups'] = groups
-            del kwargs['source_groups']
-
-        if kwargs.get('scope') is not None:
-            body['scope'] = [kwargs['scope']]
-            del kwargs['scope']
-
-        if kwargs.get('direction') is not None:
-            body['direction'] = [kwargs['direction']]
-            del kwargs['direction']
-
-        super(CommunicationMapEntryDef, self).update_attributes_in_body(
-            body=body, **kwargs)
 
 
 # Currently supports only NSXT
@@ -777,15 +764,24 @@ class EnforcementPointDef(ResourceDef):
                                  'ip_address'])
 
         if self.get_attr('ip_address'):
-            info['enforcement_point_address'] = self.get_attr('ip_address')
+            if self.attr_set('ip_address'):
+                info['enforcement_point_address'] = self.get_attr('ip_address')
+            else:
+                info['enforcement_point_address'] = ""
 
         if self.get_attr('edge_cluster_id'):
-            body['connection_info']['edge_cluster_ids'] = [
-                self.get_attr('edge_cluster_id')]
+            if self.attr_set('edge_cluster_id'):
+                body['connection_info']['edge_cluster_ids'] = [
+                    self.get_attr('edge_cluster_id')]
+            else:
+                body['connection_info']['edge_cluster_ids'] = []
 
         if self.get_attr('transport_zone_id'):
-            body['connection_info']['transport_zone_ids'] = [
-                self.get_attr('transport_zone_id')]
+            if self.attr_set('transport_zone_id'):
+                body['connection_info']['transport_zone_ids'] = [
+                    self.get_attr('transport_zone_id')]
+            else:
+                body['connection_info']['transport_zone_ids'] = []
 
         return body
 
@@ -832,30 +828,6 @@ class DeploymentMapDef(ResourceDef):
             ep_id=ep_id,
             tenant=tenant).get_resource_full_path() if ep_id else None
         return body
-
-    def update_attributes_in_body(self, **kwargs):
-        body = self._get_body_from_kwargs(**kwargs)
-        if 'body' in kwargs:
-            del kwargs['body']
-        # Fix params that need special conversions
-        if kwargs.get('domain_id') is not None:
-            domain_id = kwargs.get('domain_id')
-            domain_path = DomainDef(
-                domain_id=domain_id,
-                tenant=self.get_tenant()).get_resource_full_path()
-            body['parent_path'] = domain_path
-            del kwargs['domain_id']
-
-        if kwargs.get('ep_id') is not None:
-            ep_id = kwargs.get('ep_id')
-            ep_path = EnforcementPointDef(
-                ep_id=ep_id,
-                tenant=self.get_tenant()).get_resource_full_path()
-            body['enforcement_point_path'] = ep_path
-            del kwargs['ep_id']
-
-        super(DeploymentMapDef, self).update_attributes_in_body(
-            body=body, **kwargs)
 
 
 class NsxPolicyApi(object):
