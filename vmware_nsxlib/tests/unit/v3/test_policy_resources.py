@@ -18,6 +18,7 @@ import unittest
 import mock
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
+from vmware_nsxlib.tests.unit.v3 import policy_testcase
 from vmware_nsxlib import v3
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_constants
@@ -26,7 +27,7 @@ from vmware_nsxlib.v3 import policy_defs
 TEST_TENANT = 'test'
 
 
-class NsxPolicyLibTestCase(unittest.TestCase):
+class NsxPolicyLibTestCase(policy_testcase.TestPolicyApi):
 
     def setUp(self, *args, **kwargs):
         super(NsxPolicyLibTestCase, self).setUp()
@@ -34,7 +35,7 @@ class NsxPolicyLibTestCase(unittest.TestCase):
         nsxlib_config = nsxlib_testcase.get_default_nsxlib_config()
         self.policy_lib = v3.NsxPolicyLib(nsxlib_config)
         self.policy_api = self.policy_lib.policy_api
-
+        self.policy_api.client = self.client
         self.maxDiff = None
 
     def _compare_def(self, expected_def, actual_def):
@@ -159,6 +160,19 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
                                                  description=description,
                                                  tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
+
+    def test_unset(self):
+        domain_id = '111'
+        self.resourceApi.update(domain_id,
+                                description=self.resourceApi.UNSET,
+                                tenant=TEST_TENANT)
+
+        expected_body = {'id': domain_id,
+                         'resource_type': 'Domain',
+                         'description': None}
+        self.assert_json_call('PATCH', self.client,
+                              '%s/domains/%s' % (TEST_TENANT, domain_id),
+                              data=expected_body)
 
 
 class TestPolicyGroup(NsxPolicyLibTestCase):

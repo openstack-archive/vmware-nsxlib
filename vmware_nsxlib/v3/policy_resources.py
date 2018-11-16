@@ -39,6 +39,7 @@ class NsxPolicyResourceBase(object):
     and implement some common apis and utilities
     """
     SINGLE_ENTRY_ID = 'entry'
+    UNSET = policy_defs.UNSET
 
     def __init__(self, policy_api):
         self.policy_api = policy_api
@@ -941,8 +942,8 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
 
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
+                                  attachment_type=self.UNSET,
                                   tenant=tenant)
-        port_def.update_attributes_in_body(attachment={})
         self.policy_api.create_or_update(port_def)
 
     def attach(self, segment_id, port_id,
@@ -955,14 +956,12 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
 
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
+                                  attachment_type=attachment_type,
+                                  vif_id=vif_id,
+                                  app_id=app_id,
+                                  context_id=context_id,
+                                  allocate_addresses=allocate_addresses,
                                   tenant=tenant)
-
-        port_def.update_attributes_in_body(
-            attachment_type=attachment_type,
-            allocate_addresses=allocate_addresses,
-            vif_id=vif_id,
-            app_id=app_id,
-            context_id=context_id)
 
         self.policy_api.create_or_update(port_def)
 
