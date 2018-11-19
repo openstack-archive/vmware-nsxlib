@@ -1019,7 +1019,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         return last_sequence + 1
 
     def create_or_overwrite(self, name, domain_id, map_id=None,
-                            description=None, precedence=0,
+                            description=None,
                             category=policy_constants.CATEGORY_APPLICATION,
                             sequence_number=None, service_ids=None,
                             action=policy_constants.ACTION_ALLOW,
@@ -1066,13 +1066,13 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            precedence=precedence, category=category, tags=tags)
+            category=category, tags=tags)
 
         self._create_or_store(map_def, entry_def)
         return map_id
 
     def create_or_overwrite_map_only(
-        self, name, domain_id, map_id=None, description=None, precedence=0,
+        self, name, domain_id, map_id=None, description=None,
         category=policy_constants.CATEGORY_APPLICATION,
         tags=None, tenant=policy_constants.POLICY_INFRA_TENANT):
         """Create or update a CommunicationMap
@@ -1084,7 +1084,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            precedence=precedence, category=category, tags=tags)
+            category=category, tags=tags)
 
         self.policy_api.create_or_update(map_def)
         return map_id
@@ -1114,7 +1114,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def create_with_entries(
         self, name, domain_id, map_id=None,
-        description=None, precedence=0,
+        description=None,
         category=policy_constants.CATEGORY_APPLICATION,
         entries=None, tags=None,
         tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -1125,7 +1125,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         map_def = policy_defs.CommunicationMapDef(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            precedence=precedence, category=category, tags=tags)
+            category=category, tags=tags)
 
         # TODO(annak): support transactional create
         self.policy_api.create_with_parent(map_def, entries)
@@ -1209,7 +1209,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def update(self, domain_id, map_id, name=None, description=None,
                sequence_number=None, service_ids=None, action=None,
-               source_groups=None, dest_groups=None, precedence=None,
+               source_groups=None, dest_groups=None,
                category=None, direction=None, logged=False, tags=None,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
@@ -1219,7 +1219,6 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             name=name,
             description=description,
             category=category,
-            precedence=precedence,
             tags=tags,
             tenant=tenant)
 

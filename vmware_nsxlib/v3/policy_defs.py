@@ -650,7 +650,7 @@ class CommunicationMapDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(CommunicationMapDef, self).get_obj_dict()
-        for attr in ('category', 'precedence'):
+        for attr in ('category', ):
             if self.get_attr(attr):
                 body[attr] = self.get_attr(attr)
 

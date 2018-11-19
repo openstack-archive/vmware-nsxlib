@@ -840,7 +840,6 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 category=policy_constants.CATEGORY_APPLICATION,
-                precedence=0,
                 tenant=TEST_TENANT)
 
             entry_def = policy_defs.CommunicationMapEntryDef(
@@ -889,7 +888,6 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 category=category,
-                precedence=0,
                 tenant=TEST_TENANT)
 
             entry_def = policy_defs.CommunicationMapEntryDef(
@@ -931,7 +929,6 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 category=policy_constants.CATEGORY_APPLICATION,
-                precedence=0,
                 tenant=TEST_TENANT)
 
             expected_entry_def = policy_defs.CommunicationMapEntryDef(
@@ -967,7 +964,6 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 category=policy_constants.CATEGORY_APPLICATION,
-                precedence=0,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1127,7 +1123,6 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 category=category,
-                precedence=0,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_defs(api_call,
