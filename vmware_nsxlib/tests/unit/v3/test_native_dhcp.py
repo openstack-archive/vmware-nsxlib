@@ -34,25 +34,22 @@ class TestNativeDhcp(nsxlib_testcase.NsxLibTestCase):
                            tags=None, gateway_ip='2.2.2.2', cidr='5.5.0.0/24',
                            port_ip='5.5.0.1', net_name='dummy',
                            net_id='dummy_uuid'):
-        net = {'name': net_name, 'id': net_id}
-        subnet = {'dns_nameservers': None,
-                  'gateway_ip': gateway_ip,
-                  'cidr': cidr,
-                  'host_routes': []}
-        port = {'fixed_ips': [{'ip_address': port_ip}]}
+        name = self.handler.build_server_name(net_name, net_id)
         if not tags:
             tags = []
-        if with_net_dns:
-            net['dns_domain'] = {'dns_domain': self.net_dns_domain}
-            subnet['dns_nameservers'] = [self.subnet_dns_nameserver]
+
+        dns_domain = None
+        dns_nameservers = None
         if with_default_dns:
-            result = self.handler.build_server_config(
-                net, subnet, port, tags,
-                default_dns_nameservers=[self.default_dns_nameserver],
-                default_dns_domain=self.default_dns_domain)
-        else:
-            result = self.handler.build_server_config(net, subnet, port, tags)
-        return result
+            dns_domain = self.default_dns_domain
+            dns_nameservers = [self.default_dns_nameserver]
+        if with_net_dns:
+            dns_domain = self.net_dns_domain
+            dns_nameservers = [self.subnet_dns_nameserver]
+
+        return self.handler.build_server(name, port_ip, cidr, gateway_ip,
+                                         dns_domain, dns_nameservers,
+                                         None, tags)
 
     def test_build_server_config_dns_from_net_no_defaults(self):
         # Verify that net/subnet dns params are used if exist
