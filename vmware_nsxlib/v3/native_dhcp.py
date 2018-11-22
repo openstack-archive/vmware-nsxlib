@@ -16,8 +16,14 @@
 import netaddr
 import six
 
+from oslo_log import log
+from oslo_log import versionutils
+
 from vmware_nsxlib.v3 import constants
 from vmware_nsxlib.v3 import utils
+
+
+LOG = log.getLogger(__name__)
 
 
 class NsxLibNativeDhcp(utils.NsxLibApiBase):
@@ -29,13 +35,15 @@ class NsxLibNativeDhcp(utils.NsxLibApiBase):
         # Add route for directly connected network.
         static_routes = [{'network': cidr, 'next_hop': '0.0.0.0'}]
         # Copy routes from subnet host_routes attribute.
-        for hr in host_routes:
-            if hr['destination'] == constants.IPv4_ANY:
-                if not gateway_ip:
-                    gateway_ip = hr['nexthop']
-            else:
-                static_routes.append({'network': hr['destination'],
-                                      'next_hop': hr['nexthop']})
+        if host_routes:
+            for hr in host_routes:
+                if hr['destination'] == constants.IPv4_ANY:
+                    if not gateway_ip:
+                        gateway_ip = hr['nexthop']
+                else:
+                    static_routes.append({'network': hr['destination'],
+                                          'next_hop': hr['nexthop']})
+
         # If gateway_ip is defined, add default route via this gateway.
         if gateway_ip:
             static_routes.append({'network': constants.IPv4_ANY,
@@ -46,6 +54,10 @@ class NsxLibNativeDhcp(utils.NsxLibApiBase):
         return utils.get_name_and_uuid(net_name or 'dhcpserver', net_id)
 
     def build_server_domain_name(self, net_dns_domain, default_dns_domain):
+        versionutils.report_deprecated_feature(
+            LOG,
+            'NsxLibQosNativeDhcp.build_server_domain_name is deprecated.')
+
         if net_dns_domain:
             if isinstance(net_dns_domain, six.string_types):
                 domain_name = net_dns_domain
@@ -59,9 +71,52 @@ class NsxLibNativeDhcp(utils.NsxLibApiBase):
                 domain_name = self.nsxlib_config.dns_domain
         return domain_name
 
+    def build_server(self, name, ip_address, cidr, gateway_ip,
+                     dns_domain=None, dns_nameservers=None,
+                     host_routes=None,
+                     dhcp_profile_id=None,
+                     tags=None):
+
+        # Prepare the configuration for a new logical DHCP server.
+        server_ip = "%s/%u" % (ip_address,
+                               netaddr.IPNetwork(cidr).prefixlen)
+
+        if not dns_domain:
+            dns_domain = self.nsxlib_config.dns_domain
+
+        if not dns_nameservers:
+            dns_nameservers = self.nsxlib_config.dns_nameservers
+
+        if not utils.is_attr_set(gateway_ip):
+            gateway_ip = None
+
+        static_routes, gateway_ip = self.build_static_routes(
+            gateway_ip, cidr, host_routes)
+
+        options = {'option121': {'static_routes': static_routes}}
+
+        body = {'name': name,
+                'server_ip': server_ip,
+                'dns_nameservers': dns_nameservers,
+                'domain_name': dns_domain,
+                'gateway_ip': gateway_ip,
+                'options': options,
+                'tags': tags}
+
+        if dhcp_profile_id:
+            body['dhcp_profile_id'] = dhcp_profile_id
+
+        return body
+
     def build_server_config(self, network, subnet, port, tags,
                             default_dns_nameservers=None,
                             default_dns_domain=None):
+
+        versionutils.report_deprecated_feature(
+            LOG,
+            'NsxLibQosNativeDhcp.build_server_config is deprecated. '
+            'Please use build_server instead')
+
         # Prepare the configuration for a new logical DHCP server.
         server_ip = "%s/%u" % (port['fixed_ips'][0]['ip_address'],
                                netaddr.IPNetwork(subnet['cidr']).prefixlen)
