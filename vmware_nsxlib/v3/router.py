@@ -260,6 +260,12 @@ class RouterLib(object):
             nsx_router_id, dest_cidr=route['destination'],
             nexthop=route['nexthop'])
 
+    def has_service_router(self, nsx_router_id):
+        lrouter = self._router_client.get(nsx_router_id)
+        if lrouter and lrouter.get('edge_cluster_id'):
+            return True
+        return False
+
     def get_tier0_router_tz(self, tier0_uuid):
         lrouter = self._router_client.get(tier0_uuid)
         edge_cluster_uuid = lrouter.get('edge_cluster_id')
