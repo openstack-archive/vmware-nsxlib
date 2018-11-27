@@ -475,6 +475,21 @@ class SegmentPortDef(ResourceDef):
         return body
 
 
+class Tier1SegmentPortDef(SegmentPortDef):
+    '''Tier1 segment port'''
+
+    @property
+    def path_pattern(self):
+        return TIER1S_PATH_PATTERN + "%s/segments/%s/ports/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier1_id', 'segment_id', 'port_id')
+
+    def path_defs(self):
+        return (TenantDef, Tier1Def, SegmentDef)
+
+
 class Condition(object):
     def __init__(self, value, key=policy_constants.CONDITION_KEY_TAG,
                  member_type=policy_constants.CONDITION_MEMBER_PORT,
