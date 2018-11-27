@@ -1005,6 +1005,142 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         return self._get_realization_info(port_def)
 
 
+class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
+    """NSX Tier1 Segment Port API """
+    @property
+    def entry_def(self):
+        return policy_defs.Tier1SegmentPortDef
+
+    def build_address_binding(self, ip_address, mac_address,
+                              vlan_id=None):
+        return policy_defs.PortAddressBinding(ip_address,
+                                              mac_address,
+                                              vlan_id)
+
+    def create_or_overwrite(self, name,
+                            tier1_id,
+                            segment_id,
+                            port_id=None,
+                            description=IGNORE,
+                            address_bindings=IGNORE,
+                            attachment_type=IGNORE,
+                            vif_id=IGNORE,
+                            app_id=IGNORE,
+                            context_id=IGNORE,
+                            traffic_tag=IGNORE,
+                            allocate_addresses=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_id = self._init_obj_uuid(port_id)
+        port_def = self._init_def(segment_id=segment_id,
+                                  tier1_id=tier1_id,
+                                  port_id=port_id,
+                                  name=name,
+                                  description=description,
+                                  address_bindings=address_bindings,
+                                  attachment_type=attachment_type,
+                                  vif_id=vif_id,
+                                  app_id=app_id,
+                                  context_id=context_id,
+                                  allocate_addresses=allocate_addresses,
+                                  tags=tags,
+                                  tenant=tenant)
+        self._create_or_store(port_def)
+        return port_id
+
+    def delete(self, tier1_id, segment_id, port_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id,
+                                  tier1_id=tier1_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+        self.policy_api.delete(port_def)
+
+    def get(self, tier1_id, segment_id, port_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id,
+                                  tier1_id=tier1_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+        return self.policy_api.get(port_def)
+
+    def list(self, tier1_id, segment_id,
+             tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id, tier1_id=tier1_id,
+                                  tenant=tenant)
+        return self._list(port_def)
+
+    def update(self, tier1_id, segment_id, port_id,
+               name=IGNORE,
+               description=IGNORE,
+               address_bindings=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        self._update(segment_id=segment_id,
+                     tier1_id=tier1_id,
+                     port_id=port_id,
+                     name=name,
+                     description=description,
+                     address_bindings=address_bindings,
+                     tags=tags,
+                     tenant=tenant)
+
+    def detach(self, tier1_id, segment_id, port_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        port_def = self.entry_def(segment_id=segment_id,
+                                  tier1_id=tier1_id,
+                                  port_id=port_id,
+                                  attachment_type=None,
+                                  tenant=tenant)
+        self.policy_api.create_or_update(port_def)
+
+    def attach(self, tier1_id, segment_id, port_id,
+               attachment_type,
+               vif_id,
+               allocate_addresses,
+               app_id=None,
+               context_id=None,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        port_def = self.entry_def(segment_id=segment_id,
+                                  tier1_id=tier1_id,
+                                  port_id=port_id,
+                                  attachment_type=attachment_type,
+                                  allocate_addresses=allocate_addresses,
+                                  vif_id=vif_id,
+                                  app_id=app_id,
+                                  context_id=context_id,
+                                  tenant=tenant)
+
+        self.policy_api.create_or_update(port_def)
+
+    def get_realized_state(self, tier1_id, segment_id, port_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id,
+                                  tier1_id=tier1_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+        return self._get_realized_state(port_def)
+
+    def get_realized_id(self, tier1_id, segment_id, port_id,
+                        tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id,
+                                  tier1_id=tier1_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+        return self._get_realized_id(port_def)
+
+    def get_realization_info(self, tier1_id, segment_id, port_id,
+                             tenant=policy_constants.POLICY_INFRA_TENANT):
+        port_def = self.entry_def(segment_id=segment_id,
+                                  tier1_id=tier1_id,
+                                  port_id=port_id,
+                                  tenant=tenant)
+        return self._get_realization_info(port_def)
+
+
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     """NSX Policy CommunicationMap (Under a Domain)."""
     @property
