@@ -396,6 +396,8 @@ class NsxPolicyLib(NsxLibBase):
         self.segment = policy_resources.NsxPolicySegmentApi(self.policy_api)
         self.segment_port = policy_resources.NsxPolicySegmentPortApi(
             self.policy_api)
+        self.tier1_segment_port = policy_resources.NsxPolicyTier1SegmentPortApi(
+            self.policy_api)
         self.comm_map = policy_resources.NsxPolicyCommunicationMapApi(
             self.policy_api)
         self.enforcement_point = policy_resources.NsxPolicyEnforcementPointApi(
