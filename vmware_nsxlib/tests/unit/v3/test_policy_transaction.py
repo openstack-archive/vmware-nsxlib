@@ -14,11 +14,11 @@
 #    under the License.
 #
 
-from vmware_nsxlib import v3
+import mock
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import policy_testcase
-
+from vmware_nsxlib import v3
 from vmware_nsxlib.v3 import policy_transaction as trans
 
 
@@ -29,7 +29,9 @@ class TestPolicyTransaction(policy_testcase.TestPolicyApi):
         super(TestPolicyTransaction, self).setUp()
 
         nsxlib_config = nsxlib_testcase.get_default_nsxlib_config()
-        self.policy_lib = v3.NsxPolicyLib(nsxlib_config)
+        # Mock the nsx-lib for the passthrough api
+        with mock.patch('vmware_nsxlib.v3.NsxLib'):
+            self.policy_lib = v3.NsxPolicyLib(nsxlib_config)
         self.policy_api = self.policy_lib.policy_api
         self.policy_api.client = self.client
 
