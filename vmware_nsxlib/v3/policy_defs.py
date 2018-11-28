@@ -23,6 +23,7 @@ from vmware_nsxlib.v3 import policy_constants
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
 IP_BLOCKS_PATH_PATTERN = TENANTS_PATH_PATTERN + "ip-blocks/"
+IP_POOLS_PATH_PATTERN = TENANTS_PATH_PATTERN + "ip-pools/"
 SEGMENTS_PATH_PATTERN = TENANTS_PATH_PATTERN + "segments/"
 PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
@@ -547,6 +548,81 @@ class IpBlockDef(ResourceDef):
     def get_obj_dict(self):
         body = super(IpBlockDef, self).get_obj_dict()
         self._set_attr_if_specified(body, 'cidr')
+        return body
+
+
+class IpPoolDef(ResourceDef):
+    '''Infra IpPool'''
+
+    @property
+    def path_pattern(self):
+        return IP_POOLS_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'ip_pool_id')
+
+    @staticmethod
+    def resource_type():
+        return 'IpAddressPool'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+
+class IpPoolAllocationDef(ResourceDef):
+    '''Infra IpPoolAllocation'''
+
+    @property
+    def path_pattern(self):
+        return IP_POOLS_PATH_PATTERN + "%s/ip-allocations/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'ip_pool_id', 'ip_allocation_id')
+
+    @staticmethod
+    def resource_type():
+        return 'IpAddressAllocation'
+
+    def path_defs(self):
+        return (TenantDef, IpPoolDef)
+
+    def get_obj_dict(self):
+        body = super(IpPoolAllocationDef, self).get_obj_dict()
+        self._set_attr_if_specified(body, 'allocation_ip')
+        return body
+
+
+class IpPoolBlockSubnetDef(ResourceDef):
+    '''Infra IpPoolSubnet belonging to IpBlock'''
+
+    @property
+    def path_pattern(self):
+        return IP_POOLS_PATH_PATTERN + "%s/ip-subnets/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'ip_pool_id', 'ip_subnet_id')
+
+    @staticmethod
+    def resource_type():
+        return 'IpAddressPoolBlockSubnet'
+
+    def path_defs(self):
+        return (TenantDef, IpPoolDef)
+
+    def get_obj_dict(self):
+        body = super(IpPoolBlockSubnetDef, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['auto_assign_gateway', 'size'])
+        if self.has_attr('ip_block_id'):
+            # Format the IP Block ID to its path
+            ip_block_id = self.get_attr('ip_block_id')
+            ip_block_def = IpBlockDef(ip_block_id=ip_block_id,
+                                      tenant=self.get_tenant())
+            ip_block_path = ip_block_def.get_resource_full_path()
+            self._set_attr_if_specified(
+                body, 'ip_block_path', value=ip_block_path)
         return body
 
 
