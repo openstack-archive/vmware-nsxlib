@@ -16,6 +16,7 @@
 
 import abc
 
+import eventlet
 from oslo_log import log as logging
 from oslo_utils import uuidutils
 import six
@@ -46,8 +47,10 @@ class NsxPolicyResourceBase(object):
     """
     SINGLE_ENTRY_ID = 'entry'
 
-    def __init__(self, policy_api):
+    def __init__(self, policy_api, nsx_api, version):
         self.policy_api = policy_api
+        self.nsx_api = nsx_api
+        self.version = version
 
     @property
     def entry_def(self):
@@ -144,20 +147,53 @@ class NsxPolicyResourceBase(object):
     def _get_realization_info(self, resource_def):
         try:
             path = resource_def.get_resource_full_path()
-            return self.policy_api.get_realized_entity(path)
+            entity_type = resource_def.realization_entity_type()
+            entities = self.policy_api.get_realized_entities(path)
+            if entities:
+                if entity_type:
+                    # look for the entry with the right entity_type
+                    for entity in entities:
+                        if entity['entity_type'] == entity_type:
+                            return entity
+                else:
+                    # return the first realization entry
+                    # (Useful for resources with single realization entity)
+                    return entities[0]
         except exceptions.ResourceNotFound:
             # resource not deployed yet
             LOG.warning("No realized state found for %s", path)
 
-    def _get_realized_state(self, resource_def):
-        info = self._get_realization_info(resource_def)
-        if info and info.get('state'):
-            return info['state']
+    def _get_realized_state(self, resource_def, realization_info=None):
+        if not realization_info:
+            realization_info = self._get_realization_info(resource_def)
+        if realization_info and realization_info.get('state'):
+            return realization_info['state']
 
-    def _get_realized_id(self, resource_def):
-        info = self._get_realization_info(resource_def)
-        if info and info.get('realization_specific_identifier'):
-            return info['realization_specific_identifier']
+    def _get_realized_id(self, resource_def, realization_info=None):
+        if not realization_info:
+            realization_info = self._get_realization_info(resource_def)
+        if (realization_info and
+            realization_info.get('realization_specific_identifier')):
+            return realization_info['realization_specific_identifier']
+
+    # TODO(asarfaty): add configurations for sleep/attempts?
+    def _wait_until_realized(self, resource_def, sleep=0.5, max_attempts=10):
+        """Wait until the resource has been realized
+
+        Return the realization info, or raise an error
+        """
+        test_num = 0
+        while test_num < max_attempts:
+            info = self._get_realization_info(resource_def)
+            if info['state'] == policy_constants.STATE_REALIZED:
+                return info
+            eventlet.sleep(sleep)
+            test_num += 1
+
+        err_msg = (_("Object %(type)s ID %(id)s was not realized") %
+                   {'type': resource_def.resource_type(),
+                    'id': resource_def.get_id()})
+        raise exceptions.ManagerError(details=err_msg)
 
     def _list(self, obj_def):
         return self.policy_api.list(obj_def).get('results', [])
@@ -687,19 +723,45 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         self.policy_api.delete(t1service_def)
 
     def get_realized_state(self, tier1_id,
-                           tenant=policy_constants.POLICY_INFRA_TENANT):
+                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           realization_info=None):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
-        return self._get_realized_state(tier1_def)
+        return self._get_realized_state(
+            tier1_def, realization_info=realization_info)
 
     def get_realized_id(self, tier1_id,
-                        tenant=policy_constants.POLICY_INFRA_TENANT):
+                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        realization_info=None):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
-        return self._get_realized_id(tier1_def)
+        return self._get_realized_id(
+            tier1_def,
+            realization_info=realization_info)
 
     def get_realization_info(self, tier1_id,
                              tenant=policy_constants.POLICY_INFRA_TENANT):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self._get_realization_info(tier1_def)
+
+    def wait_until_realized(self, tier1_id,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return self._wait_until_realized(tier1_def)
+
+    def update_transport_zone(self, tier1_id, transport_zone_id,
+                              tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Use the pass-through api to update the TZ zone on the NSX router"""
+        if not self.nsx_api:
+            LOG.error("Cannot update tier1 %s transport zone as the "
+                      "passthrough api is forbidden", tier1_id)
+            return
+
+        realization_info = self.wait_until_realized(tier1_id, tenant=tenant)
+
+        nsx_router_uuid = self.get_realized_id(
+            tier1_id, tenant=tenant, realization_info=realization_info)
+        self.nsx_api.logical_router.update(
+            nsx_router_uuid,
+            transport_zone_id=transport_zone_id)
 
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
@@ -777,6 +839,45 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         for srv in services:
             if 'edge_cluster_path' in srv:
                 return srv['edge_cluster_path']
+
+    def get_overlay_transport_zone(
+        self, tier0_id,
+        tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Use the pass-through api to get the TZ zone of the NSX tier0"""
+        if not self.nsx_api:
+            LOG.error("Cannot get tier0 %s transport zone as the "
+                      "passthrough api is forbidden", tier0_id)
+            return
+        realization_info = self.wait_until_realized(tier0_id, tenant=tenant)
+        nsx_router_uuid = self.get_realized_id(
+            tier0_id, tenant=tenant,
+            realization_info=realization_info)
+        return self.nsx_api.router.get_tier0_router_overlay_tz(
+            nsx_router_uuid)
+
+    def get_realized_state(self, tier0_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           realization_info=None):
+        tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
+        return self._get_realized_state(
+            tier0_def, realization_info=realization_info)
+
+    def get_realized_id(self, tier0_id,
+                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        realization_info=None):
+        tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
+        return self._get_realized_id(
+            tier0_def, realization_info=realization_info)
+
+    def get_realization_info(self, tier0_id,
+                             tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
+        return self._get_realization_info(tier0_def)
+
+    def wait_until_realized(self, tier0_id,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
+        return self._wait_until_realized(tier0_def)
 
 
 class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
