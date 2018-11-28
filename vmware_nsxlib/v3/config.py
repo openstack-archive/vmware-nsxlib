@@ -78,6 +78,10 @@ class NsxLibConfig(object):
                                       endpoint in the NSX management cluster is
                                       available to serve a request, and retry
                                       the request instead.
+
+    -- Additional parameters which are relevant only for the Policy manager:
+    :param allow_passthrough: If True, use nsx manager api for cases which are
+                              not supported by the policy manager api.
     """
 
     def __init__(self,
@@ -102,7 +106,8 @@ class NsxLibConfig(object):
                  dhcp_profile_uuid=None,
                  allow_overwrite_header=False,
                  rate_limit_retry=True,
-                 cluster_unavailable_retry=False):
+                 cluster_unavailable_retry=False,
+                 allow_passthrough=False):
 
         self.nsx_api_managers = nsx_api_managers
         self._username = username
@@ -125,6 +130,7 @@ class NsxLibConfig(object):
         self.allow_overwrite_header = allow_overwrite_header
         self.rate_limit_retry = rate_limit_retry
         self.cluster_unavailable_retry = cluster_unavailable_retry
+        self.allow_passthrough = allow_passthrough
 
         if dhcp_profile_uuid:
             # this is deprecated, and never used.
