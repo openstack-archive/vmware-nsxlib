@@ -22,6 +22,7 @@ from vmware_nsxlib.v3 import policy_constants
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
+IP_BLOCKS_PATH_PATTERN = TENANTS_PATH_PATTERN + "ip-blocks/"
 SEGMENTS_PATH_PATTERN = TENANTS_PATH_PATTERN + "segments/"
 PROVIDERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "providers/"
 TIER0S_PATH_PATTERN = TENANTS_PATH_PATTERN + "tier-0s/"
@@ -472,6 +473,30 @@ class SegmentPortDef(ResourceDef):
                                               'allocate_addresses'])
                 body['attachment'] = attachment
 
+        return body
+
+
+class IpBlockDef(ResourceDef):
+    '''Infra IpBlock'''
+
+    @property
+    def path_pattern(self):
+        return IP_BLOCKS_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'ip_block_id')
+
+    @staticmethod
+    def resource_type():
+        return 'IpAddressBlock'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+    def get_obj_dict(self):
+        body = super(IpBlockDef, self).get_obj_dict()
+        self._set_attr_if_specified(body, 'cidr')
         return body
 
 
