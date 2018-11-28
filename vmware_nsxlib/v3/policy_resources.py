@@ -1005,6 +1005,128 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         return self._get_realization_info(port_def)
 
 
+class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
+    """NSX Policy IP Pool API"""
+    @property
+    def entry_def(self):
+        return policy_defs.IpPoolDef
+
+    def create_or_overwrite(self, name,
+                            ip_pool_id=None,
+                            description=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        ip_pool_id = self._init_obj_uuid(ip_pool_id)
+        ip_pool_def = self._init_def(ip_pool_id=ip_pool_id,
+                                     name=name,
+                                     description=description,
+                                     tags=tags,
+                                     tenant=tenant)
+        self._create_or_store(ip_pool_def)
+        return ip_pool_id
+
+    def delete(self, ip_pool_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_pool_def = self.entry_def(ip_pool_id=ip_pool_id,
+                                     tenant=tenant)
+        self.policy_api.delete(ip_pool_def)
+
+    def get(self, ip_pool_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_pool_def = self.entry_def(ip_pool_id=ip_pool_id,
+                                     tenant=tenant)
+        return self.policy_api.get(ip_pool_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_pool_def = self.entry_def(tenant=tenant)
+        return self._list(ip_pool_def)
+
+    def update(self, ip_pool_id, name=IGNORE, description=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(ip_pool_id=ip_pool_id,
+                     name=name,
+                     description=description,
+                     tags=tags,
+                     tenant=tenant)
+
+    def allocate_ip(self, ip_pool_id, ip_address, ip_allocation_id=None,
+                    name=IGNORE, description=IGNORE, tags=IGNORE,
+                    tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_allocation_id = self._init_obj_uuid(ip_allocation_id)
+        ip_allocation_def = policy_defs.IpPoolAllocationDef(
+            ip_pool_id=ip_pool_id,
+            ip_allocation_id=ip_allocation_id,
+            allocation_ip=ip_address,
+            name=name,
+            description=description,
+            tags=tags,
+            tenant=tenant)
+        self.policy_api.create_or_update(ip_allocation_def)
+
+    def release_ip(self, ip_pool_id, ip_allocation_id,
+                   tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_allocation_def = policy_defs.IpPoolAllocationDef(
+            ip_allocation_id=ip_allocation_id,
+            ip_pool_id=ip_pool_id,
+            tenant=tenant)
+        self.policy_api.delete(ip_allocation_def)
+
+    def list_allocations(self, ip_pool_id,
+                         tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_allocation_def = policy_defs.IpPoolAllocationDef(
+            ip_pool_id=ip_pool_id,
+            tenant=tenant)
+        return self._list(ip_allocation_def)
+
+    def get_allocation(self, ip_pool_id, ip_allocation_id,
+                       tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_allocation_def = policy_defs.IpPoolAllocationDef(
+            ip_pool_id=ip_pool_id,
+            ip_allocation_id=ip_allocation_id,
+            tenant=tenant)
+        return self.policy_api.get(ip_allocation_def)
+
+    def allocate_block_subnet(self, ip_pool_id, ip_block_id, size,
+                              ip_subnet_id=None, auto_assign_gateway=IGNORE,
+                              name=IGNORE, description=IGNORE, tags=IGNORE,
+                              tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_subnet_id = self._init_obj_uuid(ip_subnet_id)
+        ip_subnet_def = policy_defs.IpPoolBlockSubnetDef(
+            ip_pool_id=ip_pool_id,
+            ip_block_id=ip_block_id,
+            ip_subnet_id=ip_subnet_id,
+            size=size,
+            auto_assign_gateway=auto_assign_gateway,
+            name=name,
+            description=description,
+            tags=tags,
+            tenant=tenant)
+        self.policy_api.create_or_update(ip_subnet_def)
+
+    def release_block_subnet(self, ip_pool_id, ip_subnet_id,
+                             tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = policy_defs.IpPoolBlockSubnetDef(
+            ip_subnet_id=ip_subnet_id,
+            ip_pool_id=ip_pool_id,
+            tenant=tenant)
+        self.policy_api.delete(ip_subnet_def)
+
+    def list_block_subnets(self, ip_pool_id,
+                           tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = policy_defs.IpPoolBlockSubnetDef(
+            ip_pool_id=ip_pool_id,
+            tenant=tenant)
+        return self._list(ip_subnet_def)
+
+    def get_ip_block_subnet(self, ip_pool_id, ip_subnet_id,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = policy_defs.IpPoolBlockSubnetDef(
+            ip_pool_id=ip_pool_id,
+            ip_subnet_id=ip_subnet_id,
+            tenant=tenant)
+        return self.policy_api.get(ip_subnet_def)
+
+
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     """NSX Policy CommunicationMap (Under a Domain)."""
     @property

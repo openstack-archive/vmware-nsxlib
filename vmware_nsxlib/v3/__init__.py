@@ -404,6 +404,7 @@ class NsxPolicyLib(NsxLibBase):
             self.policy_api)
         self.deployment_map = policy_resources.NsxPolicyDeploymentMapApi(
             self.policy_api)
+        self.ip_pool = policy_resources.NsxPolicyIpPoolApi(self.policy_api)
 
     @property
     def keepalive_section(self):
