@@ -405,6 +405,9 @@ class NsxPolicyLib(NsxLibBase):
         self.deployment_map = policy_resources.NsxPolicyDeploymentMapApi(
             self.policy_api)
 
+        # For pass-through apis
+        self.nsx_manager = NsxLib(self.nsxlib_config)
+
     @property
     def keepalive_section(self):
         return 'infra'
@@ -418,15 +421,16 @@ class NsxPolicyLib(NsxLibBase):
         if self.nsx_version:
             return self.nsx_version
 
-        manager_client = client.NSX3Client(
-            self.cluster,
-            nsx_api_managers=self.nsxlib_config.nsx_api_managers,
-            max_attempts=self.nsxlib_config.max_attempts,
-            url_path_base=client.NSX3Client.NSX_V1_API_PREFIX,
-            rate_limit_retry=self.nsxlib_config.rate_limit_retry)
+        self.nsx_version = self.nsx_manager.get_version()
+        # manager_client = client.NSX3Client(
+        #     self.cluster,
+        #     nsx_api_managers=self.nsxlib_config.nsx_api_managers,
+        #     max_attempts=self.nsxlib_config.max_attempts,
+        #     url_path_base=client.NSX3Client.NSX_V1_API_PREFIX,
+        #     rate_limit_retry=self.nsxlib_config.rate_limit_retry)
 
-        node = manager_client.get('node')
-        self.nsx_version = node.get('node_version')
+        # node = manager_client.get('node')
+        # self.nsx_version = node.get('node_version')
         return self.nsx_version
 
     def feature_supported(self, feature):

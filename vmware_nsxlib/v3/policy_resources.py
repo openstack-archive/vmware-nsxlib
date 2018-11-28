@@ -701,6 +701,16 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self._get_realization_info(tier1_def)
 
+    def update_router_transport_zone(self, tier1_id):
+        """Use the pass-through api to update the TZ zone on the NSX router"""
+        nsx_router_uuid = self.get_realized_id(tier1_id)
+
+        # TODO(asarfaty): translate the TZ as well
+
+        self.nsx_manager.logical_router.update(
+            nsx_router_uuid,
+            transport_zone_id=transport_zone_id)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
