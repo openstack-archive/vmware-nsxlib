@@ -381,29 +381,33 @@ class NsxPolicyLib(NsxLibBase):
 
     def init_api(self):
         self.policy_api = policy_defs.NsxPolicyApi(self.client)
-        self.domain = policy_resources.NsxPolicyDomainApi(self.policy_api)
-        self.group = policy_resources.NsxPolicyGroupApi(self.policy_api)
-        self.service = policy_resources.NsxPolicyL4ServiceApi(self.policy_api)
+
+        # For pass-through apis
+        self.nsx_api = NsxLib(self.nsxlib_config)
+
+        self.domain = policy_resources.NsxPolicyDomainApi(self.policy_api, self.nsx_api)
+        self.group = policy_resources.NsxPolicyGroupApi(self.policy_api, self.nsx_api)
+        self.service = policy_resources.NsxPolicyL4ServiceApi(self.policy_api, self.nsx_api)
         self.icmp_service = policy_resources.NsxPolicyIcmpServiceApi(
-            self.policy_api)
+            self.policy_api, self.nsx_api)
         self.ip_protocol_service = (
             policy_resources.NsxPolicyIPProtocolServiceApi(
-                self.policy_api))
-        self.tier0 = policy_resources.NsxPolicyTier0Api(self.policy_api)
-        self.tier1 = policy_resources.NsxPolicyTier1Api(self.policy_api)
+                self.policy_api, self.nsx_api))
+        self.tier0 = policy_resources.NsxPolicyTier0Api(self.policy_api, self.nsx_api)
+        self.tier1 = policy_resources.NsxPolicyTier1Api(self.policy_api, self.nsx_api)
         self.tier1_segment = policy_resources.NsxPolicyTier1SegmentApi(
-            self.policy_api)
-        self.segment = policy_resources.NsxPolicySegmentApi(self.policy_api)
+            self.policy_api, self.nsx_api)
+        self.segment = policy_resources.NsxPolicySegmentApi(self.policy_api, self.nsx_api)
         self.segment_port = policy_resources.NsxPolicySegmentPortApi(
-            self.policy_api)
+            self.policy_api, self.nsx_api)
         self.comm_map = policy_resources.NsxPolicyCommunicationMapApi(
-            self.policy_api)
+            self.policy_api, self.nsx_api)
         self.enforcement_point = policy_resources.NsxPolicyEnforcementPointApi(
-            self.policy_api)
+            self.policy_api, self.nsx_api)
         self.transport_zone = policy_resources.NsxPolicyTransportZoneApi(
-            self.policy_api)
+            self.policy_api, self.nsx_api)
         self.deployment_map = policy_resources.NsxPolicyDeploymentMapApi(
-            self.policy_api)
+            self.policy_api, self.nsx_api)
 
     @property
     def keepalive_section(self):
@@ -418,15 +422,16 @@ class NsxPolicyLib(NsxLibBase):
         if self.nsx_version:
             return self.nsx_version
 
-        manager_client = client.NSX3Client(
-            self.cluster,
-            nsx_api_managers=self.nsxlib_config.nsx_api_managers,
-            max_attempts=self.nsxlib_config.max_attempts,
-            url_path_base=client.NSX3Client.NSX_V1_API_PREFIX,
-            rate_limit_retry=self.nsxlib_config.rate_limit_retry)
+        self.nsx_version = self.nsx_manager.get_version()
+        # manager_client = client.NSX3Client(
+        #     self.cluster,
+        #     nsx_api_managers=self.nsxlib_config.nsx_api_managers,
+        #     max_attempts=self.nsxlib_config.max_attempts,
+        #     url_path_base=client.NSX3Client.NSX_V1_API_PREFIX,
+        #     rate_limit_retry=self.nsxlib_config.rate_limit_retry)
 
-        node = manager_client.get('node')
-        self.nsx_version = node.get('node_version')
+        # node = manager_client.get('node')
+        # self.nsx_version = node.get('node_version')
         return self.nsx_version
 
     def feature_supported(self, feature):
