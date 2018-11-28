@@ -1190,6 +1190,54 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
         return self._get_realization_info(port_def)
 
 
+class NsxPolicyIpBlockApi(NsxPolicyResourceBase):
+    """NSX Policy IP Block API"""
+    @property
+    def entry_def(self):
+        return policy_defs.IpBlockDef
+
+    def create_or_overwrite(self, name,
+                            ip_block_id=None,
+                            description=IGNORE,
+                            cidr=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        ip_block_id = self._init_obj_uuid(ip_block_id)
+        ip_block_def = self._init_def(ip_block_id=ip_block_id,
+                                      name=name,
+                                      description=description,
+                                      cidr=cidr,
+                                      tags=tags,
+                                      tenant=tenant)
+        self._create_or_store(ip_block_def)
+        return ip_block_id
+
+    def delete(self, ip_block_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_block_def = self.entry_def(ip_block_id=ip_block_id,
+                                      tenant=tenant)
+        self.policy_api.delete(ip_block_def)
+
+    def get(self, ip_block_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_block_def = self.entry_def(ip_block_id=ip_block_id,
+                                      tenant=tenant)
+        return self.policy_api.get(ip_block_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        ip_block_def = self.entry_def(tenant=tenant)
+        return self._list(ip_block_def)
+
+    def update(self, ip_block_id, name=IGNORE, description=IGNORE,
+               cidr=IGNORE, tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(ip_block_id=ip_block_id,
+                     name=name,
+                     description=description,
+                     cidr=cidr,
+                     tags=tags,
+                     tenant=tenant)
+
+
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     """NSX Policy CommunicationMap (Under a Domain)."""
     @property
