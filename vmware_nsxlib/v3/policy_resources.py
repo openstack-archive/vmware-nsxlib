@@ -47,8 +47,10 @@ class NsxPolicyResourceBase(object):
     """
     SINGLE_ENTRY_ID = 'entry'
 
-    def __init__(self, policy_api):
+    def __init__(self, policy_api, nsx_api, version):
         self.policy_api = policy_api
+        self.nsx_api = nsx_api
+        self.version = version
 
     @property
     def entry_def(self):
@@ -761,6 +763,23 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self._wait_until_realized(tier1_def, entity_type=entity_type)
 
+    def update_transport_zone(self, tier1_id, transport_zone_id,
+                              tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Use the pass-through api to update the TZ zone on the NSX router"""
+        if not self.nsx_api:
+            LOG.error("Cannot update tier1 %s transport zone as the "
+                      "passthrough api is forbidden", tier1_id)
+            return
+
+        realization_info = self.wait_until_realized(
+            tier1_id, entity_type='RealizedLogicalRouter', tenant=tenant)
+
+        nsx_router_uuid = self.get_realized_id(
+            tier1_id, tenant=tenant, realization_info=realization_info)
+        self.nsx_api.logical_router.update(
+            nsx_router_uuid,
+            transport_zone_id=transport_zone_id)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
@@ -837,6 +856,22 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         for srv in services:
             if 'edge_cluster_path' in srv:
                 return srv['edge_cluster_path']
+
+    def get_overlay_transport_zone(
+        self, tier0_id,
+        tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Use the pass-through api to get the TZ zone of the NSX tier0"""
+        if not self.nsx_api:
+            LOG.error("Cannot get tier0 %s transport zone as the "
+                      "passthrough api is forbidden", tier0_id)
+            return
+        realization_info = self.wait_until_realized(
+            tier0_id, entity_type='RealizedLogicalRouter', tenant=tenant)
+        nsx_router_uuid = self.get_realized_id(
+            tier0_id, tenant=tenant,
+            realization_info=realization_info)
+        return self.nsx_api.router.get_tier0_router_overlay_tz(
+            nsx_router_uuid)
 
     def get_realized_state(self, tier0_id, entity_type=None,
                            tenant=policy_constants.POLICY_INFRA_TENANT,

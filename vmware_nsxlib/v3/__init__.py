@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import copy
 from distutils import version
 
 from oslo_log import log
@@ -59,11 +60,10 @@ class NsxLibBase(object):
         self.general_apis = utils.NsxLibApiBase(
             self.client, self.nsxlib_config)
 
+        self.nsx_version = None
         self.init_api()
 
         super(NsxLibBase, self).__init__()
-
-        self.nsx_version = None
 
     def set_config(self, nsxlib_config):
         """Set config user provided and extend it according to application"""
@@ -380,46 +380,59 @@ class NsxLib(NsxLibBase):
 class NsxPolicyLib(NsxLibBase):
 
     def init_api(self):
+        # Initialize the policy client
         self.policy_api = policy_defs.NsxPolicyApi(self.client)
-        self.domain = policy_resources.NsxPolicyDomainApi(self.policy_api)
-        self.group = policy_resources.NsxPolicyGroupApi(self.policy_api)
-        self.service = policy_resources.NsxPolicyL4ServiceApi(self.policy_api)
+
+        # NSX manager api will be used as a pass-through for apis which are
+        # not implemented by the policy manager yet
+        if self.nsxlib_config.allow_passthrough:
+            config = copy.deepcopy(self.nsxlib_config)
+            # X-Allow-Overwrite must be set for passthrough apis
+            config.allow_overwrite_header = True
+            self.nsx_api = NsxLib(config)
+        else:
+            self.nsx_api = None
+        self.nsx_version = self.get_version()
+        args = (self.policy_api, self.nsx_api, self.nsx_version)
+
+        # Initialize all the different resources
+        self.domain = policy_resources.NsxPolicyDomainApi(*args)
+        self.group = policy_resources.NsxPolicyGroupApi(*args)
+        self.service = policy_resources.NsxPolicyL4ServiceApi(*args)
         self.icmp_service = policy_resources.NsxPolicyIcmpServiceApi(
-            self.policy_api)
+            *args)
         self.ip_protocol_service = (
-            policy_resources.NsxPolicyIPProtocolServiceApi(
-                self.policy_api))
-        self.tier0 = policy_resources.NsxPolicyTier0Api(self.policy_api)
-        self.tier1 = policy_resources.NsxPolicyTier1Api(self.policy_api)
-        self.tier1_segment = policy_resources.NsxPolicyTier1SegmentApi(
-            self.policy_api)
+            policy_resources.NsxPolicyIPProtocolServiceApi(*args))
+        self.tier0 = policy_resources.NsxPolicyTier0Api(*args)
+        self.tier1 = policy_resources.NsxPolicyTier1Api(*args)
+        self.tier1_segment = policy_resources.NsxPolicyTier1SegmentApi(*args)
         self.tier1_nat_rule = policy_resources.NsxPolicyTier1NatRuleApi(
-            self.policy_api)
-        self.segment = policy_resources.NsxPolicySegmentApi(self.policy_api)
-        self.segment_port = policy_resources.NsxPolicySegmentPortApi(
-            self.policy_api)
+            *args)
         self.tier1_segment_port = (
-            policy_resources.NsxPolicyTier1SegmentPortApi(self.policy_api))
+            policy_resources.NsxPolicyTier1SegmentPortApi(*args))
+        self.segment = policy_resources.NsxPolicySegmentApi(*args)
+        self.segment_port = policy_resources.NsxPolicySegmentPortApi(
+            *args)
         self.comm_map = policy_resources.NsxPolicyCommunicationMapApi(
-            self.policy_api)
+            *args)
         self.enforcement_point = policy_resources.NsxPolicyEnforcementPointApi(
-            self.policy_api)
+            *args)
         self.transport_zone = policy_resources.NsxPolicyTransportZoneApi(
-            self.policy_api)
+            *args)
         self.deployment_map = policy_resources.NsxPolicyDeploymentMapApi(
-            self.policy_api)
-        self.ip_block = policy_resources.NsxPolicyIpBlockApi(self.policy_api)
-        self.ip_pool = policy_resources.NsxPolicyIpPoolApi(self.policy_api)
+            *args)
+        self.ip_block = policy_resources.NsxPolicyIpBlockApi(*args)
+        self.ip_pool = policy_resources.NsxPolicyIpPoolApi(*args)
         self.segment_security_profile = (
-            policy_resources.NsxSegmentSecurityProfileApi(self.policy_api))
+            policy_resources.NsxSegmentSecurityProfileApi(*args))
         self.qos_profile = (
-            policy_resources.NsxQosProfileApi(self.policy_api))
+            policy_resources.NsxQosProfileApi(*args))
         self.spoofguard_profile = (
-            policy_resources.NsxSpoofguardProfileApi(self.policy_api))
+            policy_resources.NsxSpoofguardProfileApi(*args))
         self.ip_discovery_profile = (
-            policy_resources.NsxIpDiscoveryProfileApi(self.policy_api))
+            policy_resources.NsxIpDiscoveryProfileApi(*args))
         self.mac_discovery_profile = (
-            policy_resources.NsxMacDiscoveryProfileApi(self.policy_api))
+            policy_resources.NsxMacDiscoveryProfileApi(*args))
 
     @property
     def keepalive_section(self):
@@ -429,20 +442,16 @@ class NsxPolicyLib(NsxLibBase):
         """Get the NSX Policy manager version
 
         Currently the backend does not support it, so the nsx-manager api
-        will be used temporarily.
+        will be used temporarily as a passthrough.
         """
         if self.nsx_version:
             return self.nsx_version
 
-        manager_client = client.NSX3Client(
-            self.cluster,
-            nsx_api_managers=self.nsxlib_config.nsx_api_managers,
-            max_attempts=self.nsxlib_config.max_attempts,
-            url_path_base=client.NSX3Client.NSX_V1_API_PREFIX,
-            rate_limit_retry=self.nsxlib_config.rate_limit_retry)
-
-        node = manager_client.get('node')
-        self.nsx_version = node.get('node_version')
+        if self.nsx_api:
+            self.nsx_version = self.nsx_api.get_version()
+        else:
+            # return the initial supported version
+            self.nsx_version = nsx_constants.NSX_VERSION_2_4_0
         return self.nsx_version
 
     def feature_supported(self, feature):
@@ -453,6 +462,13 @@ class NsxPolicyLib(NsxLibBase):
                 return True
 
         return (feature == nsx_constants.FEATURE_NSX_POLICY)
+
+    def reinitialize_cluster(self, resource, event, trigger, payload=None):
+        super(NsxPolicyLib, self).reinitialize_cluster(
+            resource, event, trigger, payload=payload)
+        if self.nsx_api:
+            self.nsx_api.reinitialize_cluster(resource, event, trigger,
+                                              payload)
 
     @property
     def client_url_prefix(self):
