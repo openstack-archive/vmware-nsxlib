@@ -288,6 +288,10 @@ class Tier0Def(RouterDef):
     def resource_type():
         return 'Tier0'
 
+    @staticmethod
+    def realization_entity_type():
+        return 'RealizedLogicalRouter'
+
     def get_obj_dict(self):
         body = super(Tier0Def, self).get_obj_dict()
 
@@ -309,6 +313,10 @@ class Tier1Def(RouterDef):
     @staticmethod
     def resource_type():
         return 'Tier1'
+
+    @staticmethod
+    def realization_entity_type():
+        return 'RealizedLogicalRouter'
 
     def get_obj_dict(self):
         body = super(Tier1Def, self).get_obj_dict()

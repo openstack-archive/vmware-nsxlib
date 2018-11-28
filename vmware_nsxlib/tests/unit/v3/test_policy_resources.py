@@ -33,7 +33,9 @@ class NsxPolicyLibTestCase(policy_testcase.TestPolicyApi):
         super(NsxPolicyLibTestCase, self).setUp()
 
         nsxlib_config = nsxlib_testcase.get_default_nsxlib_config()
-        self.policy_lib = v3.NsxPolicyLib(nsxlib_config)
+        # Mock the nsx-lib for the passthrough api
+        with mock.patch('vmware_nsxlib.v3.NsxLib'):
+            self.policy_lib = v3.NsxPolicyLib(nsxlib_config)
         self.policy_api = self.policy_lib.policy_api
         self.policy_api.client = self.client
 
@@ -1842,6 +1844,22 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             actual_info = self.resourceApi.wait_until_realized(
                 tier1_id, tenant=TEST_TENANT)
             self.assertEqual(info, actual_info)
+
+    def test_update_tz(self):
+        # Test a passthrough api
+        tier1_id = '111'
+        logical_router_id = 'realized_111'
+        tz_uuid = 'dummy_tz'
+        info = {'state': policy_constants.STATE_REALIZED,
+                'realization_specific_identifier': logical_router_id}
+        passthrough_mock = self.resourceApi.nsx_api.logical_router.update
+        with mock.patch.object(self.resourceApi, "_get_realization_info",
+                               return_value=info) as realization:
+            self.resourceApi.update_transport_zone(tier1_id, tz_uuid,
+                                                   tenant=TEST_TENANT)
+            realization.assert_called_once()
+            passthrough_mock.assert_called_once_with(
+                logical_router_id, transport_zone_id=tz_uuid)
 
 
 class TestPolicyTier1NatRule(NsxPolicyLibTestCase):

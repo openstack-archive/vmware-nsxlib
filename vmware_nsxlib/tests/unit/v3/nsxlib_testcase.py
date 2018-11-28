@@ -126,7 +126,8 @@ def get_default_nsxlib_config():
         plugin_tag=PLUGIN_TAG,
         plugin_ver=PLUGIN_VER,
         dns_nameservers=DNS_NAMESERVERS,
-        dns_domain=DNS_DOMAIN
+        dns_domain=DNS_DOMAIN,
+        allow_passthrough=True
     )
 
 
