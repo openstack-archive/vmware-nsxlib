@@ -778,6 +778,85 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                 return srv['edge_cluster_path']
 
 
+class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
+    """NSX Tier0 API """
+    DEFAULT_NAT_ID = 'USER'
+
+    @property
+    def entry_def(self):
+        return policy_defs.Tier1NatRule
+
+    def create_or_overwrite(self, name, tier1_id,
+                            nat_id=DEFAULT_NAT_ID,
+                            nat_rule_id=None,
+                            description=IGNORE,
+                            source_network=IGNORE,
+                            destination_network=IGNORE,
+                            translated_network=IGNORE,
+                            firewall_match=IGNORE,
+                            action=IGNORE,
+                            sequence_number=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        nat_rule_id = self._init_obj_uuid(nat_rule_id)
+        nat_rule_def = self._init_def(tier1_id=tier1_id,
+                                      nat_id=nat_id,
+                                      nat_rule_id=nat_rule_id,
+                                      name=name,
+                                      description=description,
+                                      source_network=source_network,
+                                      destination_network=destination_network,
+                                      translated_network=translated_network,
+                                      firewall_match=firewall_match,
+                                      action=action,
+                                      sequence_number=sequence_number,
+                                      tags=tags,
+                                      tenant=tenant)
+        self._create_or_store(nat_rule_def)
+        return nat_rule_id
+
+    def delete(self, tier1_id, nat_rule_id, nat_id=DEFAULT_NAT_ID,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        nat_rule_def = self.entry_def(tier1_id=tier1_id, nat_id=nat_id,
+                                      nat_rule_id=nat_rule_id, tenant=tenant)
+        self.policy_api.delete(nat_rule_def)
+
+    def get(self, tier1_id, nat_rule_id, nat_id=DEFAULT_NAT_ID,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        nat_rule_def = self.entry_def(tier1_id=tier1_id, nat_id=nat_id,
+                                      nat_rule_id=nat_rule_id, tenant=tenant)
+        self.policy_api.get(nat_rule_def)
+
+    def list(self, tier1_id, nat_id=DEFAULT_NAT_ID,
+             tenant=policy_constants.POLICY_INFRA_TENANT):
+        nat_rule_def = self.entry_def(tier1_id=tier1_id, nat_id=nat_id,
+                                      tenant=tenant)
+        return self._list(nat_rule_def)
+
+    def update(self, tier1_id, nat_rule_id,
+               nat_id=DEFAULT_NAT_ID,
+               name=IGNORE,
+               description=IGNORE,
+               source_network=IGNORE,
+               destination_network=IGNORE,
+               translated_network=IGNORE,
+               action=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(tier1_id=tier1_id,
+                     nat_id=nat_id,
+                     nat_rule_id=nat_rule_id,
+                     name=name,
+                     description=description,
+                     source_network=source_network,
+                     destination_network=destination_network,
+                     translated_network=translated_network,
+                     action=action,
+                     tags=tags,
+                     tenant=tenant)
+
+
 class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
     """NSX Tier1 Segment API """
     @property
