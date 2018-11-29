@@ -1758,3 +1758,115 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
                      ep_id=ep_id,
                      domain_id=domain_id,
                      tenant=tenant)
+
+
+class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
+    """NSX Segment Profile base API"""
+
+    def create_or_overwrite(self, name,
+                            profile_id=None,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        profile_id = self._init_obj_uuid(profile_id)
+        profile_def = self._init_def(profile_id=profile_id,
+                                     name=name,
+                                     tags=tags,
+                                     tenant=tenant)
+        self._create_or_store(profile_def)
+        return profile_id
+
+    def delete(self, profile_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(profile_id=profile_id,
+                                     tenant=tenant)
+        self.policy_api.delete(profile_def)
+
+    def get(self, profile_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(profile_id=profile_id,
+                                     tenant=tenant)
+        return self.policy_api.get(profile_def)
+
+    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(tenant=tenant)
+        return self._list(profile_def)
+
+    def get_by_name(self, name, tenant=policy_constants.POLICY_INFRA_TENANT):
+        return super(NsxSegmentProfileBaseApi, self).get_by_name(
+            name, tenant=tenant)
+
+    def update(self, profile_id, name=IGNORE, tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(profile_id=profile_id,
+                     name=name,
+                     tags=tags,
+                     tenant=tenant)
+
+
+class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
+    @property
+    def entry_def(self):
+        return policy_defs.SegmentSecurityProfileDef
+
+
+class NsxQosProfileApi(NsxSegmentProfileBaseApi):
+    @property
+    def entry_def(self):
+        return policy_defs.QosProfileDef
+
+
+class NsxSpoofguardProfileApi(NsxSegmentProfileBaseApi):
+    @property
+    def entry_def(self):
+        return policy_defs.SpoofguardProfileDef
+
+    def create_or_overwrite(self, name,
+                            profile_id=None,
+                            address_binding_whitelist=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        profile_id = self._init_obj_uuid(profile_id)
+        profile_def = self._init_def(
+            profile_id=profile_id,
+            name=name,
+            address_binding_whitelist=address_binding_whitelist,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(profile_def)
+        return profile_id
+
+
+class NsxIpDiscoveryProfileApi(NsxSegmentProfileBaseApi):
+    @property
+    def entry_def(self):
+        return policy_defs.IpDiscoveryProfileDef
+
+
+class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
+    @property
+    def entry_def(self):
+        return policy_defs.MacDiscoveryProfileDef
+
+    def create_or_overwrite(self, name,
+                            profile_id=None,
+                            mac_change_enabled=IGNORE,
+                            mac_learning_enabled=IGNORE,
+                            unknown_unicast_flooding_enabled=IGNORE,
+                            mac_limit_policy=IGNORE,
+                            mac_limit=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        profile_id = self._init_obj_uuid(profile_id)
+        profile_def = self._init_def(
+            profile_id=profile_id,
+            name=name,
+            mac_change_enabled=mac_change_enabled,
+            mac_learning_enabled=mac_learning_enabled,
+            unknown_unicast_flooding_enabled=unknown_unicast_flooding_enabled,
+            mac_limit_policy=mac_limit_policy,
+            mac_limit=mac_limit,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(profile_def)
+        return profile_id
