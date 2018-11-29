@@ -407,6 +407,16 @@ class NsxPolicyLib(NsxLibBase):
         self.deployment_map = policy_resources.NsxPolicyDeploymentMapApi(
             self.policy_api)
         self.ip_block = policy_resources.NsxPolicyIpBlockApi(self.policy_api)
+        self.segment_security_profile = (
+            policy_resources.NsxSegmentSecurityProfileApi(self.policy_api))
+        self.qos_profile = (
+            policy_resources.NsxQosProfileApi(self.policy_api))
+        self.spoofguard_profile = (
+            policy_resources.NsxSpoofguardProfileApi(self.policy_api))
+        self.ip_discovery_profile = (
+            policy_resources.NsxIpDiscoveryProfileApi(self.policy_api))
+        self.mac_discovery_profile = (
+            policy_resources.NsxMacDiscoveryProfileApi(self.policy_api))
 
     @property
     def keepalive_section(self):
