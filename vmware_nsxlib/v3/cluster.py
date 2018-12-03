@@ -244,24 +244,35 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
                        'Content-Type': 'application/x-www-form-urlencoded'}
         # Cannot use the certificate at this stage, because it is used for
         # the certificate generation
-        resp = session.request('post', provider.url + self.SESSION_CREATE_URL,
-                               data=req_data, headers=req_headers)
-        if resp.status_code != 200:
-            LOG.error("Session create failed for endpoint %s", provider.url)
-            # this will later cause the endpoint to be Down
+        try:
+            resp = session.request(
+                'post', provider.url + self.SESSION_CREATE_URL,
+                data=req_data, headers=req_headers)
+        except Exception as e:
+            # Error 403 might be because the backend does not support this for
+            # all versions.
+            LOG.warning("Session create failed for endpoint %s with error %s",
+                        provider.url, e)
         else:
-            for header_name in resp.headers:
-                if self.SET_COOKIE_FIELD.lower() == header_name.lower():
-                    m = re.match('%s=.*?\;' % self.JSESSIONID,
-                                 resp.headers[header_name])
-                    if m:
-                        session.default_headers[self.COOKIE_FIELD] = m.group()
-                if self.XSRF_TOKEN.lower() == header_name.lower():
-                    session.default_headers[self.XSRF_TOKEN] = resp.headers[
-                        header_name]
-            LOG.info("Session create succeeded for endpoint %(url)s with "
-                     "headers %(hdr)s",
-                     {'url': provider.url, 'hdr': session.default_headers})
+            if resp.status_code != 200:
+                LOG.warning("Session create failed for endpoint %s with "
+                            "response %s",
+                            provider.url, resp.status_code)
+                # this may will later cause the endpoint to be Down
+            else:
+                for header_name in resp.headers:
+                    if self.SET_COOKIE_FIELD.lower() == header_name.lower():
+                        m = re.match('%s=.*?\;' % self.JSESSIONID,
+                                     resp.headers[header_name])
+                        if m:
+                            session.default_headers[self.COOKIE_FIELD] = (
+                                m.group())
+                    if self.XSRF_TOKEN.lower() == header_name.lower():
+                        session.default_headers[self.XSRF_TOKEN] = (
+                            resp.headers[header_name])
+                LOG.info("Session create succeeded for endpoint %(url)s with "
+                         "headers %(hdr)s",
+                         {'url': provider.url, 'hdr': session.default_headers})
 
         # Add allow-overwrite if configured
         if allow_overwrite_header:
