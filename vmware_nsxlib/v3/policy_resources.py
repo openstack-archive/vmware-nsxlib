@@ -738,9 +738,10 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
         self.policy_api.delete(tier0_def)
 
-    def get(self, tier0_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def get(self, tier0_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
-        return self.policy_api.get(tier0_def)
+        return self.policy_api.get(tier0_def, silent=silent)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         tier0_def = self.entry_def(tenant=tenant)
@@ -979,11 +980,12 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         self.policy_api.delete(port_def)
 
     def get(self, segment_id, port_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
                                   tenant=tenant)
-        return self.policy_api.get(port_def)
+        return self.policy_api.get(port_def, silent=silent)
 
     def list(self, segment_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         port_def = self.entry_def(segment_id=segment_id, tenant=tenant)
@@ -1106,12 +1108,13 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
         self.policy_api.delete(port_def)
 
     def get(self, tier1_id, segment_id, port_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
         port_def = self.entry_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
                                   port_id=port_id,
                                   tenant=tenant)
-        return self.policy_api.get(port_def)
+        return self.policy_api.get(port_def, silent=silent)
 
     def list(self, tier1_id, segment_id,
              tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -1218,10 +1221,11 @@ class NsxPolicyIpBlockApi(NsxPolicyResourceBase):
                                       tenant=tenant)
         self.policy_api.delete(ip_block_def)
 
-    def get(self, ip_block_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def get(self, ip_block_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+            silent=False):
         ip_block_def = self.entry_def(ip_block_id=ip_block_id,
                                       tenant=tenant)
-        return self.policy_api.get(ip_block_def)
+        return self.policy_api.get(ip_block_def, silent=silent)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         ip_block_def = self.entry_def(tenant=tenant)
