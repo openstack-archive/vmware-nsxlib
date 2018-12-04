@@ -987,12 +987,12 @@ class LogicalRouterTestCase(BaseTestResource):
             res = router.get_transportzone_id(router_id)
             self.assertIsNone(res)
 
-    def test_get_transportzone_id(self):
+    def _test_get_transportzone_id(self, router_type):
         router = self.get_mocked_resource()
         router_id = test_constants.FAKE_ROUTER_UUID
         faked_responds = {
             'componentInfo': [{
-                'componentType': nsx_constants.ROUTER_TYPE_TIER0_DR,
+                'componentType': router_type,
                 'transportZoneId': ['faked_id']
             }]
         }
@@ -1000,6 +1000,12 @@ class LogicalRouterTestCase(BaseTestResource):
                                return_value=faked_responds):
             res = router.get_transportzone_id(router_id)
             self.assertEqual('faked_id', res)
+
+    def test_get_transportzone_id_from_t0(self):
+        self._test_get_transportzone_id(nsx_constants.ROUTER_TYPE_TIER0_DR)
+
+    def test_get_transportzone_id_from_t1(self):
+        self._test_get_transportzone_id(nsx_constants.ROUTER_TYPE_TIER1_DR)
 
 
 class LogicalRouterPortTestCase(BaseTestResource):

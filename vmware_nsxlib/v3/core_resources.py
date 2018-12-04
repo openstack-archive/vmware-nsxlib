@@ -687,7 +687,8 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
     def get_transportzone_id(self, logical_router_id):
         res = self.get_debug_info(logical_router_id)
         for item in res['componentInfo']:
-            if item['componentType'] == nsx_constants.ROUTER_TYPE_TIER0_DR:
+            if item['componentType'] in (nsx_constants.ROUTER_TYPE_TIER0_DR,
+                                         nsx_constants.ROUTER_TYPE_TIER1_DR):
                 if item['transportZoneId']:
                     return item['transportZoneId'][0]
         LOG.warning('OverlayTransportZone is not yet available on'
