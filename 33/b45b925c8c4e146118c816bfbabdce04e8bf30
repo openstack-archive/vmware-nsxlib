@@ -1,0 +1,9 @@
+Verified+1: VMware NSX CI
+Code-Review+2: Michal Kelner Mishali <mkelnermishal@vmware.com>
+Workflow+1: Michal Kelner Mishali <mkelnermishal@vmware.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 04 Dec 2018 12:35:41 +0000
+Reviewed-on: https://review.openstack.org/622129
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
