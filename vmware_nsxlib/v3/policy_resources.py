@@ -685,7 +685,10 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                          lb_vip=lb_vip,
                          lb_snat=lb_snat)
 
+        # Note(asarfaty) keep tier1 name as well, as the current nsx
+        # implementation resets it to the ID
         tier1_def = self.entry_def(tier1_id=tier1_id,
+                                   name=tier1_dict.get('display_name'),
                                    route_adv=route_adv,
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
