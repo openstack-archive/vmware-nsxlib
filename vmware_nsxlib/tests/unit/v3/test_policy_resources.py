@@ -1798,7 +1798,9 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
 
     def test_update_route_adv(self):
         id = '111'
+        rtr_name = 'rtr111'
         get_result = {'id': '111',
+                      'display_name': rtr_name,
                       'route_advertisement_types': ['TIER1_NAT',
                                                     'TIER1_LB_VIP']}
         with mock.patch.object(self.policy_api, "get",
@@ -1816,6 +1818,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                 nat=True, static_routes=True, lb_snat=True)
 
             expected_def = policy_defs.Tier1Def(tier1_id=id,
+                                                name=rtr_name,
                                                 route_adv=new_adv,
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
