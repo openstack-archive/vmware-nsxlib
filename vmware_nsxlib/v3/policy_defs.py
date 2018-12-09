@@ -308,7 +308,7 @@ class Tier1Def(RouterDef):
         # TODO(annak): replace with provider path when provider is exposed
         if self.has_attr('tier0'):
             tier0 = self.get_attr('tier0')
-            tier0_path = ""
+            tier0_path = None
             if tier0:
                 tenant = TENANTS_PATH_PATTERN % self.get_tenant()
                 tier0_path = "/%stier-0s/%s" % (tenant, tier0)
@@ -339,7 +339,7 @@ class RouterLocaleServiceDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(RouterLocaleServiceDef, self).get_obj_dict()
-        self._set_attrs_in_body(body, ['edge_cluster_path'])
+        self._set_attr_if_specified(body, 'edge_cluster_path')
         return body
 
 
@@ -363,6 +363,52 @@ class Tier1LocaleServiceDef(RouterLocaleServiceDef):
     @property
     def path_ids(self):
         return ('tenant', 'tier1_id', 'service_id')
+
+
+class RouterNatRule(ResourceDef):
+
+    @staticmethod
+    def resource_type():
+        return 'PolicyNatRule'
+
+    def get_obj_dict(self):
+        body = super(RouterNatRule, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['action',
+                                            'source_network',
+                                            'destination_network',
+                                            'translated_network',
+                                            'firewall_match',
+                                            'log',
+                                            'sequence_number'])
+        return body
+
+
+class Tier1NatRule(RouterNatRule):
+
+    @property
+    def path_pattern(self):
+        return TIER1S_PATH_PATTERN + "%s/nat/%s/nat-rules/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier1_id', 'nat_id', 'nat_rule_id')
+
+    def path_defs(self):
+        return (TenantDef, Tier1Def)
+
+
+class Tier0NatRule(RouterNatRule):
+
+    @property
+    def path_pattern(self):
+        return TIER0S_PATH_PATTERN + "%s/nat/%s/nat-rules/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier0_id', 'nat_id', 'nat_rule_id')
+
+    def path_defs(self):
+        return (TenantDef, Tier0Def)
 
 
 class Subnet(object):
