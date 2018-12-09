@@ -222,10 +222,11 @@ class DomainDef(ResourceDef):
 class RouteAdvertisement(object):
 
     types = {'static_routes': 'TIER1_STATIC_ROUTES',
-             'subnets': 'TIER1_SUBNETS',
+             'subnets': 'TIER1_CONNECTED',
              'nat': 'TIER1_NAT',
              'lb_vip': 'TIER1_LB_VIP',
-             'lb_snat': 'TIER1_LB_SNAT'}
+             'lb_snat': 'TIER1_LB_SNAT',
+             'dns_forwarder_ip': 'TIER1_DNS_FORWARDER_IP'}
 
     def __init__(self, **kwargs):
         self.attrs = kwargs
