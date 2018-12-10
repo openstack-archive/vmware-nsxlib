@@ -79,6 +79,10 @@ class ResourceDef(object):
     def resource_type():
         pass
 
+    @staticmethod
+    def realization_entity_type():
+        pass
+
     def path_defs(self):
         pass
 
@@ -250,6 +254,10 @@ class RouteAdvertisement(object):
 class RouterDef(ResourceDef):
     def path_defs(self):
         return (TenantDef,)
+
+    @staticmethod
+    def realization_entity_type():
+        return 'RealizedLogicalRouter'
 
     def get_obj_dict(self):
         body = super(RouterDef, self).get_obj_dict()
@@ -439,6 +447,10 @@ class BaseSegmentDef(ResourceDef):
     def resource_type():
         return 'Segment'
 
+    @staticmethod
+    def realization_entity_type():
+        return 'RealizedLogicalSwitch'
+
 
 class Tier1SegmentDef(BaseSegmentDef):
     '''Tier1 segments can not move to different tier1 '''
@@ -526,6 +538,10 @@ class SegmentPortDef(ResourceDef):
     @staticmethod
     def resource_type():
         return 'SegmentPort'
+
+    @staticmethod
+    def realization_entity_type():
+        return 'RealizedLogicalPort'
 
     def path_defs(self):
         return (TenantDef, SegmentDef)
@@ -730,6 +746,10 @@ class GroupDef(ResourceDef):
     def resource_type():
         return 'Group'
 
+    @staticmethod
+    def realization_entity_type():
+        return 'RealizedGroup'
+
     def path_defs(self):
         return (TenantDef, DomainDef)
 
@@ -849,6 +869,10 @@ class CommunicationMapDef(ResourceDef):
     @staticmethod
     def resource_type():
         return 'SecurityPolicy'
+
+    @staticmethod
+    def realization_entity_type():
+        return 'RealizedFirewallSection'
 
     def path_defs(self):
         return (TenantDef, DomainDef)
