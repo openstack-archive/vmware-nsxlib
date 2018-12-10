@@ -19,6 +19,7 @@ import mock
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import policy_testcase
 from vmware_nsxlib import v3
+from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3 import nsx_constants
 from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import policy_defs
@@ -439,7 +440,25 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
     def test_get_realized(self):
         domain_id = 'd1'
         group_id = 'g1'
-        result = [{'state': policy_constants.STATE_REALIZED}]
+        result = [{'state': policy_constants.STATE_REALIZED,
+                   'entity_type': 'RealizedGroup'}]
+        with mock.patch.object(
+            self.policy_api, "get_realized_entities",
+            return_value=result) as api_get:
+            state = self.resourceApi.get_realized_state(
+                domain_id, group_id, tenant=TEST_TENANT)
+            self.assertEqual(policy_constants.STATE_REALIZED, state)
+            path = "/%s/domains/%s/groups/%s" % (
+                TEST_TENANT, domain_id, group_id)
+            api_get.assert_called_once_with(path)
+
+    def test_get_realized_multiple_results(self):
+        domain_id = 'd1'
+        group_id = 'g1'
+        result = [{'state': policy_constants.STATE_UNREALIZED,
+                   'entity_type': 'NotRealizedGroup'},
+                  {'state': policy_constants.STATE_REALIZED,
+                   'entity_type': 'RealizedGroup'}]
         with mock.patch.object(
             self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
@@ -453,13 +472,16 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
     def test_get_realized_id(self):
         domain_id = 'd1'
         group_id = 'g1'
-        result = [{'state': policy_constants.STATE_REALIZED}]
+        realized_id = 'realized_111'
+        result = [{'state': policy_constants.STATE_REALIZED,
+                   'entity_type': 'RealizedGroup',
+                   'realization_specific_identifier': realized_id}]
         with mock.patch.object(
             self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
-            state = self.resourceApi.get_realized_state(
+            result_id = self.resourceApi.get_realized_id(
                 domain_id, group_id, tenant=TEST_TENANT)
-            self.assertEqual(policy_constants.STATE_REALIZED, state)
+            self.assertEqual(realized_id, result_id)
             path = "/%s/domains/%s/groups/%s" % (
                 TEST_TENANT, domain_id, group_id)
             api_get.assert_called_once_with(path)
@@ -1358,7 +1380,8 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
     def test_get_realized(self):
         domain_id = 'd1'
         map_id = '111'
-        result = [{'state': policy_constants.STATE_REALIZED}]
+        result = [{'state': policy_constants.STATE_REALIZED,
+                   'entity_type': 'RealizedFirewallSection'}]
         with mock.patch.object(
             self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
@@ -1798,6 +1821,30 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
+
+    def test_wait_until_realized_fail(self):
+        tier1_id = '111'
+        logical_router_id = 'realized_111'
+        info = {'state': policy_constants.STATE_UNREALIZED,
+                'realization_specific_identifier': logical_router_id,
+                'entity_type': 'RealizedLogicalRouter'}
+        with mock.patch.object(self.resourceApi, "_get_realization_info",
+                               return_value=info):
+            self.assertRaises(nsxlib_exc.ManagerError,
+                              self.resourceApi.wait_until_realized,
+                              tier1_id, tenant=TEST_TENANT)
+
+    def test_wait_until_realized_succeed(self):
+        tier1_id = '111'
+        logical_router_id = 'realized_111'
+        info = {'state': policy_constants.STATE_REALIZED,
+                'realization_specific_identifier': logical_router_id,
+                'entity_type': 'RealizedLogicalRouter'}
+        with mock.patch.object(self.resourceApi, "_get_realization_info",
+                               return_value=info):
+            actual_info = self.resourceApi.wait_until_realized(
+                tier1_id, tenant=TEST_TENANT)
+            self.assertEqual(info, actual_info)
 
 
 class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
