@@ -395,7 +395,12 @@ class NsxPolicyLib(NsxLibBase):
             self.policy_api)
         self.tier1_nat_rule = policy_resources.NsxPolicyTier1NatRuleApi(
             self.policy_api)
+        self.tier1_static_route = (
+            policy_resources.NsxPolicyTier1StaticRouteApi(self.policy_api))
         self.segment = policy_resources.NsxPolicySegmentApi(self.policy_api)
+        self.tier1_segment_port = (
+            policy_resources.NsxPolicyTier1SegmentPortApi(*args))
+        self.segment = policy_resources.NsxPolicySegmentApi(*args)
         self.segment_port = policy_resources.NsxPolicySegmentPortApi(
             self.policy_api)
         self.tier1_segment_port = (
@@ -403,10 +408,6 @@ class NsxPolicyLib(NsxLibBase):
         self.comm_map = policy_resources.NsxPolicyCommunicationMapApi(
             self.policy_api)
         self.enforcement_point = policy_resources.NsxPolicyEnforcementPointApi(
-            self.policy_api)
-        self.transport_zone = policy_resources.NsxPolicyTransportZoneApi(
-            self.policy_api)
-        self.deployment_map = policy_resources.NsxPolicyDeploymentMapApi(
             self.policy_api)
         self.ip_block = policy_resources.NsxPolicyIpBlockApi(self.policy_api)
         self.ip_pool = policy_resources.NsxPolicyIpPoolApi(self.policy_api)
