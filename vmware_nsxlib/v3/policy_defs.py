@@ -34,6 +34,16 @@ ENFORCEMENT_POINT_PATTERN = (TENANTS_PATH_PATTERN +
 TRANSPORT_ZONE_PATTERN = ENFORCEMENT_POINT_PATTERN + "%s/transport-zones/"
 EDGE_CLUSTER_PATTERN = ENFORCEMENT_POINT_PATTERN + "%s/edge-clusters/"
 
+SEGMENT_SECURITY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
+                                          "segment-security-profiles/")
+QOS_PROFILES_PATH_PATTERN = TENANTS_PATH_PATTERN + "qos-profiles/"
+SPOOFGUARD_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
+                                    "spoofguard-profiles/")
+IP_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
+                                      "ip-discovery-profiles/")
+MAC_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
+                                       "mac-discovery-profiles/")
+
 REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
 
 
@@ -1004,6 +1014,128 @@ class DeploymentMapDef(ResourceDef):
         body['enforcement_point_path'] = EnforcementPointDef(
             ep_id=ep_id,
             tenant=tenant).get_resource_full_path() if ep_id else None
+        return body
+
+
+class SegmentSecurityProfileDef(ResourceDef):
+    DEFAULT_PROFILE = 'default-segment-security-profile'
+
+    @property
+    def path_pattern(self):
+        return SEGMENT_SECURITY_PROFILES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'profile_id')
+
+    @staticmethod
+    def resource_type():
+        return 'SegmentSecurityProfile'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+    def get_obj_dict(self):
+        body = super(SegmentSecurityProfileDef, self).get_obj_dict()
+        # TODO(asarfaty): add all attributes here. currently used for read only
+        return body
+
+
+class QosProfileDef(ResourceDef):
+    @property
+    def path_pattern(self):
+        return QOS_PROFILES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'profile_id')
+
+    @staticmethod
+    def resource_type():
+        return 'QoSProfile'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+    def get_obj_dict(self):
+        body = super(QosProfileDef, self).get_obj_dict()
+        # TODO(asarfaty): add all attributes here. currently used for read only
+        return body
+
+
+class SpoofguardProfileDef(ResourceDef):
+    DEFAULT_PROFILE = 'default-spoofguard-profile'
+
+    @property
+    def path_pattern(self):
+        return SPOOFGUARD_PROFILES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'profile_id')
+
+    @staticmethod
+    def resource_type():
+        return 'SpoofGuardProfile'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+    def get_obj_dict(self):
+        body = super(SpoofguardProfileDef, self).get_obj_dict()
+        # TODO(asarfaty): add all attributes here
+        self._set_attr_if_specified(body, 'address_binding_whitelist')
+        return body
+
+
+class IpDiscoveryProfileDef(ResourceDef):
+    DEFAULT_PROFILE = 'default-ip-discovery-profile'
+
+    @property
+    def path_pattern(self):
+        return IP_DISCOVERY_PROFILES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'profile_id')
+
+    @staticmethod
+    def resource_type():
+        return 'IPDiscoveryProfile'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+    def get_obj_dict(self):
+        body = super(IpDiscoveryProfileDef, self).get_obj_dict()
+        # TODO(asarfaty): add all attributes here. currently used for read only
+        return body
+
+
+class MacDiscoveryProfileDef(ResourceDef):
+    DEFAULT_PROFILE = 'default-mac-discovery-profile'
+
+    @property
+    def path_pattern(self):
+        return MAC_DISCOVERY_PROFILES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'profile_id')
+
+    @staticmethod
+    def resource_type():
+        return 'MacDiscoveryProfile'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+    def get_obj_dict(self):
+        body = super(MacDiscoveryProfileDef, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['mac_change_enabled',
+                                            'mac_learning_enabled',
+                                            'unknown_unicast_flooding_enabled',
+                                            'mac_limit_policy', 'mac_limit'])
         return body
 
 

@@ -1932,3 +1932,104 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
+
+
+class TestPolicySegmentProfileBase(NsxPolicyLibTestCase):
+
+    def setUp(self, resource_api_name='segment_security_profile',
+              resource_def=policy_defs.SegmentSecurityProfileDef):
+        super(TestPolicySegmentProfileBase, self).setUp()
+        self.resourceApi = getattr(self.policy_lib, resource_api_name)
+        self.resourceDef = resource_def
+
+    def test_create(self):
+        name = 'test'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name,
+                tenant=TEST_TENANT)
+
+            expected_def = self.resourceDef(
+                profile_id=mock.ANY,
+                name=name,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        profile_id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(profile_id, tenant=TEST_TENANT)
+            expected_def = self.resourceDef(profile_id=profile_id,
+                                            tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        profile_id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(profile_id, tenant=TEST_TENANT)
+            expected_def = self.resourceDef(profile_id=profile_id,
+                                            tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 'test'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = self.resourceDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = self.resourceDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        profile_id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(profile_id,
+                                    name=name,
+                                    tenant=TEST_TENANT)
+            expected_def = self.resourceDef(profile_id=profile_id,
+                                            name=name,
+                                            tenant=TEST_TENANT)
+            self.assert_called_with_def(
+                update_call, expected_def)
+
+
+class TestPolicyQosProfile(TestPolicySegmentProfileBase):
+
+    def setUp(self):
+        super(TestPolicyQosProfile, self).setUp(
+            resource_api_name='qos_profile',
+            resource_def=policy_defs.QosProfileDef)
+
+
+class TestPolicySpoofguardProfile(TestPolicySegmentProfileBase):
+
+    def setUp(self):
+        super(TestPolicySpoofguardProfile, self).setUp(
+            resource_api_name='spoofguard_profile',
+            resource_def=policy_defs.SpoofguardProfileDef)
+
+
+class TestPolicyIpDiscoveryProfile(TestPolicySegmentProfileBase):
+
+    def setUp(self):
+        super(TestPolicyIpDiscoveryProfile, self).setUp(
+            resource_api_name='ip_discovery_profile',
+            resource_def=policy_defs.IpDiscoveryProfileDef)
+
+
+class TestPolicyMacDiscoveryProfile(TestPolicySegmentProfileBase):
+
+    def setUp(self):
+        super(TestPolicyMacDiscoveryProfile, self).setUp(
+            resource_api_name='mac_discovery_profile',
+            resource_def=policy_defs.MacDiscoveryProfileDef)
