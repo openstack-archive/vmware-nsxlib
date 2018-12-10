@@ -395,6 +395,8 @@ class NsxPolicyLib(NsxLibBase):
             self.policy_api)
         self.tier1_nat_rule = policy_resources.NsxPolicyTier1NatRuleApi(
             self.policy_api)
+        self.tier1_static_route = (
+            policy_resources.NsxPolicyTier1StaticRouteApi(self.policy_api))
         self.segment = policy_resources.NsxPolicySegmentApi(self.policy_api)
         self.segment_port = policy_resources.NsxPolicySegmentPortApi(
             self.policy_api)

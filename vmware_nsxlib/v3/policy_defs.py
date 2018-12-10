@@ -408,6 +408,54 @@ class Tier1NatRule(RouterNatRule):
         return (TenantDef, Tier1Def)
 
 
+class RouterStaticRoute(ResourceDef):
+
+    @staticmethod
+    def resource_type():
+        return 'StaticRoutes'
+
+    def get_obj_dict(self):
+        body = super(RouterStaticRoute, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['network'])
+
+        # next hops
+        if self.has_attr('next_hop'):
+            next_hop = self.get_attr('next_hop')
+            next_hops = [{'ip_address': next_hop}]
+            self._set_attr_if_specified(body, 'next_hop',
+                                        body_attr='next_hops',
+                                        value=next_hops)
+        return body
+
+
+class Tier1StaticRoute(RouterStaticRoute):
+
+    @property
+    def path_pattern(self):
+        return TIER1S_PATH_PATTERN + "%s/static-routes/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier1_id', 'static_route_id')
+
+    def path_defs(self):
+        return (TenantDef, Tier1Def)
+
+
+class Tier0StaticRoute(RouterStaticRoute):
+
+    @property
+    def path_pattern(self):
+        return TIER0S_PATH_PATTERN + "%s/static-routes/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier0_id', 'static_route_id')
+
+    def path_defs(self):
+        return (TenantDef, Tier0Def)
+
+
 class Tier0NatRule(RouterNatRule):
 
     @property

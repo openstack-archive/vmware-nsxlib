@@ -1854,6 +1854,55 @@ class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
 
 
+class TestPolicyTier1StaticRoute(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyTier1StaticRoute, self).setUp()
+        self.resourceApi = self.policy_lib.tier1_static_route
+
+    def test_create(self):
+        name = 'test'
+        description = 'desc'
+        tier1_id = '111'
+        static_route_id = '222'
+        network = '1.1.1.1/24'
+        nexthop = '2.2.2.2'
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, tier1_id,
+                static_route_id=static_route_id,
+                description=description,
+                network=network,
+                next_hop=nexthop,
+                tenant=TEST_TENANT)
+
+            expected_def = policy_defs.Tier1StaticRoute(
+                tier1_id=tier1_id,
+                static_route_id=static_route_id,
+                name=name,
+                description=description,
+                network=network,
+                next_hop=nexthop,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        tier1_id = '111'
+        static_route_id = '222'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(
+                tier1_id,
+                static_route_id,
+                tenant=TEST_TENANT)
+            expected_def = policy_defs.Tier1StaticRoute(
+                tier1_id=tier1_id,
+                static_route_id=static_route_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+
 class TestPolicyTier0(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
