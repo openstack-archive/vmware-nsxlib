@@ -749,9 +749,6 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
         realization_info = self.wait_until_realized(tier1_id, tenant=tenant)
 
-        # DEBUG ADIT - sleep until sure the last policy api is complete
-        eventlet.sleep(2)
-
         nsx_router_uuid = self.get_realized_id(
             tier1_id, tenant=tenant, realization_info=realization_info)
         self.nsx_api.logical_router.update(
@@ -876,7 +873,6 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
 
 
 class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
-    """NSX Tier0 API """
     DEFAULT_NAT_ID = 'USER'
 
     @property
@@ -954,6 +950,69 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
                      translated_network=translated_network,
                      action=action,
                      log=log,
+                     tags=tags,
+                     tenant=tenant)
+
+
+class NsxPolicyTier1StaticRouteApi(NsxPolicyResourceBase):
+
+    @property
+    def entry_def(self):
+        return policy_defs.Tier1StaticRoute
+
+    def create_or_overwrite(self, name, tier1_id,
+                            static_route_id=None,
+                            description=IGNORE,
+                            network=IGNORE,
+                            next_hop=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        static_route_id = self._init_obj_uuid(static_route_id)
+        static_route_def = self._init_def(tier1_id=tier1_id,
+                                          static_route_id=static_route_id,
+                                          name=name,
+                                          description=description,
+                                          network=network,
+                                          next_hop=next_hop,
+                                          tags=tags,
+                                          tenant=tenant)
+        self._create_or_store(static_route_def)
+        return static_route_id
+
+    def delete(self, tier1_id, static_route_id,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        static_route_def = self.entry_def(tier1_id=tier1_id,
+                                          static_route_id=static_route_id,
+                                          tenant=tenant)
+        self.policy_api.delete(static_route_def)
+
+    def get(self, tier1_id, static_route_id,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        static_route_def = self.entry_def(tier1_id=tier1_id,
+                                          static_route_id=static_route_id,
+                                          tenant=tenant)
+        self.policy_api.get(static_route_def)
+
+    def list(self, tier1_id,
+             tenant=policy_constants.POLICY_INFRA_TENANT):
+        static_route_def = self.entry_def(tier1_id=tier1_id,
+                                          tenant=tenant)
+        return self._list(static_route_def)
+
+    def update(self, tier1_id, static_route_id,
+               name=IGNORE,
+               description=IGNORE,
+               network=IGNORE,
+               next_hop=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(tier1_id=tier1_id,
+                     static_route_id=static_route_id,
+                     name=name,
+                     description=description,
+                     network=network,
+                     next_hop=next_hop,
                      tags=tags,
                      tenant=tenant)
 
