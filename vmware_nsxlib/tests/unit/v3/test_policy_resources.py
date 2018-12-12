@@ -2036,3 +2036,36 @@ class TestPolicyMacDiscoveryProfile(TestPolicySegmentProfileBase):
         super(TestPolicyMacDiscoveryProfile, self).setUp(
             resource_api_name='mac_discovery_profile',
             resource_def=policy_defs.MacDiscoveryProfileDef)
+
+
+class TestPolicySegmentSecurityProfile(TestPolicySegmentProfileBase):
+
+    def test_create_with_params(self):
+        name = 'test'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name,
+                bpdu_filter_enable=True,
+                dhcp_client_block_enabled=False,
+                dhcp_client_block_v6_enabled=True,
+                dhcp_server_block_enabled=False,
+                dhcp_server_block_v6_enabled=True,
+                non_ip_traffic_block_enabled=False,
+                ra_guard_enabled=True,
+                rate_limits_enabled=False,
+                tenant=TEST_TENANT)
+
+            expected_def = self.resourceDef(
+                profile_id=mock.ANY,
+                name=name,
+                bpdu_filter_enable=True,
+                dhcp_client_block_enabled=False,
+                dhcp_client_block_v6_enabled=True,
+                dhcp_server_block_enabled=False,
+                dhcp_server_block_v6_enabled=True,
+                non_ip_traffic_block_enabled=False,
+                ra_guard_enabled=True,
+                rate_limits_enabled=False,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
