@@ -433,6 +433,12 @@ class NsxPolicyLib(NsxLibBase):
             policy_resources.NsxIpDiscoveryProfileApi(*args))
         self.mac_discovery_profile = (
             policy_resources.NsxMacDiscoveryProfileApi(*args))
+        self.segment_port_security_profiles = (
+            policy_resources.SegmentPortSecurityProfilesBindingMapDef(
+                *args))
+        self.segment_port_discovery_profiles = (
+            policy_resources.SegmentPortDiscoveryProfilesBindingMapDef(
+                *args))
 
     @property
     def keepalive_section(self):
