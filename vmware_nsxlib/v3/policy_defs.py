@@ -569,6 +569,55 @@ class SegmentPortDef(ResourceDef):
         return body
 
 
+class SegmentPortSecProfilesBindingMapDef(ResourceDef):
+    '''Infra segment port'''
+
+    @property
+    def path_pattern(self):
+        return (SEGMENTS_PATH_PATTERN +
+                "%s/ports/%s/port-security-profile-binding-maps/")
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'segment_id', 'port_id', 'map_id')
+
+    @staticmethod
+    def resource_type():
+        return 'PortSecurityProfileBindingMap'
+
+    def path_defs(self):
+        return (TenantDef, SegmentDef, SegmentPortDef)
+
+    def get_obj_dict(self):
+        body = super(SegmentPortSecProfilesBindingMapDef, self).get_obj_dict()
+
+        if self.has_attr('segment_security_profile_id'):
+            path = None
+            if self.get_attr('segment_security_profile_id'):
+                profile = SegmentSecurityProfileDef(
+                    profile_id=self.get_attr('segment_security_profile_id'),
+                    tenant=self.get_tenant())
+                path = profile.get_resource_full_path()
+                self._set_attr_if_specified(
+                    body, 'segment_security_profile_id',
+                    body_attr='segment_security_profile_path',
+                    value=path)
+
+        if self.has_attr('spoofguard_profile_id'):
+            path = None
+            if self.get_attr('spoofguard_profile_id'):
+                profile = SpoofguardProfileDef(
+                    profile_id=self.get_attr('spoofguard_profile_id'),
+                    tenant=self.get_tenant())
+                path = profile.get_resource_full_path()
+                self._set_attr_if_specified(
+                    body, 'spoofguard_profile_id',
+                    body_attr='spoofguard_profile_path',
+                    value=path)
+
+        return body
+
+
 class Tier1SegmentPortDef(SegmentPortDef):
     '''Tier1 segment port'''
 

@@ -1142,6 +1142,79 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         return self._get_realization_info(port_def)
 
 
+class SegmentPortSecProfilesBindingMapDef(NsxPolicyResourceBase):
+    """NSX Tier0 API """
+    DEFAULT_MAP_ID = 'DEFAULT'
+
+    @property
+    def entry_def(self):
+        return policy_defs.SegmentPortSecProfilesBindingMapDef
+
+    def create_or_overwrite(self, name, segment_id, port_id,
+                            map_id=DEFAULT_MAP_ID,
+                            description=IGNORE,
+                            segment_security_profile_id=IGNORE,
+                            spoofguard_profile_id=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        map_id = self._init_obj_uuid(map_id)
+        map_def = self._init_def(
+            segment_id=segment_id,
+            port_id=port_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            segment_security_profile_id=segment_security_profile_id,
+            spoofguard_profile_id=spoofguard_profile_id,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(map_def)
+        return map_id
+
+    def delete(self, segment_id, port_id, map_id=DEFAULT_MAP_ID,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        map_def = self.entry_def(segment_id=segment_id,
+                                 port_id=port_id,
+                                 map_id=map_id,
+                                 tenant=tenant)
+        self.policy_api.delete(map_def)
+
+    def get(self, segment_id, port_id, map_id=DEFAULT_MAP_ID,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        map_def = self.entry_def(segment_id=segment_id,
+                                 port_id=port_id,
+                                 map_id=map_id,
+                                 tenant=tenant)
+        self.policy_api.get(map_def)
+
+    def list(self, segment_id, port_id,
+             tenant=policy_constants.POLICY_INFRA_TENANT):
+        map_def = self.entry_def(segment_id=segment_id,
+                                 port_id=port_id,
+                                 tenant=tenant)
+        return self._list(map_def)
+
+    def update(self, segment_id, port_id,
+               map_id=DEFAULT_MAP_ID,
+               name=IGNORE,
+               description=IGNORE,
+               segment_security_profile_id=IGNORE,
+               spoofguard_profile_id=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(
+            segment_id=segment_id,
+            port_id=port_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            segment_security_profile_id=segment_security_profile_id,
+            spoofguard_profile_id=spoofguard_profile_id,
+            tags=tags,
+            tenant=tenant)
+
+
 class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
     """NSX Tier1 Segment Port API """
     @property
