@@ -489,8 +489,14 @@ class BaseSegmentDef(ResourceDef):
     def get_obj_dict(self):
         body = super(BaseSegmentDef, self).get_obj_dict()
         if self.has_attr('subnets'):
-            body['subnets'] = [subnet.get_obj_dict()
-                               for subnet in self.get_attr('subnets')]
+            subnets = None
+            if self.get_attr('subnets'):
+                subnets = [subnet.get_obj_dict()
+                           for subnet in self.get_attr('subnets')]
+            self._set_attr_if_specified(body, 'subnets',
+                                        value=subnets)
+            if not subnets:
+                body['type'] = 'DISCONNECTED'
         self._set_attrs_if_specified(body, ['domain_name', 'vlan_ids'])
         return body
 
