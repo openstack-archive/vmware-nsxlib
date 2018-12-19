@@ -19,6 +19,7 @@ import abc
 import six
 
 from vmware_nsxlib.v3 import policy_constants
+from vmware_nsxlib.v3 import utils
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
@@ -1192,8 +1193,9 @@ class NsxPolicyApi(object):
 
     def __init__(self, client):
         self.client = client
+        self.cache = utils.NsxLibCache(utils.DEFAULT_CACHE_AGE_SEC)
 
-    def create_or_update(self, resource_def):
+    def create_or_update(self, resource_def, resource_use_cache=False):
         """Create or update a policy object.
 
         This api will update an existing object, or create a new one if it
@@ -1201,6 +1203,8 @@ class NsxPolicyApi(object):
         The policy API supports PATCH for create/update operations
         """
         path = resource_def.get_resource_path()
+        if resource_use_cache:
+            self.cache.remove(path)
         body = resource_def.body
         if not body:
             body = resource_def.get_obj_dict()
@@ -1217,13 +1221,25 @@ class NsxPolicyApi(object):
             body[child_dict_key] = [resource_def.get_obj_dict()]
         self.client.patch(path, body)
 
-    def delete(self, resource_def):
+    def delete(self, resource_def, resource_use_cache=False):
         path = resource_def.get_resource_path()
+        if resource_use_cache:
+            self.cache.remove(path)
         self.client.delete(path)
 
-    def get(self, resource_def, silent=False):
+    def get(self, resource_def, silent=False, resource_use_cache=False):
         path = resource_def.get_resource_path()
-        return self.client.get(path, silent=silent)
+        if resource_use_cache:
+            # try to get it from the cache
+            result = self.cache.get(path)
+            if result:
+                return result
+        # call the client
+        result = self.client.get(path, silent=silent)
+        if result and resource_use_cache:
+            # add the result to the cache
+            self.cache.update(path, result)
+        return result
 
     def list(self, resource_def):
         path = resource_def.get_section_path()

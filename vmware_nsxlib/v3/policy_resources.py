@@ -116,15 +116,16 @@ class NsxPolicyResourceBase(object):
 
         return resource_def
 
-    def _update(self, **kwargs):
+    def _update(self, resource_use_cache=False, **kwargs):
         """Helper for update function - ignore attrs without explicit value"""
-
         policy_def = self._init_def(**kwargs)
         if policy_def.bodyless():
             # Nothing to update - only keys provided in kwargs
             return
 
-        self.policy_api.create_or_update(policy_def)
+        self.policy_api.create_or_update(
+            policy_def,
+            resource_use_cache=resource_use_cache)
 
     @staticmethod
     def _init_obj_uuid(obj_uuid):
@@ -815,12 +816,13 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
 
     def delete(self, tier0_id, tenant=policy_constants.POLICY_INFRA_TENANT):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
-        self.policy_api.delete(tier0_def)
+        self.policy_api.delete(tier0_def, resource_use_cache=True)
 
     def get(self, tier0_id, tenant=policy_constants.POLICY_INFRA_TENANT,
             silent=False):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
-        return self.policy_api.get(tier0_def, silent=silent)
+        return self.policy_api.get(tier0_def, silent=silent,
+                                   resource_use_cache=True)
 
     def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
         tier0_def = self.entry_def(tenant=tenant)
@@ -844,7 +846,8 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                      default_rule_logging=default_rule_logging,
                      transit_subnets=transit_subnets,
                      tags=tags,
-                     tenant=tenant)
+                     tenant=tenant,
+                     resource_use_cache=True)
 
     def get_edge_cluster_path(self, tier0_id,
                               tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -2050,7 +2053,8 @@ class NsxPolicyTransportZoneApi(NsxPolicyResourceBase):
             tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
         tz_def = policy_defs.TransportZoneDef(
             ep_id=ep_id, tz_id=tz_id, tenant=tenant)
-        return self.policy_api.get(tz_def, silent=silent)
+        return self.policy_api.get(tz_def, silent=silent,
+                                   resource_use_cache=True)
 
     def get_tz_type(self, tz_id,
                     ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
