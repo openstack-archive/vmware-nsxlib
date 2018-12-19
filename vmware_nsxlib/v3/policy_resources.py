@@ -118,7 +118,6 @@ class NsxPolicyResourceBase(object):
 
     def _update(self, **kwargs):
         """Helper for update function - ignore attrs without explicit value"""
-
         policy_def = self._init_def(**kwargs)
         if policy_def.bodyless():
             # Nothing to update - only keys provided in kwargs
