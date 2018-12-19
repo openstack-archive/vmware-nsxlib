@@ -2130,6 +2130,84 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                               tier1_id, tenant=TEST_TENANT)
 
 
+class TestPolicySegment(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicySegment, self).setUp()
+        self.resourceApi = self.policy_lib.segment
+
+    def test_create(self):
+        name = 'test'
+        description = 'desc'
+        tier1_id = '111'
+        subnets = [policy_defs.Subnet(gateway_address="2.2.2.0/24")]
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, description=description,
+                tier1_id=tier1_id,
+                subnets=subnets,
+                tenant=TEST_TENANT)
+
+            expected_def = policy_defs.SegmentDef(
+                segment_id=mock.ANY,
+                name=name,
+                description=description,
+                tier1_id=tier1_id,
+                subnets=subnets,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        segment_id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(segment_id, tenant=TEST_TENANT)
+            expected_def = policy_defs.SegmentDef(segment_id=segment_id,
+                                                  tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        segment_id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(segment_id, tenant=TEST_TENANT)
+            expected_def = policy_defs.SegmentDef(segment_id=segment_id,
+                                                  tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = policy_defs.SegmentDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        segment_id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(segment_id,
+                                    name=name,
+                                    tenant=TEST_TENANT)
+            expected_def = policy_defs.SegmentDef(segment_id=segment_id,
+                                                  name=name,
+                                                  tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+
+    def test_remove_connectivity_and_subnets(self):
+        segment_id = '111'
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={'id': segment_id}) as api_get,\
+            mock.patch.object(self.policy_api.client, "update") as api_put:
+            self.resourceApi.remove_connectivity_and_subnets(
+                segment_id, tenant=TEST_TENANT)
+            api_get.assert_called_once()
+            api_put.assert_called_once_with(
+                '%s/segments/%s' % (TEST_TENANT, segment_id),
+                {'id': segment_id, 'connectivity_path': None, 'subnets': None})
+
+
 class TestPolicySegmentProfileBase(NsxPolicyLibTestCase):
 
     def setUp(self, resource_api_name='segment_security_profile',

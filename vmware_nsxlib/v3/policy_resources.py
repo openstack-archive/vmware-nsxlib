@@ -1193,6 +1193,23 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                      tags=tags,
                      tenant=tenant)
 
+    def remove_connectivity_and_subnets(
+        self, segment_id,
+        tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Disconnect a segment from a router and remove its subnets.
+
+        PATCH does not support this action so PUT is used for this
+        """
+        # Get the current segment and update it
+        segment = self.get(segment_id)
+        segment['subnets'] = None
+        segment['connectivity_path'] = None
+
+        segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
+        path = segment_def.get_resource_path()
+
+        self.policy_api.client.update(path, segment)
+
     def get_realized_state(self, segment_id, entity_type=None,
                            tenant=policy_constants.POLICY_INFRA_TENANT,
                            realization_info=None):
