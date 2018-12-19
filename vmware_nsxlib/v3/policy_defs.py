@@ -19,6 +19,7 @@ import abc
 import six
 
 from vmware_nsxlib.v3 import policy_constants
+from vmware_nsxlib.v3 import utils
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
@@ -88,6 +89,10 @@ class ResourceDef(object):
     @staticmethod
     def resource_type():
         pass
+
+    @staticmethod
+    def resource_use_cache():
+        return False
 
     def path_defs(self):
         pass
@@ -290,6 +295,10 @@ class Tier0Def(RouterDef):
     @staticmethod
     def resource_type():
         return 'Tier0'
+
+    @staticmethod
+    def resource_use_cache():
+        return True
 
     def get_obj_dict(self):
         body = super(Tier0Def, self).get_obj_dict()
@@ -1036,6 +1045,10 @@ class TransportZoneDef(ResourceDef):
     def resource_type():
         return 'PolicyTransportZone'
 
+    @staticmethod
+    def resource_use_cache():
+        return True
+
 
 # Currently assumes one deployment point per id
 class DeploymentMapDef(ResourceDef):
@@ -1192,6 +1205,7 @@ class NsxPolicyApi(object):
 
     def __init__(self, client):
         self.client = client
+        self.cache = utils.NsxLibCache(utils.DEFAULT_CACHE_AGE_SEC)
 
     def create_or_update(self, resource_def):
         """Create or update a policy object.
@@ -1201,6 +1215,8 @@ class NsxPolicyApi(object):
         The policy API supports PATCH for create/update operations
         """
         path = resource_def.get_resource_path()
+        if resource_def.resource_use_cache():
+            self.cache.remove(path)
         body = resource_def.body
         if not body:
             body = resource_def.get_obj_dict()
@@ -1219,11 +1235,23 @@ class NsxPolicyApi(object):
 
     def delete(self, resource_def):
         path = resource_def.get_resource_path()
+        if resource_def.resource_use_cache():
+            self.cache.remove(path)
         self.client.delete(path)
 
     def get(self, resource_def, silent=False):
         path = resource_def.get_resource_path()
-        return self.client.get(path, silent=silent)
+        if resource_def.resource_use_cache():
+            # try to get it from the cache
+            result = self.cache.get(path)
+            if result:
+                return result
+        # call the client
+        result = self.client.get(path, silent=silent)
+        if resource_def.resource_use_cache():
+            # add the result to the cache
+            self.cache.update(path, result)
+        return result
 
     def list(self, resource_def):
         path = resource_def.get_section_path()

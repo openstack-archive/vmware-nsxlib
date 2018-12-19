@@ -1643,6 +1643,13 @@ class TestPolicyTransportZone(NsxPolicyLibTestCase):
                                                         tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
+    def test_get_with_cache(self):
+        id = '111'
+        with mock.patch.object(self.policy_api.client, "get") as client_get:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            self.assertEqual(1, client_get.call_count)
+
     def test_get_by_name(self):
         name = 'tz1'
         with mock.patch.object(
@@ -1747,6 +1754,13 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             expected_def = policy_defs.Tier1Def(tier1_id=id,
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_with_no_cache(self):
+        id = '111'
+        with mock.patch.object(self.policy_api.client, "get") as client_get:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            self.assertEqual(2, client_get.call_count)
 
     def test_get_by_name(self):
         name = 'test'
@@ -2050,6 +2064,13 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
             expected_def = policy_defs.Tier0Def(tier0_id=id,
                                                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_with_cache(self):
+        id = '111'
+        with mock.patch.object(self.policy_api.client, "get") as client_get:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            self.assertEqual(1, client_get.call_count)
 
     def test_get_by_name(self):
         name = 'test'
