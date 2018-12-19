@@ -498,8 +498,13 @@ class BaseSegmentDef(ResourceDef):
     def get_obj_dict(self):
         body = super(BaseSegmentDef, self).get_obj_dict()
         if self.has_attr('subnets'):
-            body['subnets'] = [subnet.get_obj_dict()
-                               for subnet in self.get_attr('subnets')]
+            # Note(asarfaty): removing subnets through PATCH api is not
+            # supported
+            if self.get_attr('subnets'):
+                subnets = [subnet.get_obj_dict()
+                           for subnet in self.get_attr('subnets')]
+                self._set_attr_if_specified(body, 'subnets',
+                                            value=subnets)
         self._set_attrs_if_specified(body, ['domain_name', 'vlan_ids'])
         return body
 
@@ -543,7 +548,7 @@ class SegmentDef(BaseSegmentDef):
     def get_obj_dict(self):
         body = super(SegmentDef, self).get_obj_dict()
         if self.has_attr('tier1_id'):
-            path = None
+            path = ""
             if self.get_attr('tier1_id'):
                 tier1 = Tier1Def(tier1_id=self.get_attr('tier1_id'),
                                  tenant=self.get_tenant())
