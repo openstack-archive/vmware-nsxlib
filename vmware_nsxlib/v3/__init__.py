@@ -469,6 +469,7 @@ class NsxPolicyLib(NsxLibBase):
                 *args))
         self.load_balancer = (
             policy_load_balancer.NsxPolicyLoadBalancerApi(*args))
+        self.certificate = policy_resources.NsxPolicyCertApi(*args)
 
     @property
     def keepalive_section(self):
