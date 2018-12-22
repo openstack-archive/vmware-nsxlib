@@ -626,6 +626,105 @@ class SegmentPortDef(ResourceDef):
         return body
 
 
+class SegmentPortSecProfilesBindingMapDef(ResourceDef):
+    '''Infra segment port'''
+
+    @property
+    def path_pattern(self):
+        return (SEGMENTS_PATH_PATTERN +
+                "%s/ports/%s/port-security-profile-binding-maps/")
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'segment_id', 'port_id', 'map_id')
+
+    @staticmethod
+    def resource_type():
+        return 'PortSecurityProfileBindingMap'
+
+    def path_defs(self):
+        return (TenantDef, SegmentDef, SegmentPortDef)
+
+    def get_obj_dict(self):
+        body = super(SegmentPortSecProfilesBindingMapDef, self).get_obj_dict()
+
+        if self.has_attr('segment_security_profile_id'):
+            path = None
+            if self.get_attr('segment_security_profile_id'):
+                profile = SegmentSecurityProfileDef(
+                    profile_id=self.get_attr('segment_security_profile_id'),
+                    tenant=self.get_tenant())
+                path = profile.get_resource_full_path()
+            self._set_attr_if_specified(
+                body, 'segment_security_profile_id',
+                body_attr='segment_security_profile_path',
+                value=path)
+
+        if self.has_attr('spoofguard_profile_id'):
+            path = None
+            if self.get_attr('spoofguard_profile_id'):
+                profile = SpoofguardProfileDef(
+                    profile_id=self.get_attr('spoofguard_profile_id'),
+                    tenant=self.get_tenant())
+                path = profile.get_resource_full_path()
+            self._set_attr_if_specified(
+                body, 'spoofguard_profile_id',
+                body_attr='spoofguard_profile_path',
+                value=path)
+
+        return body
+
+
+class SegmentPortDiscoveryProfilesBindingMapDef(ResourceDef):
+    '''Infra segment port'''
+
+    @property
+    def path_pattern(self):
+        return (SEGMENTS_PATH_PATTERN +
+                "%s/ports/%s/port-discovery-profile-binding-maps/")
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'segment_id', 'port_id', 'map_id')
+
+    @staticmethod
+    def resource_type():
+        return 'PortDiscoveryProfileBindingMap'
+
+    def path_defs(self):
+        return (TenantDef, SegmentDef, SegmentPortDef)
+
+    def get_obj_dict(self):
+        body = super(SegmentPortDiscoveryProfilesBindingMapDef,
+                     self).get_obj_dict()
+
+        if self.has_attr('mac_discovery_profile_id'):
+            path = None
+            if self.get_attr('mac_discovery_profile_id'):
+                profile = MacDiscoveryProfileDef(
+                    profile_id=self.get_attr('mac_discovery_profile_id'),
+                    tenant=self.get_tenant())
+                path = profile.get_resource_full_path()
+            self._set_attr_if_specified(
+                body, 'mac_discovery_profile_id',
+                body_attr='mac_discovery_profile_path',
+                value=path)
+
+        if self.has_attr('ip_discovery_profile_id'):
+            path = None
+            if self.get_attr('ip_discovery_profile_id'):
+                profile = IpDiscoveryProfileDef(
+                    profile_id=self.get_attr('ip_discovery_profile_id'),
+                    tenant=self.get_tenant())
+                path = profile.get_resource_full_path()
+            self._set_attr_if_specified(
+                body, 'ip_discovery_profile_id',
+                body_attr='ip_discovery_profile_path',
+                value=path)
+
+        return body
+
+
 class Tier1SegmentPortDef(SegmentPortDef):
     '''Tier1 segment port'''
 
@@ -1099,7 +1198,14 @@ class SegmentSecurityProfileDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(SegmentSecurityProfileDef, self).get_obj_dict()
-        # TODO(asarfaty): add all attributes here. currently used for read only
+        self._set_attrs_if_specified(body, ['bpdu_filter_enable',
+                                            'dhcp_client_block_enabled',
+                                            'dhcp_client_block_v6_enabled',
+                                            'dhcp_server_block_enabled',
+                                            'dhcp_server_block_v6_enabled',
+                                            'non_ip_traffic_block_enabled',
+                                            'ra_guard_enabled',
+                                            'rate_limits_enabled'])
         return body
 
 

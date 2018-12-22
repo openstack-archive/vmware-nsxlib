@@ -37,6 +37,8 @@ LOG = logging.getLogger(__name__)
 # body
 IGNORE = object()
 
+DEFAULT_MAP_ID = 'DEFAULT'
+
 
 @six.add_metaclass(abc.ABCMeta)
 class NsxPolicyResourceBase(object):
@@ -1329,6 +1331,130 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         return self._get_realization_info(port_def, entity_type=entity_type)
 
 
+class SegmentPortProfilesBindingMapBaseDef(NsxPolicyResourceBase):
+
+    def delete(self, segment_id, port_id, map_id=DEFAULT_MAP_ID,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        map_def = self.entry_def(segment_id=segment_id,
+                                 port_id=port_id,
+                                 map_id=map_id,
+                                 tenant=tenant)
+        self.policy_api.delete(map_def)
+
+    def get(self, segment_id, port_id, map_id=DEFAULT_MAP_ID,
+            tenant=policy_constants.POLICY_INFRA_TENANT):
+        map_def = self.entry_def(segment_id=segment_id,
+                                 port_id=port_id,
+                                 map_id=map_id,
+                                 tenant=tenant)
+        self.policy_api.get(map_def)
+
+    def list(self, segment_id, port_id,
+             tenant=policy_constants.POLICY_INFRA_TENANT):
+        map_def = self.entry_def(segment_id=segment_id,
+                                 port_id=port_id,
+                                 tenant=tenant)
+        return self._list(map_def)
+
+
+class SegmentPortSecurityProfilesBindingMapDef(
+    SegmentPortProfilesBindingMapBaseDef):
+
+    @property
+    def entry_def(self):
+        return policy_defs.SegmentPortSecProfilesBindingMapDef
+
+    def create_or_overwrite(self, name, segment_id, port_id,
+                            map_id=DEFAULT_MAP_ID,
+                            description=IGNORE,
+                            segment_security_profile_id=IGNORE,
+                            spoofguard_profile_id=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        map_id = self._init_obj_uuid(map_id)
+        map_def = self._init_def(
+            segment_id=segment_id,
+            port_id=port_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            segment_security_profile_id=segment_security_profile_id,
+            spoofguard_profile_id=spoofguard_profile_id,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(map_def)
+        return map_id
+
+    def update(self, segment_id, port_id,
+               map_id=DEFAULT_MAP_ID,
+               name=IGNORE,
+               description=IGNORE,
+               segment_security_profile_id=IGNORE,
+               spoofguard_profile_id=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(
+            segment_id=segment_id,
+            port_id=port_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            segment_security_profile_id=segment_security_profile_id,
+            spoofguard_profile_id=spoofguard_profile_id,
+            tags=tags,
+            tenant=tenant)
+
+
+class SegmentPortDiscoveryProfilesBindingMapDef(
+    SegmentPortProfilesBindingMapBaseDef):
+
+    @property
+    def entry_def(self):
+        return policy_defs.SegmentPortDiscoveryProfilesBindingMapDef
+
+    def create_or_overwrite(self, name, segment_id, port_id,
+                            map_id=DEFAULT_MAP_ID,
+                            description=IGNORE,
+                            mac_discovery_profile_id=IGNORE,
+                            ip_discovery_profile_id=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        map_id = self._init_obj_uuid(map_id)
+        map_def = self._init_def(
+            segment_id=segment_id,
+            port_id=port_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            mac_discovery_profile_id=mac_discovery_profile_id,
+            ip_discovery_profile_id=ip_discovery_profile_id,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(map_def)
+        return map_id
+
+    def update(self, segment_id, port_id,
+               map_id=DEFAULT_MAP_ID,
+               name=IGNORE,
+               description=IGNORE,
+               mac_discovery_profile_id=IGNORE,
+               ip_discovery_profile_id=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(
+            segment_id=segment_id,
+            port_id=port_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            mac_discovery_profile_id=mac_discovery_profile_id,
+            ip_discovery_profile_id=ip_discovery_profile_id,
+            tags=tags,
+            tenant=tenant)
+
+
 class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
     """NSX Tier1 Segment Port API """
     @property
@@ -2219,6 +2345,36 @@ class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
     @property
     def entry_def(self):
         return policy_defs.SegmentSecurityProfileDef
+
+    def create_or_overwrite(self, name,
+                            profile_id=None,
+                            bpdu_filter_enable=IGNORE,
+                            dhcp_client_block_enabled=IGNORE,
+                            dhcp_client_block_v6_enabled=IGNORE,
+                            dhcp_server_block_enabled=IGNORE,
+                            dhcp_server_block_v6_enabled=IGNORE,
+                            non_ip_traffic_block_enabled=IGNORE,
+                            ra_guard_enabled=IGNORE,
+                            rate_limits_enabled=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        profile_id = self._init_obj_uuid(profile_id)
+        profile_def = self._init_def(
+            profile_id=profile_id,
+            name=name,
+            bpdu_filter_enable=bpdu_filter_enable,
+            dhcp_client_block_enabled=dhcp_client_block_enabled,
+            dhcp_client_block_v6_enabled=dhcp_client_block_v6_enabled,
+            dhcp_server_block_enabled=dhcp_server_block_enabled,
+            dhcp_server_block_v6_enabled=dhcp_server_block_v6_enabled,
+            non_ip_traffic_block_enabled=non_ip_traffic_block_enabled,
+            ra_guard_enabled=ra_guard_enabled,
+            rate_limits_enabled=rate_limits_enabled,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(profile_def)
+        return profile_id
 
 
 class NsxQosProfileApi(NsxSegmentProfileBaseApi):
