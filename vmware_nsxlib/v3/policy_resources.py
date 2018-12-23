@@ -160,6 +160,9 @@ class NsxPolicyResourceBase(object):
                     # return the first realization entry
                     # (Useful for resources with single realization entity)
                     return entities[0]
+            else:
+                # resource not deployed yet
+                LOG.warning("No realized state found for %s", path)
         except exceptions.ResourceNotFound:
             # resource not deployed yet
             LOG.warning("No realized state found for %s", path)
@@ -192,7 +195,7 @@ class NsxPolicyResourceBase(object):
         while test_num < max_attempts:
             info = self._get_realization_info(
                 resource_def, entity_type=entity_type)
-            if info['state'] == policy_constants.STATE_REALIZED:
+            if info and info['state'] == policy_constants.STATE_REALIZED:
                 return info
             eventlet.sleep(sleep)
             test_num += 1
