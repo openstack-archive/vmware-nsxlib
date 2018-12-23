@@ -160,6 +160,9 @@ class NsxPolicyResourceBase(object):
                     # return the first realization entry
                     # (Useful for resources with single realization entity)
                     return entities[0]
+            else:
+                # resource not deployed yet
+                LOG.warning("No realized state found for %s", path)
         except exceptions.ResourceNotFound:
             # resource not deployed yet
             LOG.warning("No realized state found for %s", path)
@@ -183,7 +186,7 @@ class NsxPolicyResourceBase(object):
 
     # TODO(asarfaty): add configurations for sleep/attempts?
     def _wait_until_realized(self, resource_def, entity_type=None,
-                             sleep=0.5, max_attempts=10):
+                             sleep=1, max_attempts=20):
         """Wait until the resource has been realized
 
         Return the realization info, or raise an error
@@ -192,14 +195,17 @@ class NsxPolicyResourceBase(object):
         while test_num < max_attempts:
             info = self._get_realization_info(
                 resource_def, entity_type=entity_type)
-            if info['state'] == policy_constants.STATE_REALIZED:
+            if info and info['state'] == policy_constants.STATE_REALIZED:
                 return info
             eventlet.sleep(sleep)
             test_num += 1
 
-        err_msg = (_("Object %(type)s ID %(id)s was not realized") %
+        err_msg = (_("%(type)s ID %(id)s was not realized after %(attempts)s "
+                     "attempts with %(sleep)s seconds sleep") %
                    {'type': resource_def.resource_type(),
-                    'id': resource_def.get_id()})
+                    'id': resource_def.get_id(),
+                    'attempts': max_attempts,
+                    'sleep': sleep})
         raise exceptions.ManagerError(details=err_msg)
 
     def _list(self, obj_def):
