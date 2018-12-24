@@ -68,8 +68,10 @@ class NsxLibBase(object):
     def set_config(self, nsxlib_config):
         """Set config user provided and extend it according to application"""
         self.nsxlib_config = nsxlib_config
-        self.nsxlib_config.extend(keepalive_section=self.keepalive_section,
-                                  url_base=self.client_url_prefix)
+        self.nsxlib_config.extend(
+            keepalive_section=self.keepalive_section,
+            validate_connection_method=self.validate_connection_method,
+            url_base=self.client_url_prefix)
 
     @abc.abstractproperty
     def client_url_prefix(self):
@@ -77,6 +79,10 @@ class NsxLibBase(object):
 
     @abc.abstractproperty
     def keepalive_section(self):
+        pass
+
+    @abc.abstractproperty
+    def validate_connection_method(self):
         pass
 
     @abc.abstractmethod
@@ -298,6 +304,20 @@ class NsxLib(NsxLibBase):
     def keepalive_section(self):
         return 'transport-zones'
 
+    @property
+    def validate_connection_method(self):
+        """Return a method that will validate the NSX manager status"""
+        def check_manager_status(client, manager_url):
+            status = client.get('node/services/manager/status', silent=True)
+            if (not status or 'runtime_state' not in status or
+                status['runtime_state'] != 'running'):
+                msg = _("Manager is not in running state: %s") % status
+                LOG.warning(msg)
+                raise exceptions.ResourceNotFound(
+                    manager=manager_url, operation=msg)
+
+        return check_manager_status
+
     def get_version(self):
         if self.nsx_version:
             return self.nsx_version
@@ -380,6 +400,11 @@ class NsxPolicyLib(NsxLibBase):
     @property
     def keepalive_section(self):
         return 'infra'
+
+    @property
+    def validate_connection_method(self):
+        # TODO(asarfaty): Find an equivalent api to check policy status
+        pass
 
     def feature_supported(self, feature):
         return (feature == nsx_constants.FEATURE_NSX_POLICY)
