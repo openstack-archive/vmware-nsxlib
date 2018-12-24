@@ -1331,7 +1331,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         return self._get_realization_info(port_def, entity_type=entity_type)
 
 
-class SegmentPortProfilesBindingMapBaseDef(NsxPolicyResourceBase):
+class SegmentPortProfilesBindingMapBaseApi(NsxPolicyResourceBase):
 
     def delete(self, segment_id, port_id, map_id=DEFAULT_MAP_ID,
                tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -1357,8 +1357,8 @@ class SegmentPortProfilesBindingMapBaseDef(NsxPolicyResourceBase):
         return self._list(map_def)
 
 
-class SegmentPortSecurityProfilesBindingMapDef(
-    SegmentPortProfilesBindingMapBaseDef):
+class SegmentPortSecurityProfilesBindingMapApi(
+    SegmentPortProfilesBindingMapBaseApi):
 
     @property
     def entry_def(self):
@@ -1406,8 +1406,8 @@ class SegmentPortSecurityProfilesBindingMapDef(
             tenant=tenant)
 
 
-class SegmentPortDiscoveryProfilesBindingMapDef(
-    SegmentPortProfilesBindingMapBaseDef):
+class SegmentPortDiscoveryProfilesBindingMapApi(
+    SegmentPortProfilesBindingMapBaseApi):
 
     @property
     def entry_def(self):
@@ -1451,6 +1451,51 @@ class SegmentPortDiscoveryProfilesBindingMapDef(
             description=description,
             mac_discovery_profile_id=mac_discovery_profile_id,
             ip_discovery_profile_id=ip_discovery_profile_id,
+            tags=tags,
+            tenant=tenant)
+
+
+class SegmentPortQosProfilesBindingMapApi(
+    SegmentPortProfilesBindingMapBaseApi):
+
+    @property
+    def entry_def(self):
+        return policy_defs.SegmentPortQoSProfilesBindingMapDef
+
+    def create_or_overwrite(self, name, segment_id, port_id,
+                            map_id=DEFAULT_MAP_ID,
+                            description=IGNORE,
+                            qos_profile_id=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        map_id = self._init_obj_uuid(map_id)
+        map_def = self._init_def(
+            segment_id=segment_id,
+            port_id=port_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            qos_profile_id=qos_profile_id,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(map_def)
+        return map_id
+
+    def update(self, segment_id, port_id,
+               map_id=DEFAULT_MAP_ID,
+               name=IGNORE,
+               description=IGNORE,
+               qos_profile_id=IGNORE,
+               tags=IGNORE,
+               tenant=policy_constants.POLICY_INFRA_TENANT):
+        self._update(
+            segment_id=segment_id,
+            port_id=port_id,
+            map_id=map_id,
+            name=name,
+            description=description,
+            qos_profile_id=qos_profile_id,
             tags=tags,
             tenant=tenant)
 
@@ -2304,12 +2349,14 @@ class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
 
     def create_or_overwrite(self, name,
                             profile_id=None,
+                            description=IGNORE,
                             tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
 
         profile_id = self._init_obj_uuid(profile_id)
         profile_def = self._init_def(profile_id=profile_id,
                                      name=name,
+                                     description=description,
                                      tags=tags,
                                      tenant=tenant)
         self._create_or_store(profile_def)
@@ -2333,10 +2380,11 @@ class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
         return super(NsxSegmentProfileBaseApi, self).get_by_name(
             name, tenant=tenant)
 
-    def update(self, profile_id, name=IGNORE, tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+    def update(self, profile_id, name=IGNORE, description=IGNORE,
+               tags=IGNORE, tenant=policy_constants.POLICY_INFRA_TENANT):
         self._update(profile_id=profile_id,
                      name=name,
+                     description=description,
                      tags=tags,
                      tenant=tenant)
 
@@ -2348,6 +2396,7 @@ class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
 
     def create_or_overwrite(self, name,
                             profile_id=None,
+                            description=IGNORE,
                             bpdu_filter_enable=IGNORE,
                             dhcp_client_block_enabled=IGNORE,
                             dhcp_client_block_v6_enabled=IGNORE,
@@ -2363,6 +2412,7 @@ class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
         profile_def = self._init_def(
             profile_id=profile_id,
             name=name,
+            description=description,
             bpdu_filter_enable=bpdu_filter_enable,
             dhcp_client_block_enabled=dhcp_client_block_enabled,
             dhcp_client_block_v6_enabled=dhcp_client_block_v6_enabled,
@@ -2382,6 +2432,28 @@ class NsxQosProfileApi(NsxSegmentProfileBaseApi):
     def entry_def(self):
         return policy_defs.QosProfileDef
 
+    def create_or_overwrite(self, name,
+                            profile_id=None,
+                            description=IGNORE,
+                            class_of_service=IGNORE,
+                            dscp=IGNORE,
+                            shaper_configurations=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        profile_id = self._init_obj_uuid(profile_id)
+        profile_def = self._init_def(
+            profile_id=profile_id,
+            name=name,
+            description=description,
+            class_of_service=class_of_service,
+            dscp=dscp,
+            shaper_configurations=shaper_configurations,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(profile_def)
+        return profile_id
+
 
 class NsxSpoofguardProfileApi(NsxSegmentProfileBaseApi):
     @property
@@ -2390,6 +2462,7 @@ class NsxSpoofguardProfileApi(NsxSegmentProfileBaseApi):
 
     def create_or_overwrite(self, name,
                             profile_id=None,
+                            description=IGNORE,
                             address_binding_whitelist=IGNORE,
                             tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -2398,6 +2471,7 @@ class NsxSpoofguardProfileApi(NsxSegmentProfileBaseApi):
         profile_def = self._init_def(
             profile_id=profile_id,
             name=name,
+            description=description,
             address_binding_whitelist=address_binding_whitelist,
             tags=tags,
             tenant=tenant)
@@ -2418,6 +2492,7 @@ class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
 
     def create_or_overwrite(self, name,
                             profile_id=None,
+                            description=IGNORE,
                             mac_change_enabled=IGNORE,
                             mac_learning_enabled=IGNORE,
                             unknown_unicast_flooding_enabled=IGNORE,
@@ -2430,6 +2505,7 @@ class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
         profile_def = self._init_def(
             profile_id=profile_id,
             name=name,
+            description=description,
             mac_change_enabled=mac_change_enabled,
             mac_learning_enabled=mac_learning_enabled,
             unknown_unicast_flooding_enabled=unknown_unicast_flooding_enabled,
