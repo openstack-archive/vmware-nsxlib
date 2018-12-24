@@ -189,6 +189,10 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
             LOG.warning(msg)
             raise exceptions.ResourceNotFound(
                 manager=endpoint.provider.url, operation=msg)
+        # Also check the manager state directly
+        if cluster_api.nsxlib_config.validate_connection_method:
+            cluster_api.nsxlib_config.validate_connection_method(
+                client, endpoint.provider.url)
 
     def new_connection(self, cluster_api, provider):
         config = cluster_api.nsxlib_config
