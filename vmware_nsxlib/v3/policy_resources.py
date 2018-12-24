@@ -1587,7 +1587,6 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                sequence_number=IGNORE, service_ids=IGNORE,
                action=IGNORE,
                source_groups=IGNORE, dest_groups=IGNORE,
-               category=IGNORE,
                direction=IGNORE, logged=IGNORE, tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
@@ -1596,7 +1595,6 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             map_id=map_id,
             name=name,
             description=description,
-            category=category,
             tags=tags,
             tenant=tenant)
 
