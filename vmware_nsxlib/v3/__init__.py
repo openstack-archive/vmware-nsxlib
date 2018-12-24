@@ -94,8 +94,9 @@ class NsxLibBase(object):
     def is_internal_resource(self, nsx_resource):
         return self.general_apis.is_internal_resource(nsx_resource)
 
-    def build_v3_api_version_project_tag(self, project_name):
-        return self.general_apis.build_v3_api_version_project_tag(project_name)
+    def build_v3_api_version_project_tag(self, project_name, project_id=None):
+        return self.general_apis.build_v3_api_version_project_tag(
+            project_name, project_id=project_id)
 
     def build_v3_tags_payload(self, resource, resource_type, project_name):
         return self.general_apis.build_v3_tags_payload(

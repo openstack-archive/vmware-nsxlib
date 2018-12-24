@@ -494,15 +494,19 @@ class NsxLibApiBase(object):
                 {'scope': "os-api-version",
                  'tag': self.nsxlib_config.plugin_ver}]
 
-    def build_v3_api_version_project_tag(self, project_name):
+    def build_v3_api_version_project_tag(self, project_name, project_id=None):
         if not project_name:
             project_name = self.nsxlib_config.plugin_tag
-        return [{'scope': self.nsxlib_config.plugin_scope,
+        tags = [{'scope': self.nsxlib_config.plugin_scope,
                  'tag': self.nsxlib_config.plugin_tag},
                 {'scope': "os-api-version",
                  'tag': self.nsxlib_config.plugin_ver},
                 {'scope': 'os-project-name',
                  'tag': project_name[:MAX_TAG_LEN]}]
+        if project_id:
+            tags.append({'scope': 'os-project-id',
+                         'tag': project_id[:MAX_TAG_LEN]})
+        return tags
 
     def is_internal_resource(self, nsx_resource):
         """Indicates whether the passed nsx-resource is internal
