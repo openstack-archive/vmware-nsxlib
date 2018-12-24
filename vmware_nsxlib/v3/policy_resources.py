@@ -184,13 +184,18 @@ class NsxPolicyResourceBase(object):
             realization_info.get('realization_specific_identifier')):
             return realization_info['realization_specific_identifier']
 
-    # TODO(asarfaty): add configurations for sleep/attempts?
     def _wait_until_realized(self, resource_def, entity_type=None,
-                             sleep=1, max_attempts=200):
+                             sleep=None, max_attempts=None):
         """Wait until the resource has been realized
 
         Return the realization info, or raise an error
         """
+        # TODO(asarfaty): add configurations for sleep/attempts?
+        if sleep is None:
+            sleep = 1
+        if max_attempts is None:
+            max_attempts = 200
+
         test_num = 0
         while test_num < max_attempts:
             info = self._get_realization_info(
@@ -774,9 +779,12 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         return self._get_realization_info(tier1_def)
 
     def wait_until_realized(self, tier1_id, entity_type=None,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=policy_constants.POLICY_INFRA_TENANT,
+                            sleep=None, max_attempts=None):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
-        return self._wait_until_realized(tier1_def, entity_type=entity_type)
+        return self._wait_until_realized(tier1_def, entity_type=entity_type,
+                                         sleep=sleep,
+                                         max_attempts=max_attempts)
 
     def update_transport_zone(self, tier1_id, transport_zone_id,
                               tenant=policy_constants.POLICY_INFRA_TENANT):
@@ -908,9 +916,12 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         return self._get_realization_info(tier0_def, entity_type=entity_type)
 
     def wait_until_realized(self, tier0_id, entity_type=None,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=policy_constants.POLICY_INFRA_TENANT,
+                            sleep=None, max_attempts=None):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
-        return self._wait_until_realized(tier0_def, entity_type=entity_type)
+        return self._wait_until_realized(tier0_def, entity_type=entity_type,
+                                         sleep=sleep,
+                                         max_attempts=max_attempts)
 
 
 class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
