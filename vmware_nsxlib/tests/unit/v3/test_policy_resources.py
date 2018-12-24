@@ -2284,6 +2284,34 @@ class TestPolicyQosProfile(TestPolicySegmentProfileBase):
             resource_api_name='qos_profile',
             resource_def=policy_defs.QosProfileDef)
 
+    def test_create_with_params(self):
+        name = 'test'
+        description = 'desc'
+        dscp = policy_defs.QoSDscp(
+            mode=policy_defs.QoSDscp.QOS_DSCP_TRUSTED,
+            priority=7)
+        limiter = policy_defs.QoSRateLimiter(
+            resource_type=policy_defs.QoSRateLimiter.INGRESS_RATE_LIMITER_TYPE,
+            average_bandwidth=700,
+            enabled=True)
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name,
+                description=description,
+                dscp=dscp,
+                shaper_configurations=[limiter],
+                tenant=TEST_TENANT)
+
+            expected_def = self.resourceDef(
+                profile_id=mock.ANY,
+                name=name,
+                description=description,
+                dscp=dscp,
+                shaper_configurations=[limiter],
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
 
 class TestPolicySpoofguardProfile(TestPolicySegmentProfileBase):
 
@@ -2342,11 +2370,11 @@ class TestPolicySegmentSecurityProfile(TestPolicySegmentProfileBase):
             self.assert_called_with_def(api_call, expected_def)
 
 
-class TestPolicySegmentSecProfilesBindingBase(NsxPolicyLibTestCase):
+class TestPolicySegmentSecProfilesBinding(NsxPolicyLibTestCase):
 
     def setUp(self, resource_api_name='segment_port_security_profiles',
               resource_def=policy_defs.SegmentPortSecProfilesBindingMapDef):
-        super(TestPolicySegmentSecProfilesBindingBase, self).setUp()
+        super(TestPolicySegmentSecProfilesBinding, self).setUp()
         self.resourceApi = getattr(self.policy_lib, resource_api_name)
         self.resourceDef = resource_def
 
@@ -2436,13 +2464,13 @@ class TestPolicySegmentSecProfilesBindingBase(NsxPolicyLibTestCase):
                 update_call, expected_def)
 
 
-class TestPolicySegmentDiscSecProfilesBindingBase(NsxPolicyLibTestCase):
+class TestPolicySegmentDiscoveryProfilesBinding(NsxPolicyLibTestCase):
 
     def setUp(
         self, resource_api_name='segment_port_discovery_profiles',
         resource_def=policy_defs.SegmentPortDiscoveryProfilesBindingMapDef):
 
-        super(TestPolicySegmentDiscSecProfilesBindingBase, self).setUp()
+        super(TestPolicySegmentDiscoveryProfilesBinding, self).setUp()
         self.resourceApi = getattr(self.policy_lib, resource_api_name)
         self.resourceDef = resource_def
 
@@ -2527,6 +2555,96 @@ class TestPolicySegmentDiscSecProfilesBindingBase(NsxPolicyLibTestCase):
                 name=name,
                 mac_discovery_profile_id=prf1,
                 ip_discovery_profile_id=prf2,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(
+                update_call, expected_def)
+
+
+class TestPolicySegmentQosProfilesBinding(NsxPolicyLibTestCase):
+
+    def setUp(
+        self, resource_api_name='segment_port_qos_profiles',
+        resource_def=policy_defs.SegmentPortQoSProfilesBindingMapDef):
+
+        super(TestPolicySegmentQosProfilesBinding, self).setUp()
+        self.resourceApi = getattr(self.policy_lib, resource_api_name)
+        self.resourceDef = resource_def
+
+    def test_create(self):
+        name = 'test'
+        segment_id = 'seg1'
+        port_id = 'port1'
+        prf1 = '1'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, segment_id, port_id,
+                qos_profile_id=prf1,
+                tenant=TEST_TENANT)
+
+            expected_def = self.resourceDef(
+                segment_id=segment_id,
+                port_id=port_id,
+                map_id=policy_resources.DEFAULT_MAP_ID,
+                name=name,
+                qos_profile_id=prf1,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        segment_id = 'seg1'
+        port_id = 'port1'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(segment_id, port_id, tenant=TEST_TENANT)
+            expected_def = self.resourceDef(
+                segment_id=segment_id,
+                port_id=port_id,
+                map_id=policy_resources.DEFAULT_MAP_ID,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        segment_id = 'seg1'
+        port_id = 'port1'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(segment_id, port_id, tenant=TEST_TENANT)
+            expected_def = self.resourceDef(
+                segment_id=segment_id,
+                port_id=port_id,
+                map_id=policy_resources.DEFAULT_MAP_ID,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        segment_id = 'seg1'
+        port_id = 'port1'
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(segment_id, port_id, tenant=TEST_TENANT)
+            expected_def = self.resourceDef(
+                segment_id=segment_id,
+                port_id=port_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        name = 'new name'
+        segment_id = 'seg1'
+        port_id = 'port1'
+        prf1 = '1'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(
+                segment_id=segment_id,
+                port_id=port_id,
+                name=name,
+                qos_profile_id=prf1,
+                tenant=TEST_TENANT)
+            expected_def = self.resourceDef(
+                segment_id=segment_id,
+                port_id=port_id,
+                map_id=policy_resources.DEFAULT_MAP_ID,
+                name=name,
+                qos_profile_id=prf1,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
