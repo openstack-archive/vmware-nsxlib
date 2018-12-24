@@ -1868,7 +1868,8 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                return_value=info):
             self.assertRaises(nsxlib_exc.ManagerError,
                               self.resourceApi.wait_until_realized,
-                              tier1_id, tenant=TEST_TENANT)
+                              tier1_id, max_attempts=5, sleep=0.1,
+                              tenant=TEST_TENANT)
 
     def test_wait_until_realized_succeed(self):
         tier1_id = '111'
@@ -1879,7 +1880,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         with mock.patch.object(self.resourceApi, "_get_realization_info",
                                return_value=info):
             actual_info = self.resourceApi.wait_until_realized(
-                tier1_id, tenant=TEST_TENANT)
+                tier1_id, max_attempts=5, sleep=0.1, tenant=TEST_TENANT)
             self.assertEqual(info, actual_info)
 
     def test_update_transport_zone(self):
@@ -1908,7 +1909,8 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                return_value=info):
             self.assertRaises(nsxlib_exc.ManagerError,
                               self.resourceApi.wait_until_realized,
-                              tier1_id, tenant=TEST_TENANT)
+                              tier1_id, tenant=TEST_TENANT,
+                              max_attempts=5, sleep=0.1)
 
 
 class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
@@ -2127,7 +2129,8 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                                return_value=info):
             self.assertRaises(nsxlib_exc.ManagerError,
                               self.resourceApi.wait_until_realized,
-                              tier1_id, tenant=TEST_TENANT)
+                              tier1_id, max_attempts=5, sleep=0.1,
+                              tenant=TEST_TENANT)
 
 
 class TestPolicySegment(NsxPolicyLibTestCase):
