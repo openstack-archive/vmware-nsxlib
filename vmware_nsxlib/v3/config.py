@@ -139,9 +139,11 @@ class NsxLibConfig(object):
                 'dhcp_profile_uuid is not used by the nsxlib, and will '
                 'be removed from its configuration in the future.')
 
-    def extend(self, keepalive_section, url_base=None):
+    def extend(self, keepalive_section, validate_connection_method=None,
+               url_base=None):
         """Called by library code to initialize application-specific data"""
         self.keepalive_section = keepalive_section
+        self.validate_connection_method = validate_connection_method
         self.url_base = url_base
 
     def _attribute_by_index(self, scalar_or_list, index):
