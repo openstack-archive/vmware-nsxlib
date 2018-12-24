@@ -438,10 +438,13 @@ class NsxPolicyLib(NsxLibBase):
         self.mac_discovery_profile = (
             policy_resources.NsxMacDiscoveryProfileApi(*args))
         self.segment_port_security_profiles = (
-            policy_resources.SegmentPortSecurityProfilesBindingMapDef(
+            policy_resources.SegmentPortSecurityProfilesBindingMapApi(
                 *args))
         self.segment_port_discovery_profiles = (
-            policy_resources.SegmentPortDiscoveryProfilesBindingMapDef(
+            policy_resources.SegmentPortDiscoveryProfilesBindingMapApi(
+                *args))
+        self.segment_port_qos_profiles = (
+            policy_resources.SegmentPortQosProfilesBindingMapApi(
                 *args))
         self.load_balancer = (
             policy_load_balancer.NsxPolicyLoadBalancerApi(*args))
