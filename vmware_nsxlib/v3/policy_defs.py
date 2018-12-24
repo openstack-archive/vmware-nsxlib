@@ -626,24 +626,25 @@ class SegmentPortDef(ResourceDef):
         return body
 
 
-class SegmentPortSecProfilesBindingMapDef(ResourceDef):
-    '''Infra segment port'''
-
-    @property
-    def path_pattern(self):
-        return (SEGMENTS_PATH_PATTERN +
-                "%s/ports/%s/port-security-profile-binding-maps/")
+class SegmentPortBindingMapDefBase(ResourceDef):
 
     @property
     def path_ids(self):
         return ('tenant', 'segment_id', 'port_id', 'map_id')
 
+    def path_defs(self):
+        return (TenantDef, SegmentDef, SegmentPortDef)
+
+
+class SegmentPortSecProfilesBindingMapDef(SegmentPortBindingMapDefBase):
+    @property
+    def path_pattern(self):
+        return (SEGMENTS_PATH_PATTERN +
+                "%s/ports/%s/port-security-profile-binding-maps/")
+
     @staticmethod
     def resource_type():
         return 'PortSecurityProfileBindingMap'
-
-    def path_defs(self):
-        return (TenantDef, SegmentDef, SegmentPortDef)
 
     def get_obj_dict(self):
         body = super(SegmentPortSecProfilesBindingMapDef, self).get_obj_dict()
@@ -675,24 +676,15 @@ class SegmentPortSecProfilesBindingMapDef(ResourceDef):
         return body
 
 
-class SegmentPortDiscoveryProfilesBindingMapDef(ResourceDef):
-    '''Infra segment port'''
-
+class SegmentPortDiscoveryProfilesBindingMapDef(SegmentPortBindingMapDefBase):
     @property
     def path_pattern(self):
         return (SEGMENTS_PATH_PATTERN +
                 "%s/ports/%s/port-discovery-profile-binding-maps/")
 
-    @property
-    def path_ids(self):
-        return ('tenant', 'segment_id', 'port_id', 'map_id')
-
     @staticmethod
     def resource_type():
         return 'PortDiscoveryProfileBindingMap'
-
-    def path_defs(self):
-        return (TenantDef, SegmentDef, SegmentPortDef)
 
     def get_obj_dict(self):
         body = super(SegmentPortDiscoveryProfilesBindingMapDef,
@@ -720,6 +712,35 @@ class SegmentPortDiscoveryProfilesBindingMapDef(ResourceDef):
             self._set_attr_if_specified(
                 body, 'ip_discovery_profile_id',
                 body_attr='ip_discovery_profile_path',
+                value=path)
+
+        return body
+
+
+class SegmentPortQoSProfilesBindingMapDef(SegmentPortBindingMapDefBase):
+    @property
+    def path_pattern(self):
+        return (SEGMENTS_PATH_PATTERN +
+                "%s/ports/%s/port-qos-profile-binding-maps/")
+
+    @staticmethod
+    def resource_type():
+        return 'PortQoSProfileBindingMap'
+
+    def get_obj_dict(self):
+        body = super(SegmentPortQoSProfilesBindingMapDef,
+                     self).get_obj_dict()
+
+        if self.has_attr('qos_profile_id'):
+            path = None
+            if self.get_attr('qos_profile_id'):
+                profile = QosProfileDef(
+                    profile_id=self.get_attr('qos_profile_id'),
+                    tenant=self.get_tenant())
+                path = profile.get_resource_full_path()
+            self._set_attr_if_specified(
+                body, 'qos_profile_id',
+                body_attr='qos_profile_path',
                 value=path)
 
         return body
@@ -1209,6 +1230,41 @@ class SegmentSecurityProfileDef(ResourceDef):
         return body
 
 
+class QoSObjectBase(object):
+
+    keys = []
+
+    def __init__(self, **kwargs):
+        self.attrs = kwargs
+
+    def get_obj_dict(self):
+        obj_dict = {}
+        for key in self.attrs:
+            if key in self.keys:
+                obj_dict[key] = self.attrs[key]
+        return obj_dict
+
+
+class QoSRateLimiter(QoSObjectBase):
+
+    INGRESS_RATE_LIMITER_TYPE = 'IngressRateLimiter'
+    EGRESS_RATE_LIMITER_TYPE = 'EgressRateLimiter'
+    INGRESS_BRD_RATE_LIMITER_TYPE = 'IngressBroadcastRateLimiter'
+
+    keys = ['resource_type',
+            'average_bandwidth',
+            'peak_bandwidth',
+            'burst_size',
+            'enabled'
+            ]
+
+
+class QoSDscp(QoSObjectBase):
+    QOS_DSCP_TRUSTED = 'TRUSTED'
+    QOS_DSCP_UNTRUSTED = 'UNTRUSTED'
+    keys = ['mode', 'priority']
+
+
 class QosProfileDef(ResourceDef):
     @property
     def path_pattern(self):
@@ -1227,7 +1283,23 @@ class QosProfileDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(QosProfileDef, self).get_obj_dict()
-        # TODO(asarfaty): add all attributes here. currently used for read only
+
+        self._set_attr_if_specified(body, 'class_of_service')
+
+        if self.has_attr('dscp'):
+            value = None
+            if self.get_attr('dscp'):
+                value = self.get_attr('dscp').get_obj_dict()
+            self._set_attr_if_specified(body, 'dscp', value=value)
+
+        if self.has_attr('shaper_configurations'):
+            value = None
+            if self.get_attr('shaper_configurations'):
+                value = [s.get_obj_dict()
+                         for s in self.get_attr('shaper_configurations')]
+            self._set_attr_if_specified(body, 'shaper_configurations',
+                                        value=value)
+
         return body
 
 
