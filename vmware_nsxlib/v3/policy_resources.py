@@ -2382,6 +2382,26 @@ class NsxQosProfileApi(NsxSegmentProfileBaseApi):
     def entry_def(self):
         return policy_defs.QosProfileDef
 
+    def create_or_overwrite(self, name,
+                            profile_id=None,
+                            class_of_service=IGNORE,
+                            dscp=IGNORE,
+                            shaper_configurations=IGNORE,
+                            tags=IGNORE,
+                            tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        profile_id = self._init_obj_uuid(profile_id)
+        profile_def = self._init_def(
+            profile_id=profile_id,
+            name=name,
+            class_of_service=class_of_service,
+            dscp=dscp,
+            shaper_configurations=shaper_configurations,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(profile_def)
+        return profile_id
+
 
 class NsxSpoofguardProfileApi(NsxSegmentProfileBaseApi):
     @property

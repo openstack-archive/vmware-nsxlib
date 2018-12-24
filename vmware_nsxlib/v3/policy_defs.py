@@ -1209,6 +1209,57 @@ class SegmentSecurityProfileDef(ResourceDef):
         return body
 
 
+class QoSEgressRateLimiter(object):
+
+    keys = ['resource_type',
+            'average_bandwidth_mbps',
+            'peak_bandwidth_mbps',
+            'burst_size_bytes',
+            'enabled'
+            ]
+
+    def __init__(self, **kwargs):
+        self.attrs = kwargs
+        if 'resource_type' not in kwargs:
+            self.attrs['resource_type'] = 'EgressRateLimiter'
+
+    def get_obj_dict(self):
+        return [value for key, value in self.types.items()
+                if key in self.keys and self.attrs.get(key) is True]
+
+
+class QoSIngressRateLimiter(object):
+
+    keys = ['resource_type',
+            'average_bandwidth_kbps',
+            'peak_bandwidth_kbps',
+            'burst_size_bytes',
+            'enabled'
+            ]
+
+    def __init__(self, **kwargs):
+        self.attrs = kwargs
+        if 'resource_type' not in kwargs:
+            self.attrs['resource_type'] = 'IngressRateLimiter'
+
+    def get_obj_dict(self):
+        return [value for key, value in self.types.items()
+                if key in self.keys and self.attrs.get(key) is True]
+
+
+class QoSDscp(object):
+    QOS_DSCP_TRUSTED = 'TRUSTED'
+    QOS_DSCP_UNTRUSTED = 'UNTRUSTED'
+    keys = ['mode', 'priority']
+
+    def __init__(self, **kwargs):
+        self.attrs = kwargs
+
+    def get_obj_dict(self):
+        return [value for key, value in self.types.items()
+                if key in self.keys and self.attrs.get(key) is True]
+
+
 class QosProfileDef(ResourceDef):
     @property
     def path_pattern(self):
@@ -1227,7 +1278,21 @@ class QosProfileDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(QosProfileDef, self).get_obj_dict()
-        # TODO(asarfaty): add all attributes here. currently used for read only
+
+        self._set_attr_if_specified(body, 'class_of_service')
+
+        if self.has_attr('dscp'):
+            value = None
+            if self.get_attr('dscp'):
+                value = self.get_attr('dscp').get_obj_dict()
+            self._set_attr_if_specified(body, 'dscp', value=value)
+
+        if self.has_attr('shaper_configurations'):
+            value = None
+            if self.get_attr('shaper_configurations'):
+                value = [s.get_obj_dict() for s in self.get_attr('shaper_configurations')]
+            self._set_attr_if_specified(body, 'shaper_configurations', value=value)
+
         return body
 
 
