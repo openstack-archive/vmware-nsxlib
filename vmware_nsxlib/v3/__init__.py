@@ -69,8 +69,10 @@ class NsxLibBase(object):
     def set_config(self, nsxlib_config):
         """Set config user provided and extend it according to application"""
         self.nsxlib_config = nsxlib_config
-        self.nsxlib_config.extend(keepalive_section=self.keepalive_section,
-                                  url_base=self.client_url_prefix)
+        self.nsxlib_config.extend(
+            keepalive_section=self.keepalive_section,
+            validate_connection_method=self.validate_connection_method,
+            url_base=self.client_url_prefix)
 
     @abc.abstractproperty
     def client_url_prefix(self):
@@ -78,6 +80,10 @@ class NsxLibBase(object):
 
     @abc.abstractproperty
     def keepalive_section(self):
+        pass
+
+    @abc.abstractproperty
+    def validate_connection_method(self):
         pass
 
     @abc.abstractmethod
@@ -312,6 +318,20 @@ class NsxLib(NsxLibBase):
     def keepalive_section(self):
         return 'transport-zones'
 
+    @property
+    def validate_connection_method(self):
+        """Return a method that will validate the NSX manager status"""
+        def check_manager_status(client, manager_url):
+            status = client.get('node/services/manager/status', silent=True)
+            if (not status or 'runtime_state' not in status or
+                status['runtime_state'] != 'running'):
+                msg = _("Manager is not in running state: %s") % status
+                LOG.warning(msg)
+                raise exceptions.ResourceNotFound(
+                    manager=manager_url, operation=msg)
+
+        return check_manager_status
+
     def get_version(self):
         if self.nsx_version:
             return self.nsx_version
@@ -451,21 +471,10 @@ class NsxPolicyLib(NsxLibBase):
     def keepalive_section(self):
         return 'infra'
 
-    def get_version(self):
-        """Get the NSX Policy manager version
-
-        Currently the backend does not support it, so the nsx-manager api
-        will be used temporarily as a passthrough.
-        """
-        if self.nsx_version:
-            return self.nsx_version
-
-        if self.nsx_api:
-            self.nsx_version = self.nsx_api.get_version()
-        else:
-            # return the initial supported version
-            self.nsx_version = nsx_constants.NSX_VERSION_2_4_0
-        return self.nsx_version
+    @property
+    def validate_connection_method(self):
+        # TODO(asarfaty): Find an equivalent api to check policy status
+        pass
 
     def feature_supported(self, feature):
         if (version.LooseVersion(self.get_version()) >=
