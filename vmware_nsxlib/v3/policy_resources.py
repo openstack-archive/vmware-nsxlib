@@ -672,7 +672,6 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                             route_advertisement=IGNORE,
                             tags=IGNORE,
                             tenant=policy_constants.POLICY_INFRA_TENANT):
-
         tier1_id = self._init_obj_uuid(tier1_id)
         tier1_def = self._init_def(tier1_id=tier1_id,
                                    name=name,
@@ -683,7 +682,15 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    failover_mode=failover_mode,
                                    route_advertisement=route_advertisement,
                                    tenant=tenant)
-        self._create_or_store(tier1_def)
+
+        # Note(asarfaty): Although this is a patch request, it sometimes fail
+        # with StaleRevision on communication maps conflicts
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.policy_api.client.max_attempts)
+        def _create():
+            self._create_or_store(tier1_def)
+        _create()
         return tier1_id
 
     def delete(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
