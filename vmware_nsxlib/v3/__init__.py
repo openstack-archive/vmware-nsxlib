@@ -395,7 +395,8 @@ class NsxPolicyLib(NsxLibBase):
         else:
             self.nsx_api = None
         self.nsx_version = self.get_version()
-        args = (self.policy_api, self.nsx_api, self.nsx_version)
+        args = (self.policy_api, self.nsx_api, self.nsx_version,
+                self.nsxlib_config)
 
         # Initialize all the different resources
         self.domain = policy_resources.NsxPolicyDomainApi(*args)
