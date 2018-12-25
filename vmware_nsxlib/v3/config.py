@@ -82,6 +82,9 @@ class NsxLibConfig(object):
     -- Additional parameters which are relevant only for the Policy manager:
     :param allow_passthrough: If True, use nsx manager api for cases which are
                               not supported by the policy manager api.
+    :param realization_max_attempts: Maximum number of times to retry while
+                                     waiting for a resource to be realized.
+.
     """
 
     def __init__(self,
@@ -107,7 +110,8 @@ class NsxLibConfig(object):
                  allow_overwrite_header=False,
                  rate_limit_retry=True,
                  cluster_unavailable_retry=False,
-                 allow_passthrough=False):
+                 allow_passthrough=False,
+                 realization_max_attempts=20):
 
         self.nsx_api_managers = nsx_api_managers
         self._username = username
@@ -131,6 +135,7 @@ class NsxLibConfig(object):
         self.rate_limit_retry = rate_limit_retry
         self.cluster_unavailable_retry = cluster_unavailable_retry
         self.allow_passthrough = allow_passthrough
+        self.realization_max_attempts = realization_max_attempts
 
         if dhcp_profile_uuid:
             # this is deprecated, and never used.
