@@ -49,10 +49,11 @@ class NsxPolicyResourceBase(object):
     """
     SINGLE_ENTRY_ID = 'entry'
 
-    def __init__(self, policy_api, nsx_api, version):
+    def __init__(self, policy_api, nsx_api, version, nsxlib_config):
         self.policy_api = policy_api
         self.nsx_api = nsx_api
         self.version = version
+        self.nsxlib_config = nsxlib_config
 
     @property
     def entry_def(self):
@@ -190,11 +191,10 @@ class NsxPolicyResourceBase(object):
 
         Return the realization info, or raise an error
         """
-        # TODO(asarfaty): add configurations for sleep/attempts?
         if sleep is None:
-            sleep = 1
+            sleep = 0.5
         if max_attempts is None:
-            max_attempts = 200
+            max_attempts = self.nsxlib_config.realization_max_attempts
 
         test_num = 0
         while test_num < max_attempts:
