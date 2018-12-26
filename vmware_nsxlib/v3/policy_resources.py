@@ -95,6 +95,14 @@ class NsxPolicyResourceBase(object):
         """
         pass
 
+    def _any_arg_set(self, *args):
+        """Helper to identify if user specified any of args"""
+        for arg in args:
+            if arg != IGNORE:
+                return True
+
+        return False
+
     def _get_user_args(self, **kwargs):
         return {key: value for key, value in kwargs.items()
                 if value != IGNORE}
@@ -2040,7 +2048,6 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                sequence_number=IGNORE, service_ids=IGNORE,
                action=IGNORE,
                source_groups=IGNORE, dest_groups=IGNORE,
-               category=IGNORE,
                direction=IGNORE, logged=IGNORE, tags=IGNORE,
                tenant=policy_constants.POLICY_INFRA_TENANT):
 
@@ -2049,24 +2056,29 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             map_id=map_id,
             name=name,
             description=description,
-            category=category,
             tags=tags,
             tenant=tenant)
 
-        entry_def = self._get_and_update_def(
-            domain_id=domain_id,
-            map_id=map_id,
-            entry_id=self.SINGLE_ENTRY_ID,
-            service_ids=service_ids,
-            source_groups=source_groups,
-            dest_groups=dest_groups,
-            sequence_number=sequence_number,
-            action=action,
-            direction=direction,
-            logged=logged,
-            tenant=tenant)
+        if self._any_arg_set(sequence_number, service_ids,
+                             action, source_groups, dest_groups,
+                             direction, logged):
+            # Update the entry only if relevant attributes were changed
+            entry_def = self._get_and_update_def(
+                domain_id=domain_id,
+                map_id=map_id,
+                entry_id=self.SINGLE_ENTRY_ID,
+                service_ids=service_ids,
+                source_groups=source_groups,
+                dest_groups=dest_groups,
+                sequence_number=sequence_number,
+                action=action,
+                direction=direction,
+                logged=logged,
+                tenant=tenant)
 
-        self.policy_api.create_with_parent(parent_def, entry_def)
+            self.policy_api.create_with_parent(parent_def, entry_def)
+        else:
+            self.policy_api.create_or_update(parent_def)
 
     def update_entries_logged(self, domain_id, map_id, logged,
                               tenant=policy_constants.POLICY_INFRA_TENANT):
