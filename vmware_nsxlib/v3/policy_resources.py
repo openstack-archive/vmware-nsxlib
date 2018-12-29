@@ -1250,6 +1250,17 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         return self._get_realized_id(segment_def, entity_type=entity_type,
                                      realization_info=realization_info)
 
+    def get_realized_logical_switch_id(
+        self,
+        segment_id,
+        tenant=policy_constants.POLICY_INFRA_TENANT):
+
+        segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
+        realization_info = self._wait_until_realized(
+            segment_def, entity_type='RealizedLogicalSwitch')
+        return self._get_realized_id(segment_def,
+                                     realization_info=realization_info)
+
     def get_realization_info(self, segment_id, entity_type=None,
                              tenant=policy_constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
