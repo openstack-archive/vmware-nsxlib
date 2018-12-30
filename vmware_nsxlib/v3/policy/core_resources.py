@@ -1268,6 +1268,31 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         return self._get_realization_info(segment_def,
                                           entity_type=entity_type)
 
+    def wait_until_realized(self, segment_id, entity_type=None,
+                            tenant=policy_constants.POLICY_INFRA_TENANT,
+                            sleep=None, max_attempts=None):
+        segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
+        return self._wait_until_realized(segment_def, entity_type=entity_type,
+                                         sleep=sleep,
+                                         max_attempts=max_attempts)
+
+    def set_admin_state(self, segment_id, admin_state,
+                        tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Set the segment admin state using the passthrough api"""
+        if not self.nsx_api:
+            LOG.error("Cannot update segment %s admin state as the "
+                      "passthrough api is forbidden", segment_id)
+            return
+
+        realization_info = self.wait_until_realized(
+            segment_id, entity_type='RealizedLogicalSwitch', tenant=tenant)
+
+        nsx_ls_uuid = self.get_realized_id(
+            segment_id, tenant=tenant, realization_info=realization_info)
+        self.nsx_api.logical_switch.update(
+            nsx_ls_uuid,
+            admin_state=admin_state)
+
 
 class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
     """NSX Segment Port API """
