@@ -1386,6 +1386,27 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         return self._get_realization_info(segment_def,
                                           entity_type=entity_type)
 
+    def wait_until_realized(self, segment_id, entity_type=None,
+                            tenant=constants.POLICY_INFRA_TENANT,
+                            sleep=None, max_attempts=None):
+        segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
+        return self._wait_until_realized(segment_def, entity_type=entity_type,
+                                         sleep=sleep,
+                                         max_attempts=max_attempts)
+
+    @check_allowed_passthrough
+    def set_admin_state(self, segment_id, admin_state,
+                        tenant=constants.POLICY_INFRA_TENANT):
+        """Set the segment admin state using the passthrough api"""
+        realization_info = self.wait_until_realized(
+            segment_id, entity_type='RealizedLogicalSwitch', tenant=tenant)
+
+        nsx_ls_uuid = self.get_realized_id(
+            segment_id, tenant=tenant, realization_info=realization_info)
+        self.nsx_api.logical_switch.update(
+            nsx_ls_uuid,
+            admin_state=admin_state)
+
     def get_transport_zone_id(self, segment_id,
                               tenant=constants.POLICY_INFRA_TENANT):
         segment = self.get(segment_id, tenant=tenant)
@@ -1522,6 +1543,30 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                                   port_id=port_id,
                                   tenant=tenant)
         return self._get_realization_info(port_def, entity_type=entity_type)
+
+    def wait_until_realized(self, segment_id, port_id, entity_type=None,
+                            tenant=constants.POLICY_INFRA_TENANT,
+                            sleep=None, max_attempts=None):
+        port_def = self.entry_def(segment_id=segment_id, port_id=port_id,
+                                  tenant=tenant)
+        return self._wait_until_realized(port_def, entity_type=entity_type,
+                                         sleep=sleep,
+                                         max_attempts=max_attempts)
+
+    @check_allowed_passthrough
+    def set_admin_state(self, segment_id, port_id, admin_state,
+                        tenant=constants.POLICY_INFRA_TENANT):
+        """Set the segment port admin state using the passthrough api"""
+        realization_info = self.wait_until_realized(
+            segment_id, port_id, entity_type='RealizedLogicalPort',
+            tenant=tenant)
+
+        nsx_lp_uuid = self.get_realized_id(
+            segment_id, port_id, tenant=tenant,
+            realization_info=realization_info)
+        self.nsx_api.logical_port.update(
+            nsx_lp_uuid, False,
+            admin_state=admin_state)
 
 
 class SegmentPortProfilesBindingMapBaseApi(NsxPolicyResourceBase):
