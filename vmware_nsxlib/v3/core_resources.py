@@ -713,6 +713,11 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         if allocation_pool:
             body['allocation_profile'] = {
                 'allocation_pool': allocation_pool}
+        if (self.nsxlib and
+                self.nsxlib.feature_supported(
+                    nsx_constants.FEATURE_ENABLE_STANDBY_RELOCATION)):
+            body['allocation_profile'] = {
+                'enable_standby_relocation': 'true'}
         return self.client.create(self.get_path(), body=body)
 
     def delete(self, lrouter_id, force=False):
