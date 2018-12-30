@@ -644,26 +644,29 @@ class LogicalRouterTestCase(BaseTestResource):
             'allocation_pool_type': 'LoadBalancerAllocationPool',
             'allocation_size': 'SMALL'
         }
-        router.create(fake_router['display_name'], None, None, tier0_router,
-                      description=description, transport_zone_id=tz_id,
-                      allocation_pool=allocation_pool)
+        with mock.patch("vmware_nsxlib.v3.NsxLib.get_version",
+                        return_value='1.1.0'):
+            router.create(fake_router['display_name'], None, None,
+                          tier0_router,
+                          description=description, transport_zone_id=tz_id,
+                          allocation_pool=allocation_pool)
 
-        data = {
-            'display_name': fake_router['display_name'],
-            'router_type': 'TIER0' if tier0_router else 'TIER1',
-            'tags': None,
-            'description': description,
-            'advanced_config': {'transport_zone_id': tz_id},
-            'allocation_profile': {
-                'allocation_pool': allocation_pool
+            data = {
+                'display_name': fake_router['display_name'],
+                'router_type': 'TIER0' if tier0_router else 'TIER1',
+                'tags': None,
+                'description': description,
+                'advanced_config': {'transport_zone_id': tz_id},
+                'allocation_profile': {
+                    'allocation_pool': allocation_pool
+                }
             }
-        }
 
-        test_client.assert_json_call(
-            'post', router,
-            'https://1.2.3.4/api/v1/logical-routers',
-            data=jsonutils.dumps(data, sort_keys=True),
-            headers=self.default_headers())
+            test_client.assert_json_call(
+                'post', router,
+                'https://1.2.3.4/api/v1/logical-routers',
+                data=jsonutils.dumps(data, sort_keys=True),
+                headers=self.default_headers())
 
     def test_update_logical_router(self):
         fake_router = test_constants.FAKE_ROUTER.copy()
