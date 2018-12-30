@@ -695,7 +695,8 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
                     ' %s.' % (logical_router_id))
 
     def create(self, display_name, tags, edge_cluster_uuid=None, tier_0=False,
-               description=None, transport_zone_id=None, allocation_pool=None):
+               description=None, transport_zone_id=None,
+               allocation_pool=None, enable_standby_relocation=False):
         # TODO(salv-orlando): If possible do not manage edge clusters
         # in the main plugin logic.
         router_type = (nsx_constants.ROUTER_TYPE_TIER0 if tier_0 else
@@ -703,6 +704,9 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         body = {'display_name': display_name,
                 'router_type': router_type,
                 'tags': tags}
+        if (self.nsxlib and self.nsxlib.feature_supported(
+                nsx_constants.FEATURE_ENABLE_STANDBY_RELOCATION)):
+            enable_standby_relocation = True
         if edge_cluster_uuid:
             body['edge_cluster_id'] = edge_cluster_uuid
         if description:
@@ -710,9 +714,17 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
         if transport_zone_id:
             body['advanced_config'] = {
                 'transport_zone_id': transport_zone_id}
+        allocation_profile = {}
         if allocation_pool:
-            body['allocation_profile'] = {
-                'allocation_pool': allocation_pool}
+            allocation_profile['allocation_pool'] = allocation_pool
+        if (enable_standby_relocation and self.nsxlib and
+                self.nsxlib.feature_supported(
+                nsx_constants.FEATURE_ENABLE_STANDBY_RELOCATION)):
+            allocation_profile[
+                'enable_standby_relocation'] = enable_standby_relocation
+        if allocation_profile:
+            body['allocation_profile'] = allocation_profile
+
         return self.client.create(self.get_path(), body=body)
 
     def delete(self, lrouter_id, force=False):
@@ -723,11 +735,20 @@ class NsxLibLogicalRouter(utils.NsxLibApiBase):
 
     def update(self, lrouter_id, *args, **kwargs):
         body = {}
+        allocation_profile = {}
         for arg in kwargs:
             # special care for transport_zone_id
             if arg == 'transport_zone_id':
                 body['advanced_config'] = {
                     'transport_zone_id': kwargs['transport_zone_id']}
+            if arg == 'enable_standby_relocation':
+                if (self.nsxlib and self.nsxlib.feature_supported(
+                        nsx_constants.FEATURE_ENABLE_STANDBY_RELOCATION)):
+                    body['allocation_profile'] = {
+                        'enable_standby_relocation':
+                            kwargs['enable_standby_relocation']}
+                    if allocation_profile:
+                        body['allocation_profile'] = allocation_profile
             else:
                 body[arg] = kwargs[arg]
 
