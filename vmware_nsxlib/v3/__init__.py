@@ -146,6 +146,8 @@ class NsxLib(lib.NsxLibBase):
                 return True
             if (feature == nsx_constants.FEATURE_ICMP_STRICT):
                 return True
+            if (feature == nsx_constants.FEATURE_ENABLE_STANDBY_RELOCATION):
+                return True
 
         if (version.LooseVersion(self.get_version()) >=
                 version.LooseVersion(nsx_constants.NSX_VERSION_2_3_0)):
