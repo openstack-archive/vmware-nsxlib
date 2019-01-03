@@ -15,7 +15,8 @@
 #
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.v3 import client
-from vmware_nsxlib.v3 import policy_defs as policy
+
+from vmware_nsxlib.v3.policy import core_defs as policy
 
 BASE_POLICY_URI = "https://1.2.3.4/policy/api/v1/"
 

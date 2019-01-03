@@ -24,10 +24,11 @@ import six
 from vmware_nsxlib._i18n import _
 from vmware_nsxlib.v3 import exceptions
 from vmware_nsxlib.v3 import nsx_constants
-from vmware_nsxlib.v3 import policy_constants
-from vmware_nsxlib.v3 import policy_defs
-from vmware_nsxlib.v3 import policy_transaction as policy_trans
 from vmware_nsxlib.v3 import utils
+
+from vmware_nsxlib.v3.policy import constants
+from vmware_nsxlib.v3.policy import core_defs
+from vmware_nsxlib.v3.policy import transaction as trans
 
 LOG = logging.getLogger(__name__)
 
@@ -208,7 +209,7 @@ class NsxPolicyResourceBase(object):
         while test_num < max_attempts:
             info = self._get_realization_info(
                 resource_def, entity_type=entity_type)
-            if info and info['state'] == policy_constants.STATE_REALIZED:
+            if info and info['state'] == constants.STATE_REALIZED:
                 # TODO(asarfaty): why sometimes realization takes so long?
                 if test_num > 5:
                     LOG.warning("Waited %(time)s seconds for realization of "
@@ -232,7 +233,7 @@ class NsxPolicyResourceBase(object):
         return self.policy_api.list(obj_def).get('results', [])
 
     def _create_or_store(self, policy_def, child_def=None):
-        transaction = policy_trans.NsxPolicyTransaction.get_current()
+        transaction = trans.NsxPolicyTransaction.get_current()
         if transaction:
             # Store this def for batch apply for this transaction
             transaction.store_def(policy_def, self.policy_api.client)
@@ -250,12 +251,12 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
     """NSX Policy Domain."""
     @property
     def entry_def(self):
-        return policy_defs.DomainDef
+        return core_defs.DomainDef
 
     def create_or_overwrite(self, name, domain_id=None,
                             description=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         domain_id = self._init_obj_uuid(domain_id)
         domain_def = self._init_def(domain_id=domain_id,
                                     name=name,
@@ -266,23 +267,23 @@ class NsxPolicyDomainApi(NsxPolicyResourceBase):
         self._create_or_store(domain_def)
         return domain_id
 
-    def delete(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT):
-        domain_def = policy_defs.DomainDef(domain_id=domain_id, tenant=tenant)
+    def delete(self, domain_id, tenant=constants.POLICY_INFRA_TENANT):
+        domain_def = core_defs.DomainDef(domain_id=domain_id, tenant=tenant)
         self.policy_api.delete(domain_def)
 
-    def get(self, domain_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+    def get(self, domain_id, tenant=constants.POLICY_INFRA_TENANT,
             silent=False):
-        domain_def = policy_defs.DomainDef(domain_id=domain_id, tenant=tenant)
+        domain_def = core_defs.DomainDef(domain_id=domain_id, tenant=tenant)
         return self.policy_api.get(domain_def, silent=silent)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
-        domain_def = policy_defs.DomainDef(tenant=tenant)
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        domain_def = core_defs.DomainDef(tenant=tenant)
         return self._list(domain_def)
 
     def update(self, domain_id, name=IGNORE,
                description=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(domain_id=domain_id,
                      name=name,
                      description=description,
@@ -294,17 +295,17 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
     """NSX Policy Group (under a Domain) with condition/s"""
     @property
     def entry_def(self):
-        return policy_defs.GroupDef
+        return core_defs.GroupDef
 
     def create_or_overwrite(
         self, name, domain_id, group_id=None,
         description=IGNORE,
         cond_val=None,
-        cond_key=policy_constants.CONDITION_KEY_TAG,
-        cond_op=policy_constants.CONDITION_OP_EQUALS,
-        cond_member_type=policy_constants.CONDITION_MEMBER_PORT,
+        cond_key=constants.CONDITION_KEY_TAG,
+        cond_op=constants.CONDITION_OP_EQUALS,
+        cond_member_type=constants.CONDITION_MEMBER_PORT,
         tags=IGNORE,
-        tenant=policy_constants.POLICY_INFRA_TENANT):
+        tenant=constants.POLICY_INFRA_TENANT):
         """Create a group with/without a condition.
 
         Empty condition value will result a group with no condition.
@@ -313,10 +314,10 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         group_id = self._init_obj_uuid(group_id)
         # Prepare the condition
         if cond_val is not None:
-            condition = policy_defs.Condition(value=cond_val,
-                                              key=cond_key,
-                                              operator=cond_op,
-                                              member_type=cond_member_type)
+            condition = core_defs.Condition(value=cond_val,
+                                            key=cond_key,
+                                            operator=cond_op,
+                                            member_type=cond_member_type)
             conditions = [condition]
         else:
             conditions = []
@@ -332,34 +333,34 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
 
     def build_condition(
         self, cond_val=None,
-        cond_key=policy_constants.CONDITION_KEY_TAG,
-        cond_op=policy_constants.CONDITION_OP_EQUALS,
-        cond_member_type=policy_constants.CONDITION_MEMBER_PORT):
-        return policy_defs.Condition(value=cond_val,
-                                     key=cond_key,
-                                     operator=cond_op,
-                                     member_type=cond_member_type)
+        cond_key=constants.CONDITION_KEY_TAG,
+        cond_op=constants.CONDITION_OP_EQUALS,
+        cond_member_type=constants.CONDITION_MEMBER_PORT):
+        return core_defs.Condition(value=cond_val,
+                                   key=cond_key,
+                                   operator=cond_op,
+                                   member_type=cond_member_type)
 
     def build_ip_address_expression(self, ip_addresses):
-        return policy_defs.IPAddressExpression(ip_addresses)
+        return core_defs.IPAddressExpression(ip_addresses)
 
     def build_nested_condition(
-        self, operator=policy_constants.CONDITION_OP_AND,
+        self, operator=constants.CONDITION_OP_AND,
         conditions=None):
         expressions = []
         for cond in conditions:
             if len(expressions):
-                expressions.append(policy_defs.ConjunctionOperator(
+                expressions.append(core_defs.ConjunctionOperator(
                     operator=operator))
             expressions.append(cond)
 
-        return policy_defs.NestedExpression(expressions=expressions)
+        return core_defs.NestedExpression(expressions=expressions)
 
     def create_or_overwrite_with_conditions(
         self, name, domain_id, group_id=None,
         description=IGNORE,
         conditions=IGNORE, tags=IGNORE,
-        tenant=policy_constants.POLICY_INFRA_TENANT):
+        tenant=constants.POLICY_INFRA_TENANT):
         """Create a group with a list of conditions.
 
         To build the conditions in the list, build_condition
@@ -379,35 +380,35 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
         return group_id
 
     def delete(self, domain_id, group_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         tenant=tenant)
+               tenant=constants.POLICY_INFRA_TENANT):
+        group_def = core_defs.GroupDef(domain_id=domain_id,
+                                       group_id=group_id,
+                                       tenant=tenant)
         self.policy_api.delete(group_def)
 
     def get(self, domain_id, group_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         tenant=tenant)
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
+        group_def = core_defs.GroupDef(domain_id=domain_id,
+                                       group_id=group_id,
+                                       tenant=tenant)
         return self.policy_api.get(group_def, silent=silent)
 
     def list(self, domain_id,
-             tenant=policy_constants.POLICY_INFRA_TENANT):
+             tenant=constants.POLICY_INFRA_TENANT):
         """List all the groups of a specific domain."""
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         tenant=tenant)
+        group_def = core_defs.GroupDef(domain_id=domain_id,
+                                       tenant=tenant)
         return self._list(group_def)
 
     def get_by_name(self, domain_id, name,
-                    tenant=policy_constants.POLICY_INFRA_TENANT):
+                    tenant=constants.POLICY_INFRA_TENANT):
         """Return first group matched by name of this domain"""
         return super(NsxPolicyGroupApi, self).get_by_name(name, domain_id,
                                                           tenant=tenant)
 
     def update(self, domain_id, group_id,
                name=IGNORE, description=IGNORE,
-               tags=IGNORE, tenant=policy_constants.POLICY_INFRA_TENANT):
+               tags=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
         self._update(domain_id=domain_id,
                      group_id=group_id,
                      name=name,
@@ -416,28 +417,28 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                      tenant=tenant)
 
     def get_realized_state(self, domain_id, group_id, entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         tenant=tenant)
+        group_def = core_defs.GroupDef(domain_id=domain_id,
+                                       group_id=group_id,
+                                       tenant=tenant)
         return self._get_realized_state(group_def, entity_type=entity_type,
                                         realization_info=realization_info)
 
     def get_realized_id(self, domain_id, group_id, entity_type=None,
-                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         tenant=tenant)
+        group_def = core_defs.GroupDef(domain_id=domain_id,
+                                       group_id=group_id,
+                                       tenant=tenant)
         return self._get_realized_id(group_def, entity_type=entity_type,
                                      realization_info=realization_info)
 
     def get_realization_info(self, domain_id, group_id, entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
-        group_def = policy_defs.GroupDef(domain_id=domain_id,
-                                         group_id=group_id,
-                                         tenant=tenant)
+                             tenant=constants.POLICY_INFRA_TENANT):
+        group_def = core_defs.GroupDef(domain_id=domain_id,
+                                       group_id=group_id,
+                                       tenant=tenant)
         return self._get_realization_info(group_def, entity_type=entity_type)
 
 
@@ -450,45 +451,45 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
 
     @property
     def parent_entry_def(self):
-        return policy_defs.ServiceDef
+        return core_defs.ServiceDef
 
     def delete(self, service_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         """Delete the service with all its entries"""
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             tenant=tenant)
+        service_def = core_defs.ServiceDef(service_id=service_id,
+                                           tenant=tenant)
         self.policy_api.delete(service_def)
 
     def get(self, service_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             tenant=tenant)
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
+        service_def = core_defs.ServiceDef(service_id=service_id,
+                                           tenant=tenant)
         return self.policy_api.get(service_def, silent=silent)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
-        service_def = policy_defs.ServiceDef(tenant=tenant)
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        service_def = core_defs.ServiceDef(tenant=tenant)
         return self._list(service_def)
 
     def get_realized_state(self, service_id, entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             tenant=tenant)
+        service_def = core_defs.ServiceDef(service_id=service_id,
+                                           tenant=tenant)
         return self._get_realized_state(service_def, entity_type=entity_type,
                                         realization_info=realization_info)
 
     def get_realized_id(self, service_id, entity_type=None,
-                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             tenant=tenant)
+        service_def = core_defs.ServiceDef(service_id=service_id,
+                                           tenant=tenant)
         return self._get_realized_id(service_def, entity_type=entity_type,
                                      realization_info=realization_info)
 
     def get_realization_info(self, service_id, entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
-        service_def = policy_defs.ServiceDef(service_id=service_id,
-                                             tenant=tenant)
+                             tenant=constants.POLICY_INFRA_TENANT):
+        service_def = core_defs.ServiceDef(service_id=service_id,
+                                           tenant=tenant)
         return self._get_realization_info(service_def,
                                           entity_type=entity_type)
 
@@ -502,14 +503,14 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
 
     @property
     def entry_def(self):
-        return policy_defs.L4ServiceEntryDef
+        return core_defs.L4ServiceEntryDef
 
     def create_or_overwrite(self, name, service_id=None,
                             description=IGNORE,
-                            protocol=policy_constants.TCP,
+                            protocol=constants.TCP,
                             dest_ports=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
         service_def = self._init_parent_def(service_id=service_id,
                                             name=name,
@@ -529,7 +530,7 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     def update(self, service_id,
                name=IGNORE, description=IGNORE,
                protocol=IGNORE, dest_ports=IGNORE, tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def(
             service_id=service_id,
@@ -556,13 +557,13 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
     """
     @property
     def entry_def(self):
-        return policy_defs.IcmpServiceEntryDef
+        return core_defs.IcmpServiceEntryDef
 
     def create_or_overwrite(self, name, service_id=None,
                             description=IGNORE,
                             version=4, icmp_type=IGNORE, icmp_code=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
         service_def = self._init_parent_def(service_id=service_id,
                                             name=name,
@@ -585,7 +586,7 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
                name=IGNORE, description=IGNORE,
                version=IGNORE, icmp_type=IGNORE,
                icmp_code=IGNORE, tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def(
             service_id=service_id,
@@ -613,12 +614,12 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
     """
     @property
     def entry_def(self):
-        return policy_defs.IPProtocolServiceEntryDef
+        return core_defs.IPProtocolServiceEntryDef
 
     def create_or_overwrite(self, name, service_id=None,
                             description=IGNORE,
                             protocol_number=IGNORE, tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         service_id = self._init_obj_uuid(service_id)
         service_def = self._init_parent_def(service_id=service_id,
                                             name=name,
@@ -638,7 +639,7 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
     def update(self, service_id,
                name=IGNORE, description=IGNORE,
                protocol_number=IGNORE, tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def(
             service_id=service_id,
@@ -662,24 +663,24 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
     @property
     def entry_def(self):
-        return policy_defs.Tier1Def
+        return core_defs.Tier1Def
 
     def build_route_advertisement(self, static_routes=False, subnets=False,
                                   nat=False, lb_vip=False, lb_snat=False):
-        return policy_defs.RouteAdvertisement(static_routes=static_routes,
-                                              subnets=subnets,
-                                              nat=nat,
-                                              lb_vip=lb_vip,
-                                              lb_snat=lb_snat)
+        return core_defs.RouteAdvertisement(static_routes=static_routes,
+                                            subnets=subnets,
+                                            nat=nat,
+                                            lb_vip=lb_vip,
+                                            lb_snat=lb_snat)
 
     def create_or_overwrite(self, name, tier1_id=None,
                             description=IGNORE,
                             tier0=IGNORE,
                             force_whitelisting=IGNORE,
-                            failover_mode=policy_constants.NON_PREEMPTIVE,
+                            failover_mode=constants.NON_PREEMPTIVE,
                             route_advertisement=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         tier1_id = self._init_obj_uuid(tier1_id)
         tier1_def = self._init_def(tier1_id=tier1_id,
                                    name=name,
@@ -701,16 +702,16 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         _create()
         return tier1_id
 
-    def delete(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def delete(self, tier1_id, tenant=constants.POLICY_INFRA_TENANT):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         self.policy_api.delete(tier1_def)
 
-    def get(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+    def get(self, tier1_id, tenant=constants.POLICY_INFRA_TENANT,
             silent=False):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self.policy_api.get(tier1_def, silent=silent)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         tier1_def = self.entry_def(tenant=tenant)
         return self._list(tier1_def)
 
@@ -718,7 +719,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                force_whitelisting=IGNORE,
                failover_mode=IGNORE, tier0=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(tier1_id=tier1_id,
                      name=name,
                      description=description,
@@ -735,7 +736,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         nat=None,
         lb_vip=None,
         lb_snat=None,
-        tenant=policy_constants.POLICY_INFRA_TENANT):
+        tenant=constants.POLICY_INFRA_TENANT):
 
         tier1_dict = self.get(tier1_id, tenant)
         route_adv = self.entry_def.get_route_adv(tier1_dict)
@@ -754,47 +755,47 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         self.policy_api.create_or_update(tier1_def)
 
     def set_edge_cluster_path(self, tier1_id, edge_cluster_path,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
+                              tenant=constants.POLICY_INFRA_TENANT):
         # Supporting only a single locale-service per router for now
         # with the same id as the router id with a constant suffix
-        t1service_def = policy_defs.Tier1LocaleServiceDef(
+        t1service_def = core_defs.Tier1LocaleServiceDef(
             tier1_id=tier1_id,
             service_id=tier1_id + self.LOCALE_SERVICE_SUFF,
             edge_cluster_path=edge_cluster_path,
-            tenant=policy_constants.POLICY_INFRA_TENANT)
+            tenant=constants.POLICY_INFRA_TENANT)
         self.policy_api.create_or_update(t1service_def)
 
     def remove_edge_cluster(self, tier1_id,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         # Supporting only a single locale-service per router for now
         # with the same id as the router id with a constant suffix
-        t1service_def = policy_defs.Tier1LocaleServiceDef(
+        t1service_def = core_defs.Tier1LocaleServiceDef(
             tier1_id=tier1_id,
             service_id=tier1_id + self.LOCALE_SERVICE_SUFF,
-            tenant=policy_constants.POLICY_INFRA_TENANT)
+            tenant=constants.POLICY_INFRA_TENANT)
         self.policy_api.delete(t1service_def)
 
     def get_realized_state(self, tier1_id, entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self._get_realized_state(tier1_def, entity_type=entity_type,
                                         realization_info=realization_info)
 
     def get_realized_id(self, tier1_id, entity_type=None,
-                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self._get_realized_id(tier1_def, entity_type=entity_type,
                                      realization_info=realization_info)
 
     def get_realization_info(self, tier1_id, entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
+                             tenant=constants.POLICY_INFRA_TENANT):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self._get_realization_info(tier1_def)
 
     def wait_until_realized(self, tier1_id, entity_type=None,
-                            tenant=policy_constants.POLICY_INFRA_TENANT,
+                            tenant=constants.POLICY_INFRA_TENANT,
                             sleep=None, max_attempts=None):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self._wait_until_realized(tier1_def, entity_type=entity_type,
@@ -802,7 +803,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                          max_attempts=max_attempts)
 
     def update_transport_zone(self, tier1_id, transport_zone_id,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
+                              tenant=constants.POLICY_INFRA_TENANT):
         """Use the pass-through api to update the TZ zone on the NSX router"""
         if not self.nsx_api:
             LOG.error("Cannot update tier1 %s transport zone as the "
@@ -823,18 +824,18 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
     @property
     def entry_def(self):
-        return policy_defs.Tier0Def
+        return core_defs.Tier0Def
 
     def create_or_overwrite(self, name, tier0_id=None,
                             description=IGNORE,
-                            ha_mode=policy_constants.ACTIVE_ACTIVE,
-                            failover_mode=policy_constants.NON_PREEMPTIVE,
+                            ha_mode=constants.ACTIVE_ACTIVE,
+                            failover_mode=constants.NON_PREEMPTIVE,
                             dhcp_config=IGNORE,
                             force_whitelisting=IGNORE,
                             default_rule_logging=IGNORE,
                             transit_subnets=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         tier0_id = self._init_obj_uuid(tier0_id)
         tier0_def = self._init_def(tier0_id=tier0_id,
@@ -851,16 +852,16 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         self.policy_api.create_or_update(tier0_def)
         return tier0_id
 
-    def delete(self, tier0_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def delete(self, tier0_id, tenant=constants.POLICY_INFRA_TENANT):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
         self.policy_api.delete(tier0_def)
 
-    def get(self, tier0_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+    def get(self, tier0_id, tenant=constants.POLICY_INFRA_TENANT,
             silent=False):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
         return self.policy_api.get(tier0_def, silent=silent)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         tier0_def = self.entry_def(tenant=tenant)
         return self._list(tier0_def)
 
@@ -871,7 +872,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                default_rule_logging=IGNORE,
                transit_subnets=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         self._update(tier0_id=tier0_id,
                      name=name,
@@ -885,11 +886,11 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                      tenant=tenant)
 
     def get_edge_cluster_path(self, tier0_id,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
+                              tenant=constants.POLICY_INFRA_TENANT):
         """Get the edge_cluster path of a Tier0 router"""
-        t0service_def = policy_defs.Tier0LocaleServiceDef(
+        t0service_def = core_defs.Tier0LocaleServiceDef(
             tier0_id=tier0_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT)
+            tenant=constants.POLICY_INFRA_TENANT)
         services = self.policy_api.list(t0service_def)['results']
         for srv in services:
             if 'edge_cluster_path' in srv:
@@ -897,7 +898,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
 
     def get_overlay_transport_zone(
         self, tier0_id,
-        tenant=policy_constants.POLICY_INFRA_TENANT):
+        tenant=constants.POLICY_INFRA_TENANT):
         """Use the pass-through api to get the TZ zone of the NSX tier0"""
         if not self.nsx_api:
             LOG.error("Cannot get tier0 %s transport zone as the "
@@ -912,26 +913,26 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
             nsx_router_uuid)
 
     def get_realized_state(self, tier0_id, entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
         return self._get_realized_state(tier0_def, entity_type=entity_type,
                                         realization_info=realization_info)
 
     def get_realized_id(self, tier0_id, entity_type=None,
-                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
         return self._get_realized_id(tier0_def, entity_type=entity_type,
                                      realization_info=realization_info)
 
     def get_realization_info(self, tier0_id, entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
+                             tenant=constants.POLICY_INFRA_TENANT):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
         return self._get_realization_info(tier0_def, entity_type=entity_type)
 
     def wait_until_realized(self, tier0_id, entity_type=None,
-                            tenant=policy_constants.POLICY_INFRA_TENANT,
+                            tenant=constants.POLICY_INFRA_TENANT,
                             sleep=None, max_attempts=None):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
         return self._wait_until_realized(tier0_def, entity_type=entity_type,
@@ -944,7 +945,7 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
 
     @property
     def entry_def(self):
-        return policy_defs.Tier1NatRule
+        return core_defs.Tier1NatRule
 
     def create_or_overwrite(self, name, tier1_id,
                             nat_id=DEFAULT_NAT_ID,
@@ -958,7 +959,7 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
                             sequence_number=IGNORE,
                             log=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         nat_rule_id = self._init_obj_uuid(nat_rule_id)
         nat_rule_def = self._init_def(tier1_id=tier1_id,
@@ -979,19 +980,19 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
         return nat_rule_id
 
     def delete(self, tier1_id, nat_rule_id, nat_id=DEFAULT_NAT_ID,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         nat_rule_def = self.entry_def(tier1_id=tier1_id, nat_id=nat_id,
                                       nat_rule_id=nat_rule_id, tenant=tenant)
         self.policy_api.delete(nat_rule_def)
 
     def get(self, tier1_id, nat_rule_id, nat_id=DEFAULT_NAT_ID,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=constants.POLICY_INFRA_TENANT):
         nat_rule_def = self.entry_def(tier1_id=tier1_id, nat_id=nat_id,
                                       nat_rule_id=nat_rule_id, tenant=tenant)
         self.policy_api.get(nat_rule_def)
 
     def list(self, tier1_id, nat_id=DEFAULT_NAT_ID,
-             tenant=policy_constants.POLICY_INFRA_TENANT):
+             tenant=constants.POLICY_INFRA_TENANT):
         nat_rule_def = self.entry_def(tier1_id=tier1_id, nat_id=nat_id,
                                       tenant=tenant)
         return self._list(nat_rule_def)
@@ -1006,7 +1007,7 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
                action=IGNORE,
                log=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(tier1_id=tier1_id,
                      nat_id=nat_id,
                      nat_rule_id=nat_rule_id,
@@ -1025,7 +1026,7 @@ class NsxPolicyTier1StaticRouteApi(NsxPolicyResourceBase):
 
     @property
     def entry_def(self):
-        return policy_defs.Tier1StaticRoute
+        return core_defs.Tier1StaticRoute
 
     def create_or_overwrite(self, name, tier1_id,
                             static_route_id=None,
@@ -1033,7 +1034,7 @@ class NsxPolicyTier1StaticRouteApi(NsxPolicyResourceBase):
                             network=IGNORE,
                             next_hop=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         static_route_id = self._init_obj_uuid(static_route_id)
         static_route_def = self._init_def(tier1_id=tier1_id,
@@ -1048,21 +1049,21 @@ class NsxPolicyTier1StaticRouteApi(NsxPolicyResourceBase):
         return static_route_id
 
     def delete(self, tier1_id, static_route_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         static_route_def = self.entry_def(tier1_id=tier1_id,
                                           static_route_id=static_route_id,
                                           tenant=tenant)
         self.policy_api.delete(static_route_def)
 
     def get(self, tier1_id, static_route_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=constants.POLICY_INFRA_TENANT):
         static_route_def = self.entry_def(tier1_id=tier1_id,
                                           static_route_id=static_route_id,
                                           tenant=tenant)
         self.policy_api.get(static_route_def)
 
     def list(self, tier1_id,
-             tenant=policy_constants.POLICY_INFRA_TENANT):
+             tenant=constants.POLICY_INFRA_TENANT):
         static_route_def = self.entry_def(tier1_id=tier1_id,
                                           tenant=tenant)
         return self._list(static_route_def)
@@ -1073,7 +1074,7 @@ class NsxPolicyTier1StaticRouteApi(NsxPolicyResourceBase):
                network=IGNORE,
                next_hop=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(tier1_id=tier1_id,
                      static_route_id=static_route_id,
                      name=name,
@@ -1088,7 +1089,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
     """NSX Tier1 Segment API """
     @property
     def entry_def(self):
-        return policy_defs.Tier1SegmentDef
+        return core_defs.Tier1SegmentDef
 
     def create_or_overwrite(self, name, tier1_id,
                             segment_id=None,
@@ -1099,7 +1100,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                             vlan_ids=IGNORE,
                             default_rule_logging=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         segment_id = self._init_obj_uuid(segment_id)
         segment_def = self._init_def(tier1_id=tier1_id,
@@ -1117,20 +1118,20 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
         return segment_id
 
     def delete(self, tier1_id, segment_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tier1_id=tier1_id,
                                      segment_id=segment_id,
                                      tenant=tenant)
         self.policy_api.delete(segment_def)
 
     def get(self, tier1_id, segment_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
         segment_def = self.entry_def(tier1_id=tier1_id,
                                      segment_id=segment_id,
                                      tenant=tenant)
         return self.policy_api.get(segment_def, silent=silent)
 
-    def list(self, tier1_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tier1_id, tenant=constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self._list(segment_def)
 
@@ -1143,7 +1144,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                vlan_ids=IGNORE,
                default_rule_logging=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         self._update(tier1_id=tier1_id,
                      segment_id=segment_id,
@@ -1162,7 +1163,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
     """NSX Infra Segment API """
     @property
     def entry_def(self):
-        return policy_defs.SegmentDef
+        return core_defs.SegmentDef
 
     def create_or_overwrite(self, name,
                             segment_id=None,
@@ -1173,7 +1174,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                             vlan_ids=IGNORE,
                             transport_zone_id=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         segment_id = self._init_obj_uuid(segment_id)
         segment_def = self._init_def(segment_id=segment_id,
@@ -1190,16 +1191,16 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         return segment_id
 
     def delete(self, segment_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         self.policy_api.delete(segment_def)
 
     def get(self, segment_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         return self.policy_api.get(segment_def, silent=silent)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(tenant=tenant)
         return self._list(segment_def)
 
@@ -1207,7 +1208,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                tier1_id=IGNORE, subnets=IGNORE,
                dns_domain_name=IGNORE,
                vlan_ids=IGNORE, tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         self._update(segment_id=segment_id,
                      name=name,
@@ -1221,7 +1222,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
 
     def remove_connectivity_and_subnets(
         self, segment_id,
-        tenant=policy_constants.POLICY_INFRA_TENANT):
+        tenant=constants.POLICY_INFRA_TENANT):
         """Disconnect a segment from a router and remove its subnets.
 
         PATCH does not support this action so PUT is used for this
@@ -1237,14 +1238,14 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         self.policy_api.client.update(path, segment)
 
     def get_realized_state(self, segment_id, entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         return self._get_realized_state(segment_def, entity_type=entity_type,
                                         realization_info=realization_info)
 
     def get_realized_id(self, segment_id, entity_type=None,
-                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         return self._get_realized_id(segment_def, entity_type=entity_type,
@@ -1253,7 +1254,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
     def get_realized_logical_switch_id(
         self,
         segment_id,
-        tenant=policy_constants.POLICY_INFRA_TENANT):
+        tenant=constants.POLICY_INFRA_TENANT):
 
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         realization_info = self._wait_until_realized(
@@ -1262,7 +1263,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                                      realization_info=realization_info)
 
     def get_realization_info(self, segment_id, entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
+                             tenant=constants.POLICY_INFRA_TENANT):
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         return self._get_realization_info(segment_def,
                                           entity_type=entity_type)
@@ -1272,13 +1273,13 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
     """NSX Segment Port API """
     @property
     def entry_def(self):
-        return policy_defs.SegmentPortDef
+        return core_defs.SegmentPortDef
 
     def build_address_binding(self, ip_address, mac_address,
                               vlan_id=None):
-        return policy_defs.PortAddressBinding(ip_address,
-                                              mac_address,
-                                              vlan_id)
+        return core_defs.PortAddressBinding(ip_address,
+                                            mac_address,
+                                            vlan_id)
 
     def create_or_overwrite(self, name,
                             segment_id,
@@ -1292,7 +1293,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                             traffic_tag=IGNORE,
                             allocate_addresses=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         port_id = self._init_obj_uuid(port_id)
         port_def = self._init_def(segment_id=segment_id,
@@ -1311,21 +1312,21 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         return port_id
 
     def delete(self, segment_id, port_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
                                   tenant=tenant)
         self.policy_api.delete(port_def)
 
     def get(self, segment_id, port_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT,
+            tenant=constants.POLICY_INFRA_TENANT,
             silent=False):
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
                                   tenant=tenant)
         return self.policy_api.get(port_def, silent=silent)
 
-    def list(self, segment_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, segment_id, tenant=constants.POLICY_INFRA_TENANT):
         port_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         return self._list(port_def)
 
@@ -1334,7 +1335,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                description=IGNORE,
                address_bindings=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         self._update(segment_id=segment_id,
                      port_id=port_id,
@@ -1345,7 +1346,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                      tenant=tenant)
 
     def detach(self, segment_id, port_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
@@ -1359,7 +1360,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                allocate_addresses,
                app_id=None,
                context_id=None,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
@@ -1373,7 +1374,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
         self.policy_api.create_or_update(port_def)
 
     def get_realized_state(self, segment_id, port_id, entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
@@ -1382,7 +1383,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                                         realization_info=realization_info)
 
     def get_realized_id(self, segment_id, port_id, entity_type=None,
-                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
@@ -1391,7 +1392,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                                      realization_info=realization_info)
 
     def get_realization_info(self, segment_id, port_id, entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
+                             tenant=constants.POLICY_INFRA_TENANT):
         port_def = self.entry_def(segment_id=segment_id,
                                   port_id=port_id,
                                   tenant=tenant)
@@ -1401,7 +1402,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
 class SegmentPortProfilesBindingMapBaseApi(NsxPolicyResourceBase):
 
     def delete(self, segment_id, port_id, map_id=DEFAULT_MAP_ID,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         map_def = self.entry_def(segment_id=segment_id,
                                  port_id=port_id,
                                  map_id=map_id,
@@ -1409,7 +1410,7 @@ class SegmentPortProfilesBindingMapBaseApi(NsxPolicyResourceBase):
         self.policy_api.delete(map_def)
 
     def get(self, segment_id, port_id, map_id=DEFAULT_MAP_ID,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=constants.POLICY_INFRA_TENANT):
         map_def = self.entry_def(segment_id=segment_id,
                                  port_id=port_id,
                                  map_id=map_id,
@@ -1417,7 +1418,7 @@ class SegmentPortProfilesBindingMapBaseApi(NsxPolicyResourceBase):
         self.policy_api.get(map_def)
 
     def list(self, segment_id, port_id,
-             tenant=policy_constants.POLICY_INFRA_TENANT):
+             tenant=constants.POLICY_INFRA_TENANT):
         map_def = self.entry_def(segment_id=segment_id,
                                  port_id=port_id,
                                  tenant=tenant)
@@ -1429,7 +1430,7 @@ class SegmentPortSecurityProfilesBindingMapApi(
 
     @property
     def entry_def(self):
-        return policy_defs.SegmentPortSecProfilesBindingMapDef
+        return core_defs.SegmentPortSecProfilesBindingMapDef
 
     def create_or_overwrite(self, name, segment_id, port_id,
                             map_id=DEFAULT_MAP_ID,
@@ -1437,7 +1438,7 @@ class SegmentPortSecurityProfilesBindingMapApi(
                             segment_security_profile_id=IGNORE,
                             spoofguard_profile_id=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         map_id = self._init_obj_uuid(map_id)
         map_def = self._init_def(
@@ -1460,7 +1461,7 @@ class SegmentPortSecurityProfilesBindingMapApi(
                segment_security_profile_id=IGNORE,
                spoofguard_profile_id=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             segment_id=segment_id,
             port_id=port_id,
@@ -1478,7 +1479,7 @@ class SegmentPortDiscoveryProfilesBindingMapApi(
 
     @property
     def entry_def(self):
-        return policy_defs.SegmentPortDiscoveryProfilesBindingMapDef
+        return core_defs.SegmentPortDiscoveryProfilesBindingMapDef
 
     def create_or_overwrite(self, name, segment_id, port_id,
                             map_id=DEFAULT_MAP_ID,
@@ -1486,7 +1487,7 @@ class SegmentPortDiscoveryProfilesBindingMapApi(
                             mac_discovery_profile_id=IGNORE,
                             ip_discovery_profile_id=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         map_id = self._init_obj_uuid(map_id)
         map_def = self._init_def(
@@ -1509,7 +1510,7 @@ class SegmentPortDiscoveryProfilesBindingMapApi(
                mac_discovery_profile_id=IGNORE,
                ip_discovery_profile_id=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             segment_id=segment_id,
             port_id=port_id,
@@ -1527,14 +1528,14 @@ class SegmentPortQosProfilesBindingMapApi(
 
     @property
     def entry_def(self):
-        return policy_defs.SegmentPortQoSProfilesBindingMapDef
+        return core_defs.SegmentPortQoSProfilesBindingMapDef
 
     def create_or_overwrite(self, name, segment_id, port_id,
                             map_id=DEFAULT_MAP_ID,
                             description=IGNORE,
                             qos_profile_id=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         map_id = self._init_obj_uuid(map_id)
         map_def = self._init_def(
@@ -1555,7 +1556,7 @@ class SegmentPortQosProfilesBindingMapApi(
                description=IGNORE,
                qos_profile_id=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             segment_id=segment_id,
             port_id=port_id,
@@ -1571,13 +1572,13 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
     """NSX Tier1 Segment Port API """
     @property
     def entry_def(self):
-        return policy_defs.Tier1SegmentPortDef
+        return core_defs.Tier1SegmentPortDef
 
     def build_address_binding(self, ip_address, mac_address,
                               vlan_id=None):
-        return policy_defs.PortAddressBinding(ip_address,
-                                              mac_address,
-                                              vlan_id)
+        return core_defs.PortAddressBinding(ip_address,
+                                            mac_address,
+                                            vlan_id)
 
     def create_or_overwrite(self, name,
                             tier1_id,
@@ -1592,7 +1593,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
                             traffic_tag=IGNORE,
                             allocate_addresses=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         port_id = self._init_obj_uuid(port_id)
         port_def = self._init_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
@@ -1611,7 +1612,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
         return port_id
 
     def delete(self, tier1_id, segment_id, port_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         port_def = self.entry_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
                                   port_id=port_id,
@@ -1619,7 +1620,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
         self.policy_api.delete(port_def)
 
     def get(self, tier1_id, segment_id, port_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT,
+            tenant=constants.POLICY_INFRA_TENANT,
             silent=False):
         port_def = self.entry_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
@@ -1628,7 +1629,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
         return self.policy_api.get(port_def, silent=silent)
 
     def list(self, tier1_id, segment_id,
-             tenant=policy_constants.POLICY_INFRA_TENANT):
+             tenant=constants.POLICY_INFRA_TENANT):
         port_def = self.entry_def(segment_id=segment_id, tier1_id=tier1_id,
                                   tenant=tenant)
         return self._list(port_def)
@@ -1638,7 +1639,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
                description=IGNORE,
                address_bindings=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         self._update(segment_id=segment_id,
                      tier1_id=tier1_id,
@@ -1650,7 +1651,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
                      tenant=tenant)
 
     def detach(self, tier1_id, segment_id, port_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         port_def = self.entry_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
@@ -1665,7 +1666,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
                allocate_addresses,
                app_id=None,
                context_id=None,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         port_def = self.entry_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
@@ -1681,7 +1682,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
 
     def get_realized_state(self, tier1_id, segment_id, port_id,
                            entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
         port_def = self.entry_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
@@ -1691,7 +1692,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
                                         realization_info=realization_info)
 
     def get_realized_id(self, tier1_id, segment_id, port_id, entity_type=None,
-                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
         port_def = self.entry_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
@@ -1702,7 +1703,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
 
     def get_realization_info(self, tier1_id, segment_id, port_id,
                              entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
+                             tenant=constants.POLICY_INFRA_TENANT):
         port_def = self.entry_def(segment_id=segment_id,
                                   tier1_id=tier1_id,
                                   port_id=port_id,
@@ -1714,14 +1715,14 @@ class NsxPolicyIpBlockApi(NsxPolicyResourceBase):
     """NSX Policy IP Block API"""
     @property
     def entry_def(self):
-        return policy_defs.IpBlockDef
+        return core_defs.IpBlockDef
 
     def create_or_overwrite(self, name,
                             ip_block_id=None,
                             description=IGNORE,
                             cidr=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         ip_block_id = self._init_obj_uuid(ip_block_id)
         ip_block_def = self._init_def(ip_block_id=ip_block_id,
@@ -1733,24 +1734,24 @@ class NsxPolicyIpBlockApi(NsxPolicyResourceBase):
         self._create_or_store(ip_block_def)
         return ip_block_id
 
-    def delete(self, ip_block_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def delete(self, ip_block_id, tenant=constants.POLICY_INFRA_TENANT):
         ip_block_def = self.entry_def(ip_block_id=ip_block_id,
                                       tenant=tenant)
         self.policy_api.delete(ip_block_def)
 
-    def get(self, ip_block_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+    def get(self, ip_block_id, tenant=constants.POLICY_INFRA_TENANT,
             silent=False):
         ip_block_def = self.entry_def(ip_block_id=ip_block_id,
                                       tenant=tenant)
         return self.policy_api.get(ip_block_def, silent=silent)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         ip_block_def = self.entry_def(tenant=tenant)
         return self._list(ip_block_def)
 
     def update(self, ip_block_id, name=IGNORE, description=IGNORE,
                cidr=IGNORE, tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(ip_block_id=ip_block_id,
                      name=name,
                      description=description,
@@ -1763,13 +1764,13 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
     """NSX Policy IP Pool API"""
     @property
     def entry_def(self):
-        return policy_defs.IpPoolDef
+        return core_defs.IpPoolDef
 
     def create_or_overwrite(self, name,
                             ip_pool_id=None,
                             description=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         ip_pool_id = self._init_obj_uuid(ip_pool_id)
         ip_pool_def = self._init_def(ip_pool_id=ip_pool_id,
@@ -1780,23 +1781,23 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
         self._create_or_store(ip_pool_def)
         return ip_pool_id
 
-    def delete(self, ip_pool_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def delete(self, ip_pool_id, tenant=constants.POLICY_INFRA_TENANT):
         ip_pool_def = self.entry_def(ip_pool_id=ip_pool_id,
                                      tenant=tenant)
         self.policy_api.delete(ip_pool_def)
 
-    def get(self, ip_pool_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def get(self, ip_pool_id, tenant=constants.POLICY_INFRA_TENANT):
         ip_pool_def = self.entry_def(ip_pool_id=ip_pool_id,
                                      tenant=tenant)
         return self.policy_api.get(ip_pool_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         ip_pool_def = self.entry_def(tenant=tenant)
         return self._list(ip_pool_def)
 
     def update(self, ip_pool_id, name=IGNORE, description=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(ip_pool_id=ip_pool_id,
                      name=name,
                      description=description,
@@ -1805,9 +1806,9 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
 
     def allocate_ip(self, ip_pool_id, ip_address, ip_allocation_id=None,
                     name=IGNORE, description=IGNORE, tags=IGNORE,
-                    tenant=policy_constants.POLICY_INFRA_TENANT):
+                    tenant=constants.POLICY_INFRA_TENANT):
         ip_allocation_id = self._init_obj_uuid(ip_allocation_id)
-        ip_allocation_def = policy_defs.IpPoolAllocationDef(
+        ip_allocation_def = core_defs.IpPoolAllocationDef(
             ip_pool_id=ip_pool_id,
             ip_allocation_id=ip_allocation_id,
             allocation_ip=ip_address,
@@ -1818,23 +1819,23 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
         self.policy_api.create_or_update(ip_allocation_def)
 
     def release_ip(self, ip_pool_id, ip_allocation_id,
-                   tenant=policy_constants.POLICY_INFRA_TENANT):
-        ip_allocation_def = policy_defs.IpPoolAllocationDef(
+                   tenant=constants.POLICY_INFRA_TENANT):
+        ip_allocation_def = core_defs.IpPoolAllocationDef(
             ip_allocation_id=ip_allocation_id,
             ip_pool_id=ip_pool_id,
             tenant=tenant)
         self.policy_api.delete(ip_allocation_def)
 
     def list_allocations(self, ip_pool_id,
-                         tenant=policy_constants.POLICY_INFRA_TENANT):
-        ip_allocation_def = policy_defs.IpPoolAllocationDef(
+                         tenant=constants.POLICY_INFRA_TENANT):
+        ip_allocation_def = core_defs.IpPoolAllocationDef(
             ip_pool_id=ip_pool_id,
             tenant=tenant)
         return self._list(ip_allocation_def)
 
     def get_allocation(self, ip_pool_id, ip_allocation_id,
-                       tenant=policy_constants.POLICY_INFRA_TENANT):
-        ip_allocation_def = policy_defs.IpPoolAllocationDef(
+                       tenant=constants.POLICY_INFRA_TENANT):
+        ip_allocation_def = core_defs.IpPoolAllocationDef(
             ip_pool_id=ip_pool_id,
             ip_allocation_id=ip_allocation_id,
             tenant=tenant)
@@ -1843,9 +1844,9 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
     def allocate_block_subnet(self, ip_pool_id, ip_block_id, size,
                               ip_subnet_id=None, auto_assign_gateway=IGNORE,
                               name=IGNORE, description=IGNORE, tags=IGNORE,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
+                              tenant=constants.POLICY_INFRA_TENANT):
         ip_subnet_id = self._init_obj_uuid(ip_subnet_id)
-        ip_subnet_def = policy_defs.IpPoolBlockSubnetDef(
+        ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
             ip_pool_id=ip_pool_id,
             ip_block_id=ip_block_id,
             ip_subnet_id=ip_subnet_id,
@@ -1858,23 +1859,23 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
         self.policy_api.create_or_update(ip_subnet_def)
 
     def release_block_subnet(self, ip_pool_id, ip_subnet_id,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
-        ip_subnet_def = policy_defs.IpPoolBlockSubnetDef(
+                             tenant=constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
             ip_subnet_id=ip_subnet_id,
             ip_pool_id=ip_pool_id,
             tenant=tenant)
         self.policy_api.delete(ip_subnet_def)
 
     def list_block_subnets(self, ip_pool_id,
-                           tenant=policy_constants.POLICY_INFRA_TENANT):
-        ip_subnet_def = policy_defs.IpPoolBlockSubnetDef(
+                           tenant=constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
             ip_pool_id=ip_pool_id,
             tenant=tenant)
         return self._list(ip_subnet_def)
 
     def get_ip_block_subnet(self, ip_pool_id, ip_subnet_id,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
-        ip_subnet_def = policy_defs.IpPoolBlockSubnetDef(
+                            tenant=constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
             ip_pool_id=ip_pool_id,
             ip_subnet_id=ip_subnet_id,
             tenant=tenant)
@@ -1885,14 +1886,14 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     """NSX Policy CommunicationMap (Under a Domain)."""
     @property
     def entry_def(self):
-        return policy_defs.CommunicationMapEntryDef
+        return core_defs.CommunicationMapEntryDef
 
     @property
     def parent_entry_def(self):
-        return policy_defs.CommunicationMapDef
+        return core_defs.CommunicationMapDef
 
     def _get_last_seq_num(self, domain_id, map_id,
-                          tenant=policy_constants.POLICY_INFRA_TENANT):
+                          tenant=constants.POLICY_INFRA_TENANT):
         # get the current entries, and choose the next unused sequence number
         # between the entries under the same communication map
         try:
@@ -1913,13 +1914,13 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def create_or_overwrite(self, name, domain_id, map_id=None,
                             description=IGNORE,
-                            category=policy_constants.CATEGORY_APPLICATION,
+                            category=constants.CATEGORY_APPLICATION,
                             sequence_number=None, service_ids=IGNORE,
-                            action=policy_constants.ACTION_ALLOW,
+                            action=constants.ACTION_ALLOW,
                             source_groups=IGNORE, dest_groups=IGNORE,
                             direction=nsx_constants.IN_OUT,
                             logged=IGNORE, tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap & Entry.
 
         source_groups/dest_groups should be a list of group ids belonging
@@ -1967,8 +1968,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def create_or_overwrite_map_only(
         self, name, domain_id, map_id=None, description=IGNORE,
-        category=policy_constants.CATEGORY_APPLICATION,
-        tags=IGNORE, tenant=policy_constants.POLICY_INFRA_TENANT):
+        category=constants.CATEGORY_APPLICATION,
+        tags=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
         """Create or update a CommunicationMap
 
         Create a communication map without any entries, or update the
@@ -1986,10 +1987,10 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def build_entry(self, name, domain_id, map_id, entry_id,
                     description=None,
                     sequence_number=None, service_ids=None,
-                    action=policy_constants.ACTION_ALLOW,
+                    action=constants.ACTION_ALLOW,
                     source_groups=None, dest_groups=None,
                     direction=nsx_constants.IN_OUT, logged=False,
-                    tenant=policy_constants.POLICY_INFRA_TENANT):
+                    tenant=constants.POLICY_INFRA_TENANT):
         """Get the definition of a single map entry"""
         return self._init_def(domain_id=domain_id,
                               map_id=map_id,
@@ -2008,9 +2009,9 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def create_with_entries(
         self, name, domain_id, map_id=None,
         description=IGNORE,
-        category=policy_constants.CATEGORY_APPLICATION,
+        category=constants.CATEGORY_APPLICATION,
         entries=None, tags=IGNORE,
-        tenant=policy_constants.POLICY_INFRA_TENANT):
+        tenant=constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap with entries"""
 
         map_id = self._init_obj_uuid(map_id)
@@ -2025,11 +2026,11 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def create_entry(self, name, domain_id, map_id, entry_id=None,
                      description=None, sequence_number=None, service_ids=None,
-                     action=policy_constants.ACTION_ALLOW,
+                     action=constants.ACTION_ALLOW,
                      source_groups=None, dest_groups=None,
                      direction=nsx_constants.IN_OUT,
                      logged=False,
-                     tenant=policy_constants.POLICY_INFRA_TENANT):
+                     tenant=constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap Entry.
 
         source_groups/dest_groups should be a list of group ids belonging
@@ -2061,7 +2062,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         return entry_id
 
     def delete(self, domain_id, map_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         map_def = self._init_parent_def(
             domain_id=domain_id,
             map_id=map_id,
@@ -2069,8 +2070,8 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         self.policy_api.delete(map_def)
 
     def delete_entry(self, domain_id, map_id, entry_id,
-                     tenant=policy_constants.POLICY_INFRA_TENANT):
-        entry_def = policy_defs.CommunicationMapEntryDef(
+                     tenant=constants.POLICY_INFRA_TENANT):
+        entry_def = core_defs.CommunicationMapEntryDef(
             domain_id=domain_id,
             map_id=map_id,
             entry_id=entry_id,
@@ -2078,23 +2079,23 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         self.policy_api.delete(entry_def)
 
     def get(self, domain_id, map_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
-        map_def = policy_defs.CommunicationMapDef(
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
+        map_def = core_defs.CommunicationMapDef(
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
         return self.policy_api.get(map_def, silent=silent)
 
     def get_by_name(self, domain_id, name,
-                    tenant=policy_constants.POLICY_INFRA_TENANT):
+                    tenant=constants.POLICY_INFRA_TENANT):
         """Return first communication map entry matched by name"""
         return super(NsxPolicyCommunicationMapApi, self).get_by_name(
             name, domain_id, tenant=tenant)
 
     def list(self, domain_id,
-             tenant=policy_constants.POLICY_INFRA_TENANT):
+             tenant=constants.POLICY_INFRA_TENANT):
         """List all the map entries of a specific domain."""
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = core_defs.CommunicationMapDef(
             domain_id=domain_id,
             tenant=tenant)
         return self._list(map_def)
@@ -2105,7 +2106,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                action=IGNORE,
                source_groups=IGNORE, dest_groups=IGNORE,
                direction=IGNORE, logged=IGNORE, tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         parent_def = self._init_parent_def(
             domain_id=domain_id,
@@ -2137,9 +2138,9 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
             self.policy_api.create_or_update(parent_def)
 
     def update_entries_logged(self, domain_id, map_id, logged,
-                              tenant=policy_constants.POLICY_INFRA_TENANT):
+                              tenant=constants.POLICY_INFRA_TENANT):
         """Update all communication map entries logged flags"""
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = core_defs.CommunicationMapDef(
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
@@ -2161,28 +2162,28 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
         _update()
 
     def get_realized_state(self, domain_id, map_id, entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
-        map_def = policy_defs.CommunicationMapDef(map_id=map_id,
-                                                  domain_id=domain_id,
-                                                  tenant=tenant)
+        map_def = core_defs.CommunicationMapDef(map_id=map_id,
+                                                domain_id=domain_id,
+                                                tenant=tenant)
         return self._get_realized_state(map_def, entity_type=entity_type,
                                         realization_info=realization_info)
 
     def get_realized_id(self, domain_id, map_id, entity_type=None,
-                        tenant=policy_constants.POLICY_INFRA_TENANT,
+                        tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
-        map_def = policy_defs.CommunicationMapDef(map_id=map_id,
-                                                  domain_id=domain_id,
-                                                  tenant=tenant)
+        map_def = core_defs.CommunicationMapDef(map_id=map_id,
+                                                domain_id=domain_id,
+                                                tenant=tenant)
         return self._get_realized_id(map_def, entity_type=entity_type,
                                      realization_info=realization_info)
 
     def get_realization_info(self, domain_id, map_id, entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
-        map_def = policy_defs.CommunicationMapDef(map_id=map_id,
-                                                  domain_id=domain_id,
-                                                  tenant=tenant)
+                             tenant=constants.POLICY_INFRA_TENANT):
+        map_def = core_defs.CommunicationMapDef(map_id=map_id,
+                                                domain_id=domain_id,
+                                                tenant=tenant)
         return self._get_realization_info(map_def, entity_type=entity_type)
 
 
@@ -2191,14 +2192,14 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
 
     @property
     def entry_def(self):
-        return policy_defs.EnforcementPointDef
+        return core_defs.EnforcementPointDef
 
     def create_or_overwrite(self, name, ep_id=None, description=IGNORE,
                             ip_address=IGNORE, username=IGNORE,
                             password=IGNORE, thumbprint=IGNORE,
                             edge_cluster_id=IGNORE,
                             transport_zone_id=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         if not ip_address or not username or password is None:
             err_msg = (_("Cannot create an enforcement point without "
                          "ip_address, username and password"))
@@ -2218,26 +2219,26 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
         return ep_id
 
     def delete(self, ep_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
-        ep_def = policy_defs.EnforcementPointDef(
+               tenant=constants.POLICY_INFRA_TENANT):
+        ep_def = core_defs.EnforcementPointDef(
             ep_id=ep_id, tenant=tenant)
         self.policy_api.delete(ep_def)
 
     def get(self, ep_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
-        ep_def = policy_defs.EnforcementPointDef(
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
+        ep_def = core_defs.EnforcementPointDef(
             ep_id=ep_id, tenant=tenant)
         return self.policy_api.get(ep_def, silent=silent)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
-        ep_def = policy_defs.EnforcementPointDef(tenant=tenant)
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        ep_def = core_defs.EnforcementPointDef(tenant=tenant)
         return self._list(ep_def)
 
     def update(self, ep_id, name=IGNORE, description=IGNORE,
                ip_address=IGNORE, username=IGNORE,
                password=IGNORE, thumbprint=IGNORE,
                edge_cluster_id=IGNORE, transport_zone_id=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         """Update the enforcement point.
 
         username & password must be defined
@@ -2263,16 +2264,16 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
         self.policy_api.create_or_update(ep_def)
 
     def get_realized_state(self, ep_id, entity_type=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT,
+                           tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
-        ep_def = policy_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
+        ep_def = core_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
         return self._get_realized_state(ep_def, entity_type=entity_type,
                                         realization_info=realization_info)
 
     def get_realization_info(self, ep_id, entity_type=None,
-                             tenant=policy_constants.POLICY_INFRA_TENANT,
+                             tenant=constants.POLICY_INFRA_TENANT,
                              realization_info=None):
-        ep_def = policy_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
+        ep_def = core_defs.EnforcementPointDef(ep_id=ep_id, tenant=tenant)
         return self._get_realization_info(ep_def, entity_type=entity_type,
                                           realization_info=realization_info)
 
@@ -2286,23 +2287,23 @@ class NsxPolicyTransportZoneApi(NsxPolicyResourceBase):
 
     @property
     def entry_def(self):
-        return policy_defs.TransportZoneDef
+        return core_defs.TransportZoneDef
 
-    def get(self, tz_id, ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
-        tz_def = policy_defs.TransportZoneDef(
+    def get(self, tz_id, ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
+        tz_def = core_defs.TransportZoneDef(
             ep_id=ep_id, tz_id=tz_id, tenant=tenant)
         return self.policy_api.get(tz_def, silent=silent)
 
     def get_tz_type(self, tz_id,
-                    ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-                    tenant=policy_constants.POLICY_INFRA_TENANT):
+                    ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+                    tenant=constants.POLICY_INFRA_TENANT):
         tz = self.get(tz_id, ep_id=ep_id, tenant=tenant)
         return tz.get('tz_type')
 
     def get_transport_type(self, tz_id,
-                           ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-                           tenant=policy_constants.POLICY_INFRA_TENANT):
+                           ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+                           tenant=constants.POLICY_INFRA_TENANT):
         """This api is consistent with the nsx manager resource api"""
         tz_type = self.get_tz_type(tz_id, ep_id=ep_id, tenant=tenant)
         if tz_type == self.TZ_TYPE_VLAN:
@@ -2311,8 +2312,8 @@ class NsxPolicyTransportZoneApi(NsxPolicyResourceBase):
             return nsx_constants.TRANSPORT_TYPE_OVERLAY
 
     def get_host_switch_mode(self, tz_id,
-                             ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-                             tenant=policy_constants.POLICY_INFRA_TENANT):
+                             ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+                             tenant=constants.POLICY_INFRA_TENANT):
         """This api is consistent with the nsx manager resource api"""
         tz_type = self.get_tz_type(tz_id, ep_id=ep_id, tenant=tenant)
         if tz_type == self.TZ_TYPE_ENS:
@@ -2320,33 +2321,33 @@ class NsxPolicyTransportZoneApi(NsxPolicyResourceBase):
         else:
             return nsx_constants.HOST_SWITCH_MODE_STANDARD
 
-    def list(self, ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-             tenant=policy_constants.POLICY_INFRA_TENANT):
-        tz_def = policy_defs.TransportZoneDef(ep_id=ep_id, tenant=tenant)
+    def list(self, ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+             tenant=constants.POLICY_INFRA_TENANT):
+        tz_def = core_defs.TransportZoneDef(ep_id=ep_id, tenant=tenant)
         return self._list(tz_def)
 
     def get_by_name(self, name,
-                    ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-                    tenant=policy_constants.POLICY_INFRA_TENANT):
+                    ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+                    tenant=constants.POLICY_INFRA_TENANT):
         """Return first group matched by name"""
         return super(NsxPolicyTransportZoneApi, self).get_by_name(
             name, ep_id, tenant=tenant)
 
     def create_or_overwrite(self, name, tz_id=None,
-                            ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+                            tenant=constants.POLICY_INFRA_TENANT):
         err_msg = (_("This action is not supported"))
         raise exceptions.ManagerError(details=err_msg)
 
     def update(self, tz_id,
-               ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+               tenant=constants.POLICY_INFRA_TENANT):
         err_msg = (_("This action is not supported"))
         raise exceptions.ManagerError(details=err_msg)
 
     def delete(self, tz_id,
-               ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+               tenant=constants.POLICY_INFRA_TENANT):
         err_msg = (_("This action is not supported"))
         raise exceptions.ManagerError(details=err_msg)
 
@@ -2355,14 +2356,14 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
     """NSX Policy Deployment Map."""
     @property
     def entry_def(self):
-        return policy_defs.DeploymentMapDef
+        return core_defs.DeploymentMapDef
 
     def create_or_overwrite(self, name, map_id=None,
                             description=IGNORE,
                             ep_id=IGNORE, domain_id=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         map_id = self._init_obj_uuid(map_id)
-        map_def = policy_defs.DeploymentMapDef(
+        map_def = core_defs.DeploymentMapDef(
             map_id=map_id,
             name=name,
             description=description,
@@ -2373,39 +2374,39 @@ class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):
         return map_id
 
     def delete(self, map_id, domain_id=None,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         if not domain_id:
             # domain_id must be provided
             err_msg = (_("Cannot delete deployment maps without a domain"))
             raise exceptions.ManagerError(details=err_msg)
 
-        map_def = policy_defs.DeploymentMapDef(
+        map_def = core_defs.DeploymentMapDef(
             map_id=map_id, domain_id=domain_id, tenant=tenant)
         self.policy_api.delete(map_def)
 
     def get(self, map_id, domain_id=None,
-            tenant=policy_constants.POLICY_INFRA_TENANT, silent=False):
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
         if not domain_id:
             # domain_id must be provided
             err_msg = (_("Cannot get deployment maps without a domain"))
             raise exceptions.ManagerError(details=err_msg)
-        map_def = policy_defs.DeploymentMapDef(
+        map_def = core_defs.DeploymentMapDef(
             map_id=map_id, domain_id=domain_id, tenant=tenant)
         return self.policy_api.get(map_def, silent=silent)
 
     def list(self, domain_id=None,
-             tenant=policy_constants.POLICY_INFRA_TENANT):
+             tenant=constants.POLICY_INFRA_TENANT):
         if not domain_id:
             # domain_id must be provided
             err_msg = (_("Cannot list deployment maps without a domain"))
             raise exceptions.ManagerError(details=err_msg)
-        map_def = policy_defs.DeploymentMapDef(domain_id=domain_id,
-                                               tenant=tenant)
+        map_def = core_defs.DeploymentMapDef(domain_id=domain_id,
+                                             tenant=tenant)
         return self._list(map_def)
 
     def update(self, map_id, name=IGNORE, description=IGNORE,
                ep_id=IGNORE, domain_id=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
 
         self._update(map_id=map_id,
                      name=name,
@@ -2422,7 +2423,7 @@ class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
                             profile_id=None,
                             description=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         profile_id = self._init_obj_uuid(profile_id)
         profile_def = self._init_def(profile_id=profile_id,
@@ -2433,26 +2434,26 @@ class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
         self._create_or_store(profile_def)
         return profile_id
 
-    def delete(self, profile_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def delete(self, profile_id, tenant=constants.POLICY_INFRA_TENANT):
         profile_def = self.entry_def(profile_id=profile_id,
                                      tenant=tenant)
         self.policy_api.delete(profile_def)
 
-    def get(self, profile_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def get(self, profile_id, tenant=constants.POLICY_INFRA_TENANT):
         profile_def = self.entry_def(profile_id=profile_id,
                                      tenant=tenant)
         return self.policy_api.get(profile_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         profile_def = self.entry_def(tenant=tenant)
         return self._list(profile_def)
 
-    def get_by_name(self, name, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def get_by_name(self, name, tenant=constants.POLICY_INFRA_TENANT):
         return super(NsxSegmentProfileBaseApi, self).get_by_name(
             name, tenant=tenant)
 
     def update(self, profile_id, name=IGNORE, description=IGNORE,
-               tags=IGNORE, tenant=policy_constants.POLICY_INFRA_TENANT):
+               tags=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
         self._update(profile_id=profile_id,
                      name=name,
                      description=description,
@@ -2463,7 +2464,7 @@ class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
 class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
     @property
     def entry_def(self):
-        return policy_defs.SegmentSecurityProfileDef
+        return core_defs.SegmentSecurityProfileDef
 
     def create_or_overwrite(self, name,
                             profile_id=None,
@@ -2477,7 +2478,7 @@ class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
                             ra_guard_enabled=IGNORE,
                             rate_limits_enabled=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         profile_id = self._init_obj_uuid(profile_id)
         profile_def = self._init_def(
@@ -2501,11 +2502,11 @@ class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
 class NsxQosProfileApi(NsxSegmentProfileBaseApi):
     @property
     def entry_def(self):
-        return policy_defs.QosProfileDef
+        return core_defs.QosProfileDef
 
     def _build_rate_limiter(self, resource_type, average_bandwidth,
                             peak_bandwidth, burst_size, enabled):
-        return policy_defs.QoSRateLimiter(
+        return core_defs.QoSRateLimiter(
             resource_type=resource_type,
             average_bandwidth=average_bandwidth,
             peak_bandwidth=peak_bandwidth,
@@ -2519,7 +2520,7 @@ class NsxQosProfileApi(NsxSegmentProfileBaseApi):
         burst_size=None,
         enabled=True):
         return self._build_rate_limiter(
-            resource_type=policy_defs.QoSRateLimiter.INGRESS_RATE_LIMITER_TYPE,
+            resource_type=core_defs.QoSRateLimiter.INGRESS_RATE_LIMITER_TYPE,
             average_bandwidth=average_bandwidth,
             peak_bandwidth=peak_bandwidth,
             burst_size=burst_size,
@@ -2532,16 +2533,16 @@ class NsxQosProfileApi(NsxSegmentProfileBaseApi):
         burst_size=None,
         enabled=True):
         return self._build_rate_limiter(
-            resource_type=policy_defs.QoSRateLimiter.EGRESS_RATE_LIMITER_TYPE,
+            resource_type=core_defs.QoSRateLimiter.EGRESS_RATE_LIMITER_TYPE,
             average_bandwidth=average_bandwidth,
             peak_bandwidth=peak_bandwidth,
             burst_size=burst_size,
             enabled=enabled)
 
     def build_dscp(self, trusted=False, priority=None):
-        mode = (policy_defs.QoSDscp.QOS_DSCP_TRUSTED if trusted
-                else policy_defs.QoSDscp.QOS_DSCP_UNTRUSTED)
-        return policy_defs.QoSDscp(mode=mode, priority=priority)
+        mode = (core_defs.QoSDscp.QOS_DSCP_TRUSTED if trusted
+                else core_defs.QoSDscp.QOS_DSCP_UNTRUSTED)
+        return core_defs.QoSDscp(mode=mode, priority=priority)
 
     def create_or_overwrite(self, name,
                             profile_id=None,
@@ -2550,7 +2551,7 @@ class NsxQosProfileApi(NsxSegmentProfileBaseApi):
                             dscp=IGNORE,
                             shaper_configurations=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         profile_id = self._init_obj_uuid(profile_id)
         profile_def = self._init_def(
@@ -2569,14 +2570,14 @@ class NsxQosProfileApi(NsxSegmentProfileBaseApi):
 class NsxSpoofguardProfileApi(NsxSegmentProfileBaseApi):
     @property
     def entry_def(self):
-        return policy_defs.SpoofguardProfileDef
+        return core_defs.SpoofguardProfileDef
 
     def create_or_overwrite(self, name,
                             profile_id=None,
                             description=IGNORE,
                             address_binding_whitelist=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         profile_id = self._init_obj_uuid(profile_id)
         profile_def = self._init_def(
@@ -2593,13 +2594,13 @@ class NsxSpoofguardProfileApi(NsxSegmentProfileBaseApi):
 class NsxIpDiscoveryProfileApi(NsxSegmentProfileBaseApi):
     @property
     def entry_def(self):
-        return policy_defs.IpDiscoveryProfileDef
+        return core_defs.IpDiscoveryProfileDef
 
 
 class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
     @property
     def entry_def(self):
-        return policy_defs.MacDiscoveryProfileDef
+        return core_defs.MacDiscoveryProfileDef
 
     def create_or_overwrite(self, name,
                             profile_id=None,
@@ -2610,7 +2611,7 @@ class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
                             mac_limit_policy=IGNORE,
                             mac_limit=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
 
         profile_id = self._init_obj_uuid(profile_id)
         profile_def = self._init_def(

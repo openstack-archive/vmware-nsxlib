@@ -15,8 +15,9 @@
 #
 from vmware_nsxlib.tests.unit.v3 import policy_testcase
 from vmware_nsxlib.v3 import nsx_constants
-from vmware_nsxlib.v3 import policy_constants
-from vmware_nsxlib.v3 import policy_defs as policy
+
+from vmware_nsxlib.v3.policy import constants
+from vmware_nsxlib.v3.policy import core_defs as policy
 
 
 class TestPolicyDomain(policy_testcase.TestPolicyApi):
@@ -104,10 +105,10 @@ class TestPolicyGroup(policy_testcase.TestPolicyApi):
         domain_def = policy.DomainDef(domain_id='eukarya')
         pines = policy.Condition(
             'pine',
-            operator=policy_constants.CONDITION_OP_CONTAINS)
+            operator=constants.CONDITION_OP_CONTAINS)
         maples = policy.Condition(
             'maple',
-            operator=policy_constants.CONDITION_OP_STARTS_WITH)
+            operator=constants.CONDITION_OP_STARTS_WITH)
         group_def = policy.GroupDef(domain_id='eukarya', group_id='trees',
                                     conditions=[pines, maples])
         self.policy_api.create_with_parent(domain_def, group_def)

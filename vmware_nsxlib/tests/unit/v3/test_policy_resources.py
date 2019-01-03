@@ -18,13 +18,14 @@ import mock
 
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
 from vmware_nsxlib.tests.unit.v3 import policy_testcase
-from vmware_nsxlib import v3
 from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3 import nsx_constants
-from vmware_nsxlib.v3 import policy_constants
-from vmware_nsxlib.v3 import policy_defs
-from vmware_nsxlib.v3 import policy_defs_load_balancer
-from vmware_nsxlib.v3 import policy_resources
+
+from vmware_nsxlib.v3 import policy
+from vmware_nsxlib.v3.policy import constants
+from vmware_nsxlib.v3.policy import core_defs
+from vmware_nsxlib.v3.policy import core_resources
+from vmware_nsxlib.v3.policy import lb_defs
 
 TEST_TENANT = 'test'
 
@@ -37,7 +38,7 @@ class NsxPolicyLibTestCase(policy_testcase.TestPolicyApi):
         nsxlib_config = nsxlib_testcase.get_default_nsxlib_config()
         # Mock the nsx-lib for the passthrough api
         with mock.patch('vmware_nsxlib.v3.NsxLib'):
-            self.policy_lib = v3.NsxPolicyLib(nsxlib_config)
+            self.policy_lib = policy.NsxPolicyLib(nsxlib_config)
         self.policy_api = self.policy_lib.policy_api
         self.policy_api.client = self.client
 
@@ -99,10 +100,10 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
                                                  domain_id=id,
                                                  description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs.DomainDef(domain_id=id,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
+            expected_def = core_defs.DomainDef(domain_id=id,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_create_without_id(self):
@@ -112,26 +113,26 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
                                "create_or_update") as api_call:
             self.resourceApi.create_or_overwrite(name, description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs.DomainDef(domain_id=mock.ANY,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
+            expected_def = core_defs.DomainDef(domain_id=mock.ANY,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_delete(self):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.DomainDef(domain_id=id,
-                                                 tenant=TEST_TENANT)
+            expected_def = core_defs.DomainDef(domain_id=id,
+                                               tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.DomainDef(domain_id=id,
-                                                 tenant=TEST_TENANT)
+            expected_def = core_defs.DomainDef(domain_id=id,
+                                               tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
@@ -141,13 +142,13 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.DomainDef(tenant=TEST_TENANT)
+            expected_def = core_defs.DomainDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.DomainDef(tenant=TEST_TENANT)
+            expected_def = core_defs.DomainDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -160,10 +161,10 @@ class TestPolicyDomain(NsxPolicyLibTestCase):
                                     name=name,
                                     description=description,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.DomainDef(domain_id=id,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
+            expected_def = core_defs.DomainDef(domain_id=id,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
 
     def test_unset(self):
@@ -201,12 +202,12 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                                  group_id=id,
                                                  description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=id,
-                                                name=name,
-                                                description=description,
-                                                conditions=[],
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=id,
+                                              name=name,
+                                              description=description,
+                                              conditions=[],
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_create_without_id(self):
@@ -218,12 +219,12 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.resourceApi.create_or_overwrite(name, domain_id,
                                                  description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=mock.ANY,
-                                                name=name,
-                                                description=description,
-                                                conditions=[],
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=mock.ANY,
+                                              name=name,
+                                              description=description,
+                                              conditions=[],
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_create_with_condition(self):
@@ -231,9 +232,9 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         name = 'g1'
         description = 'desc'
         cond_val = '123'
-        cond_op = policy_constants.CONDITION_OP_EQUALS
-        cond_member_type = policy_constants.CONDITION_MEMBER_VM
-        cond_key = policy_constants.CONDITION_KEY_TAG
+        cond_op = constants.CONDITION_OP_EQUALS
+        cond_member_type = constants.CONDITION_MEMBER_VM
+        cond_key = constants.CONDITION_KEY_TAG
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
             self.resourceApi.create_or_overwrite(
@@ -243,16 +244,16 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                 cond_member_type=cond_member_type,
                 cond_key=cond_key,
                 tenant=TEST_TENANT)
-            exp_cond = policy_defs.Condition(value=cond_val,
-                                             key=cond_key,
-                                             operator=cond_op,
-                                             member_type=cond_member_type)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=mock.ANY,
-                                                name=name,
-                                                description=description,
-                                                conditions=[exp_cond],
-                                                tenant=TEST_TENANT)
+            exp_cond = core_defs.Condition(value=cond_val,
+                                           key=cond_key,
+                                           operator=cond_op,
+                                           member_type=cond_member_type)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=mock.ANY,
+                                              name=name,
+                                              description=description,
+                                              conditions=[exp_cond],
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_create_with_simple_condition(self):
@@ -260,9 +261,9 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         name = 'g1'
         description = 'desc'
         cond_val = '123'
-        cond_op = policy_constants.CONDITION_OP_EQUALS
-        cond_member_type = policy_constants.CONDITION_MEMBER_VM
-        cond_key = policy_constants.CONDITION_KEY_TAG
+        cond_op = constants.CONDITION_OP_EQUALS
+        cond_member_type = constants.CONDITION_MEMBER_VM
+        cond_key = constants.CONDITION_KEY_TAG
 
         cond = self.resourceApi.build_condition(
             cond_val=cond_val,
@@ -276,16 +277,16 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                 name, domain_id, description=description,
                 conditions=[cond],
                 tenant=TEST_TENANT)
-            exp_cond = policy_defs.Condition(value=cond_val,
-                                             key=cond_key,
-                                             operator=cond_op,
-                                             member_type=cond_member_type)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=mock.ANY,
-                                                name=name,
-                                                description=description,
-                                                conditions=[exp_cond],
-                                                tenant=TEST_TENANT)
+            exp_cond = core_defs.Condition(value=cond_val,
+                                           key=cond_key,
+                                           operator=cond_op,
+                                           member_type=cond_member_type)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=mock.ANY,
+                                              name=name,
+                                              description=description,
+                                              conditions=[exp_cond],
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_create_with_nested_condition(self):
@@ -294,9 +295,9 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         description = 'desc'
         cond_val1 = '123'
         cond_val2 = '456'
-        cond_op = policy_constants.CONDITION_OP_EQUALS
-        cond_member_type = policy_constants.CONDITION_MEMBER_VM
-        cond_key = policy_constants.CONDITION_KEY_TAG
+        cond_op = constants.CONDITION_OP_EQUALS
+        cond_member_type = constants.CONDITION_MEMBER_VM
+        cond_key = constants.CONDITION_KEY_TAG
 
         cond1 = self.resourceApi.build_condition(
             cond_val=cond_val1,
@@ -317,23 +318,23 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                 name, domain_id, description=description,
                 conditions=[nested],
                 tenant=TEST_TENANT)
-            exp_cond1 = policy_defs.Condition(value=cond_val1,
-                                              key=cond_key,
-                                              operator=cond_op,
-                                              member_type=cond_member_type)
-            exp_cond2 = policy_defs.Condition(value=cond_val2,
-                                              key=cond_key,
-                                              operator=cond_op,
-                                              member_type=cond_member_type)
-            and_cond = policy_defs.ConjunctionOperator()
-            nested_cond = policy_defs.NestedExpression(
+            exp_cond1 = core_defs.Condition(value=cond_val1,
+                                            key=cond_key,
+                                            operator=cond_op,
+                                            member_type=cond_member_type)
+            exp_cond2 = core_defs.Condition(value=cond_val2,
+                                            key=cond_key,
+                                            operator=cond_op,
+                                            member_type=cond_member_type)
+            and_cond = core_defs.ConjunctionOperator()
+            nested_cond = core_defs.NestedExpression(
                 expressions=[exp_cond1, and_cond, exp_cond2])
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=mock.ANY,
-                                                name=name,
-                                                description=description,
-                                                conditions=[nested_cond],
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=mock.ANY,
+                                              name=name,
+                                              description=description,
+                                              conditions=[nested_cond],
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_create_with_ip_expression(self):
@@ -350,13 +351,13 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                 name, domain_id, description=description,
                 conditions=[cond],
                 tenant=TEST_TENANT)
-            exp_cond = policy_defs.IPAddressExpression([cidr])
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=mock.ANY,
-                                                name=name,
-                                                description=description,
-                                                conditions=[exp_cond],
-                                                tenant=TEST_TENANT)
+            exp_cond = core_defs.IPAddressExpression([cidr])
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=mock.ANY,
+                                              name=name,
+                                              description=description,
+                                              conditions=[exp_cond],
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_delete(self):
@@ -364,9 +365,9 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         id = '222'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(domain_id, id, tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=id,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=id,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
@@ -374,9 +375,9 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         id = '222'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(domain_id, id, tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=id,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=id,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
@@ -388,16 +389,16 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(domain_id, name,
                                                tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         domain_id = '111'
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(domain_id, tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -411,11 +412,11 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                                     name=name,
                                     description=description,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.GroupDef(domain_id=domain_id,
-                                                group_id=id,
-                                                name=name,
-                                                description=description,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=id,
+                                              name=name,
+                                              description=description,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
 
@@ -444,14 +445,14 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
     def test_get_realized(self):
         domain_id = 'd1'
         group_id = 'g1'
-        result = [{'state': policy_constants.STATE_REALIZED,
+        result = [{'state': constants.STATE_REALIZED,
                    'entity_type': 'RealizedGroup'}]
         with mock.patch.object(
             self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
             state = self.resourceApi.get_realized_state(
                 domain_id, group_id, tenant=TEST_TENANT)
-            self.assertEqual(policy_constants.STATE_REALIZED, state)
+            self.assertEqual(constants.STATE_REALIZED, state)
             path = "/%s/domains/%s/groups/%s" % (
                 TEST_TENANT, domain_id, group_id)
             api_get.assert_called_once_with(path)
@@ -459,16 +460,16 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
     def test_get_realized_multiple_results_get_default(self):
         domain_id = 'd1'
         group_id = 'g1'
-        result = [{'state': policy_constants.STATE_UNREALIZED,
+        result = [{'state': constants.STATE_UNREALIZED,
                    'entity_type': 'NotRealizedGroup'},
-                  {'state': policy_constants.STATE_REALIZED,
+                  {'state': constants.STATE_REALIZED,
                    'entity_type': 'RealizedGroup'}]
         with mock.patch.object(
             self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
             state = self.resourceApi.get_realized_state(
                 domain_id, group_id, tenant=TEST_TENANT)
-            self.assertEqual(policy_constants.STATE_UNREALIZED, state)
+            self.assertEqual(constants.STATE_UNREALIZED, state)
             path = "/%s/domains/%s/groups/%s" % (
                 TEST_TENANT, domain_id, group_id)
             api_get.assert_called_once_with(path)
@@ -476,9 +477,9 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
     def test_get_realized_multiple_results_get_specific(self):
         domain_id = 'd1'
         group_id = 'g1'
-        result = [{'state': policy_constants.STATE_UNREALIZED,
+        result = [{'state': constants.STATE_UNREALIZED,
                    'entity_type': 'NotRealizedGroup'},
-                  {'state': policy_constants.STATE_REALIZED,
+                  {'state': constants.STATE_REALIZED,
                    'entity_type': 'RealizedGroup'}]
         with mock.patch.object(
             self.policy_api, "get_realized_entities",
@@ -486,7 +487,7 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             state = self.resourceApi.get_realized_state(
                 domain_id, group_id, entity_type='RealizedGroup',
                 tenant=TEST_TENANT)
-            self.assertEqual(policy_constants.STATE_REALIZED, state)
+            self.assertEqual(constants.STATE_REALIZED, state)
             path = "/%s/domains/%s/groups/%s" % (
                 TEST_TENANT, domain_id, group_id)
             api_get.assert_called_once_with(path)
@@ -495,7 +496,7 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         domain_id = 'd1'
         group_id = 'g1'
         realized_id = 'realized_111'
-        result = [{'state': policy_constants.STATE_REALIZED,
+        result = [{'state': constants.STATE_REALIZED,
                    'entity_type': 'RealizedGroup',
                    'realization_specific_identifier': realized_id}]
         with mock.patch.object(
@@ -518,7 +519,7 @@ class TestPolicyService(NsxPolicyLibTestCase):
     def test_create(self):
         name = 's1'
         description = 'desc'
-        protocol = policy_constants.TCP
+        protocol = constants.TCP
         dest_ports = [81, 82]
         tags = [{'scope': 'a', 'tag': 'b'}]
         with mock.patch.object(self.policy_api,
@@ -529,12 +530,12 @@ class TestPolicyService(NsxPolicyLibTestCase):
                                                  dest_ports=dest_ports,
                                                  tags=tags,
                                                  tenant=TEST_TENANT)
-            exp_srv_def = policy_defs.ServiceDef(service_id=mock.ANY,
-                                                 name=name,
-                                                 description=description,
-                                                 tags=tags,
-                                                 tenant=TEST_TENANT)
-            exp_entry_def = policy_defs.L4ServiceEntryDef(
+            exp_srv_def = core_defs.ServiceDef(service_id=mock.ANY,
+                                               name=name,
+                                               description=description,
+                                               tags=tags,
+                                               tenant=TEST_TENANT)
+            exp_entry_def = core_defs.L4ServiceEntryDef(
                 service_id=mock.ANY,
                 entry_id='entry',
                 name='entry',
@@ -548,16 +549,16 @@ class TestPolicyService(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(service_id=id,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(service_id=id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(service_id=id,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(service_id=id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
@@ -567,13 +568,13 @@ class TestPolicyService(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.ServiceDef(tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -596,12 +597,12 @@ class TestPolicyService(NsxPolicyLibTestCase):
                                     description=description,
                                     tags=tags,
                                     tenant=TEST_TENANT)
-            service_def = policy_defs.ServiceDef(service_id=id,
-                                                 name=name,
-                                                 description=description,
-                                                 tags=tags,
-                                                 tenant=TEST_TENANT)
-            entry_def = policy_defs.L4ServiceEntryDef(
+            service_def = core_defs.ServiceDef(service_id=id,
+                                               name=name,
+                                               description=description,
+                                               tags=tags,
+                                               tenant=TEST_TENANT)
+            entry_def = core_defs.L4ServiceEntryDef(
                 service_id=id,
                 entry_id='entry',
                 protocol=protocol,
@@ -630,11 +631,11 @@ class TestPolicyService(NsxPolicyLibTestCase):
                                     dest_ports=dest_ports,
                                     tenant=TEST_TENANT)
 
-            service_def = policy_defs.ServiceDef(service_id=id,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
-            entry_def = policy_defs.L4ServiceEntryDef(
+            service_def = core_defs.ServiceDef(service_id=id,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
+            entry_def = core_defs.L4ServiceEntryDef(
                 service_id=id,
                 entry_id=mock.ANY,
                 protocol=protocol,
@@ -689,11 +690,11 @@ class TestPolicyIcmpService(NsxPolicyLibTestCase):
                                                  description=description,
                                                  icmp_type=icmp_type,
                                                  tenant=TEST_TENANT)
-            exp_srv_def = policy_defs.ServiceDef(service_id=mock.ANY,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
-            exp_entry_def = policy_defs.IcmpServiceEntryDef(
+            exp_srv_def = core_defs.ServiceDef(service_id=mock.ANY,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
+            exp_entry_def = core_defs.IcmpServiceEntryDef(
                 service_id=mock.ANY,
                 entry_id='entry',
                 name='entry',
@@ -707,16 +708,16 @@ class TestPolicyIcmpService(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(service_id=id,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(service_id=id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(service_id=id,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(service_id=id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
@@ -726,13 +727,13 @@ class TestPolicyIcmpService(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.ServiceDef(tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -749,12 +750,12 @@ class TestPolicyIcmpService(NsxPolicyLibTestCase):
                                     description=description,
                                     tenant=TEST_TENANT)
 
-            service_def = policy_defs.ServiceDef(service_id=id,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
+            service_def = core_defs.ServiceDef(service_id=id,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
 
-            entry_def = policy_defs.IcmpServiceEntryDef(
+            entry_def = core_defs.IcmpServiceEntryDef(
                 service_id=id,
                 entry_id='entry',
                 version=4,
@@ -782,11 +783,11 @@ class TestPolicyIcmpService(NsxPolicyLibTestCase):
                                     icmp_code=icmp_code,
                                     tenant=TEST_TENANT)
             # get will be called for the entire service
-            service_def = policy_defs.ServiceDef(service_id=id,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
-            entry_def = policy_defs.IcmpServiceEntryDef(
+            service_def = core_defs.ServiceDef(service_id=id,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
+            entry_def = core_defs.IcmpServiceEntryDef(
                 service_id=id,
                 entry_id=mock.ANY,
                 version=version,
@@ -815,11 +816,11 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
                 description=description,
                 protocol_number=protocol_number,
                 tenant=TEST_TENANT)
-            exp_srv_def = policy_defs.ServiceDef(service_id=mock.ANY,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
-            exp_entry_def = policy_defs.IPProtocolServiceEntryDef(
+            exp_srv_def = core_defs.ServiceDef(service_id=mock.ANY,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
+            exp_entry_def = core_defs.IPProtocolServiceEntryDef(
                 service_id=mock.ANY,
                 entry_id='entry',
                 name='entry',
@@ -832,16 +833,16 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(service_id=id,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(service_id=id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(service_id=id,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(service_id=id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
@@ -851,13 +852,13 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.ServiceDef(tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.ServiceDef(tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -872,12 +873,12 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
                                     name=name,
                                     description=description,
                                     tenant=TEST_TENANT)
-            service_def = policy_defs.ServiceDef(service_id=id,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
+            service_def = core_defs.ServiceDef(service_id=id,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
 
-            entry_def = policy_defs.IPProtocolServiceEntryDef(
+            entry_def = core_defs.IPProtocolServiceEntryDef(
                 service_id=id,
                 entry_id='entry',
                 tenant=TEST_TENANT)
@@ -900,11 +901,11 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
                                     protocol_number=protocol_number,
                                     tenant=TEST_TENANT)
 
-            service_def = policy_defs.ServiceDef(service_id=id,
-                                                 name=name,
-                                                 description=description,
-                                                 tenant=TEST_TENANT)
-            entry_def = policy_defs.IPProtocolServiceEntryDef(
+            service_def = core_defs.ServiceDef(service_id=id,
+                                               name=name,
+                                               description=description,
+                                               tenant=TEST_TENANT)
+            entry_def = core_defs.IPProtocolServiceEntryDef(
                 service_id=id,
                 entry_id='entry',
                 protocol_number=protocol_number,
@@ -945,20 +946,20 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  direction=direction,
                                                  logged=True,
                                                  tenant=TEST_TENANT)
-            map_def = policy_defs.CommunicationMapDef(
+            map_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
                 description=description,
-                category=policy_constants.CATEGORY_APPLICATION,
+                category=constants.CATEGORY_APPLICATION,
                 tenant=TEST_TENANT)
 
-            entry_def = policy_defs.CommunicationMapEntryDef(
+            entry_def = core_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id='entry',
                 name=name,
-                action=policy_constants.ACTION_ALLOW,
+                action=constants.ACTION_ALLOW,
                 description=description,
                 sequence_number=seq_num,
                 service_ids=[service_id],
@@ -993,7 +994,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  logged=False,
                                                  tenant=TEST_TENANT)
 
-            map_def = policy_defs.CommunicationMapDef(
+            map_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
@@ -1001,12 +1002,12 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 category=category,
                 tenant=TEST_TENANT)
 
-            entry_def = policy_defs.CommunicationMapEntryDef(
+            entry_def = core_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id='entry',
                 name=name,
-                action=policy_constants.ACTION_ALLOW,
+                action=constants.ACTION_ALLOW,
                 direction=nsx_constants.IN_OUT,
                 description=description,
                 sequence_number=1,
@@ -1035,19 +1036,19 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  dest_groups=[dest_group],
                                                  tenant=TEST_TENANT)
 
-            expected_map_def = policy_defs.CommunicationMapDef(
+            expected_map_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=mock.ANY,
                 name=name,
                 description=description,
-                category=policy_constants.CATEGORY_APPLICATION,
+                category=constants.CATEGORY_APPLICATION,
                 tenant=TEST_TENANT)
 
-            expected_entry_def = policy_defs.CommunicationMapEntryDef(
+            expected_entry_def = core_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=mock.ANY,
                 entry_id=mock.ANY,
-                action=policy_constants.ACTION_ALLOW,
+                action=constants.ACTION_ALLOW,
                 direction=nsx_constants.IN_OUT,
                 name=name,
                 description=description,
@@ -1071,12 +1072,12 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name, domain_id, description=description,
                 tenant=TEST_TENANT)
 
-            expected_map_def = policy_defs.CommunicationMapDef(
+            expected_map_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=mock.ANY,
                 name=name,
                 description=description,
-                category=policy_constants.CATEGORY_APPLICATION,
+                category=constants.CATEGORY_APPLICATION,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(
@@ -1105,12 +1106,12 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                           direction=nsx_constants.IN,
                                           tenant=TEST_TENANT)
 
-            expected_entry_def = policy_defs.CommunicationMapEntryDef(
+            expected_entry_def = core_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id=mock.ANY,
                 name=name,
-                action=policy_constants.ACTION_ALLOW,
+                action=constants.ACTION_ALLOW,
                 description=description,
                 sequence_number=1,
                 service_ids=[service1_id, service2_id],
@@ -1139,12 +1140,12 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                           sequence_number=1,
                                           tenant=TEST_TENANT)
 
-            expected_entry_def = policy_defs.CommunicationMapEntryDef(
+            expected_entry_def = core_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id=mock.ANY,
                 name=name,
-                action=policy_constants.ACTION_ALLOW,
+                action=constants.ACTION_ALLOW,
                 direction=nsx_constants.IN_OUT,
                 description=description,
                 sequence_number=1,
@@ -1181,12 +1182,12 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                           logged=False,
                                           tenant=TEST_TENANT)
 
-            expected_entry_def = policy_defs.CommunicationMapEntryDef(
+            expected_entry_def = core_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id=mock.ANY,
                 name=name,
-                action=policy_constants.ACTION_ALLOW,
+                action=constants.ACTION_ALLOW,
                 direction=nsx_constants.IN_OUT,
                 description=description,
                 service_ids=[service1_id, service2_id],
@@ -1213,7 +1214,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         entry1 = self.resourceApi.build_entry(
             'DHCP Reply', domain_id, map_id,
             rule_id, sequence_number=rule_id, service_ids=[service_id],
-            action=policy_constants.ACTION_DENY,
+            action=constants.ACTION_DENY,
             source_groups=None,
             dest_groups=[dest_group],
             direction=nsx_constants.IN)
@@ -1221,7 +1222,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         entry2 = self.resourceApi.build_entry(
             'DHCP Request', domain_id, map_id,
             rule_id, sequence_number=rule_id, service_ids=None,
-            action=policy_constants.ACTION_DENY,
+            action=constants.ACTION_DENY,
             source_groups=[source_group],
             dest_groups=None,
             direction=nsx_constants.OUT)
@@ -1235,7 +1236,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                                  category=category,
                                                  tenant=TEST_TENANT)
 
-            expected_def = policy_defs.CommunicationMapDef(
+            expected_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
@@ -1251,7 +1252,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         id = '222'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(domain_id, id, tenant=TEST_TENANT)
-            expected_def = policy_defs.CommunicationMapDef(
+            expected_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=id,
                 tenant=TEST_TENANT)
@@ -1264,7 +1265,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete_entry(domain_id, map_id, entry_id,
                                           tenant=TEST_TENANT)
-            expected_def = policy_defs.CommunicationMapEntryDef(
+            expected_def = core_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id=entry_id,
@@ -1276,7 +1277,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         id = '222'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(domain_id, id, tenant=TEST_TENANT)
-            expected_def = policy_defs.CommunicationMapDef(
+            expected_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=id,
                 tenant=TEST_TENANT)
@@ -1291,7 +1292,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(domain_id, name,
                                                tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.CommunicationMapDef(
+            expected_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -1300,7 +1301,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         domain_id = '111'
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(domain_id, tenant=TEST_TENANT)
-            expected_def = policy_defs.CommunicationMapDef(
+            expected_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -1325,14 +1326,14 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                     source_groups=[source_group],
                                     dest_groups=[dest_group],
                                     tenant=TEST_TENANT)
-            map_def = policy_defs.CommunicationMapDef(
+            map_def = core_defs.CommunicationMapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
                 description=description,
                 tenant=TEST_TENANT)
 
-            entry_def = policy_defs.CommunicationMapEntryDef(
+            entry_def = core_defs.CommunicationMapEntryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id='entry',
@@ -1384,7 +1385,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         map_id = '222'
         dummy_map = {'rules': [{'logged': False}]}
         updated_map = {'rules': [{'logged': True}]}
-        map_def = policy_defs.CommunicationMapDef(
+        map_def = core_defs.CommunicationMapDef(
             domain_id=domain_id,
             map_id=map_id,
             tenant=TEST_TENANT)
@@ -1402,14 +1403,14 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
     def test_get_realized(self):
         domain_id = 'd1'
         map_id = '111'
-        result = [{'state': policy_constants.STATE_REALIZED,
+        result = [{'state': constants.STATE_REALIZED,
                    'entity_type': 'RealizedFirewallSection'}]
         with mock.patch.object(
             self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
             state = self.resourceApi.get_realized_state(
                 domain_id, map_id, tenant=TEST_TENANT)
-            self.assertEqual(policy_constants.STATE_REALIZED, state)
+            self.assertEqual(constants.STATE_REALIZED, state)
             path = "/%s/domains/%s/security-policies/%s" % (
                 TEST_TENANT, domain_id, map_id)
             api_get.assert_called_once_with(path)
@@ -1442,7 +1443,7 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
                 transport_zone_id=transport_zone_id,
                 tenant=TEST_TENANT)
 
-            expected_def = policy_defs.EnforcementPointDef(
+            expected_def = core_defs.EnforcementPointDef(
                 ep_id=mock.ANY,
                 name=name,
                 description=description,
@@ -1459,16 +1460,16 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.EnforcementPointDef(ep_id=id,
-                                                           tenant=TEST_TENANT)
+            expected_def = core_defs.EnforcementPointDef(ep_id=id,
+                                                         tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.EnforcementPointDef(ep_id=id,
-                                                           tenant=TEST_TENANT)
+            expected_def = core_defs.EnforcementPointDef(ep_id=id,
+                                                         tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
@@ -1478,13 +1479,13 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.EnforcementPointDef(tenant=TEST_TENANT)
+            expected_def = core_defs.EnforcementPointDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.EnforcementPointDef(tenant=TEST_TENANT)
+            expected_def = core_defs.EnforcementPointDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -1512,7 +1513,7 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
                                     edge_cluster_id=edge_cluster_id,
                                     transport_zone_id=transport_zone_id,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.EnforcementPointDef(
+            expected_def = core_defs.EnforcementPointDef(
                 ep_id=id,
                 name=name,
                 username=username,
@@ -1527,13 +1528,13 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
 
     def test_get_realized(self):
         ep_id = 'ef1'
-        result = [{'state': policy_constants.STATE_REALIZED}]
+        result = [{'state': constants.STATE_REALIZED}]
         with mock.patch.object(
             self.policy_api, "get_realized_entities",
             return_value=result) as api_get:
             state = self.resourceApi.get_realized_state(
                 ep_id, tenant=TEST_TENANT)
-            self.assertEqual(policy_constants.STATE_REALIZED, state)
+            self.assertEqual(constants.STATE_REALIZED, state)
             path = "/%s/sites/default/enforcement-points/%s" % (
                 TEST_TENANT, ep_id)
             api_get.assert_called_once_with(path)
@@ -1557,7 +1558,7 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
                                                  ep_id=ep_id,
                                                  domain_id=domain_id,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs.DeploymentMapDef(
+            expected_def = core_defs.DeploymentMapDef(
                 map_id=mock.ANY,
                 name=name,
                 description=description,
@@ -1572,9 +1573,9 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, domain_id=domain_id,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.DeploymentMapDef(map_id=id,
-                                                        domain_id=domain_id,
-                                                        tenant=TEST_TENANT)
+            expected_def = core_defs.DeploymentMapDef(map_id=id,
+                                                      domain_id=domain_id,
+                                                      tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
@@ -1582,9 +1583,9 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
         domain_id = 'domain1'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, domain_id=domain_id, tenant=TEST_TENANT)
-            expected_def = policy_defs.DeploymentMapDef(map_id=id,
-                                                        domain_id=domain_id,
-                                                        tenant=TEST_TENANT)
+            expected_def = core_defs.DeploymentMapDef(map_id=id,
+                                                      domain_id=domain_id,
+                                                      tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_by_name(self):
@@ -1596,16 +1597,16 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(name, domain_id=domain_id,
                                                tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.DeploymentMapDef(domain_id=domain_id,
-                                                        tenant=TEST_TENANT)
+            expected_def = core_defs.DeploymentMapDef(domain_id=domain_id,
+                                                      tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         domain_id = 'domain1'
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(domain_id=domain_id, tenant=TEST_TENANT)
-            expected_def = policy_defs.DeploymentMapDef(domain_id=domain_id,
-                                                        tenant=TEST_TENANT)
+            expected_def = core_defs.DeploymentMapDef(domain_id=domain_id,
+                                                      tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -1620,7 +1621,7 @@ class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
                                     ep_id=ep_id,
                                     domain_id=domain_id,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.DeploymentMapDef(
+            expected_def = core_defs.DeploymentMapDef(
                 map_id=id,
                 name=name,
                 ep_id=ep_id,
@@ -1640,8 +1641,8 @@ class TestPolicyTransportZone(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.TransportZoneDef(tz_id=id,
-                                                        tenant=TEST_TENANT)
+            expected_def = core_defs.TransportZoneDef(tz_id=id,
+                                                      tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_with_cache(self):
@@ -1658,7 +1659,7 @@ class TestPolicyTransportZone(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.TransportZoneDef(tenant=TEST_TENANT)
+            expected_def = core_defs.TransportZoneDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_tz_type(self):
@@ -1668,8 +1669,8 @@ class TestPolicyTransportZone(NsxPolicyLibTestCase):
                                return_value={'tz_type': tz_type}) as api_call:
             actual_tz_type = self.resourceApi.get_tz_type(
                 id, tenant=TEST_TENANT)
-            expected_def = policy_defs.TransportZoneDef(tz_id=id,
-                                                        tenant=TEST_TENANT)
+            expected_def = core_defs.TransportZoneDef(tz_id=id,
+                                                      tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(tz_type, actual_tz_type)
 
@@ -1680,8 +1681,8 @@ class TestPolicyTransportZone(NsxPolicyLibTestCase):
                                return_value={'tz_type': tz_type}) as api_call:
             actual_tz_type = self.resourceApi.get_transport_type(
                 id, tenant=TEST_TENANT)
-            expected_def = policy_defs.TransportZoneDef(tz_id=id,
-                                                        tenant=TEST_TENANT)
+            expected_def = core_defs.TransportZoneDef(tz_id=id,
+                                                      tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(nsx_constants.TRANSPORT_TYPE_OVERLAY,
                              actual_tz_type)
@@ -1693,8 +1694,8 @@ class TestPolicyTransportZone(NsxPolicyLibTestCase):
                                return_value={'tz_type': tz_type}) as api_call:
             actual_sm = self.resourceApi.get_host_switch_mode(
                 id, tenant=TEST_TENANT)
-            expected_def = policy_defs.TransportZoneDef(tz_id=id,
-                                                        tenant=TEST_TENANT)
+            expected_def = core_defs.TransportZoneDef(tz_id=id,
+                                                      tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(nsx_constants.HOST_SWITCH_MODE_STANDARD,
                              actual_sm)
@@ -1702,7 +1703,7 @@ class TestPolicyTransportZone(NsxPolicyLibTestCase):
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.TransportZoneDef(tenant=TEST_TENANT)
+            expected_def = core_defs.TransportZoneDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
 
@@ -1729,13 +1730,13 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                 route_advertisement=route_adv,
                 tenant=TEST_TENANT)
 
-            expected_def = policy_defs.Tier1Def(
+            expected_def = core_defs.Tier1Def(
                 tier1_id=mock.ANY,
                 name=name,
                 description=description,
                 tier0=tier0_id,
                 force_whitelisting=True,
-                failover_mode=policy_constants.NON_PREEMPTIVE,
+                failover_mode=constants.NON_PREEMPTIVE,
                 route_advertisement=route_adv,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -1744,16 +1745,16 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier1Def(tier1_id=id,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tier1_id=id,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier1Def(tier1_id=id,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tier1_id=id,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_with_no_cache(self):
@@ -1770,13 +1771,13 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.Tier1Def(tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier1Def(tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -1788,10 +1789,10 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             self.resourceApi.update(id,
                                     name=name, tier0=tier0,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier1Def(tier1_id=id,
-                                                name=name,
-                                                tier0=tier0,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tier1_id=id,
+                                              name=name,
+                                              tier0=tier0,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
 
@@ -1803,9 +1804,9 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             self.resourceApi.update(id,
                                     name=name,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier1Def(tier1_id=id,
-                                                name=name,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tier1_id=id,
+                                              name=name,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
             # make sure tier0 is not in the body
             actual_def = update_call.call_args_list[0][0][0]
@@ -1820,10 +1821,10 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                     name=name,
                                     tier0=None,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier1Def(tier1_id=id,
-                                                name=name,
-                                                tier0=None,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tier1_id=id,
+                                              name=name,
+                                              tier0=None,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
             # make sure tier0 is in the body with value None
             actual_def = update_call.call_args_list[0][0][0]
@@ -1851,17 +1852,17 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             new_adv = self.resourceApi.build_route_advertisement(
                 nat=True, static_routes=True, lb_snat=True)
 
-            expected_def = policy_defs.Tier1Def(tier1_id=id,
-                                                name=rtr_name,
-                                                route_adv=new_adv,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tier1_id=id,
+                                              name=rtr_name,
+                                              route_adv=new_adv,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
 
     def test_wait_until_realized_fail(self):
         tier1_id = '111'
         logical_router_id = 'realized_111'
-        info = {'state': policy_constants.STATE_UNREALIZED,
+        info = {'state': constants.STATE_UNREALIZED,
                 'realization_specific_identifier': logical_router_id,
                 'entity_type': 'RealizedLogicalRouter'}
         with mock.patch.object(self.resourceApi, "_get_realization_info",
@@ -1874,7 +1875,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
     def test_wait_until_realized_succeed(self):
         tier1_id = '111'
         logical_router_id = 'realized_111'
-        info = {'state': policy_constants.STATE_REALIZED,
+        info = {'state': constants.STATE_REALIZED,
                 'realization_specific_identifier': logical_router_id,
                 'entity_type': 'RealizedLogicalRouter'}
         with mock.patch.object(self.resourceApi, "_get_realization_info",
@@ -1888,7 +1889,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         tier1_id = '111'
         logical_router_id = 'realized_111'
         tz_uuid = 'dummy_tz'
-        info = {'state': policy_constants.STATE_REALIZED,
+        info = {'state': constants.STATE_REALIZED,
                 'entity_type': 'RealizedLogicalRouter',
                 'realization_specific_identifier': logical_router_id}
         passthrough_mock = self.resourceApi.nsx_api.logical_router.update
@@ -1903,7 +1904,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
     def test_wait_until_realized(self):
         tier1_id = '111'
         logical_router_id = 'realized_111'
-        info = {'state': policy_constants.STATE_UNREALIZED,
+        info = {'state': constants.STATE_UNREALIZED,
                 'realization_specific_identifier': logical_router_id}
         with mock.patch.object(self.resourceApi, "_get_realization_info",
                                return_value=info):
@@ -1924,7 +1925,7 @@ class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
         description = 'desc'
         tier1_id = '111'
         nat_rule_id = 'rule1'
-        action = policy_constants.NAT_ACTION_SNAT
+        action = constants.NAT_ACTION_SNAT
         cidr1 = '1.1.1.1/32'
         cidr2 = '2.2.2.0/24'
 
@@ -1939,7 +1940,7 @@ class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
                 source_network=cidr2,
                 tenant=TEST_TENANT)
 
-            expected_def = policy_defs.Tier1NatRule(
+            expected_def = core_defs.Tier1NatRule(
                 tier1_id=tier1_id,
                 nat_rule_id=nat_rule_id,
                 nat_id=self.resourceApi.DEFAULT_NAT_ID,
@@ -1959,7 +1960,7 @@ class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
                 tier1_id,
                 nat_rule_id,
                 tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier1NatRule(
+            expected_def = core_defs.Tier1NatRule(
                 tier1_id=tier1_id,
                 nat_rule_id=nat_rule_id,
                 nat_id=self.resourceApi.DEFAULT_NAT_ID,
@@ -1991,7 +1992,7 @@ class TestPolicyTier1StaticRoute(NsxPolicyLibTestCase):
                 next_hop=nexthop,
                 tenant=TEST_TENANT)
 
-            expected_def = policy_defs.Tier1StaticRoute(
+            expected_def = core_defs.Tier1StaticRoute(
                 tier1_id=tier1_id,
                 static_route_id=static_route_id,
                 name=name,
@@ -2009,7 +2010,7 @@ class TestPolicyTier1StaticRoute(NsxPolicyLibTestCase):
                 tier1_id,
                 static_route_id,
                 tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier1StaticRoute(
+            expected_def = core_defs.Tier1StaticRoute(
                 tier1_id=tier1_id,
                 static_route_id=static_route_id,
                 tenant=TEST_TENANT)
@@ -2038,15 +2039,15 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                 transit_subnets=subnets,
                 tenant=TEST_TENANT)
 
-            expected_def = policy_defs.Tier0Def(
+            expected_def = core_defs.Tier0Def(
                 tier0_id=mock.ANY,
                 name=name,
                 description=description,
                 dhcp_config=dhcp_config,
                 default_rule_logging=True,
                 force_whitelisting=True,
-                ha_mode=policy_constants.ACTIVE_ACTIVE,
-                failover_mode=policy_constants.NON_PREEMPTIVE,
+                ha_mode=constants.ACTIVE_ACTIVE,
+                failover_mode=constants.NON_PREEMPTIVE,
                 transit_subnets=subnets,
                 tenant=TEST_TENANT)
 
@@ -2056,16 +2057,16 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier0Def(tier0_id=id,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier0Def(tier0_id=id,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier0Def(tier0_id=id,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier0Def(tier0_id=id,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get_with_cache(self):
@@ -2082,13 +2083,13 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs.Tier0Def(tenant=TEST_TENANT)
+            expected_def = core_defs.Tier0Def(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier0Def(tenant=TEST_TENANT)
+            expected_def = core_defs.Tier0Def(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -2099,9 +2100,9 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
             self.resourceApi.update(id,
                                     name=name,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.Tier0Def(tier0_id=id,
-                                                name=name,
-                                                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier0Def(tier0_id=id,
+                                              name=name,
+                                              tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
 
@@ -2109,7 +2110,7 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
         # Test the passthrough api
         tier0_id = '111'
         logical_router_id = 'realized_111'
-        info = {'state': policy_constants.STATE_REALIZED,
+        info = {'state': constants.STATE_REALIZED,
                 'entity_type': 'RealizedLogicalRouter',
                 'realization_specific_identifier': logical_router_id}
         pt_mock = self.resourceApi.nsx_api.router.get_tier0_router_overlay_tz
@@ -2123,7 +2124,7 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
     def test_wait_until_realized(self):
         tier1_id = '111'
         logical_router_id = 'realized_111'
-        info = {'state': policy_constants.STATE_UNREALIZED,
+        info = {'state': constants.STATE_UNREALIZED,
                 'realization_specific_identifier': logical_router_id}
         with mock.patch.object(self.resourceApi, "_get_realization_info",
                                return_value=info):
@@ -2143,7 +2144,7 @@ class TestPolicySegment(NsxPolicyLibTestCase):
         name = 'test'
         description = 'desc'
         tier1_id = '111'
-        subnets = [policy_defs.Subnet(gateway_address="2.2.2.0/24")]
+        subnets = [core_defs.Subnet(gateway_address="2.2.2.0/24")]
 
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
@@ -2153,7 +2154,7 @@ class TestPolicySegment(NsxPolicyLibTestCase):
                 subnets=subnets,
                 tenant=TEST_TENANT)
 
-            expected_def = policy_defs.SegmentDef(
+            expected_def = core_defs.SegmentDef(
                 segment_id=mock.ANY,
                 name=name,
                 description=description,
@@ -2167,22 +2168,22 @@ class TestPolicySegment(NsxPolicyLibTestCase):
         segment_id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(segment_id, tenant=TEST_TENANT)
-            expected_def = policy_defs.SegmentDef(segment_id=segment_id,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.SegmentDef(segment_id=segment_id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_get(self):
         segment_id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(segment_id, tenant=TEST_TENANT)
-            expected_def = policy_defs.SegmentDef(segment_id=segment_id,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.SegmentDef(segment_id=segment_id,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs.SegmentDef(tenant=TEST_TENANT)
+            expected_def = core_defs.SegmentDef(tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -2193,9 +2194,9 @@ class TestPolicySegment(NsxPolicyLibTestCase):
             self.resourceApi.update(segment_id,
                                     name=name,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs.SegmentDef(segment_id=segment_id,
-                                                  name=name,
-                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.SegmentDef(segment_id=segment_id,
+                                                name=name,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
 
     def test_remove_connectivity_and_subnets(self):
@@ -2214,7 +2215,7 @@ class TestPolicySegment(NsxPolicyLibTestCase):
 class TestPolicySegmentProfileBase(NsxPolicyLibTestCase):
 
     def setUp(self, resource_api_name='segment_security_profile',
-              resource_def=policy_defs.SegmentSecurityProfileDef):
+              resource_def=core_defs.SegmentSecurityProfileDef):
         super(TestPolicySegmentProfileBase, self).setUp()
         self.resourceApi = getattr(self.policy_lib, resource_api_name)
         self.resourceDef = resource_def
@@ -2285,7 +2286,7 @@ class TestPolicyQosProfile(TestPolicySegmentProfileBase):
     def setUp(self):
         super(TestPolicyQosProfile, self).setUp(
             resource_api_name='qos_profile',
-            resource_def=policy_defs.QosProfileDef)
+            resource_def=core_defs.QosProfileDef)
 
     def test_create_with_params(self):
         name = 'test'
@@ -2318,7 +2319,7 @@ class TestPolicySpoofguardProfile(TestPolicySegmentProfileBase):
     def setUp(self):
         super(TestPolicySpoofguardProfile, self).setUp(
             resource_api_name='spoofguard_profile',
-            resource_def=policy_defs.SpoofguardProfileDef)
+            resource_def=core_defs.SpoofguardProfileDef)
 
 
 class TestPolicyIpDiscoveryProfile(TestPolicySegmentProfileBase):
@@ -2326,7 +2327,7 @@ class TestPolicyIpDiscoveryProfile(TestPolicySegmentProfileBase):
     def setUp(self):
         super(TestPolicyIpDiscoveryProfile, self).setUp(
             resource_api_name='ip_discovery_profile',
-            resource_def=policy_defs.IpDiscoveryProfileDef)
+            resource_def=core_defs.IpDiscoveryProfileDef)
 
 
 class TestPolicyMacDiscoveryProfile(TestPolicySegmentProfileBase):
@@ -2334,7 +2335,7 @@ class TestPolicyMacDiscoveryProfile(TestPolicySegmentProfileBase):
     def setUp(self):
         super(TestPolicyMacDiscoveryProfile, self).setUp(
             resource_api_name='mac_discovery_profile',
-            resource_def=policy_defs.MacDiscoveryProfileDef)
+            resource_def=core_defs.MacDiscoveryProfileDef)
 
 
 class TestPolicySegmentSecurityProfile(TestPolicySegmentProfileBase):
@@ -2373,7 +2374,7 @@ class TestPolicySegmentSecurityProfile(TestPolicySegmentProfileBase):
 class TestPolicySegmentSecProfilesBinding(NsxPolicyLibTestCase):
 
     def setUp(self, resource_api_name='segment_port_security_profiles',
-              resource_def=policy_defs.SegmentPortSecProfilesBindingMapDef):
+              resource_def=core_defs.SegmentPortSecProfilesBindingMapDef):
         super(TestPolicySegmentSecProfilesBinding, self).setUp()
         self.resourceApi = getattr(self.policy_lib, resource_api_name)
         self.resourceDef = resource_def
@@ -2395,7 +2396,7 @@ class TestPolicySegmentSecProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 name=name,
                 segment_security_profile_id=prf1,
                 spoofguard_profile_id=prf2,
@@ -2410,7 +2411,7 @@ class TestPolicySegmentSecProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2422,7 +2423,7 @@ class TestPolicySegmentSecProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2455,7 +2456,7 @@ class TestPolicySegmentSecProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 name=name,
                 segment_security_profile_id=prf1,
                 spoofguard_profile_id=prf2,
@@ -2468,7 +2469,7 @@ class TestPolicySegmentDiscoveryProfilesBinding(NsxPolicyLibTestCase):
 
     def setUp(
         self, resource_api_name='segment_port_discovery_profiles',
-        resource_def=policy_defs.SegmentPortDiscoveryProfilesBindingMapDef):
+        resource_def=core_defs.SegmentPortDiscoveryProfilesBindingMapDef):
 
         super(TestPolicySegmentDiscoveryProfilesBinding, self).setUp()
         self.resourceApi = getattr(self.policy_lib, resource_api_name)
@@ -2491,7 +2492,7 @@ class TestPolicySegmentDiscoveryProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 name=name,
                 mac_discovery_profile_id=prf1,
                 ip_discovery_profile_id=prf2,
@@ -2506,7 +2507,7 @@ class TestPolicySegmentDiscoveryProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2518,7 +2519,7 @@ class TestPolicySegmentDiscoveryProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2551,7 +2552,7 @@ class TestPolicySegmentDiscoveryProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 name=name,
                 mac_discovery_profile_id=prf1,
                 ip_discovery_profile_id=prf2,
@@ -2564,7 +2565,7 @@ class TestPolicySegmentQosProfilesBinding(NsxPolicyLibTestCase):
 
     def setUp(
         self, resource_api_name='segment_port_qos_profiles',
-        resource_def=policy_defs.SegmentPortQoSProfilesBindingMapDef):
+        resource_def=core_defs.SegmentPortQoSProfilesBindingMapDef):
 
         super(TestPolicySegmentQosProfilesBinding, self).setUp()
         self.resourceApi = getattr(self.policy_lib, resource_api_name)
@@ -2585,7 +2586,7 @@ class TestPolicySegmentQosProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 name=name,
                 qos_profile_id=prf1,
                 tenant=TEST_TENANT)
@@ -2599,7 +2600,7 @@ class TestPolicySegmentQosProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2611,7 +2612,7 @@ class TestPolicySegmentQosProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2642,7 +2643,7 @@ class TestPolicySegmentQosProfilesBinding(NsxPolicyLibTestCase):
             expected_def = self.resourceDef(
                 segment_id=segment_id,
                 port_id=port_id,
-                map_id=policy_resources.DEFAULT_MAP_ID,
+                map_id=core_resources.DEFAULT_MAP_ID,
                 name=name,
                 qos_profile_id=prf1,
                 tenant=TEST_TENANT)
@@ -2669,7 +2670,7 @@ class TestPolicyLBClientSSLProfileApi(NsxPolicyLibTestCase):
                 description=description,
                 protocols=protocols,
                 tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBClientSslProfileDef(
+            expected_def = lb_defs.LBClientSslProfileDef(
                 client_ssl_profile_id=id,
                 name=name,
                 description=description,
@@ -2684,7 +2685,7 @@ class TestPolicyLBClientSSLProfileApi(NsxPolicyLibTestCase):
                                "create_or_update") as api_call:
             self.resourceApi.create_or_overwrite(name, description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBClientSslProfileDef(
+            expected_def = lb_defs.LBClientSslProfileDef(
                 client_ssl_profile_id=mock.ANY,
                 name=name,
                 description=description,
@@ -2695,7 +2696,7 @@ class TestPolicyLBClientSSLProfileApi(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBClientSslProfileDef(
+            expected_def = lb_defs.LBClientSslProfileDef(
                 client_ssl_profile_id=id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -2704,7 +2705,7 @@ class TestPolicyLBClientSSLProfileApi(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBClientSslProfileDef(
+            expected_def = lb_defs.LBClientSslProfileDef(
                 client_ssl_profile_id=id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -2716,14 +2717,14 @@ class TestPolicyLBClientSSLProfileApi(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs_load_balancer.LBClientSslProfileDef(
+            expected_def = lb_defs.LBClientSslProfileDef(
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBClientSslProfileDef(
+            expected_def = lb_defs.LBClientSslProfileDef(
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2737,7 +2738,7 @@ class TestPolicyLBClientSSLProfileApi(NsxPolicyLibTestCase):
                                     name=name,
                                     description=description,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBClientSslProfileDef(
+            expected_def = lb_defs.LBClientSslProfileDef(
                 client_ssl_profile_id=id,
                 name=name,
                 description=description,
@@ -2776,7 +2777,7 @@ class TestPolicyLBCookiePersistenceProfile(NsxPolicyLibTestCase):
                 persistence_shared=persistence_shared,
                 tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBCookiePersistenceProfileDef(
+                lb_defs.LBCookiePersistenceProfileDef(
                     persistence_profile_id=id,
                     name=name,
                     description=description,
@@ -2797,7 +2798,7 @@ class TestPolicyLBCookiePersistenceProfile(NsxPolicyLibTestCase):
             self.resourceApi.create_or_overwrite(name, description=description,
                                                  tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBCookiePersistenceProfileDef(
+                lb_defs.LBCookiePersistenceProfileDef(
                     persistence_profile_id=mock.ANY,
                     name=name,
                     description=description,
@@ -2809,7 +2810,7 @@ class TestPolicyLBCookiePersistenceProfile(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBCookiePersistenceProfileDef(
+                lb_defs.LBCookiePersistenceProfileDef(
                     persistence_profile_id=id,
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
@@ -2819,7 +2820,7 @@ class TestPolicyLBCookiePersistenceProfile(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBCookiePersistenceProfileDef(
+                lb_defs.LBCookiePersistenceProfileDef(
                     persistence_profile_id=id,
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
@@ -2832,7 +2833,7 @@ class TestPolicyLBCookiePersistenceProfile(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
             expected_def = (
-                policy_defs_load_balancer.LBCookiePersistenceProfileDef(
+                lb_defs.LBCookiePersistenceProfileDef(
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2840,7 +2841,7 @@ class TestPolicyLBCookiePersistenceProfile(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBCookiePersistenceProfileDef(
+                lb_defs.LBCookiePersistenceProfileDef(
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2867,7 +2868,7 @@ class TestPolicyLBCookiePersistenceProfile(NsxPolicyLibTestCase):
                                     persistence_shared=persistence_shared,
                                     tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBCookiePersistenceProfileDef(
+                lb_defs.LBCookiePersistenceProfileDef(
                     persistence_profile_id=id,
                     name=name,
                     description=description,
@@ -2908,7 +2909,7 @@ class TestPolicyLBSourceIpProfileApi(NsxPolicyLibTestCase):
                 timeout=timeout,
                 tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBSourceIpPersistenceProfileDef(
+                lb_defs.LBSourceIpPersistenceProfileDef(
                     persistence_profile_id=id,
                     name=name,
                     description=description,
@@ -2927,7 +2928,7 @@ class TestPolicyLBSourceIpProfileApi(NsxPolicyLibTestCase):
             self.resourceApi.create_or_overwrite(name, description=description,
                                                  tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBSourceIpPersistenceProfileDef(
+                lb_defs.LBSourceIpPersistenceProfileDef(
                     persistence_profile_id=mock.ANY,
                     name=name,
                     description=description,
@@ -2939,7 +2940,7 @@ class TestPolicyLBSourceIpProfileApi(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBSourceIpPersistenceProfileDef(
+                lb_defs.LBSourceIpPersistenceProfileDef(
                     persistence_profile_id=id,
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
@@ -2949,7 +2950,7 @@ class TestPolicyLBSourceIpProfileApi(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBSourceIpPersistenceProfileDef(
+                lb_defs.LBSourceIpPersistenceProfileDef(
                     persistence_profile_id=id,
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
@@ -2962,7 +2963,7 @@ class TestPolicyLBSourceIpProfileApi(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
             expected_def = (
-                policy_defs_load_balancer.LBSourceIpPersistenceProfileDef(
+                lb_defs.LBSourceIpPersistenceProfileDef(
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2970,7 +2971,7 @@ class TestPolicyLBSourceIpProfileApi(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBSourceIpPersistenceProfileDef(
+                lb_defs.LBSourceIpPersistenceProfileDef(
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
 
@@ -2993,7 +2994,7 @@ class TestPolicyLBSourceIpProfileApi(NsxPolicyLibTestCase):
                                     timeout=timeout,
                                     tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBSourceIpPersistenceProfileDef(
+                lb_defs.LBSourceIpPersistenceProfileDef(
                     persistence_profile_id=id,
                     name=name,
                     description=description,
@@ -3041,7 +3042,7 @@ class TestPolicyLBApplicationProfile(NsxPolicyLibTestCase):
                 x_forwarded_for=x_forwarded_for,
                 tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBHttpProfileDef(
+                lb_defs.LBHttpProfileDef(
                     lb_app_profile_id=id,
                     name=name,
                     description=description,
@@ -3065,7 +3066,7 @@ class TestPolicyLBApplicationProfile(NsxPolicyLibTestCase):
             self.resourceApi.create_or_overwrite(name, description=description,
                                                  tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBHttpProfileDef(
+                lb_defs.LBHttpProfileDef(
                     lb_app_profile_id=mock.ANY,
                     name=name,
                     description=description,
@@ -3077,7 +3078,7 @@ class TestPolicyLBApplicationProfile(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBHttpProfileDef(
+                lb_defs.LBHttpProfileDef(
                     lb_app_profile_id=id,
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
@@ -3087,7 +3088,7 @@ class TestPolicyLBApplicationProfile(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBHttpProfileDef(
+                lb_defs.LBHttpProfileDef(
                     lb_app_profile_id=id,
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
@@ -3100,14 +3101,14 @@ class TestPolicyLBApplicationProfile(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
             expected_def = (
-                policy_defs_load_balancer.LBHttpProfileDef(tenant=TEST_TENANT))
+                lb_defs.LBHttpProfileDef(tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBHttpProfileDef(tenant=TEST_TENANT))
+                lb_defs.LBHttpProfileDef(tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
 
     def test_update(self):
@@ -3121,7 +3122,7 @@ class TestPolicyLBApplicationProfile(NsxPolicyLibTestCase):
                                     description=description,
                                     tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBHttpProfileDef(
+                lb_defs.LBHttpProfileDef(
                     lb_app_profile_id=id,
                     name=name,
                     description=description,
@@ -3148,7 +3149,7 @@ class TestPolicyLBService(NsxPolicyLibTestCase):
                                                  size=size,
                                                  tenant=TEST_TENANT)
             expected_def = (
-                policy_defs_load_balancer.LBServiceDef(
+                lb_defs.LBServiceDef(
                     lb_service_id=id,
                     name=name,
                     description=description,
@@ -3163,18 +3164,17 @@ class TestPolicyLBService(NsxPolicyLibTestCase):
                                "create_or_update") as api_call:
             self.resourceApi.create_or_overwrite(name, description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = (
-                policy_defs_load_balancer.LBServiceDef(lb_service_id=mock.ANY,
-                                                       name=name,
-                                                       description=description,
-                                                       tenant=TEST_TENANT))
+            expected_def = lb_defs.LBServiceDef(lb_service_id=mock.ANY,
+                                                name=name,
+                                                description=description,
+                                                tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_delete(self):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBServiceDef(
+            expected_def = lb_defs.LBServiceDef(
                 lb_service_id=id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -3183,7 +3183,7 @@ class TestPolicyLBService(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBServiceDef(
+            expected_def = lb_defs.LBServiceDef(
                 lb_service_id=id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -3195,14 +3195,14 @@ class TestPolicyLBService(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs_load_balancer.LBServiceDef(
+            expected_def = lb_defs.LBServiceDef(
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBServiceDef(
+            expected_def = lb_defs.LBServiceDef(
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -3218,7 +3218,7 @@ class TestPolicyLBService(NsxPolicyLibTestCase):
                                     description=description,
                                     tenant=TEST_TENANT,
                                     size=size)
-            expected_def = policy_defs_load_balancer.LBServiceDef(
+            expected_def = lb_defs.LBServiceDef(
                 lb_service_id=id,
                 name=name,
                 description=description,
@@ -3243,7 +3243,7 @@ class TestPolicyLBVirtualServer(NsxPolicyLibTestCase):
                                                  virtual_server_id=id,
                                                  description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBVirtualServerDef(
+            expected_def = lb_defs.LBVirtualServerDef(
                 virtual_server_id=id, name=name, description=description,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -3255,7 +3255,7 @@ class TestPolicyLBVirtualServer(NsxPolicyLibTestCase):
                                "create_or_update") as api_call:
             self.resourceApi.create_or_overwrite(name, description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBVirtualServerDef(
+            expected_def = lb_defs.LBVirtualServerDef(
                 virtual_server_id=mock.ANY, name=name, description=description,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -3264,7 +3264,7 @@ class TestPolicyLBVirtualServer(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBVirtualServerDef(
+            expected_def = lb_defs.LBVirtualServerDef(
                 virtual_server_id=id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -3273,7 +3273,7 @@ class TestPolicyLBVirtualServer(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBVirtualServerDef(
+            expected_def = lb_defs.LBVirtualServerDef(
                 virtual_server_id=id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -3285,14 +3285,14 @@ class TestPolicyLBVirtualServer(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs_load_balancer.LBVirtualServerDef(
+            expected_def = lb_defs.LBVirtualServerDef(
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBVirtualServerDef(
+            expected_def = lb_defs.LBVirtualServerDef(
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -3306,7 +3306,7 @@ class TestPolicyLBVirtualServer(NsxPolicyLibTestCase):
                                     name=name,
                                     description=description,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBVirtualServerDef(
+            expected_def = lb_defs.LBVirtualServerDef(
                 virtual_server_id=id, name=name, description=description,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
@@ -3323,7 +3323,7 @@ class TestPolicyLBPoolApi(NsxPolicyLibTestCase):
         description = 'desc'
         id = '111'
         members = [
-            policy_defs_load_balancer.LBPoolMemberDef(ip_address='10.0.0.1')]
+            lb_defs.LBPoolMemberDef(ip_address='10.0.0.1')]
         algorithm = 'algo'
         active_monitor_paths = 'path1'
         member_group = 'group1'
@@ -3340,7 +3340,7 @@ class TestPolicyLBPoolApi(NsxPolicyLibTestCase):
                 member_group=member_group,
                 snat_translation=snat_translation,
                 tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBPoolDef(
+            expected_def = lb_defs.LBPoolDef(
                 lb_pool_id=id,
                 name=name,
                 description=description,
@@ -3359,7 +3359,7 @@ class TestPolicyLBPoolApi(NsxPolicyLibTestCase):
                                "create_or_update") as api_call:
             self.resourceApi.create_or_overwrite(name, description=description,
                                                  tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBPoolDef(
+            expected_def = lb_defs.LBPoolDef(
                 lb_pool_id=mock.ANY,
                 name=name,
                 description=description,
@@ -3370,7 +3370,7 @@ class TestPolicyLBPoolApi(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(id, tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBPoolDef(
+            expected_def = lb_defs.LBPoolDef(
                 lb_pool_id=id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -3379,7 +3379,7 @@ class TestPolicyLBPoolApi(NsxPolicyLibTestCase):
         id = '111'
         with mock.patch.object(self.policy_api, "get") as api_call:
             self.resourceApi.get(id, tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBPoolDef(
+            expected_def = lb_defs.LBPoolDef(
                 lb_pool_id=id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -3391,14 +3391,14 @@ class TestPolicyLBPoolApi(NsxPolicyLibTestCase):
             return_value={'results': [{'display_name': name}]}) as api_call:
             obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = policy_defs_load_balancer.LBPoolDef(
+            expected_def = lb_defs.LBPoolDef(
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
     def test_list(self):
         with mock.patch.object(self.policy_api, "list") as api_call:
             self.resourceApi.list(tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBPoolDef(
+            expected_def = lb_defs.LBPoolDef(
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
 
@@ -3422,7 +3422,7 @@ class TestPolicyLBPoolApi(NsxPolicyLibTestCase):
                                     member_group=member_group,
                                     snat_translation=snat_translation,
                                     tenant=TEST_TENANT)
-            expected_def = policy_defs_load_balancer.LBPoolDef(
+            expected_def = lb_defs.LBPoolDef(
                 lb_pool_id=id,
                 name=name,
                 description=description,

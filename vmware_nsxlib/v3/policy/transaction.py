@@ -19,8 +19,9 @@ import threading
 from vmware_nsxlib._i18n import _
 
 from vmware_nsxlib.v3 import exceptions
-from vmware_nsxlib.v3 import policy_constants
-from vmware_nsxlib.v3 import policy_defs
+
+from vmware_nsxlib.v3.policy import constants
+from vmware_nsxlib.v3.policy import core_defs
 
 
 class NsxPolicyTransactionException(exceptions.NsxLibException):
@@ -35,8 +36,8 @@ class NsxPolicyTransaction(object):
 
     def __init__(self):
         # For now only infra tenant is supported
-        self.defs = [policy_defs.TenantDef(
-            tenant=policy_constants.POLICY_INFRA_TENANT)]
+        self.defs = [core_defs.TenantDef(
+            tenant=constants.POLICY_INFRA_TENANT)]
         self.client = None
 
     def __enter__(self):

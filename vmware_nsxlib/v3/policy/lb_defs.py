@@ -14,7 +14,7 @@
 #    under the License.
 #
 
-from vmware_nsxlib.v3.policy_defs import ResourceDef
+from vmware_nsxlib.v3.policy.core_defs import ResourceDef
 
 TENANTS_PATH_PATTERN = "%s/"
 LB_VIRTUAL_SERVERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-virtual-servers/"
