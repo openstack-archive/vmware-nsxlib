@@ -2627,3 +2627,52 @@ class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
             tenant=tenant)
         self._create_or_store(profile_def)
         return profile_id
+
+
+class NsxDhcpRelayConfigApi(NsxPolicyResourceBase):
+    @property
+    def entry_def(self):
+        return core_defs.DhcpRelayConfigDef
+
+    def create_or_overwrite(self, name,
+                            config_id=None,
+                            description=None,
+                            server_addresses=IGNORE,
+                            tags=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+
+        config_id = self._init_obj_uuid(config_id)
+        config_def = self._init_def(
+            config_id=config_id,
+            name=name,
+            description=description,
+            server_addresses=server_addresses,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(config_def)
+        return config_id
+
+    def delete(self, config_id, tenant=constants.POLICY_INFRA_TENANT):
+        config_def = self.entry_def(config_id=config_id, tenant=tenant)
+        self.policy_api.delete(config_def)
+
+    def get(self, config_id, tenant=constants.POLICY_INFRA_TENANT,
+            silent=False):
+        config_def = self.entry_def(config_id=config_id, tenant=tenant)
+        return self.policy_api.get(config_def, silent=silent)
+
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        config_def = self.entry_def(tenant=tenant)
+        return self._list(config_def)
+
+    def update(self, config_id, name=IGNORE,
+               description=IGNORE,
+               server_addresses=IGNORE,
+               tags=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
+        self._update(config_id=config_id,
+                     name=name,
+                     description=description,
+                     server_addresses=server_addresses,
+                     tags=tags,
+                     tenant=tenant)

@@ -2650,6 +2650,55 @@ class TestPolicySegmentQosProfilesBinding(NsxPolicyLibTestCase):
                 update_call, expected_def)
 
 
+class TestPolicyDhcpRelayConfig(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyDhcpRelayConfig, self).setUp()
+        self.resourceApi = self.policy_lib.dhcp_relay_config
+
+    def test_create(self):
+        name = 'test'
+        description = 'desc'
+        server_addr = '1.1.1.1'
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, description=description,
+                server_addresses=[server_addr],
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.DhcpRelayConfigDef(
+                config_id=mock.ANY,
+                name=name,
+                description=description,
+                server_addresses=[server_addr],
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        config_id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(config_id, tenant=TEST_TENANT)
+            expected_def = core_defs.DhcpRelayConfigDef(config_id=config_id,
+                                                        tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        config_id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(config_id, tenant=TEST_TENANT)
+            expected_def = core_defs.DhcpRelayConfigDef(config_id=config_id,
+                                                        tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = core_defs.DhcpRelayConfigDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+
 class TestPolicyLBClientSSLProfileApi(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
