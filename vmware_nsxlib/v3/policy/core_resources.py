@@ -819,6 +819,62 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
             nsx_router_uuid,
             transport_zone_id=transport_zone_id)
 
+    def _get_realized_downlink_port(
+        self, tier1_id, segment_id,
+        tenant=constants.POLICY_INFRA_TENANT,
+        sleep=None, max_attempts=None):
+        """Return the realized ID of a tier1 downlink port of a segment
+
+        If not found, wait until it has been realized
+        """
+        if sleep is None:
+            sleep = 0.5
+        if max_attempts is None:
+            max_attempts = self.nsxlib_config.realization_max_attempts
+
+        tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        path = tier1_def.get_resource_full_path()
+
+        test_num = 0
+        while test_num < max_attempts:
+            # get all the realized resources of the tier1
+            entities = self.policy_api.get_realized_entities(path)
+            for e in entities:
+                # Look fir router ports
+                if (e['entity_type'] == 'RealizedLogicalRouterPort' and
+                    e['state'] == constants.STATE_REALIZED):
+                    # Get the NSX port to check if its the downlink port
+                    port = self.nsx_api.logical_router_port.get(
+                        e['realization_specific_identifier'])
+                    # compare the segment ID to the port display name as this
+                    # is the way policy sets it
+                    port_type = port.get('resource_type')
+                    if (port_type == nsx_constants.LROUTERPORT_DOWNLINK and
+                        segment_id in port.get('display_name', '')):
+                        return port['id']
+            eventlet.sleep(sleep)
+            test_num += 1
+
+        err_msg = (_("Could not find realized downlink port for tier1 "
+                     "%(tier1)s and segment %(seg)s after %(attempts)s "
+                     "attempts with %(sleep)s seconds sleep") %
+                   {'tier1': tier1_id,
+                    'seg': segment_id,
+                    'attempts': max_attempts,
+                    'sleep': sleep})
+        raise exceptions.ManagerError(details=err_msg)
+
+    def set_dhcp_relay(self, tier1_id, segment_id, relay_service_uuid,
+                       tenant=constants.POLICY_INFRA_TENANT):
+        """Set relay service on the nsx logical router port
+
+        Using passthrough api, as the policy api does not support this yet
+        """
+        downlink_port_id = self._get_realized_downlink_port(
+            tier1_id, segment_id, tenant=tenant)
+        self.nsx_api.logical_router_port.update(
+            downlink_port_id, relay_service_uuid=relay_service_uuid)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
