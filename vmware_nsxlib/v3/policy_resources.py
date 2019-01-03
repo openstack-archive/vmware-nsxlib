@@ -818,6 +818,20 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
             nsx_router_uuid,
             transport_zone_id=transport_zone_id)
 
+    def set_dhcp_relay(self, tier1_id, segment_id, relay_service_uuid,
+                       tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Set relay service on the nsx logical router port
+
+        Using passthrough api
+        """
+        realization_info = self.wait_until_realized(
+            tier1_id, entity_type='RealizedLogicalRouterPort', tenant=tenant)
+        nsx_lrp_id = self.get_realized_id(
+            tier1_id, tenant=tenant, realization_info=realization_info)
+
+        self.nsx_api.logical_router_port.update(
+            nsx_lrp_id, relay_service_uuid=relay_service_uuid)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
