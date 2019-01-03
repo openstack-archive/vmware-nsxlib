@@ -213,6 +213,11 @@ class LogicalPort(utils.NsxLibApiBase):
                       (attachment_type, attachment_id))
         return self.client.get(self.get_path(url_suffix))
 
+    def get_by_logical_switch(self, logical_switch_id):
+        """Return all logical port of a logical switch"""
+        url_suffix = '?logical_switch_id=%s' % logical_switch_id
+        return self.client.get(self.get_path(url_suffix))
+
 
 class LogicalRouter(core_resources.NsxLibLogicalRouter):
     # TODO(asarfaty): keeping this for backwards compatibility.
