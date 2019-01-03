@@ -818,6 +818,48 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
             nsx_router_uuid,
             transport_zone_id=transport_zone_id)
 
+    def set_dhcp_relay(self, tier1_id, segment_id, relay_service_uuid,
+                       tenant=policy_constants.POLICY_INFRA_TENANT):
+        """Set relay service on the nsx logical router port
+
+        Using passthrough api, as the policy api does not support this yet
+        """
+        # TODO(asarfaty): we need to get the NSX router downlink port, and add
+        # the relay service to it.
+        # Since the realization api does not return it, we will need to search.
+        # Please change this code once the downlink port is returned by the
+        # realization.
+
+        if not self.nsx_api:
+            LOG.error("Cannot update relay service for segment %s as the "
+                      "passthrough api is forbidden", segment_id)
+            return
+
+        # Get the NSX logical switch ID
+        segment_def = policy_defs.SegmentDef(
+            segment_id=segment_id, tenant=tenant)
+        nsx_ls_id = self._get_realized_id(
+            segment_def, entity_type='RealizedLogicalSwitch')
+
+        # wait for realization of the downlink port
+        eventlet.sleep(2)
+
+        # Get all the NSX ports of the segment
+        nsx_ports = self.nsx_api.logical_port.get_by_logical_switch(
+            nsx_ls_id)['results']
+        for port in nsx_ports:
+            # find the link port
+            if (port.get('attachment') and
+                port['attachment'].get('attachment_type') == 'LOGICALROUTER'):
+                downlink_port_id = port['attachment'].get('id')
+                if downlink_port_id:
+                    self.nsx_api.logical_router_port.update(
+                        downlink_port_id,
+                        relay_service_uuid=relay_service_uuid)
+                    return
+        LOG.error("Did not find router %s downlink port for network %s",
+                  tier1_id, segment_id)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
