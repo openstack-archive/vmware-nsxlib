@@ -46,6 +46,7 @@ MAC_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                                        "mac-discovery-profiles/")
 
 REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
+DHCP_REALY_PATTERN = TENANTS_PATH_PATTERN + "dhcp-relay-configs/"
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -1382,6 +1383,24 @@ class MacDiscoveryProfileDef(ResourceDef):
                                             'unknown_unicast_flooding_enabled',
                                             'mac_limit_policy', 'mac_limit'])
         return body
+
+
+class DhcpRelayConfigDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return DHCP_REALY_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'config_id')
+
+    @staticmethod
+    def resource_type():
+        return 'DhcpRelayConfig'
+
+    def path_defs(self):
+        return (TenantDef,)
 
 
 class NsxPolicyApi(object):

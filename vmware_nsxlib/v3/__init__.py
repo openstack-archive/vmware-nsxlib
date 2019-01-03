@@ -467,6 +467,8 @@ class NsxPolicyLib(NsxLibBase):
         self.segment_port_qos_profiles = (
             policy_resources.SegmentPortQosProfilesBindingMapApi(
                 *args))
+        self.dhcp_relay_config = (
+            policy_resources.NsxDhcpRelayConfigApi(*args))
         self.load_balancer = (
             policy_load_balancer.NsxPolicyLoadBalancerApi(*args))
 
