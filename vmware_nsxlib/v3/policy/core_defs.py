@@ -18,8 +18,9 @@ import abc
 
 import six
 
-from vmware_nsxlib.v3 import policy_constants
 from vmware_nsxlib.v3 import utils
+
+from vmware_nsxlib.v3.policy import constants
 
 TENANTS_PATH_PATTERN = "%s/"
 DOMAINS_PATH_PATTERN = TENANTS_PATH_PATTERN + "domains/"
@@ -111,7 +112,7 @@ class ResourceDef(object):
         if self.attrs.get('tenant'):
             return self.attrs.get('tenant')
 
-        return policy_constants.POLICY_INFRA_TENANT
+        return constants.POLICY_INFRA_TENANT
 
     def get_section_path(self):
         path_ids = [self.get_attr(path_id) for path_id in self.path_ids[:-1]]
@@ -562,7 +563,7 @@ class SegmentDef(BaseSegmentDef):
             if self.get_attr('transport_zone_id'):
                 tz = TransportZoneDef(
                     tz_id=self.get_attr('transport_zone_id'),
-                    ep_id=policy_constants.DEFAULT_ENFORCEMENT_POINT,
+                    ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
                     tenant=self.get_tenant())
                 path = tz.get_resource_full_path()
             self._set_attr_if_specified(body, 'transport_zone_id',
@@ -866,9 +867,9 @@ class IpPoolBlockSubnetDef(ResourceDef):
 
 
 class Condition(object):
-    def __init__(self, value, key=policy_constants.CONDITION_KEY_TAG,
-                 member_type=policy_constants.CONDITION_MEMBER_PORT,
-                 operator=policy_constants.CONDITION_OP_EQUALS):
+    def __init__(self, value, key=constants.CONDITION_KEY_TAG,
+                 member_type=constants.CONDITION_MEMBER_PORT,
+                 operator=constants.CONDITION_OP_EQUALS):
         self.value = value
         self.key = key
         self.member_type = member_type
@@ -892,7 +893,7 @@ class IPAddressExpression(object):
 
 
 class ConjunctionOperator(object):
-    def __init__(self, operator=policy_constants.CONDITION_OP_AND):
+    def __init__(self, operator=constants.CONDITION_OP_AND):
         self.operator = operator
 
     def get_obj_dict(self):
@@ -1060,7 +1061,7 @@ class CommunicationMapDef(ResourceDef):
 class CommunicationMapEntryDef(ResourceDef):
     def get_groups_path(self, domain_id, group_ids):
         if not group_ids:
-            return [policy_constants.ANY_GROUP]
+            return [constants.ANY_GROUP]
         return [GroupDef(domain_id=domain_id,
                          group_id=group_id,
                          tenant=self.get_tenant()).get_resource_full_path()
@@ -1076,7 +1077,7 @@ class CommunicationMapEntryDef(ResourceDef):
             return [self.get_service_path(service_id)
                     for service_id in service_ids]
 
-        return [policy_constants.ANY_SERVICE]
+        return [constants.ANY_SERVICE]
 
     @property
     def path_pattern(self):

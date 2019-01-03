@@ -16,10 +16,11 @@
 
 from oslo_log import log as logging
 
-from vmware_nsxlib.v3 import policy_constants
-from vmware_nsxlib.v3 import policy_defs_load_balancer
-from vmware_nsxlib.v3.policy_resources import IGNORE
-from vmware_nsxlib.v3.policy_resources import NsxPolicyResourceBase
+from vmware_nsxlib.v3.policy import constants
+from vmware_nsxlib.v3.policy import lb_defs
+
+from vmware_nsxlib.v3.policy.core_resources import IGNORE
+from vmware_nsxlib.v3.policy.core_resources import NsxPolicyResourceBase
 
 
 LOG = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ class NsxPolicyLBAppProfileBase(NsxPolicyResourceBase):
                             response_timeout=IGNORE,
                             x_forwarded_for=IGNORE,
                             tags=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         lb_app_profile_id = self._init_obj_uuid(lb_app_profile_id)
         lb_app_profile_def = self._init_def(
             lb_app_profile_id=lb_app_profile_id,
@@ -67,20 +68,20 @@ class NsxPolicyLBAppProfileBase(NsxPolicyResourceBase):
         return lb_app_profile_id
 
     def delete(self, lb_app_profile_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         lb_app_profile_def = self.entry_def(
             lb_app_profile_id=lb_app_profile_id,
             tenant=tenant)
         self.policy_api.delete(lb_app_profile_def)
 
     def get(self, lb_app_profile_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=constants.POLICY_INFRA_TENANT):
         lb_app_profile_def = self.entry_def(
             lb_app_profile_id=lb_app_profile_id,
             tenant=tenant)
         self.policy_api.get(lb_app_profile_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_app_profile_def = self.entry_def(tenant=tenant)
         return self._list(lb_app_profile_def)
 
@@ -97,7 +98,7 @@ class NsxPolicyLBAppProfileBase(NsxPolicyResourceBase):
                response_timeout=IGNORE,
                x_forwarded_for=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             lb_app_profile_id=lb_app_profile_id,
             name=name,
@@ -120,7 +121,7 @@ class NsxPolicyLBAppProfileHttpApi(NsxPolicyLBAppProfileBase):
 
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBHttpProfileDef
+        return lb_defs.LBHttpProfileDef
 
 
 class NsxPolicyLBAppProfileFastTcpApi(
@@ -129,7 +130,7 @@ class NsxPolicyLBAppProfileFastTcpApi(
 
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBFastTcpProfile
+        return lb_defs.LBFastTcpProfile
 
 
 class NsxPolicyLBAppProfileFastUdpApi(
@@ -138,7 +139,7 @@ class NsxPolicyLBAppProfileFastUdpApi(
 
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBFastUdpProfile
+        return lb_defs.LBFastUdpProfile
 
 
 class NsxPolicyLoadBalancerLBClientSSLProfileApi(NsxPolicyResourceBase):
@@ -146,14 +147,14 @@ class NsxPolicyLoadBalancerLBClientSSLProfileApi(NsxPolicyResourceBase):
 
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBClientSslProfileDef
+        return lb_defs.LBClientSslProfileDef
 
     def create_or_overwrite(self, name,
                             client_ssl_profile_id=None,
                             description=IGNORE,
                             tags=IGNORE,
                             protocols=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         client_ssl_profile_id = self._init_obj_uuid(
             client_ssl_profile_id)
         lb_client_ssl_profile_def = self._init_def(
@@ -167,20 +168,20 @@ class NsxPolicyLoadBalancerLBClientSSLProfileApi(NsxPolicyResourceBase):
         return client_ssl_profile_id
 
     def delete(self, client_ssl_profile_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         lb_client_ssl_profile_def = self.entry_def(
             client_ssl_profile_id=client_ssl_profile_id,
             tenant=tenant)
         self.policy_api.delete(lb_client_ssl_profile_def)
 
     def get(self, client_ssl_profile_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=constants.POLICY_INFRA_TENANT):
         lb_client_ssl_profile_def = self.entry_def(
             client_ssl_profile_id=client_ssl_profile_id,
             tenant=tenant)
         self.policy_api.get(lb_client_ssl_profile_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_client_ssl_profile_def = self.entry_def(tenant=tenant)
         return self._list(lb_client_ssl_profile_def)
 
@@ -189,7 +190,7 @@ class NsxPolicyLoadBalancerLBClientSSLProfileApi(NsxPolicyResourceBase):
                description=IGNORE,
                tags=IGNORE,
                protocols=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             client_ssl_profile_id=client_ssl_profile_id,
             name=name,
@@ -205,7 +206,7 @@ class NsxPolicyLoadBalancerLBCookiePersistenceProfileApi(
 
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBCookiePersistenceProfileDef
+        return lb_defs.LBCookiePersistenceProfileDef
 
     def create_or_overwrite(self, name,
                             persistence_profile_id=None,
@@ -217,7 +218,7 @@ class NsxPolicyLoadBalancerLBCookiePersistenceProfileApi(
                             cookie_path=IGNORE,
                             cookie_time=IGNORE,
                             persistence_shared=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         persistence_profile_id = self._init_obj_uuid(
             persistence_profile_id)
         lb_cookie_persistence_profile_def = self._init_def(
@@ -236,20 +237,20 @@ class NsxPolicyLoadBalancerLBCookiePersistenceProfileApi(
         return persistence_profile_id
 
     def delete(self, persistence_profile_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         lb_cookie_persistence_profile_def = self.entry_def(
             persistence_profile_id=persistence_profile_id,
             tenant=tenant)
         self.policy_api.delete(lb_cookie_persistence_profile_def)
 
     def get(self, persistence_profile_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=constants.POLICY_INFRA_TENANT):
         lb_cookie_persistence_profile_def = self.entry_def(
             persistence_profile_id=persistence_profile_id,
             tenant=tenant)
         self.policy_api.get(lb_cookie_persistence_profile_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_cookie_persistence_profile_def = self.entry_def(tenant=tenant)
         return self._list(lb_cookie_persistence_profile_def)
 
@@ -263,7 +264,7 @@ class NsxPolicyLoadBalancerLBCookiePersistenceProfileApi(
                cookie_path=IGNORE,
                cookie_time=IGNORE,
                persistence_shared=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             persistence_profile_id=persistence_profile_id,
             name=name,
@@ -284,7 +285,7 @@ class NsxPolicyLoadBalancerLBSourceIpPersistenceProfileApi(
 
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBSourceIpPersistenceProfileDef
+        return lb_defs.LBSourceIpPersistenceProfileDef
 
     def create_or_overwrite(self, name,
                             persistence_profile_id=None,
@@ -294,7 +295,7 @@ class NsxPolicyLoadBalancerLBSourceIpPersistenceProfileApi(
                             persistence_shared=IGNORE,
                             purge=IGNORE,
                             timeout=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         persistence_profile_id = self._init_obj_uuid(
             persistence_profile_id)
         lb_source_ip_persistence_profile_def = self._init_def(
@@ -311,20 +312,20 @@ class NsxPolicyLoadBalancerLBSourceIpPersistenceProfileApi(
         return persistence_profile_id
 
     def delete(self, persistence_profile_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         lb_source_ip_persistence_profile_def = self.entry_def(
             persistence_profile_id=persistence_profile_id,
             tenant=tenant)
         self.policy_api.delete(lb_source_ip_persistence_profile_def)
 
     def get(self, persistence_profile_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=constants.POLICY_INFRA_TENANT):
         lb_source_ip_persistence_profile_def = self.entry_def(
             persistence_profile_id=persistence_profile_id,
             tenant=tenant)
         self.policy_api.get(lb_source_ip_persistence_profile_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_source_ip_persistence_profile_def = self.entry_def(tenant=tenant)
         return self._list(lb_source_ip_persistence_profile_def)
 
@@ -336,7 +337,7 @@ class NsxPolicyLoadBalancerLBSourceIpPersistenceProfileApi(
                persistence_shared=IGNORE,
                purge=IGNORE,
                timeout=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             persistence_profile_id=persistence_profile_id,
             name=name,
@@ -353,13 +354,13 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
     """NSX Policy LBService."""
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBPoolDef
+        return lb_defs.LBPoolDef
 
     def create_or_overwrite(self, name, lb_pool_id=None, description=IGNORE,
                             tags=IGNORE, members=IGNORE, algorithm=IGNORE,
                             active_monitor_paths=IGNORE, member_group=IGNORE,
                             snat_translation=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         lb_pool_id = self._init_obj_uuid(lb_pool_id)
         lb_pool_def = self._init_def(
             lb_pool_id=lb_pool_id,
@@ -377,18 +378,18 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
         return lb_pool_id
 
     def delete(self, lb_pool_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         lb_pool_def = self.entry_def(
             lb_pool_id=lb_pool_id, tenant=tenant)
         self.policy_api.delete(lb_pool_def)
 
-    def get(self, lb_pool_id, tenant=policy_constants.POLICY_INFRA_TENANT,
+    def get(self, lb_pool_id, tenant=constants.POLICY_INFRA_TENANT,
             silent=False):
         lb_pool_def = self.entry_def(
             lb_pool_id=lb_pool_id, tenant=tenant)
         return self.policy_api.get(lb_pool_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_pool_def = self.entry_def(tenant=tenant)
         return self.policy_api.list(lb_pool_def)['results']
 
@@ -396,7 +397,7 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
                tags=IGNORE, members=IGNORE, algorithm=IGNORE,
                active_monitor_paths=IGNORE, member_group=IGNORE,
                snat_translation=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             lb_pool_id=lb_pool_id,
             name=name,
@@ -410,7 +411,7 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
             tenant=tenant)
 
     def add_monitor_to_pool(self, lb_pool_id, active_monitor_paths,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         lb_pool_def = self.entry_def(
             lb_pool_id=lb_pool_id, tenant=tenant)
         lb_pool = self.policy_api.get(lb_pool_def)
@@ -419,7 +420,7 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
         self.update(lb_pool_id, active_monitor_paths=monitor_paths)
 
     def remove_monitor_from_pool(self, lb_pool_id, monitor_path,
-                                 tenant=policy_constants.POLICY_INFRA_TENANT):
+                                 tenant=constants.POLICY_INFRA_TENANT):
         lb_pool_def = self.entry_def(
             lb_pool_id=lb_pool_id, tenant=tenant)
         lb_pool = self.policy_api.get(lb_pool_def)
@@ -430,12 +431,12 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
     def create_pool_member_and_add_to_pool(
             self, lb_pool_id, ip_address, port=None,
             display_name=None, weight=None,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
-        lb_pool_member = policy_defs_load_balancer.LBPoolMemberDef(
+            tenant=constants.POLICY_INFRA_TENANT):
+        lb_pool_member = lb_defs.LBPoolMemberDef(
             ip_address, port=port,
             name=display_name,
             weight=weight)
-        lb_pool_def = policy_defs_load_balancer.LBPoolDef(
+        lb_pool_def = lb_defs.LBPoolDef(
             lb_pool_id=lb_pool_id, tenant=tenant)
         lb_pool = self.policy_api.get(lb_pool_def)
         lb_pool_members = lb_pool.get('members', [])
@@ -444,8 +445,8 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
         return lb_pool_member
 
     def remove_pool_member(self, lb_pool_id, ip_address, port=None,
-                           tenant=policy_constants.POLICY_INFRA_TENANT):
-        lb_pool_def = policy_defs_load_balancer.LBPoolDef(
+                           tenant=constants.POLICY_INFRA_TENANT):
+        lb_pool_def = lb_defs.LBPoolDef(
             lb_pool_id=lb_pool_id, tenant=tenant)
         lb_pool = self.policy_api.get(lb_pool_def)
         lb_pool_members = lb_pool.get('members', [])
@@ -459,13 +460,13 @@ class NsxPolicyLoadBalancerServiceApi(NsxPolicyResourceBase):
     """NSX Policy LBService."""
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBServiceDef
+        return lb_defs.LBServiceDef
 
     def create_or_overwrite(self, name, lb_service_id=None,
                             description=IGNORE,
                             tags=IGNORE,
                             size=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT):
         lb_service_id = self._init_obj_uuid(lb_service_id)
         lb_service_def = self._init_def(
             lb_service_id=lb_service_id,
@@ -479,23 +480,23 @@ class NsxPolicyLoadBalancerServiceApi(NsxPolicyResourceBase):
         return lb_service_id
 
     def delete(self, lb_service_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         lb_service_def = self.entry_def(
             lb_service_id=lb_service_id, tenant=tenant)
         self.policy_api.delete(lb_service_def)
 
-    def get(self, lb_service_id, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def get(self, lb_service_id, tenant=constants.POLICY_INFRA_TENANT):
         lb_service_def = self.entry_def(
             lb_service_id=lb_service_id, tenant=tenant)
         return self.policy_api.get(lb_service_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
-        lb_service_def = policy_defs_load_balancer.LBServiceDef(tenant=tenant)
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        lb_service_def = lb_defs.LBServiceDef(tenant=tenant)
         return self.policy_api.list(lb_service_def)['results']
 
     def update(self, lb_service_id, name=IGNORE,
                description=IGNORE, tags=IGNORE,
-               size=IGNORE, tenant=policy_constants.POLICY_INFRA_TENANT):
+               size=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
         self._update(lb_service_id=lb_service_id,
                      name=name,
                      description=description,
@@ -505,15 +506,15 @@ class NsxPolicyLoadBalancerServiceApi(NsxPolicyResourceBase):
 
     def get_status(self, lb_service_id):
         lb_service_status_def = (
-            policy_defs_load_balancer.LBServiceStatisticsDef(
+            lb_defs.LBServiceStatisticsDef(
                 lb_service_id=lb_service_id,
-                tenant=policy_constants.POLICY_INFRA_TENANT))
+                tenant=constants.POLICY_INFRA_TENANT))
         return self.policy_api.get(lb_service_status_def)
 
     def get_usage(self, lb_service_id):
-        lb_service_status_def = policy_defs_load_balancer.LBServiceUsageDef(
+        lb_service_status_def = lb_defs.LBServiceUsageDef(
             lb_service_id=lb_service_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT)
+            tenant=constants.POLICY_INFRA_TENANT)
         return self.policy_api.get(lb_service_status_def)
 
 
@@ -522,7 +523,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
 
     @property
     def entry_def(self):
-        return policy_defs_load_balancer.LBVirtualServerDef
+        return lb_defs.LBVirtualServerDef
 
     def create_or_overwrite(self, name, virtual_server_id=None,
                             description=IGNORE,
@@ -533,7 +534,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                             lb_persistence_profile_id=IGNORE,
                             ports=IGNORE,
                             server_ssl_profile_binding=IGNORE,
-                            tenant=policy_constants.POLICY_INFRA_TENANT,
+                            tenant=constants.POLICY_INFRA_TENANT,
                             tags=IGNORE):
         virtual_server_id = self._init_obj_uuid(virtual_server_id)
         lbvs_def = self._init_def(
@@ -555,18 +556,18 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
         return self.policy_api.create_or_update(lbvs_def)
 
     def delete(self, virtual_server_id,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         lbvs_def = self.entry_def(
             virtual_server_id=virtual_server_id, tenant=tenant)
         self.policy_api.delete(lbvs_def)
 
     def get(self, virtual_server_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT):
+            tenant=constants.POLICY_INFRA_TENANT):
         lbvs_def = self.entry_def(
             virtual_server_id=virtual_server_id, tenant=tenant)
         return self.policy_api.get(lbvs_def)
 
-    def list(self, tenant=policy_constants.POLICY_INFRA_TENANT):
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lbvs_def = self.entry_def(tenant=tenant)
         return self.policy_api.list(lbvs_def)['results']
 
@@ -579,7 +580,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                ports=IGNORE,
                server_ssl_profile_binding=IGNORE,
                tags=IGNORE,
-               tenant=policy_constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(
             virtual_server_id=virtual_server_id,
             name=name,
@@ -647,7 +648,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                                          ssl_profile_path=None,
                                          client_auth_ca_paths=None,
                                          client_auth=None):
-        return policy_defs_load_balancer.ClientSSLProfileBindingDef(
+        return lb_defs.ClientSSLProfileBindingDef(
             default_certificate_path,
             sni_certificate_paths=sni_certificate_paths,
             ssl_profile_path=ssl_profile_path,
@@ -661,10 +662,10 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                                           client_auth=None):
         lbvs_def = self.entry_def(
             virtual_server_id=virtual_server_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT)
+            tenant=constants.POLICY_INFRA_TENANT)
         body = self.policy_api.get(lbvs_def)
         app_profile_id = body['application_profile_path'].split('/')[-1]
-        client_ssl_def = policy_defs_load_balancer.ClientSSLProfileBindingDef(
+        client_ssl_def = lb_defs.ClientSSLProfileBindingDef(
             default_certificate_path,
             sni_certificate_paths=sni_certificate_paths,
             ssl_profile_path=ssl_profile_path,
@@ -678,17 +679,17 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
 
     def build_lb_rule(self, actions=None, display_name=None,
                       match_conditions=None, match_strategy=None, phase=None):
-        return policy_defs_load_balancer.LBRuleDef(
+        return lb_defs.LBRuleDef(
             actions, match_conditions, display_name, match_strategy, phase)
 
     def add_lb_rule(self, virtual_server_id, actions=None,
                     name=None, match_conditions=None,
                     match_strategy=None, phase=None):
-        lb_rule = policy_defs_load_balancer.LBRuleDef(
+        lb_rule = lb_defs.LBRuleDef(
             actions, match_conditions, name, match_strategy, phase)
         lbvs_def = self.entry_def(
             virtual_server_id=virtual_server_id,
-            tenant=policy_constants.POLICY_INFRA_TENANT)
+            tenant=constants.POLICY_INFRA_TENANT)
         body = self.policy_api.get(lbvs_def)
         app_profile_id = body['application_profile_path'].split('/')[-1]
         lb_rules = body.get('rules', [])
@@ -700,7 +701,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
 
     def remove_lb_rule(self, virtual_server_id, lb_rule_name):
         lbvs_def = self.entry_def(virtual_server_id=virtual_server_id,
-                                  tenant=policy_constants.POLICY_INFRA_TENANT)
+                                  tenant=constants.POLICY_INFRA_TENANT)
         body = self.policy_api.get(lbvs_def)
         app_profile_id = body['application_profile_path'].split('/')[-1]
         lb_rules = body.get('rules', [])
