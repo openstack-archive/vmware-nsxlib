@@ -894,13 +894,17 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                      tags=tags,
                      tenant=tenant)
 
-    def get_edge_cluster_path(self, tier0_id,
-                              tenant=constants.POLICY_INFRA_TENANT):
-        """Get the edge_cluster path of a Tier0 router"""
+    def get_locale_services(self, tier0_id,
+                            tenant=constants.POLICY_INFRA_TENANT):
         t0service_def = core_defs.Tier0LocaleServiceDef(
             tier0_id=tier0_id,
             tenant=constants.POLICY_INFRA_TENANT)
-        services = self.policy_api.list(t0service_def)['results']
+        return self.policy_api.list(t0service_def)['results']
+
+    def get_edge_cluster_path(self, tier0_id,
+                              tenant=constants.POLICY_INFRA_TENANT):
+        """Get the edge_cluster path of a Tier0 router"""
+        services = self.get_locale_services(tier0_id, tenant=tenant)
         for srv in services:
             if 'edge_cluster_path' in srv:
                 return srv['edge_cluster_path']
@@ -944,6 +948,39 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         return self._wait_until_realized(tier0_def, entity_type=entity_type,
                                          sleep=sleep,
                                          max_attempts=max_attempts)
+
+    @check_allowed_passthrough
+    def get_transport_zones(self, tier0_id,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        """Return a list of the transport zones IDs connected to the tier0
+
+        Currently this is supported only with the passthrough api
+        """
+        realization_info = self.wait_until_realized(
+            tier0_id, entity_type='RealizedLogicalRouter', tenant=tenant)
+        nsx_router_uuid = self.get_realized_id(
+            tier0_id, tenant=tenant,
+            realization_info=realization_info)
+        return self.nsx_api.router.get_tier0_router_tz(
+            nsx_router_uuid)
+
+    def get_uplink_ips(self, tier0_id, tenant=constants.POLICY_INFRA_TENANT):
+        """Return a link of all uplink ips of this tier0 router"""
+        uplink_ips = []
+        services = self.get_locale_services(tier0_id, tenant=tenant)
+        for srv in services:
+            # get the interfaces of this service
+            t0interface_def = core_defs.Tier0InterfaceDef(
+                tier0_id=tier0_id,
+                service_id=srv['id'],
+                tenant=constants.POLICY_INFRA_TENANT)
+            interfaces = self.policy_api.list(
+                t0interface_def).get('results', [])
+            for interface in interfaces:
+                if interface.get('type') == 'EXTERNAL':
+                    for subnet in interface.get('subnets', []):
+                        uplink_ips.extend(subnet.get('ip_addresses', []))
+        return uplink_ips
 
 
 class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
@@ -1273,6 +1310,13 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         return self._get_realization_info(segment_def,
                                           entity_type=entity_type)
+
+    def get_transport_zone_id(self, segment_id,
+                              tenant=constants.POLICY_INFRA_TENANT):
+        segment = self.get(segment_id, tenant=tenant)
+        tz_path = segment.get('transport_zone_path')
+        if tz_path:
+            return tz_path.split('/')[-1]
 
 
 class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
