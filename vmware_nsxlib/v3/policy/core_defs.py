@@ -45,6 +45,7 @@ IP_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                                       "ip-discovery-profiles/")
 MAC_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                                        "mac-discovery-profiles/")
+CERTIFICATE_PATH_PATTERN = TENANTS_PATH_PATTERN + "certificates/"
 
 REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
 
@@ -1382,6 +1383,27 @@ class MacDiscoveryProfileDef(ResourceDef):
                                             'mac_learning_enabled',
                                             'unknown_unicast_flooding_enabled',
                                             'mac_limit_policy', 'mac_limit'])
+        return body
+
+
+class CertificateDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return CERTIFICATE_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'certificate_id')
+
+    @staticmethod
+    def resource_type():
+        return "TlsTrustData"
+
+    def get_obj_dict(self):
+        body = super(CertificateDef, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['pem_encoded', 'key_algo',
+                                            'private_key', 'passphrase'])
         return body
 
 

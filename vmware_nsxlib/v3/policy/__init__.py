@@ -99,6 +99,7 @@ class NsxPolicyLib(lib.NsxLibBase):
         self.segment_port_qos_profiles = (
             core_resources.SegmentPortQosProfilesBindingMapApi(
                 *args))
+        self.certificate = core_resources.NsxPolicyCertApi(*args)
         self.load_balancer = lb_resources.NsxPolicyLoadBalancerApi(*args)
 
     @property
