@@ -2132,6 +2132,32 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                               tier1_id, max_attempts=5, sleep=0.1,
                               tenant=TEST_TENANT)
 
+    def test_get_uplink_ips(self):
+        tier0_id = '111'
+        ip_addr = '5.5.5.5'
+        interface = {'id': '222', 'type': 'EXTERNAL',
+                     'subnets': [{'ip_addresses': [ip_addr]}]}
+        with mock.patch.object(self.resourceApi.policy_api, "list",
+                               return_value={'results': [interface]}):
+            uplink_ips = self.resourceApi.get_uplink_ips(
+                tier0_id, tenant=TEST_TENANT)
+            self.assertEqual([ip_addr], uplink_ips)
+
+    def test_get_transport_zones(self):
+        # Test the passthrough api
+        tier0_id = '111'
+        logical_router_id = 'realized_111'
+        info = {'state': constants.STATE_REALIZED,
+                'entity_type': 'RealizedLogicalRouter',
+                'realization_specific_identifier': logical_router_id}
+        pt_mock = self.resourceApi.nsx_api.router.get_tier0_router_tz
+        with mock.patch.object(self.resourceApi, "_get_realization_info",
+                               return_value=info) as realization:
+            self.resourceApi.get_transport_zones(
+                tier0_id, tenant=TEST_TENANT)
+            realization.assert_called_once()
+            pt_mock.assert_called_once_with(logical_router_id)
+
 
 class TestPolicySegment(NsxPolicyLibTestCase):
 
