@@ -3589,3 +3589,121 @@ class TestPolicyLBPoolApi(NsxPolicyLibTestCase):
                 snat_translation=snat_translation,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
+
+
+class TestPolicyCertificate(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyCertificate, self).setUp()
+        self.resourceApi = self.policy_lib.certificate
+
+    def test_create_with_id(self):
+        name = 'd1'
+        description = 'desc'
+        id = '111'
+        pem_encoded = 'pem_encoded'
+        private_key = 'private_key'
+        passphrase = 'passphrase'
+        key_algo = 'algo'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name,
+                                                 certificate_id=id,
+                                                 description=description,
+                                                 pem_encoded=pem_encoded,
+                                                 private_key=private_key,
+                                                 passphrase=passphrase,
+                                                 key_algo=key_algo,
+                                                 tenant=TEST_TENANT)
+            expected_def = (
+                core_defs.CertificateDef(
+                    certificate_id=id,
+                    name=name,
+                    description=description,
+                    pem_encoded=pem_encoded,
+                    private_key=private_key,
+                    passphrase=passphrase,
+                    key_algo=key_algo,
+                    tenant=TEST_TENANT))
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_create_without_id(self):
+        name = 'd1'
+        description = 'desc'
+        pem_encoded = 'pem_encoded'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(name, description=description,
+                                                 tenant=TEST_TENANT,
+                                                 pem_encoded=pem_encoded)
+            expected_def = (
+                core_defs.CertificateDef(certificate_id=mock.ANY,
+                                         name=name,
+                                         description=description,
+                                         tenant=TEST_TENANT,
+                                         pem_encoded=pem_encoded))
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(id, tenant=TEST_TENANT)
+            expected_def = core_defs.CertificateDef(
+                certificate_id=id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(id, tenant=TEST_TENANT)
+            expected_def = core_defs.CertificateDef(
+                certificate_id=id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_by_name(self):
+        name = 'd1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = core_defs.CertificateDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = core_defs.CertificateDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        id = '111'
+        name = 'new name'
+        description = 'new desc'
+        pem_encoded = 'pem_encoded'
+        private_key = 'private_key'
+        passphrase = '12'
+        key_algo = 'new_algo'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(id,
+                                    name=name,
+                                    description=description,
+                                    tenant=TEST_TENANT,
+                                    pem_encoded=pem_encoded,
+                                    private_key=private_key,
+                                    passphrase=passphrase,
+                                    key_algo=key_algo)
+            expected_def = core_defs.CertificateDef(
+                certificate_id=id,
+                name=name,
+                description=description,
+                tenant=TEST_TENANT,
+                pem_encoded=pem_encoded,
+                private_key=private_key,
+                passphrase=passphrase,
+                key_algo=key_algo
+            )
+            self.assert_called_with_def(update_call, expected_def)

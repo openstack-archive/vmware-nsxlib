@@ -2784,3 +2784,61 @@ class NsxDhcpRelayConfigApi(NsxPolicyResourceBase):
                      server_addresses=server_addresses,
                      tags=tags,
                      tenant=tenant)
+
+
+class NsxPolicyCertApi(NsxPolicyResourceBase):
+    """NSX Policy Certificate API."""
+    @property
+    def entry_def(self):
+        return core_defs.CertificateDef
+
+    def create_or_overwrite(self, name, certificate_id=None,
+                            pem_encoded=IGNORE, private_key=IGNORE,
+                            passphrase=IGNORE,
+                            key_algo=IGNORE,
+                            description=IGNORE,
+                            tags=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        certificate_id = self._init_obj_uuid(certificate_id)
+        certificate_def = self._init_def(certificate_id=certificate_id,
+                                         name=name,
+                                         private_key=private_key,
+                                         pem_encoded=pem_encoded,
+                                         passphrase=passphrase,
+                                         key_algo=key_algo,
+                                         description=description,
+                                         tags=tags,
+                                         tenant=tenant)
+
+        self._create_or_store(certificate_def)
+        return certificate_id
+
+    def delete(self, certificate_id,
+               tenant=constants.POLICY_INFRA_TENANT):
+        certificate_def = self.entry_def(certificate_id=certificate_id,
+                                         tenant=tenant)
+        self.policy_api.delete(certificate_def)
+
+    def get(self, certificate_id, tenant=constants.POLICY_INFRA_TENANT,
+            silent=False):
+        certificate_def = self.entry_def(certificate_id=certificate_id,
+                                         tenant=tenant)
+        return self.policy_api.get(certificate_def, silent=silent)
+
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        certificate_def = self.entry_def(tenant=tenant)
+        return self._list(certificate_def)
+
+    def update(self, certificate_id, name=IGNORE,
+               pem_encoded=IGNORE, private_key=IGNORE,
+               passphrase=IGNORE, key_algo=IGNORE, description=IGNORE,
+               tags=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
+        self._update(certificate_id=certificate_id,
+                     name=name,
+                     description=description,
+                     tags=tags,
+                     private_key=private_key,
+                     pem_encoded=pem_encoded,
+                     passphrase=passphrase,
+                     key_algo=key_algo,
+                     tenant=tenant)
