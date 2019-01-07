@@ -15,7 +15,9 @@
 #
 
 import abc
+import sys
 
+import decorator
 import eventlet
 from oslo_log import log as logging
 from oslo_utils import uuidutils
@@ -39,6 +41,17 @@ LOG = logging.getLogger(__name__)
 IGNORE = object()
 
 DEFAULT_MAP_ID = 'DEFAULT'
+
+
+@decorator.decorator
+def check_allowed_passthrough(f, *args, **kwargs):
+    resource_api = args[0]
+    if not resource_api.nsx_api:
+        caller = sys._getframe(1).f_code.co_name
+        LOG.error("%s failed: Passthrough api is disabled", caller)
+        return
+
+    return f(*args, **kwargs)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -802,14 +815,10 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                          sleep=sleep,
                                          max_attempts=max_attempts)
 
+    @check_allowed_passthrough
     def update_transport_zone(self, tier1_id, transport_zone_id,
                               tenant=constants.POLICY_INFRA_TENANT):
         """Use the pass-through api to update the TZ zone on the NSX router"""
-        if not self.nsx_api:
-            LOG.error("Cannot update tier1 %s transport zone as the "
-                      "passthrough api is forbidden", tier1_id)
-            return
-
         realization_info = self.wait_until_realized(
             tier1_id, entity_type='RealizedLogicalRouter', tenant=tenant)
 
@@ -896,14 +905,11 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
             if 'edge_cluster_path' in srv:
                 return srv['edge_cluster_path']
 
+    @check_allowed_passthrough
     def get_overlay_transport_zone(
         self, tier0_id,
         tenant=constants.POLICY_INFRA_TENANT):
         """Use the pass-through api to get the TZ zone of the NSX tier0"""
-        if not self.nsx_api:
-            LOG.error("Cannot get tier0 %s transport zone as the "
-                      "passthrough api is forbidden", tier0_id)
-            return
         realization_info = self.wait_until_realized(
             tier0_id, entity_type='RealizedLogicalRouter', tenant=tenant)
         nsx_router_uuid = self.get_realized_id(

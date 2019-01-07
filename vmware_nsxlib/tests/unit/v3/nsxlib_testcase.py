@@ -109,7 +109,7 @@ def _mock_nsxlib():
     return mocking
 
 
-def get_default_nsxlib_config():
+def get_default_nsxlib_config(allow_passthrough=True):
     return config.NsxLibConfig(
         username=NSX_USER,
         password=NSX_PASSWORD,
@@ -127,7 +127,7 @@ def get_default_nsxlib_config():
         plugin_ver=PLUGIN_VER,
         dns_nameservers=DNS_NAMESERVERS,
         dns_domain=DNS_DOMAIN,
-        allow_passthrough=True
+        allow_passthrough=allow_passthrough
     )
 
 

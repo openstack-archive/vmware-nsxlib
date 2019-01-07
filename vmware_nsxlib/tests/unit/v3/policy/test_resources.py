@@ -34,7 +34,9 @@ class NsxPolicyLibTestCase(policy_testcase.TestPolicyApi):
     def setUp(self, *args, **kwargs):
         super(NsxPolicyLibTestCase, self).setUp()
 
-        nsxlib_config = nsxlib_testcase.get_default_nsxlib_config()
+        nsxlib_config = nsxlib_testcase.get_default_nsxlib_config(
+            allow_passthrough=kwargs.get('allow_passthrough', True))
+
         # Mock the nsx-lib for the passthrough api
         with mock.patch('vmware_nsxlib.v3.NsxLib'):
             self.policy_lib = policy.NsxPolicyLib(nsxlib_config)
@@ -1709,7 +1711,7 @@ class TestPolicyTransportZone(NsxPolicyLibTestCase):
 class TestPolicyTier1(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
-        super(TestPolicyTier1, self).setUp()
+        super(TestPolicyTier1, self).setUp(*args, **kwargs)
         self.resourceApi = self.policy_lib.tier1
 
     def test_create(self):
@@ -1911,6 +1913,23 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                               self.resourceApi.wait_until_realized,
                               tier1_id, tenant=TEST_TENANT,
                               max_attempts=5, sleep=0.1)
+
+
+class TestPolicyTier1NoPassthrough(TestPolicyTier1):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyTier1NoPassthrough, self).setUp(
+            allow_passthrough=False)
+
+    def test_update_transport_zone(self):
+        # Will not work without passthrough api
+        tier1_id = '111'
+        tz_uuid = 'dummy_tz'
+        with mock.patch.object(self.resourceApi,
+                               "_get_realization_info") as realization:
+            self.resourceApi.update_transport_zone(tier1_id, tz_uuid,
+                                                   tenant=TEST_TENANT)
+            realization.assert_not_called()
 
 
 class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
