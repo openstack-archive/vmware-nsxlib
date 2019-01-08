@@ -292,6 +292,15 @@ class TestPolicyTransportZone(policy_testcase.TestPolicyApi):
         self.assert_json_call('GET', self.client, tz_path)
 
 
+class TestPolicyEdgeCluster(policy_testcase.TestPolicyApi):
+
+    def test_get(self):
+        ec_def = policy.EdgeClusterDef(ec_id='ec1', ep_id='default')
+        self.policy_api.get(ec_def)
+        ec_path = ec_def.get_resource_path()
+        self.assert_json_call('GET', self.client, ec_path)
+
+
 class TestPolicyDeploymentMap(policy_testcase.TestPolicyApi):
 
     def test_create(self):
