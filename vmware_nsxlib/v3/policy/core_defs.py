@@ -387,6 +387,21 @@ class Tier1LocaleServiceDef(RouterLocaleServiceDef):
         return ('tenant', 'tier1_id', 'service_id')
 
 
+class Tier0InterfaceDef(ResourceDef):
+
+    @staticmethod
+    def resource_type():
+        return 'Tier0Interface'
+
+    @property
+    def path_pattern(self):
+        return TIER0S_PATH_PATTERN + "%s/locale-services/%s/interfaces"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier0_id', 'service_id', 'interface_id')
+
+
 class RouterNatRule(ResourceDef):
 
     @staticmethod
