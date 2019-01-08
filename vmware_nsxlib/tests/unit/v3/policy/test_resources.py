@@ -1914,6 +1914,47 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                               tier1_id, tenant=TEST_TENANT,
                               max_attempts=5, sleep=0.1)
 
+    def test_get_realized_downlink_port(self):
+        tier1_id = '111'
+        segment_id = '222'
+        lrp_id = '333'
+        info = {'state': constants.STATE_REALIZED,
+                'realization_specific_identifier': lrp_id,
+                'entity_type': 'RealizedLogicalRouterPort'}
+        dummy_port = {'resource_type': nsx_constants.LROUTERPORT_DOWNLINK,
+                      'id': lrp_id,
+                      'display_name': 'test_%s' % segment_id}
+        with mock.patch.object(self.resourceApi.policy_api,
+                               "get_realized_entities",
+                               return_value=[info]),\
+            mock.patch.object(self.resourceApi.nsx_api.logical_router_port,
+                              "get", return_value=dummy_port):
+            actual_id = self.resourceApi._get_realized_downlink_port(
+                tier1_id, segment_id)
+            self.assertEqual(lrp_id, actual_id)
+
+    def test_set_dhcp_relay(self):
+        tier1_id = '111'
+        segment_id = '222'
+        lrp_id = '333'
+        relay_id = '444'
+        info = {'state': constants.STATE_REALIZED,
+                'realization_specific_identifier': lrp_id,
+                'entity_type': 'RealizedLogicalRouterPort'}
+        dummy_port = {'resource_type': nsx_constants.LROUTERPORT_DOWNLINK,
+                      'id': lrp_id,
+                      'display_name': 'test_%s' % segment_id}
+        with mock.patch.object(self.resourceApi.policy_api,
+                               "get_realized_entities",
+                               return_value=[info]),\
+            mock.patch.object(self.resourceApi.nsx_api.logical_router_port,
+                              "get", return_value=dummy_port),\
+            mock.patch.object(self.resourceApi.nsx_api.logical_router_port,
+                              "update") as nsx_lrp_update:
+            self.resourceApi.set_dhcp_relay(tier1_id, segment_id, relay_id)
+            nsx_lrp_update.assert_called_once_with(
+                lrp_id, relay_service_uuid=relay_id)
+
 
 class TestPolicyTier1NoPassthrough(TestPolicyTier1):
 
@@ -1929,6 +1970,27 @@ class TestPolicyTier1NoPassthrough(TestPolicyTier1):
                                "_get_realization_info") as realization:
             self.resourceApi.update_transport_zone(tier1_id, tz_uuid,
                                                    tenant=TEST_TENANT)
+            realization.assert_not_called()
+
+    def test_get_realized_downlink_port(self):
+        # Will not work without passthrough api
+        tier1_id = '111'
+        segment_id = '222'
+        with mock.patch.object(self.resourceApi.policy_api,
+                               "get_realized_entities") as realization:
+            actual_id = self.resourceApi._get_realized_downlink_port(
+                tier1_id, segment_id)
+            self.assertIsNone(actual_id)
+            realization.assert_not_called()
+
+    def test_set_dhcp_relay(self):
+        # Will not work without passthrough api
+        tier1_id = '111'
+        segment_id = '222'
+        relay_id = '444'
+        with mock.patch.object(self.resourceApi.policy_api,
+                               "get_realized_entities") as realization:
+            self.resourceApi.set_dhcp_relay(tier1_id, segment_id, relay_id)
             realization.assert_not_called()
 
 

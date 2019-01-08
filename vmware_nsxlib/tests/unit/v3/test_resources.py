@@ -494,6 +494,17 @@ class LogicalPortTestCase(BaseTestResource):
             "&attachment_id=%s" % (attachment_type, attachment_id),
             headers=self.default_headers())
 
+    def test_get_logical_port_by_switch(self):
+        """Test deleting port."""
+        ls_id = '111'
+        mocked_resource = self.get_mocked_resource()
+        mocked_resource.get_by_logical_switch(ls_id)
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            "https://1.2.3.4/api/v1/logical-ports/?logical_switch_id"
+            "=%s" % ls_id,
+            headers=self.default_headers())
+
     def test_clear_port_bindings(self):
         fake_port = copy.copy(test_constants.FAKE_PORT)
         fake_port['address_bindings'] = ['a', 'b']
