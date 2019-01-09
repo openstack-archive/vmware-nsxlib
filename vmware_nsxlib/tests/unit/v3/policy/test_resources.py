@@ -2435,6 +2435,88 @@ class TestPolicyIpDiscoveryProfile(TestPolicySegmentProfileBase):
             resource_api_name='ip_discovery_profile',
             resource_def=core_defs.IpDiscoveryProfileDef)
 
+    def test_create(self):
+        name = 'test'
+        profile_id = 'id'
+        arp_nd_binding_timeout = 10
+        duplicate_ip_detection = core_defs.DuplicateIPDetectionOptions(True)
+        ip_v4_discovery_options = core_defs.IPv4DiscoveryOptions(
+            'arpConfig', False, False)
+        tofu_enabled = True
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, profile_id=profile_id,
+                arp_nd_binding_timeout=arp_nd_binding_timeout,
+                duplicate_ip_detection=duplicate_ip_detection,
+                ip_v4_discovery_options=ip_v4_discovery_options,
+                tofu_enabled=tofu_enabled,
+                tenant=TEST_TENANT)
+
+            expected_def = self.resourceDef(
+                profile_id=profile_id,
+                arp_nd_binding_timeout=arp_nd_binding_timeout,
+                duplicate_ip_detection=duplicate_ip_detection,
+                name=name,
+                ip_v4_discovery_options=ip_v4_discovery_options,
+                tofu_enabled=tofu_enabled,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        profile_id = 'id'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(profile_id, tenant=TEST_TENANT)
+            expected_def = self.resourceDef(
+                profile_id=profile_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        profile_id = 'id'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(profile_id, tenant=TEST_TENANT)
+            expected_def = self.resourceDef(
+                profile_id=profile_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = self.resourceDef(
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        name = 'test'
+        profile_id = 'id'
+        arp_nd_binding_timeout = 10
+        duplicate_ip_detection = core_defs.DuplicateIPDetectionOptions(True)
+        ip_v4_discovery_options = core_defs.IPv4DiscoveryOptions(
+            'arpConfig', False, False)
+        tofu_enabled = True
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(
+                profile_id,
+                name=name,
+                arp_nd_binding_timeout=arp_nd_binding_timeout,
+                duplicate_ip_detection=duplicate_ip_detection,
+                ip_v4_discovery_options=ip_v4_discovery_options,
+                tofu_enabled=tofu_enabled,
+                tenant=TEST_TENANT)
+            expected_def = self.resourceDef(
+                profile_id=profile_id,
+                name=name,
+                arp_nd_binding_timeout=arp_nd_binding_timeout,
+                duplicate_ip_detection=duplicate_ip_detection,
+                ip_v4_discovery_options=ip_v4_discovery_options,
+                tofu_enabled=tofu_enabled,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(
+                update_call, expected_def)
+
 
 class TestPolicyMacDiscoveryProfile(TestPolicySegmentProfileBase):
 

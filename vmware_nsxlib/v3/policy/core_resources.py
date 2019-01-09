@@ -2704,6 +2704,64 @@ class NsxIpDiscoveryProfileApi(NsxSegmentProfileBaseApi):
     def entry_def(self):
         return core_defs.IpDiscoveryProfileDef
 
+    def create_or_overwrite(self, name,
+                            profile_id=None,
+                            description=IGNORE,
+                            tags=IGNORE,
+                            arp_nd_binding_timeout=IGNORE,
+                            duplicate_ip_detection=IGNORE,
+                            ip_v4_discovery_options=IGNORE,
+                            ip_v6_discovery_options=IGNORE,
+                            tofu_enabled=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        profile_id = self._init_obj_uuid(profile_id)
+        profile_def = self._init_def(
+            profile_id=profile_id,
+            name=name,
+            description=description,
+            arp_nd_binding_timeout=arp_nd_binding_timeout,
+            duplicate_ip_detection=duplicate_ip_detection,
+            ip_v4_discovery_options=ip_v4_discovery_options,
+            ip_v6_discovery_options=ip_v6_discovery_options,
+            tofu_enabled=tofu_enabled,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(profile_def)
+        return profile_id
+
+    def delete(self, profile_id, tenant=constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(profile_id=profile_id, tenant=tenant)
+        self.policy_api.delete(profile_def)
+
+    def get(self, profile_id, tenant=constants.POLICY_INFRA_TENANT,
+            silent=False):
+        profile_def = self.entry_def(profile_id=profile_id, tenant=tenant)
+        return self.policy_api.get(profile_def, silent=silent)
+
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(tenant=tenant)
+        return self._list(profile_def)
+
+    def update(self, profile_id, name=IGNORE,
+               description=IGNORE,
+               tags=IGNORE,
+               arp_nd_binding_timeout=IGNORE,
+               duplicate_ip_detection=IGNORE,
+               ip_v4_discovery_options=IGNORE,
+               ip_v6_discovery_options=IGNORE,
+               tofu_enabled=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
+        self._update(profile_id=profile_id,
+                     name=name,
+                     description=description,
+                     tags=tags,
+                     arp_nd_binding_timeout=arp_nd_binding_timeout,
+                     duplicate_ip_detection=duplicate_ip_detection,
+                     ip_v4_discovery_options=ip_v4_discovery_options,
+                     ip_v6_discovery_options=ip_v6_discovery_options,
+                     tofu_enabled=tofu_enabled,
+                     tenant=tenant)
+
 
 class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
     @property

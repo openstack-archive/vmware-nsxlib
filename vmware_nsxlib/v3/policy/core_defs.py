@@ -1370,7 +1370,69 @@ class IpDiscoveryProfileDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(IpDiscoveryProfileDef, self).get_obj_dict()
-        # TODO(asarfaty): add all attributes here. currently used for read only
+        duplicate_ip_detection = self.get_attr('duplicate_ip_detection')
+        if duplicate_ip_detection:
+            self._set_attr_if_specified(
+                body, 'duplicate_ip_detection',
+                value=duplicate_ip_detection.get_obj_dict())
+        ip_v4_discovery_options = self.get_attr('ip_v4_discovery_options')
+        if ip_v4_discovery_options:
+            self._set_attr_if_specified(
+                body, 'ip_v4_discovery_options',
+                value=ip_v4_discovery_options.get_obj_dict())
+        ip_v6_discovery_options = self.get_attr('ip_v6_discovery_options')
+        if ip_v6_discovery_options:
+            self._set_attr_if_specified(
+                body, 'ip_v6_discovery_options',
+                value=ip_v6_discovery_options.get_obj_dict())
+        self._set_attr_if_specified(body, 'tofu_enabled')
+        return body
+
+
+class DuplicateIPDetectionOptions(object):
+    def __init__(self, duplicate_ip_detection_enabled):
+        self.dup_ip_detection_enabled = duplicate_ip_detection_enabled
+
+    def get_obj_dict(self):
+        body = {
+            'duplicate_ip_detection_enabled': self.dup_ip_detection_enabled
+        }
+        return body
+
+
+class IPv4DiscoveryOptions(object):
+    def __init__(self, arp_snooping_config, dhcp_snooping_enabled=None,
+                 vmtools_enabled=None):
+        self.arp_snooping_config = arp_snooping_config
+        self.dhcp_snooping_enabled = dhcp_snooping_enabled
+        self.vmtools_enabled = vmtools_enabled
+
+    def get_obj_dict(self):
+        body = {
+            'arp_snooping_config': self.arp_snooping_config
+        }
+        if self.dhcp_snooping_enabled:
+            body['dhcp_snooping_enabled'] = self.dhcp_snooping_enabled
+        if self.vmtools_enabled:
+            body['vmtools_enabled'] = self.vmtools_enabled
+        return body
+
+
+class IPv6DiscoveryOptions(object):
+    def __init__(self, nd_snooping_config, dhcp_snooping_v6_enabled=None,
+                 vmtools_v6_enabled=None):
+        self.nd_snooping_config = nd_snooping_config
+        self.dhcp_snooping_v6_enabled = dhcp_snooping_v6_enabled
+        self.vmtools_v6_enabled = vmtools_v6_enabled
+
+    def get_obj_dict(self):
+        body = {
+            'nd_snooping_config': self.nd_snooping_config
+        }
+        if self.dhcp_snooping_v6_enabled:
+            body['dhcp_snooping_v6_enabled'] = self.dhcp_snooping_v6_enabled
+        if self.vmtools_v6_enabled:
+            body['vmtools_v6_enabled'] = self.vmtools_v6_enabled
         return body
 
 
