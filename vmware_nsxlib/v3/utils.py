@@ -598,3 +598,49 @@ def get_l4_protocol_name(protocol_number):
         return nsx_constants.ICMPV4
     else:
         return protocol_number
+
+
+def get_dhcp_opt_code(self, name):
+    _supported_options = {
+        'subnet-mask': 1,
+        'time-offset': 2,
+        'router': 3,
+        'dns-name': 6,
+        'host-name': 12,
+        'boot-file-size': 13,
+        'domain-name': 15,
+        'ip-forwarding': 19,
+        'interface-mtu': 26,
+        'broadcast-address': 28,
+        'arp-cache-timeout': 35,
+        'nis-domain': 40,
+        'nis-servers': 41,
+        'ntp-servers': 42,
+        'netbios-name-servers': 44,
+        'netbios-dd-server': 45,
+        'netbios-node-type': 46,
+        'netbios-scope': 47,
+        'dhcp-renewal-time': 58,
+        'dhcp-rebinding-time': 59,
+        'class-id': 60,
+        'dhcp-client-identifier': 61,
+        'nisplus-domain': 64,
+        'nisplus-servers': 65,
+        'tftp-server': 66,
+        'tftp-server-name': 66,
+        'bootfile-name': 67,
+        'system-architecture': 93,
+        'interface-id': 94,
+        'machine-id': 97,
+        'name-search': 117,
+        'subnet-selection': 118,
+        'domain-search': 119,
+        'classless-static-route': 121,
+        'tftp-server-address': 150,
+        'server-ip-address': 150,
+        'etherboot': 175,
+        'config-file': 209,
+        'path-prefix': 210,
+        'reboot-time': 211,
+    }
+    return _supported_options.get(name)
