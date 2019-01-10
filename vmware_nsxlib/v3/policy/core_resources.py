@@ -2387,7 +2387,6 @@ class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
 
 
 class NsxPolicyTransportZoneApi(NsxPolicyResourceBase):
-    """NSX Policy Enforcement Point."""
 
     TZ_TYPE_OVERLAY = 'OVERLAY_STANDARD'
     TZ_TYPE_ENS = 'OVERLAY_ENS'
@@ -2458,6 +2457,55 @@ class NsxPolicyTransportZoneApi(NsxPolicyResourceBase):
                tenant=constants.POLICY_INFRA_TENANT):
         err_msg = (_("This action is not supported"))
         raise exceptions.ManagerError(details=err_msg)
+
+
+class NsxPolicyEdgeClusterApi(NsxPolicyResourceBase):
+    @property
+    def entry_def(self):
+        return core_defs.EdgeClusterDef
+
+    def get(self, ec_id, ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
+        ec_def = core_defs.EdgeClusterDef(
+            ep_id=ep_id, ec_id=ec_id, tenant=tenant)
+        return self.policy_api.get(ec_def, silent=silent)
+
+    def list(self, ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+             tenant=constants.POLICY_INFRA_TENANT):
+        ec_def = core_defs.EdgeClusterDef(ep_id=ep_id, tenant=tenant)
+        return self._list(ec_def)
+
+    def get_by_name(self, name,
+                    ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+                    tenant=constants.POLICY_INFRA_TENANT):
+        """Return first group matched by name"""
+        return super(NsxPolicyEdgeClusterApi, self).get_by_name(
+            name, ep_id, tenant=tenant)
+
+    def create_or_overwrite(self, name, ec_id=None,
+                            ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
+
+    def update(self, ec_id,
+               ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+               tenant=constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
+
+    def delete(self, ec_id,
+               ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+               tenant=constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
+
+    def get_path(self, ec_id,
+                 ep_id=constants.DEFAULT_ENFORCEMENT_POINT,
+                 tenant=constants.POLICY_INFRA_TENANT):
+        ec_def = core_defs.EdgeClusterDef(
+            ep_id=ep_id, ec_id=ec_id, tenant=tenant)
+        return ec_def.get_resource_full_path()
 
 
 class NsxPolicyDeploymentMapApi(NsxPolicyResourceBase):

@@ -76,6 +76,8 @@ class NsxPolicyLib(lib.NsxLibBase):
             *args)
         self.transport_zone = core_resources.NsxPolicyTransportZoneApi(
             *args)
+        self.edge_cluster = core_resources.NsxPolicyEdgeClusterApi(
+            *args)
         self.deployment_map = core_resources.NsxPolicyDeploymentMapApi(
             *args)
         self.ip_block = core_resources.NsxPolicyIpBlockApi(*args)
