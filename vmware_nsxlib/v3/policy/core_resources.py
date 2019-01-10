@@ -886,6 +886,23 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         self.nsx_api.logical_router_port.update(
             downlink_port_id, relay_service_uuid=relay_service_uuid)
 
+    @check_allowed_passthrough
+    def set_standby_relocation(self, tier1_id,
+                               enable_standby_relocation=True,
+                               tenant=constants.POLICY_INFRA_TENANT):
+        """Set the flag for standby relocation on the nsx logical router port
+
+        Using passthrough api, as the policy api does not support this yet
+        """
+        realization_info = self.wait_until_realized(
+            tier1_id, entity_type='RealizedLogicalRouter', tenant=tenant)
+
+        nsx_router_uuid = self.get_realized_id(
+            tier1_id, tenant=tenant, realization_info=realization_info)
+        self.nsx_api.logical_router.update(
+            nsx_router_uuid,
+            enable_standby_relocation=enable_standby_relocation)
+
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
     """NSX Tier0 API """
