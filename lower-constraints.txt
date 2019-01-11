@@ -14,7 +14,7 @@ contextlib2==0.4.0
 coverage==4.0
 cryptography==2.1
 debtcollector==1.2.0
-decorator==3.4.0
+decorator==4.3.0
 deprecation==1.0
 docutils==0.11
 dogpile.cache==0.6.2
