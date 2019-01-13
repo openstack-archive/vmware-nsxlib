@@ -209,7 +209,7 @@ class TestNsxV3Utils(nsxlib_testcase.NsxClientTestCase):
         extra_args = ['fall_count', 'interval', 'monitor_port',
                       'request_body', 'request_method', 'request_url',
                       'request_version', 'response_body',
-                      'response_status', 'rise_count', 'timeout']
+                      'response_status_codes', 'rise_count', 'timeout']
         body = {'display_name': 'httpmonitor1',
                 'description': 'my http monitor'}
         expected = {'display_name': 'httpmonitor1',

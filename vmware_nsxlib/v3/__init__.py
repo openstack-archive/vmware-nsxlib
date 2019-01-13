@@ -349,6 +349,12 @@ class NsxLib(NsxLibBase):
                 return True
 
         if (version.LooseVersion(self.get_version()) >=
+                version.LooseVersion(nsx_constants.NSX_VERSION_2_3_0)):
+            # Features available since 2.3
+            if (feature == nsx_constants.FEATURE_LB_HM_RESPONSE_CODES):
+                return True
+
+        if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_2_2_0)):
             # Features available since 2.2
             if (feature == nsx_constants.FEATURE_VLAN_ROUTER_INTERFACE or
