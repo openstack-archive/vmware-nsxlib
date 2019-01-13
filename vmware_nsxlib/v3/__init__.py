@@ -154,6 +154,8 @@ class NsxLib(lib.NsxLibBase):
             # Features available since 2.3
             if (feature == nsx_constants.FEATURE_ROUTER_ALLOCATION_PROFILE):
                 return True
+            if (feature == nsx_constants.FEATURE_LB_HM_RESPONSE_CODES):
+                return True
 
         if (version.LooseVersion(self.get_version()) >=
             version.LooseVersion(nsx_constants.NSX_VERSION_2_2_0)):

@@ -53,6 +53,8 @@ class LoadBalancerBase(utils.NsxLibApiBase):
     @staticmethod
     def _build_args(body, display_name=None, description=None, tags=None,
                     resource_type=None, **kwargs):
+        LOG.error("DEBUG ADIT _build_args initial body %s", body)
+        LOG.error("DEBUG ADIT _build_args kwargs %s", kwargs)
         if display_name:
             body['display_name'] = display_name
         if description:
@@ -62,6 +64,7 @@ class LoadBalancerBase(utils.NsxLibApiBase):
         if resource_type:
             body['resource_type'] = resource_type
         body.update(kwargs)
+        LOG.error("DEBUG ADIT _build_args updated body %s", body)
         return body
 
     def add_to_list(self, resource_id, item_id, item_key):
@@ -125,8 +128,10 @@ class LoadBalancerBase(utils.NsxLibApiBase):
     def create(self, display_name=None, description=None, tags=None,
                resource_type=None, **kwargs):
         orig_body = {}
+        LOG.error("DEBUG ADIT LB resource create with args %s", kwargs)
         body = self._build_args(orig_body, display_name, description, tags,
                                 resource_type, **kwargs)
+        LOG.error("DEBUG ADIT LB resource create body %s", body)
         return self.client.create(self.resource, body)
 
     def list(self):
@@ -246,7 +251,7 @@ class Monitor(LoadBalancerBase):
             extra_args = ['fall_count', 'interval', 'monitor_port',
                           'request_body', 'request_method', 'request_url',
                           'request_version', 'response_body',
-                          'response_status', 'rise_count', 'timeout']
+                          'response_status_codes', 'rise_count', 'timeout']
             return utils.build_extra_args(body, extra_args, **kwargs)
         elif resource_type == MonitorTypes.HTTPS:
             body['resource_type'] = resource_type
@@ -254,8 +259,8 @@ class Monitor(LoadBalancerBase):
                           'client_certificate_id', 'fall_count', 'interval',
                           'monitor_port', 'protocols', 'request_body',
                           'request_method', 'request_url', 'request_version',
-                          'response_body', 'response_status', 'rise_count',
-                          'server_auth', 'server_auth_ca_ids',
+                          'response_body', 'response_status_codes',
+                          'rise_count', 'server_auth', 'server_auth_ca_ids',
                           'server_auth_crl_ids', 'timeout']
             return utils.build_extra_args(body, extra_args, **kwargs)
         elif resource_type == MonitorTypes.ICMP:
