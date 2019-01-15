@@ -246,7 +246,7 @@ class Monitor(LoadBalancerBase):
             extra_args = ['fall_count', 'interval', 'monitor_port',
                           'request_body', 'request_method', 'request_url',
                           'request_version', 'response_body',
-                          'response_status', 'rise_count', 'timeout']
+                          'response_status_codes', 'rise_count', 'timeout']
             return utils.build_extra_args(body, extra_args, **kwargs)
         elif resource_type == MonitorTypes.HTTPS:
             body['resource_type'] = resource_type
@@ -254,8 +254,8 @@ class Monitor(LoadBalancerBase):
                           'client_certificate_id', 'fall_count', 'interval',
                           'monitor_port', 'protocols', 'request_body',
                           'request_method', 'request_url', 'request_version',
-                          'response_body', 'response_status', 'rise_count',
-                          'server_auth', 'server_auth_ca_ids',
+                          'response_body', 'response_status_codes',
+                          'rise_count', 'server_auth', 'server_auth_ca_ids',
                           'server_auth_crl_ids', 'timeout']
             return utils.build_extra_args(body, extra_args, **kwargs)
         elif resource_type == MonitorTypes.ICMP:
