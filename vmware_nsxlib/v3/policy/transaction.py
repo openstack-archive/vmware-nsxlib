@@ -102,9 +102,16 @@ class NsxPolicyTransaction(object):
             return
 
         parent_type = resource_def.path_defs()[level]
+
         is_leaf = (level + 1 == len(resource_def.path_defs()))
         resource_type = parent_type.resource_type()
         parent_id = resource_def.get_attr(resource_def.path_ids[level])
+
+        def create_missing_node():
+            return {'resource_type': 'Child%s' % resource_type,
+                    'id': parent_id,
+                    'children': []}
+
         # iterate over all objects in d, and look for resource type
         for child in d:
             if resource_type in child and child[resource_type]:
@@ -113,17 +120,17 @@ class NsxPolicyTransaction(object):
                 if parent['id'] == parent_id:
                     if is_leaf:
                         return parent
-                    if 'children' in parent:
-                        return self._find_parent_in_dict(
-                            parent['children'], resource_def, level + 1)
+                    if 'children' not in parent:
+                        parent['children'] = []
 
-                    # Parent not found - for now, raise an exception
-                    # Support for this will come later
-                    # TODO(annak): remove this when missing parent body is
-                    # created on demand
-                    raise NsxPolicyTransactionException(
-                        "Transactional create is supported for infra level"
-                        " objects and their children")
+                    return self._find_parent_in_dict(
+                        parent['children'], resource_def, level + 1)
+
+        # Parent not found - create a node for missing parent
+        node = create_missing_node()
+        d.append(node)
+        return self._find_parent_in_dict(node['children'], resource_def,
+                                         level + 1)
 
     def apply_defs(self):
         # TODO(annak): find longest common URL, for now always
