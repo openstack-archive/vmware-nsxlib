@@ -156,3 +156,38 @@ class TestPolicyTransaction(policy_testcase.TestPolicyApi):
                                        'IpAddressPool': pool}]}
 
         self.assert_infra_patch_call(expected_body)
+
+    def test_groups_only(self):
+
+        g1 = {'resource_type': 'Group', 'id': 'group1',
+              'display_name': 'g1',
+              'description': 'first group'}
+        g2 = {'resource_type': 'Group', 'id': 'group2',
+              'description': 'second group',
+              'display_name': 'g2'}
+        d1 = {'resource_type': 'Domain', 'id': 'domain1'}
+
+        d2 = {'resource_type': 'Domain', 'id': 'domain2'}
+
+        with trans.NsxPolicyTransaction():
+
+            for d in (d1, d2):
+                d['children'] = []
+
+                for g in (g1, g2):
+                    self.policy_lib.group.create_or_overwrite(
+                        g['display_name'],
+                        d['id'],
+                        g['id'],
+                        g['description'])
+
+                    d['children'].append({'resource_type': 'ChildGroup',
+                                          'Group': g})
+
+        expected_body = {'resource_type': 'Infra',
+                         'children': [{'resource_type': 'ChildDomain',
+                                       'Domain': d1},
+                                      {'resource_type': 'ChildDomain',
+                                       'Domain': d2}]}
+
+        self.assert_infra_patch_call(expected_body)
