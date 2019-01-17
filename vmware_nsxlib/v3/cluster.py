@@ -181,6 +181,10 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
             default_headers=conn.default_headers)
         keepalive_section = cluster_api.nsxlib_config.keepalive_section
         result = client.get(keepalive_section, silent=True)
+        # Check the manager state directly
+        if cluster_api.nsxlib_config.validate_connection_method:
+            cluster_api.nsxlib_config.validate_connection_method(
+                client, endpoint.provider.url)
         # If keeplive section returns a list, it is assumed to be non-empty
         if not result or result.get('result_count', 1) <= 0:
             msg = _("No %(section)s found "
@@ -189,10 +193,6 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
             LOG.warning(msg)
             raise exceptions.ResourceNotFound(
                 manager=endpoint.provider.url, operation=msg)
-        # Also check the manager state directly
-        if cluster_api.nsxlib_config.validate_connection_method:
-            cluster_api.nsxlib_config.validate_connection_method(
-                client, endpoint.provider.url)
 
     def new_connection(self, cluster_api, provider):
         config = cluster_api.nsxlib_config
