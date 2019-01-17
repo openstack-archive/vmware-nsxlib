@@ -308,10 +308,14 @@ class NsxLib(NsxLibBase):
     def validate_connection_method(self):
         """Return a method that will validate the NSX manager status"""
         def check_manager_status(client, manager_url):
-            status = client.get('node/services/manager/status', silent=True)
-            if (not status or 'runtime_state' not in status or
-                status['runtime_state'] != 'running'):
-                msg = _("Manager is not in running state: %s") % status
+            # Try to get the cluster status silently and with no retries
+            status = client.get('operational/application/status',
+                                silent=True, with_retries=False)
+            if (not status or
+                status.get('application_status') != 'WORKING' or
+                status.get('corfu_status') != 'CONNECTED' or
+                status.get('corfu_status') != 'CONNECTED'):
+                msg = _("Manager is not in working state: %s") % status
                 LOG.warning(msg)
                 raise exceptions.ResourceNotFound(
                     manager=manager_url, operation=msg)
