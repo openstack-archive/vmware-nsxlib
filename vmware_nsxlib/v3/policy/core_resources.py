@@ -1209,6 +1209,9 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
     def entry_def(self):
         return core_defs.Tier1SegmentDef
 
+    def build_advanced_config(self, ip_pool_id):
+        return core_defs.SegmentAdvancedConfig(ip_pool_id=ip_pool_id)
+
     def create_or_overwrite(self, name, tier1_id,
                             segment_id=None,
                             description=IGNORE,
@@ -1217,6 +1220,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                             dns_domain_name=IGNORE,
                             vlan_ids=IGNORE,
                             default_rule_logging=IGNORE,
+                            advanced_config=IGNORE,
                             tags=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
 
@@ -1230,6 +1234,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                                      dns_domain_name=dns_domain_name,
                                      vlan_ids=vlan_ids,
                                      default_rule_logging=default_rule_logging,
+                                     advanced_config=advanced_config,
                                      tags=tags,
                                      tenant=tenant)
         self._create_or_store(segment_def)
