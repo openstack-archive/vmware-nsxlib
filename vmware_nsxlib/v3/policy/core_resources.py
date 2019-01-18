@@ -2013,7 +2013,7 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
 
     def allocate_block_subnet(self, ip_pool_id, ip_block_id, size,
                               ip_subnet_id=None, auto_assign_gateway=IGNORE,
-                              name=IGNORE, description=IGNORE, tags=IGNORE,
+                              name=IGNORE, tags=IGNORE,
                               tenant=constants.POLICY_INFRA_TENANT):
         ip_subnet_id = self._init_obj_uuid(ip_subnet_id)
         ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
@@ -2023,7 +2023,6 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
             size=size,
             auto_assign_gateway=auto_assign_gateway,
             name=name,
-            description=description,
             tags=tags,
             tenant=tenant)
         self.policy_api.create_or_update(ip_subnet_def)

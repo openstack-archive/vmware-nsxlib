@@ -879,7 +879,8 @@ class IpPoolBlockSubnetDef(ResourceDef):
                                       tenant=self.get_tenant())
             ip_block_path = ip_block_def.get_resource_full_path()
             self._set_attr_if_specified(
-                body, 'ip_block_path', value=ip_block_path)
+                body, 'ip_block_id', body_attr='ip_block_path',
+                value=ip_block_path)
         return body
 
 
