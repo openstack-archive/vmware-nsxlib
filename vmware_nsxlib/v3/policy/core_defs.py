@@ -510,7 +510,6 @@ class Subnet(object):
         return body
 
 
-# TODO(annak) - add advanced config when supported by platform
 class BaseSegmentDef(ResourceDef):
 
     def get_obj_dict(self):
@@ -523,12 +522,23 @@ class BaseSegmentDef(ResourceDef):
                            for subnet in self.get_attr('subnets')]
                 self._set_attr_if_specified(body, 'subnets',
                                             value=subnets)
+        if self.has_attr('ip_pool_id'):
+            ip_pool_id = self.get_attr('ip_pool_id')
+            adv_cfg = self._get_adv_config(ip_pool_id)
+            self._set_attr_if_specified(body, 'ip_pool_id',
+                                        body_attr='advanced_config',
+                                        value=adv_cfg)
         self._set_attrs_if_specified(body, ['domain_name', 'vlan_ids'])
         return body
 
     @staticmethod
     def resource_type():
         return 'Segment'
+
+    def _get_adv_config(self, ip_pool_id):
+        ip_pool_def = IpPoolDef(ip_pool_id=ip_pool_id)
+        ip_pool_path = ip_pool_def.get_resource_full_path()
+        return {'address_pool_paths': [ip_pool_path]}
 
 
 class Tier1SegmentDef(BaseSegmentDef):
