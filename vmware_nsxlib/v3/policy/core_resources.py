@@ -1316,6 +1316,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                             dns_domain_name=IGNORE,
                             vlan_ids=IGNORE,
                             default_rule_logging=IGNORE,
+                            ip_pool_id=IGNORE,
                             tags=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
 
@@ -1329,6 +1330,7 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
                                      dns_domain_name=dns_domain_name,
                                      vlan_ids=vlan_ids,
                                      default_rule_logging=default_rule_logging,
+                                     ip_pool_id=ip_pool_id,
                                      tags=tags,
                                      tenant=tenant)
         self._create_or_store(segment_def)
