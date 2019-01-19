@@ -118,3 +118,41 @@ class TestPolicyTransaction(policy_testcase.TestPolicyApi):
                                        'Domain': d2}]}
 
         self.assert_infra_patch_call(expected_body)
+
+    def test_ip_address_pool_and_block_subnets(self):
+
+        pool = {'id': 'pool1',
+                'resource_type': 'IpAddressPool',
+                'display_name': 'pool1',
+                'children': []}
+
+        ip_block_id = 'block1'
+        subnet1 = {'id': 'subnet1',
+                   'resource_type': 'IpAddressPoolBlockSubnet',
+                   'size': 8}
+
+        subnet2 = {'id': 'subnet2',
+                   'resource_type': 'IpAddressPoolBlockSubnet',
+                   'size': 4}
+
+        with trans.NsxPolicyTransaction():
+            self.policy_lib.ip_pool.create_or_overwrite(
+                pool['display_name'],
+                ip_pool_id=pool['id'])
+
+            for s in (subnet1, subnet2):
+                self.policy_lib.ip_pool.allocate_block_subnet(
+                    ip_pool_id=pool['id'],
+                    ip_block_id=ip_block_id,
+                    ip_subnet_id=s['id'],
+                    size=s['size'])
+
+                pool['children'].append(
+                    {'resource_type': 'ChildIpAddressPoolSubnet',
+                     'IpAddressPoolSubnet': s})
+
+        expected_body = {'resource_type': 'Infra',
+                         'children': [{'resource_type': 'ChildIpAddressPool',
+                                       'IpAddressPool': pool}]}
+
+        self.assert_infra_patch_call(expected_body)
