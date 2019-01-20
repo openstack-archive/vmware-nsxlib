@@ -16,6 +16,8 @@
 
 from oslo_utils import uuidutils
 
+from vmware_nsxlib.v3 import nsx_constants
+
 FAKE_NAME = "fake_name"
 FAKE_SWITCH_UUID = uuidutils.generate_uuid()
 FAKE_IP_SET_UUID = uuidutils.generate_uuid()
@@ -124,11 +126,22 @@ FAKE_ROUTER = {
 
 FAKE_ROUTER_PORT_UUID = uuidutils.generate_uuid()
 FAKE_ROUTER_PORT = {
-    "resource_type": "LogicalRouterLinkPort",
+    "resource_type": nsx_constants.LROUTERPORT_UPLINK,
     "revision": 0,
     "id": FAKE_ROUTER_PORT_UUID,
     "display_name": FAKE_NAME,
-    "logical_router_id": FAKE_ROUTER_UUID
+    "logical_router_id": FAKE_ROUTER_UUID,
+    "subnets": [{'ip_addresses': ['172.20.1.60'], 'prefix_length': 24}]
+}
+
+FAKE_ROUTER_LINKT1_PORT_UUID = uuidutils.generate_uuid()
+FAKE_ROUTER_LINKT1_PORT = {
+    "resource_type": nsx_constants.LROUTERPORT_LINKONTIER1,
+    "revision": 0,
+    "id": FAKE_ROUTER_LINKT1_PORT_UUID,
+    "display_name": FAKE_NAME,
+    "logical_router_id": FAKE_ROUTER_UUID,
+    "linked_logical_router_port_id": {'target_id': uuidutils.generate_uuid()}
 }
 
 FAKE_QOS_PROFILE = {
