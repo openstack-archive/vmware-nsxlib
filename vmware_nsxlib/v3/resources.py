@@ -357,13 +357,29 @@ class LogicalRouterPort(utils.NsxLibApiBase):
             if port['resource_type'] == nsx_constants.LROUTERPORT_UPLINK:
                 return port
 
-    def get_tier0_uplink_ips(self, logical_router_id):
+    def get_tier0_uplink_subnets(self, logical_router_id):
         port = self.get_tier0_uplink_port(logical_router_id)
-        ips = []
         if port:
-            for subnet in port.get('subnets', []):
-                for ip_address in subnet.get('ip_addresses'):
-                    ips.append(ip_address)
+            return port.get('subnets', [])
+        return []
+
+    def get_tier0_uplink_cidrs(self, logical_router_id):
+        # return a list of tier0 uplink ip/prefix addresses
+        subnets = self.get_tier0_uplink_subnets(logical_router_id)
+        cidrs = []
+        for subnet in subnets:
+            for ip_address in subnet.get('ip_addresses'):
+                cidrs.append('%s/%s' % (ip_address,
+                                        subnet.get('prefix_length')))
+        return cidrs
+
+    def get_tier0_uplink_ips(self, logical_router_id):
+        # return a list of tier0 uplink ip addresses
+        subnets = self.get_tier0_uplink_subnets(logical_router_id)
+        ips = []
+        for subnet in subnets:
+            for ip_address in subnet.get('ip_addresses'):
+                ips.append(ip_address)
         return ips
 
 
