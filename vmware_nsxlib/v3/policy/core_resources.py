@@ -259,6 +259,9 @@ class NsxPolicyResourceBase(object):
             else:
                 self.policy_api.create_or_update(policy_def)
 
+    def _path_to_id(self, path):
+        return path.split('/')[-1]
+
 
 class NsxPolicyDomainApi(NsxPolicyResourceBase):
     """NSX Policy Domain."""
@@ -733,6 +736,11 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                failover_mode=IGNORE, tier0=IGNORE,
                tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
+        # Note(asarfaty): L2/L3 PATCH APIs don't support partial updates yet
+        # TODO(asarfaty): Remove this when supported
+        if name == IGNORE:
+            current_body = self.get(tier1_id, tenant=tenant)
+            name = current_body.get('display_name', IGNORE)
         self._update(tier1_id=tier1_id,
                      name=name,
                      description=description,
@@ -761,6 +769,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
         # Note(asarfaty) keep tier1 name as well, as the current nsx
         # implementation resets it to the ID
+        # TODO(asarfaty): Remove this when supported
         tier1_def = self.entry_def(tier1_id=tier1_id,
                                    name=tier1_dict.get('display_name'),
                                    route_adv=route_adv,
@@ -1344,6 +1353,11 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
                dns_domain_name=IGNORE,
                vlan_ids=IGNORE, tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
+        # Note(asarfaty): L2/L3 PATCH APIs don't support partial updates yet
+        # TODO(asarfaty): Remove this when supported
+        if name == IGNORE:
+            current_body = self.get(segment_id, tenant=tenant)
+            name = current_body.get('display_name', IGNORE)
 
         self._update(segment_id=segment_id,
                      name=name,
@@ -1429,7 +1443,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         segment = self.get(segment_id, tenant=tenant)
         tz_path = segment.get('transport_zone_path')
         if tz_path:
-            return tz_path.split('/')[-1]
+            return self._path_to_id(tz_path)
 
 
 class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
