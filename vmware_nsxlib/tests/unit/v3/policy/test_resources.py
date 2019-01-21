@@ -1847,14 +1847,17 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
     def test_update_unset_tier0(self):
         id = '111'
         name = 'new name'
+        description = 'abc'
         with mock.patch.object(self.policy_api,
                                "create_or_update") as update_call:
             self.resourceApi.update(id,
                                     name=name,
+                                    description=description,
                                     tier0=None,
                                     tenant=TEST_TENANT)
             expected_def = core_defs.Tier1Def(tier1_id=id,
                                               name=name,
+                                              description=description,
                                               tier0=None,
                                               tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
