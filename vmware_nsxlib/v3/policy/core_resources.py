@@ -695,6 +695,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                             force_whitelisting=IGNORE,
                             failover_mode=constants.NON_PREEMPTIVE,
                             route_advertisement=IGNORE,
+                            dhcp_config=IGNORE,
                             tags=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
         tier1_id = self._init_obj_uuid(tier1_id)
@@ -706,6 +707,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    tags=tags,
                                    failover_mode=failover_mode,
                                    route_advertisement=route_advertisement,
+                                   dhcp_config=dhcp_config,
                                    tenant=tenant)
 
         # Note(asarfaty): Although this is a patch request, it sometimes fail
@@ -734,7 +736,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
     def update(self, tier1_id, name=IGNORE, description=IGNORE,
                force_whitelisting=IGNORE,
                failover_mode=IGNORE, tier0=IGNORE,
-               tags=IGNORE,
+               dhcp_config=IGNORE, tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
         # Note(asarfaty): L2/L3 PATCH APIs don't support partial updates yet
         # TODO(asarfaty): Remove this when supported
@@ -746,6 +748,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                      description=description,
                      force_whitelisting=force_whitelisting,
                      failover_mode=failover_mode,
+                     dhcp_config=dhcp_config,
                      tier0=tier0,
                      tags=tags,
                      tenant=tenant)
