@@ -692,6 +692,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                             force_whitelisting=IGNORE,
                             failover_mode=constants.NON_PREEMPTIVE,
                             route_advertisement=IGNORE,
+                            dhcp_config=IGNORE,
                             tags=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
         tier1_id = self._init_obj_uuid(tier1_id)
@@ -703,6 +704,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    tags=tags,
                                    failover_mode=failover_mode,
                                    route_advertisement=route_advertisement,
+                                   dhcp_config=dhcp_config,
                                    tenant=tenant)
 
         self._create_or_store(tier1_def)
@@ -724,13 +726,14 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
     def update(self, tier1_id, name=IGNORE, description=IGNORE,
                force_whitelisting=IGNORE,
                failover_mode=IGNORE, tier0=IGNORE,
-               tags=IGNORE,
+               dhcp_config=IGNORE, tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
         self._update(tier1_id=tier1_id,
                      name=name,
                      description=description,
                      force_whitelisting=force_whitelisting,
                      failover_mode=failover_mode,
+                     dhcp_config=dhcp_config,
                      tier0=tier0,
                      tags=tags,
                      tenant=tenant)
