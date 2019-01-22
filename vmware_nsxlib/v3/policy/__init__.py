@@ -59,6 +59,8 @@ class NsxPolicyLib(lib.NsxLibBase):
         self.ip_protocol_service = (
             core_resources.NsxPolicyIPProtocolServiceApi(*args))
         self.tier0 = core_resources.NsxPolicyTier0Api(*args)
+        self.tier0_nat_rule = core_resources.NsxPolicyTier0NatRuleApi(
+            *args)
         self.tier1 = core_resources.NsxPolicyTier1Api(*args)
         self.tier1_segment = core_resources.NsxPolicyTier1SegmentApi(*args)
         self.tier1_nat_rule = core_resources.NsxPolicyTier1NatRuleApi(
