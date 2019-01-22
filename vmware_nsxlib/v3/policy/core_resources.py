@@ -1995,7 +1995,8 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
                     name=IGNORE, description=IGNORE, tags=IGNORE,
                     tenant=constants.POLICY_INFRA_TENANT):
         ip_allocation_id = self._init_obj_uuid(ip_allocation_id)
-        ip_allocation_def = core_defs.IpPoolAllocationDef(
+
+        args = self._get_user_args(
             ip_pool_id=ip_pool_id,
             ip_allocation_id=ip_allocation_id,
             allocation_ip=ip_address,
@@ -2003,7 +2004,9 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
             description=description,
             tags=tags,
             tenant=tenant)
-        self.policy_api.create_or_update(ip_allocation_def)
+
+        ip_allocation_def = core_defs.IpPoolAllocationDef(**args)
+        self._create_or_store(ip_allocation_def)
 
     def release_ip(self, ip_pool_id, ip_allocation_id,
                    tenant=constants.POLICY_INFRA_TENANT):
@@ -2033,7 +2036,7 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
                               name=IGNORE, description=IGNORE, tags=IGNORE,
                               tenant=constants.POLICY_INFRA_TENANT):
         ip_subnet_id = self._init_obj_uuid(ip_subnet_id)
-        ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
+        args = self._get_user_args(
             ip_pool_id=ip_pool_id,
             ip_block_id=ip_block_id,
             ip_subnet_id=ip_subnet_id,
@@ -2043,7 +2046,9 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
             description=description,
             tags=tags,
             tenant=tenant)
-        self.policy_api.create_or_update(ip_subnet_def)
+
+        ip_subnet_def = core_defs.IpPoolBlockSubnetDef(**args)
+        self._create_or_store(ip_subnet_def)
 
     def release_block_subnet(self, ip_pool_id, ip_subnet_id,
                              tenant=constants.POLICY_INFRA_TENANT):

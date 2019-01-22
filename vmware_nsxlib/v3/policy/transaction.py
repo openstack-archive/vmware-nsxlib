@@ -150,10 +150,10 @@ class NsxPolicyTransaction(object):
             if 'children' not in parent_dict:
                 parent_dict['children'] = []
 
-            resource_type = resource_def.resource_type()
+            resource_class = resource_def.resource_class()
             parent_dict['children'].append({
-                'resource_type': 'Child%s' % resource_type,
-                resource_type: resource_def.get_obj_dict()
+                'resource_type': 'Child%s' % resource_class,
+                resource_class: resource_def.get_obj_dict()
             })
 
         if body:

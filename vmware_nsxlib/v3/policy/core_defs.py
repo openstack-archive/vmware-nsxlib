@@ -93,6 +93,12 @@ class ResourceDef(object):
     def resource_type():
         pass
 
+    @classmethod
+    def resource_class(cls):
+        # Returns base resource type for polymorphic objects
+        # if not overriden, would return resource_type
+        return cls.resource_type()
+
     @staticmethod
     def resource_use_cache():
         return False
@@ -862,6 +868,10 @@ class IpPoolBlockSubnetDef(ResourceDef):
     def path_ids(self):
         return ('tenant', 'ip_pool_id', 'ip_subnet_id')
 
+    @classmethod
+    def resource_class(cls):
+        return 'IpAddressPoolSubnet'
+
     @staticmethod
     def resource_type():
         return 'IpAddressPoolBlockSubnet'
@@ -1000,6 +1010,10 @@ class ServiceEntryDef(ResourceDef):
 
     def path_defs(self):
         return (TenantDef, ServiceDef)
+
+    @classmethod
+    def resource_class(cls):
+        return 'ServiceEntry'
 
 
 class L4ServiceEntryDef(ServiceEntryDef):
