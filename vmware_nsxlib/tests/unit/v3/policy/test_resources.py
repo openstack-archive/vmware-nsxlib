@@ -2286,6 +2286,77 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
             pt_mock.assert_called_once_with(logical_router_id)
 
 
+class TestPolicyTier1Segment(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyTier1Segment, self).setUp()
+        self.resourceApi = self.policy_lib.tier1_segment
+
+    def test_create(self):
+        name = 'test'
+        description = 'desc'
+        tier1_id = '111'
+        ip_pool_id = 'external-ip-pool'
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, description=description,
+                tier1_id=tier1_id,
+                ip_pool_id=ip_pool_id,
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.Tier1SegmentDef(
+                segment_id=mock.ANY,
+                name=name,
+                description=description,
+                tier1_id=tier1_id,
+                ip_pool_id=ip_pool_id,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        tier1_id = '111'
+        segment_id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(tier1_id, segment_id, tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1SegmentDef(
+                tier1_id=tier1_id, segment_id=segment_id, tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        tier1_id = '111'
+        segment_id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(tier1_id, segment_id, tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1SegmentDef(
+                tier1_id=tier1_id, segment_id=segment_id, tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        tier1_id = '111'
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tier1_id=tier1_id, tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1SegmentDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        tier1_id = '111'
+        segment_id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(segment_id=segment_id,
+                                    tier1_id=tier1_id,
+                                    name=name,
+                                    tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1SegmentDef(
+                tier1_id=tier1_id, segment_id=segment_id,
+                name=name, tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+
+
 class TestPolicySegment(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
