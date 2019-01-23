@@ -70,6 +70,7 @@ class NsxLibInvalidInput(NsxLibException):
 class ManagerError(NsxLibException):
     message = _("Unexpected error from backend manager (%(manager)s) "
                 "for %(operation)s%(details)s")
+    related_error_codes = []
 
     def __init__(self, **kwargs):
         details = kwargs.get('details', '')
@@ -80,6 +81,7 @@ class ManagerError(NsxLibException):
         except KeyError:
             self.msg = details
         self.error_code = kwargs.get('error_code')
+        self.related_error_codes = kwargs.get('related_error_codes', [])
 
 
 class ResourceNotFound(ManagerError):

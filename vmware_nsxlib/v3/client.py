@@ -141,10 +141,11 @@ class RESTClient(object):
         return self._rest_call(url, method='PATCH', body=body, headers=headers)
 
     def _raise_error(self, status_code, operation, result_msg,
-                     error_code=None):
+                     error_code=None, related_error_codes=None):
         error = http_error_to_exception(status_code, error_code)
         raise error(manager='', operation=operation, details=result_msg,
-                    error_code=error_code)
+                    error_code=error_code,
+                    related_error_codes=related_error_codes)
 
     def _validate_result(self, result, expected, operation, silent=False):
         if result.status_code not in expected:
@@ -159,16 +160,21 @@ class RESTClient(object):
                              'body': result_msg})
 
             error_code = None
+            related_error_codes = []
             if isinstance(result_msg, dict) and 'error_message' in result_msg:
                 error_code = result_msg.get('error_code')
                 related_errors = [error['error_message'] for error in
                                   result_msg.get('related_errors', [])]
+                related_error_codes = [str(error['error_code']) for error in
+                                       result_msg.get('related_errors', []) if
+                                       error.get('error_code')]
                 result_msg = result_msg['error_message']
                 if related_errors:
                     result_msg += " relatedErrors: %s" % ' '.join(
                         related_errors)
             self._raise_error(result.status_code, operation, result_msg,
-                              error_code=error_code)
+                              error_code=error_code,
+                              related_error_codes=related_error_codes)
 
     @classmethod
     def merge_headers(cls, *headers):
@@ -297,13 +303,14 @@ class NSX3Client(JSONRESTClient):
             client_obj=client_obj)
 
     def _raise_error(self, status_code, operation, result_msg,
-                     error_code=None):
+                     error_code=None, related_error_codes=None):
         """Override the Rest client errors to add the manager IPs"""
         error = http_error_to_exception(status_code, error_code)
         raise error(manager=self.nsx_api_managers,
                     operation=operation,
                     details=result_msg,
-                    error_code=error_code)
+                    error_code=error_code,
+                    related_error_codes=related_error_codes)
 
     def _rest_call(self, url, **kwargs):
         if self.rate_limit_retry and kwargs.get('with_retries', True):
