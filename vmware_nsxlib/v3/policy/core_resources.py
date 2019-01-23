@@ -1039,9 +1039,9 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
         return self.nsx_api.router.get_tier0_router_tz(
             nsx_router_uuid)
 
-    def _get_uplink_subnets(self, tier0_id,
-                            tenant=constants.POLICY_INFRA_TENANT):
-        subnets = []
+    def get_uplink_ips(self, tier0_id, tenant=constants.POLICY_INFRA_TENANT):
+        """Return a link of all uplink ips of this tier0 router"""
+        uplink_ips = []
         services = self.get_locale_services(tier0_id, tenant=tenant)
         for srv in services:
             # get the interfaces of this service
@@ -1053,26 +1053,9 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                 t0interface_def).get('results', [])
             for interface in interfaces:
                 if interface.get('type') == 'EXTERNAL':
-                    subnets.extend(interface.get('subnets', []))
-        return subnets
-
-    def get_uplink_ips(self, tier0_id, tenant=constants.POLICY_INFRA_TENANT):
-        """Return a link of all uplink ips of this tier0 router"""
-        subnets = self._get_uplink_subnets(tier0_id, tenant=tenant)
-        uplink_ips = []
-        for subnet in subnets:
-            uplink_ips.extend(subnet.get('ip_addresses', []))
+                    for subnet in interface.get('subnets', []):
+                        uplink_ips.extend(subnet.get('ip_addresses', []))
         return uplink_ips
-
-    def get_uplink_cidrs(self, tier0_id, tenant=constants.POLICY_INFRA_TENANT):
-        """Return a link of all uplink cidrs of this tier0 router"""
-        subnets = self._get_uplink_subnets(tier0_id, tenant=tenant)
-        cidrs = []
-        for subnet in subnets:
-            for ip_address in subnet.get('ip_addresses'):
-                cidrs.append('%s/%s' % (ip_address,
-                                        subnet.get('prefix_len')))
-        return cidrs
 
 
 class NsxPolicyTier0NatRuleApi(NsxPolicyResourceBase):
