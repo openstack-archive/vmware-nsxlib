@@ -249,7 +249,10 @@ class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
                 content = jsonutils.dumps({'httpStatus': 'dummy',
                                            'error_code': error_code,
                                            'module_name': 'dummy',
-                                           'error_message': 'bad'})
+                                           'error_message': 'bad',
+                                           'related_errors': [{
+                                               'error_message': 'bla',
+                                               'error_code': 'code'}]})
             response = mocks.MockRequestsResponse(
                 status_code, content)
 
