@@ -129,10 +129,12 @@ class TestPolicyTransaction(policy_testcase.TestPolicyApi):
         ip_block_id = 'block1'
         subnet1 = {'id': 'subnet1',
                    'resource_type': 'IpAddressPoolBlockSubnet',
+                   'ip_block_path': '/infra/ip-blocks/%s' % ip_block_id,
                    'size': 8}
 
         subnet2 = {'id': 'subnet2',
                    'resource_type': 'IpAddressPoolBlockSubnet',
+                   'ip_block_path': '/infra/ip-blocks/%s' % ip_block_id,
                    'size': 4}
 
         with trans.NsxPolicyTransaction():
