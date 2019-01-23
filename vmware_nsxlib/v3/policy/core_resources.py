@@ -2073,7 +2073,7 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
                      tags=tags,
                      tenant=tenant)
 
-    def allocate_ip(self, ip_pool_id, ip_address, ip_allocation_id=None,
+    def allocate_ip(self, ip_pool_id, ip_allocation_id=None, ip_address=IGNORE,
                     name=IGNORE, description=IGNORE, tags=IGNORE,
                     tenant=constants.POLICY_INFRA_TENANT):
         ip_allocation_id = self._init_obj_uuid(ip_allocation_id)
@@ -2154,6 +2154,30 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
             ip_subnet_id=ip_subnet_id,
             tenant=tenant)
         return self.policy_api.get(ip_subnet_def)
+
+    def get_ip_alloc_realization_info(self, ip_pool_id, ip_allocation_id,
+                                      entity_type=None,
+                                      tenant=constants.POLICY_INFRA_TENANT):
+        ip_allocation_def = core_defs.IpPoolAllocationDef(
+            ip_pool_id=ip_pool_id,
+            ip_allocation_id=ip_allocation_id,
+            tenant=tenant)
+        return self._get_realization_info(ip_allocation_def,
+                                          entity_type=entity_type)
+
+    def get_realized_allocated_ip(self, ip_pool_id, ip_allocation_id,
+                                  entity_type=None,
+                                  tenant=constants.POLICY_INFRA_TENANT):
+        # Retrieve the allocated IpAddress for allocation ID
+        # Return None in case the IP is not yet allocated
+        realized_info = self.get_ip_alloc_realization_info(
+            ip_pool_id, ip_allocation_id, entity_type, tenant)
+        if realized_info:
+            try:
+                return realized_info['extended_attributes'][0].get(
+                    'values')[0]
+            except IndexError:
+                return
 
 
 class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
