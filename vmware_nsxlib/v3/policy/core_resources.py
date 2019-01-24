@@ -1559,6 +1559,7 @@ class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
                                   vif_id=vif_id,
                                   app_id=app_id,
                                   context_id=context_id,
+                                  traffic_tag=traffic_tag,
                                   allocate_addresses=allocate_addresses,
                                   tags=tags,
                                   tenant=tenant)
@@ -1883,6 +1884,7 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
                                   vif_id=vif_id,
                                   app_id=app_id,
                                   context_id=context_id,
+                                  traffic_tag=traffic_tag,
                                   allocate_addresses=allocate_addresses,
                                   tags=tags,
                                   tenant=tenant)
