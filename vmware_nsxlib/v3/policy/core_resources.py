@@ -1126,7 +1126,7 @@ class NsxPolicyTier0NatRuleApi(NsxPolicyResourceBase):
             tenant=constants.POLICY_INFRA_TENANT):
         nat_rule_def = self.entry_def(tier0_id=tier0_id, nat_id=nat_id,
                                       nat_rule_id=nat_rule_id, tenant=tenant)
-        self.policy_api.get(nat_rule_def)
+        return self.policy_api.get(nat_rule_def)
 
     def list(self, tier0_id, nat_id=DEFAULT_NAT_ID,
              tenant=constants.POLICY_INFRA_TENANT):
@@ -1208,7 +1208,7 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
             tenant=constants.POLICY_INFRA_TENANT):
         nat_rule_def = self.entry_def(tier1_id=tier1_id, nat_id=nat_id,
                                       nat_rule_id=nat_rule_id, tenant=tenant)
-        self.policy_api.get(nat_rule_def)
+        return self.policy_api.get(nat_rule_def)
 
     def list(self, tier1_id, nat_id=DEFAULT_NAT_ID,
              tenant=constants.POLICY_INFRA_TENANT):
@@ -1279,7 +1279,7 @@ class NsxPolicyTier1StaticRouteApi(NsxPolicyResourceBase):
         static_route_def = self.entry_def(tier1_id=tier1_id,
                                           static_route_id=static_route_id,
                                           tenant=tenant)
-        self.policy_api.get(static_route_def)
+        return self.policy_api.get(static_route_def)
 
     def list(self, tier1_id,
              tenant=constants.POLICY_INFRA_TENANT):
@@ -1693,7 +1693,7 @@ class SegmentPortProfilesBindingMapBaseApi(NsxPolicyResourceBase):
                                  port_id=port_id,
                                  map_id=map_id,
                                  tenant=tenant)
-        self.policy_api.get(map_def)
+        return self.policy_api.get(map_def)
 
     def list(self, segment_id, port_id,
              tenant=constants.POLICY_INFRA_TENANT):

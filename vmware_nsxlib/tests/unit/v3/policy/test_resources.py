@@ -2040,6 +2040,74 @@ class TestPolicyTier1NoPassthrough(TestPolicyTier1):
             realization.assert_not_called()
 
 
+class TestPolicyTier0NatRule(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyTier0NatRule, self).setUp()
+        self.resourceApi = self.policy_lib.tier0_nat_rule
+
+    def test_create(self):
+        name = 'test'
+        description = 'desc'
+        tier0_id = '111'
+        nat_rule_id = 'rule1'
+        action = constants.NAT_ACTION_SNAT
+        cidr1 = '1.1.1.1/32'
+        cidr2 = '2.2.2.0/24'
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, tier0_id,
+                nat_rule_id=nat_rule_id,
+                description=description,
+                action=action,
+                translated_network=cidr1,
+                source_network=cidr2,
+                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier0NatRule(
+                tier0_id=tier0_id,
+                nat_rule_id=nat_rule_id,
+                nat_id=self.resourceApi.DEFAULT_NAT_ID,
+                name=name,
+                description=description,
+                action=action,
+                translated_network=cidr1,
+                source_network=cidr2,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        tier0_id = '111'
+        nat_rule_id = 'rule1'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(
+                tier0_id,
+                nat_rule_id,
+                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier0NatRule(
+                tier0_id=tier0_id,
+                nat_rule_id=nat_rule_id,
+                nat_id=self.resourceApi.DEFAULT_NAT_ID,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        tier0_id = '111'
+        nat_rule_id = 'rule1'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            mock_t0_nat_rule = mock.Mock()
+            api_call.return_value = mock_t0_nat_rule
+            result = self.resourceApi.get(tier0_id, nat_rule_id,
+                                          tenant=TEST_TENANT)
+            expected_def = core_defs.Tier0NatRule(
+                tier0_id=tier0_id,
+                nat_rule_id=nat_rule_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual(mock_t0_nat_rule, result)
+
+
 class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
@@ -2141,6 +2209,23 @@ class TestPolicyTier1StaticRoute(NsxPolicyLibTestCase):
                 static_route_id=static_route_id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        tier1_id = '111'
+        static_route_id = '222'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            mock_get = mock.Mock()
+            api_call.return_value = mock_get
+            result = self.resourceApi.get(
+                tier1_id,
+                static_route_id,
+                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1StaticRoute(
+                tier1_id=tier1_id,
+                static_route_id=static_route_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual(mock_get, result)
 
 
 class TestPolicyTier0(NsxPolicyLibTestCase):
