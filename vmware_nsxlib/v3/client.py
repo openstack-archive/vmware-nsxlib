@@ -40,7 +40,8 @@ def http_error_to_exception(status_code, error_code):
         requests.codes.CONFLICT: exceptions.StaleRevision,
         requests.codes.PRECONDITION_FAILED: exceptions.StaleRevision,
         requests.codes.INTERNAL_SERVER_ERROR:
-            {'99': exceptions.ClientCertificateNotTrusted},
+            {'99': exceptions.ClientCertificateNotTrusted,
+             '607': exceptions.APITransactionAborted},
         requests.codes.FORBIDDEN:
             {'98': exceptions.BadXSRFToken},
         requests.codes.TOO_MANY_REQUESTS: exceptions.TooManyRequests,
@@ -311,11 +312,15 @@ class NSX3Client(JSONRESTClient):
             # will be returned.
             # the client is expected to retry after a random 400-600 milli,
             # and later exponentially until 5 seconds wait
-            @utils.retry_random_upon_exception(
-                exceptions.ServerBusy,
-                max_attempts=self.max_attempts)
-            def _rest_call_with_retry(self, url, **kwargs):
-                return super(NSX3Client, self)._rest_call(url, **kwargs)
-            return _rest_call_with_retry(self, url, **kwargs)
+            f = exceptions.ServerBusy
         else:
+            # If the MP cluster is reconfiguring, INTERNAL_SERVER_ERROR will
+            # be returned with 607 error code. The client is expected to
+            # retry with a random exponential backoff interval
+            f = exceptions.APITransactionAborted
+
+        @utils.retry_random_upon_exception(
+            f, max_attempts=self.max_attempts)
+        def _rest_call_with_retry(self, url, **kwargs):
             return super(NSX3Client, self)._rest_call(url, **kwargs)
+        return _rest_call_with_retry(self, url, **kwargs)

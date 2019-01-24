@@ -159,3 +159,8 @@ class NsxPendingDelete(NsxLibException):
     message = _("An object with the same name is marked for deletion. Either "
                 "use another path or wait for the purge cycle to permanently "
                 "remove the deleted object")
+
+
+class APITransactionAborted(ServerBusy):
+    message = _("API transaction aborted as MP cluster is reconfiguring."
+                "Retrying...")
