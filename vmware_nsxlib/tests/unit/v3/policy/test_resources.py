@@ -2435,6 +2435,150 @@ class TestPolicySegment(NsxPolicyLibTestCase):
                 {'id': segment_id, 'connectivity_path': None, 'subnets': None})
 
 
+class TestPolicyIpPool(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyIpPool, self).setUp()
+        self.resourceApi = self.policy_lib.ip_pool
+
+    def test_create(self):
+        name = 'test'
+        description = 'desc'
+        ip_pool_id = '111'
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_overwrite(
+                name, ip_pool_id, description=description,
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.IpPoolDef(
+                ip_pool_id=ip_pool_id,
+                name=name,
+                description=description,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_delete(self):
+        ip_pool_id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(ip_pool_id, tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolDef(ip_pool_id=ip_pool_id,
+                                               tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        ip_pool_id = '111'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(ip_pool_id, tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolDef(ip_pool_id=ip_pool_id,
+                                               tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list") as api_call:
+            self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_update(self):
+        ip_pool_id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(ip_pool_id,
+                                    name=name,
+                                    tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolDef(ip_pool_id=ip_pool_id,
+                                               name=name,
+                                               tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+
+    def test_allocate_ip(self):
+        ip_pool_id = '111'
+        ip_allocation_id = 'alloc-id'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.allocate_ip(ip_pool_id,
+                                         ip_allocation_id,
+                                         tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolAllocationDef(
+                ip_pool_id=ip_pool_id,
+                ip_allocation_id=ip_allocation_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+
+    def test_release_ip(self):
+        ip_pool_id = '111'
+        ip_allocation_id = 'alloc-id'
+        with mock.patch.object(self.policy_api, "delete") as delete_call:
+            self.resourceApi.release_ip(ip_pool_id,
+                                        ip_allocation_id,
+                                        tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolAllocationDef(
+                ip_pool_id=ip_pool_id,
+                ip_allocation_id=ip_allocation_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(delete_call, expected_def)
+
+    def test_allocate_block_subnet(self):
+        ip_pool_id = '111'
+        ip_block_id = 'block-id'
+        size = 256
+        ip_subnet_id = 'subnet-id'
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.allocate_block_subnet(
+                ip_pool_id, ip_block_id, size, ip_subnet_id,
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.IpPoolBlockSubnetDef(
+                ip_pool_id=ip_pool_id,
+                ip_block_id=ip_block_id,
+                ip_subnet_id=ip_subnet_id,
+                size=size,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_release_block_subnet(self):
+        ip_pool_id = '111'
+        ip_subnet_id = 'subnet-id'
+        with mock.patch.object(self.policy_api, "delete") as delete_call:
+            self.resourceApi.release_block_subnet(ip_pool_id,
+                                                  ip_subnet_id,
+                                                  tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolBlockSubnetDef(
+                ip_pool_id=ip_pool_id,
+                ip_subnet_id=ip_subnet_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(delete_call, expected_def)
+
+    def test_get_ip_alloc_realization_info(self):
+        ip_pool_id = '111'
+        ip_allocation_id = 'alloc-id'
+        result = {'extended_attributes': [{'values': ['5.5.0.8']}]}
+        with mock.patch.object(
+            self.resourceApi, "_get_realization_info",
+            return_value=result) as api_get:
+            self.resourceApi.get_ip_alloc_realization_info(
+                ip_pool_id, ip_allocation_id, tenant=TEST_TENANT)
+            api_get.assert_called_once()
+
+    def test_get_realized_allocated_ip(self):
+        ip_pool_id = '111'
+        ip_allocation_id = 'alloc-id'
+        result = {'extended_attributes': [{'values': ['5.5.0.8']}]}
+        with mock.patch.object(
+            self.resourceApi, "_get_realization_info",
+            return_value=result) as api_get:
+            ip = self.resourceApi.get_realized_allocated_ip(
+                ip_pool_id, ip_allocation_id, tenant=TEST_TENANT)
+            self.assertEqual('5.5.0.8', ip)
+            api_get.assert_called_once()
+
+
 class TestPolicySegmentProfileBase(NsxPolicyLibTestCase):
 
     def setUp(self, resource_api_name='segment_security_profile',
