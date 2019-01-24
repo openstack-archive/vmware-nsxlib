@@ -302,6 +302,10 @@ class NsxV3RESTClientTestCase(nsxlib_testcase.NsxClientTestCase):
         utils.set_inject_headers_callback(None)
         self.assertIsNotNone(self.injected)
 
+    def test_http_error_to_exception(self):
+        exc = client.http_error_to_exception(500, 607)
+        self.assertEqual(exc, nsxlib_exc.APITransactionAborted)
+
 
 class NsxV3JSONClientTestCase(nsxlib_testcase.NsxClientTestCase):
 

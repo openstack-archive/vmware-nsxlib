@@ -148,3 +148,6 @@ class SecurityGroupMaximumCapacityReached(ManagerError):
 
 class NsxSearchInvalidQuery(NsxLibException):
     message = _("Invalid input for NSX search query. Reason: %(reason)s")
+
+class APITransactionAborted(ServerBusy):
+    message = _("API transaction aborted as MP cluster is reconfiguring.")
