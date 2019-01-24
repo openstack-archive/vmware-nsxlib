@@ -40,7 +40,8 @@ def http_error_to_exception(status_code, error_code):
         requests.codes.CONFLICT: exceptions.StaleRevision,
         requests.codes.PRECONDITION_FAILED: exceptions.StaleRevision,
         requests.codes.INTERNAL_SERVER_ERROR:
-            {'99': exceptions.ClientCertificateNotTrusted},
+            {'99': exceptions.ClientCertificateNotTrusted,
+             '607': exceptions.APITransactionAborted},
         requests.codes.FORBIDDEN:
             {'98': exceptions.BadXSRFToken},
         requests.codes.TOO_MANY_REQUESTS: exceptions.TooManyRequests,
@@ -194,6 +195,7 @@ class RESTClient(object):
         pattern = r'\"password\": [^,}]*'
         return re.sub(pattern, '"password": "********"', json)
 
+    @utils.retry_upon_exception(exceptions.APITransactionAborted)
     def _rest_call(self, url, method='GET', body=None, headers=None,
                    silent=False, expected_results=None):
         request_headers = headers.copy() if headers else {}
