@@ -708,14 +708,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    route_advertisement=route_advertisement,
                                    tenant=tenant)
 
-        # Note(asarfaty): Although this is a patch request, it sometimes fail
-        # with StaleRevision on communication maps conflicts
-        @utils.retry_upon_exception(
-            exceptions.StaleRevision,
-            max_attempts=self.policy_api.client.max_attempts)
-        def _create():
-            self._create_or_store(tier1_def)
-        _create()
+        self._create_or_store(tier1_def)
         return tier1_id
 
     def delete(self, tier1_id, tenant=constants.POLICY_INFRA_TENANT):
