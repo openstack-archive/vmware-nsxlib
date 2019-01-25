@@ -243,6 +243,18 @@ class NsxPolicyResourceBase(object):
                     'sleep': sleep})
         raise exceptions.ManagerError(details=err_msg)
 
+    def _get_extended_attr_from_realized_info(self, realization_info,
+                                              requested_attr):
+        # Returns a list. In case a single value is expected,
+        # caller must extract the first index to retrieve the value
+        if realization_info:
+            try:
+                for attr in realization_info.get('extended_attributes', []):
+                    if attr.get('key') == requested_attr:
+                        return attr.get('values')
+            except IndexError:
+                return
+
     def _list(self, obj_def):
         return self.policy_api.list(obj_def).get('results', [])
 
@@ -2166,23 +2178,63 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
             tenant=tenant)
         return self.policy_api.get(ip_subnet_def)
 
+    def get_ip_block_subnet_cidr(self, ip_pool_id, ip_subnet_id,
+                                 entity_type=None,
+                                 tenant=constants.POLICY_INFRA_TENANT,
+                                 wait=False, sleep=None,
+                                 max_attempts=None):
+        # Retrieve the allocated Subnet CIDR for Subnet ID
+        # Return None in case the CIDR is not yet allocated
+        realized_info = self.get_ip_subnet_realization_info(
+            ip_pool_id, ip_subnet_id, entity_type, tenant, wait,
+            sleep, max_attempts)
+        # Returns a list of CIDRs. In case a single value is expected,
+        # caller must extract the first index to retrieve the CIDR value
+        return self._get_extended_attr_from_realized_info(
+            realized_info, requested_attr='cidr')
+
+    def get_ip_subnet_realization_info(self, ip_pool_id, ip_subnet_id,
+                                       entity_type=None,
+                                       tenant=constants.POLICY_INFRA_TENANT,
+                                       wait=False, sleep=None,
+                                       max_attempts=None):
+        ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
+            ip_pool_id=ip_pool_id,
+            ip_subnet_id=ip_subnet_id,
+            tenant=tenant)
+        if wait:
+            return self._wait_until_realized(
+                ip_subnet_def, entity_type=entity_type,
+                sleep=sleep, max_attempts=max_attempts)
+        return self._get_realization_info(ip_subnet_def,
+                                          entity_type=entity_type)
+
     def get_ip_alloc_realization_info(self, ip_pool_id, ip_allocation_id,
                                       entity_type=None,
-                                      tenant=constants.POLICY_INFRA_TENANT):
+                                      tenant=constants.POLICY_INFRA_TENANT,
+                                      wait=False, sleep=None,
+                                      max_attempts=None):
         ip_allocation_def = core_defs.IpPoolAllocationDef(
             ip_pool_id=ip_pool_id,
             ip_allocation_id=ip_allocation_id,
             tenant=tenant)
+        if wait:
+            return self._wait_until_realized(
+                ip_allocation_def, entity_type=entity_type,
+                sleep=sleep, max_attempts=max_attempts)
         return self._get_realization_info(ip_allocation_def,
                                           entity_type=entity_type)
 
     def get_realized_allocated_ip(self, ip_pool_id, ip_allocation_id,
                                   entity_type=None,
-                                  tenant=constants.POLICY_INFRA_TENANT):
+                                  tenant=constants.POLICY_INFRA_TENANT,
+                                  wait=False, sleep=None,
+                                  max_attempts=None):
         # Retrieve the allocated IpAddress for allocation ID
         # Return None in case the IP is not yet allocated
         realized_info = self.get_ip_alloc_realization_info(
-            ip_pool_id, ip_allocation_id, entity_type, tenant)
+            ip_pool_id, ip_allocation_id, entity_type, tenant, wait,
+            sleep, max_attempts)
         if realized_info:
             try:
                 return realized_info['extended_attributes'][0].get(
