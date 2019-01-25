@@ -89,8 +89,9 @@ class RESTClient(object):
     def list(self, resource='', headers=None, silent=False):
         return self.url_list(resource, headers=headers, silent=silent)
 
-    def get(self, uuid, headers=None, silent=False):
-        return self.url_get(uuid, headers=headers, silent=silent)
+    def get(self, uuid, headers=None, silent=False, with_retries=True):
+        return self.url_get(uuid, headers=headers, silent=silent,
+                            with_retries=with_retries)
 
     def delete(self, uuid, headers=None, expected_results=None):
         return self.url_delete(uuid, headers=headers,
@@ -120,9 +121,9 @@ class RESTClient(object):
             cursor = page.get('cursor', NULL_CURSOR_PREFIX)
         return concatenate_response
 
-    def url_get(self, url, headers=None, silent=False):
+    def url_get(self, url, headers=None, silent=False, with_retries=True):
         return self._rest_call(url, method='GET', headers=headers,
-                               silent=silent)
+                               silent=silent, with_retries=with_retries)
 
     def url_delete(self, url, headers=None, expected_results=None):
         return self._rest_call(url, method='DELETE', headers=headers,
@@ -195,7 +196,7 @@ class RESTClient(object):
         return re.sub(pattern, '"password": "********"', json)
 
     def _rest_call(self, url, method='GET', body=None, headers=None,
-                   silent=False, expected_results=None):
+                   silent=False, expected_results=None, **kwargs):
         request_headers = headers.copy() if headers else {}
         request_headers.update(self._default_headers)
         if utils.INJECT_HEADERS_CALLBACK:
@@ -305,7 +306,7 @@ class NSX3Client(JSONRESTClient):
                     error_code=error_code)
 
     def _rest_call(self, url, **kwargs):
-        if self.rate_limit_retry:
+        if self.rate_limit_retry and kwargs.get('with_retries', True):
             # If too many requests are handled by the nsx at the same time,
             # error "429: Too Many Requests" or "503: Server Unavailable"
             # will be returned.
