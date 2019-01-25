@@ -2555,6 +2555,39 @@ class TestPolicyIpPool(NsxPolicyLibTestCase):
                 tenant=TEST_TENANT)
             self.assert_called_with_def(delete_call, expected_def)
 
+    def test_get_ip_subnet_realization_info(self):
+        ip_pool_id = '111'
+        ip_subnet_id = 'subnet-id'
+        result = {'extended_attributes': [{'values': ['5.5.0.0/24'],
+                                           'key': 'cidr'}]}
+        with mock.patch.object(
+            self.resourceApi, "_get_realization_info",
+            return_value=result) as api_get:
+            self.resourceApi.get_ip_subnet_realization_info(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT)
+            api_get.assert_called_once()
+        # Test with wait set to True
+        with mock.patch.object(
+            self.resourceApi, "_wait_until_realized",
+            return_value=result) as api_get:
+            self.resourceApi.get_ip_subnet_realization_info(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT,
+                wait=True)
+            api_get.assert_called_once()
+
+    def test_get_ip_block_subnet_cidr(self):
+        ip_pool_id = '111'
+        ip_subnet_id = 'subnet-id'
+        result = {'extended_attributes': [{'values': ['5.5.0.0/24'],
+                                           'key': 'cidr'}]}
+        with mock.patch.object(
+            self.resourceApi, "_get_realization_info",
+            return_value=result) as api_get:
+            cidr = self.resourceApi.get_ip_block_subnet_cidr(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT)
+            self.assertEqual(['5.5.0.0/24'], cidr)
+            api_get.assert_called_once()
+
     def test_get_ip_alloc_realization_info(self):
         ip_pool_id = '111'
         ip_allocation_id = 'alloc-id'
@@ -2564,6 +2597,14 @@ class TestPolicyIpPool(NsxPolicyLibTestCase):
             return_value=result) as api_get:
             self.resourceApi.get_ip_alloc_realization_info(
                 ip_pool_id, ip_allocation_id, tenant=TEST_TENANT)
+            api_get.assert_called_once()
+        # Test with wait set to True
+        with mock.patch.object(
+            self.resourceApi, "_wait_until_realized",
+            return_value=result) as api_get:
+            self.resourceApi.get_ip_alloc_realization_info(
+                ip_pool_id, ip_allocation_id, tenant=TEST_TENANT,
+                wait=True)
             api_get.assert_called_once()
 
     def test_get_realized_allocated_ip(self):
