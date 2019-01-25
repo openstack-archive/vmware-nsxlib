@@ -63,8 +63,13 @@ class TestRouter(nsxlib_testcase.NsxClientTestCase):
         tier1_uuid = uuidutils.generate_uuid()
         with mock.patch.object(self.nsxlib.router._router_port_client,
                                'create') as port_create:
-            self.nsxlib.router.add_router_link_port(
-                tier1_uuid, tier0_uuid, tags)
+            tier0_link_port = mock.MagicMock()
+            tier1_link_port = mock.MagicMock()
+            port_create.side_effect = [tier0_link_port, tier1_link_port]
+            self.assertEqual(
+                (tier0_link_port, tier1_link_port),
+                self.nsxlib.router.add_router_link_port(
+                    tier1_uuid, tier0_uuid, tags))
             self.assertEqual(port_create.call_count, 2)
 
     def test_remove_router_link_port(self):
