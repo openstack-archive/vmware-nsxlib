@@ -1,0 +1,8 @@
+Code-Review+2: Salvatore Orlando <salv.orlando@gmail.com>
+Workflow+1: Salvatore Orlando <salv.orlando@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Fri, 25 Jan 2019 09:41:16 +0000
+Reviewed-on: https://review.openstack.org/631453
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/stable/rocky
