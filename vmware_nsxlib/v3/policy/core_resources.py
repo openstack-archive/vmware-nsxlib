@@ -31,6 +31,7 @@ from vmware_nsxlib.v3 import utils
 from vmware_nsxlib.v3.policy import constants
 from vmware_nsxlib.v3.policy import core_defs
 from vmware_nsxlib.v3.policy import transaction as trans
+from vmware_nsxlib.v3.policy import utils as p_utils
 
 LOG = logging.getLogger(__name__)
 
@@ -258,9 +259,6 @@ class NsxPolicyResourceBase(object):
                 self.policy_api.create_with_parent(policy_def, child_def)
             else:
                 self.policy_api.create_or_update(policy_def)
-
-    def _path_to_id(self, path):
-        return path.split('/')[-1]
 
 
 class NsxPolicyDomainApi(NsxPolicyResourceBase):
@@ -1520,7 +1518,7 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
         segment = self.get(segment_id, tenant=tenant)
         tz_path = segment.get('transport_zone_path')
         if tz_path:
-            return self._path_to_id(tz_path)
+            return p_utils.path_to_id(tz_path)
 
 
 class NsxPolicySegmentPortApi(NsxPolicyResourceBase):
