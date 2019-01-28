@@ -86,6 +86,13 @@ class AbstractHTTPProvider(object):
         Return True if it's a connection exception and False otherwise.
         """
 
+    @abc.abstractmethod
+    def is_timeout_exception(self, exception):
+        """Determine if the given exception is related to timeout.
+
+        Return True if it's a timeout exception and False otherwise.
+        """
+
 
 class TimeoutSession(requests.Session):
     """Extends requests.Session to support timeout at the session level."""
@@ -228,6 +235,9 @@ class NSXRequestsHTTPProvider(AbstractHTTPProvider):
 
     def is_connection_exception(self, exception):
         return isinstance(exception, requests_exceptions.ConnectionError)
+
+    def is_timeout_exception(self, exception):
+        return isinstance(exception, requests_exceptions.Timeout)
 
     def is_conn_open_exception(self, exception):
         return isinstance(exception, requests_exceptions.ConnectTimeout)
@@ -628,8 +638,9 @@ class ClusteredAPI(object):
                 return response
             except Exception as e:
                 LOG.warning("Request failed due to: %s", e)
-                if not self._http_provider.is_connection_exception(e):
-                    # only trap and retry connection errors
+                if (not self._http_provider.is_connection_exception(e) and
+                    not self._http_provider.is_timeout_exception(e)):
+                    # only trap and retry connection & timeout errors
                     raise e
                 if self._http_provider.is_conn_open_exception(e):
                     # unable to establish new connection - endpoint is
