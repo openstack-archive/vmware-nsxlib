@@ -320,10 +320,7 @@ class NsxLib(NsxLibBase):
             # Try to get the cluster status silently and with no retries
             status = client.get('operational/application/status',
                                 silent=True, with_retries=False)
-            if (not status or
-                status.get('application_status') != 'WORKING' or
-                status.get('corfu_status') != 'CONNECTED' or
-                status.get('corfu_status') != 'CONNECTED'):
+            if (not status or status.get('application_status') != 'WORKING'):
                 msg = _("Manager is not in working state: %s") % status
                 LOG.warning(msg)
                 raise exceptions.ResourceNotFound(
