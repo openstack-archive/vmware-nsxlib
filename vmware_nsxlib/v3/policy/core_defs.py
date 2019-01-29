@@ -283,11 +283,18 @@ class RouterDef(ResourceDef):
                                             'force_whitelisting',
                                             'default_rule_logging'])
 
-        # TODO(annak): change to path of dhcp config when dhcp config
-        # def is introduced
-        self._set_attr_if_specified(body, 'dhcp_config',
-                                    body_attr='dhcp_config_paths',
-                                    value=[self.get_attr('dhcp_config')])
+        # Add dhcp relay config
+        # TODO(asarfaty): this can be either dhcp or dhcp relay config
+        if self.has_attr('dhcp_config'):
+            paths = None
+            if self.get_attr('dhcp_config'):
+                dhcp_conf = DhcpRelayConfigDef(
+                    config_id=self.get_attr('dhcp_config'),
+                    tenant=self.get_tenant())
+                paths = [dhcp_conf.get_resource_full_path()]
+            self._set_attr_if_specified(body, 'dhcp_config',
+                                        body_attr='dhcp_config_paths',
+                                        value=paths)
         return body
 
 
