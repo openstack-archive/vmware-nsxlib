@@ -197,6 +197,9 @@ class MemoryMockAPIProvider(nsx_cluster.AbstractHTTPProvider):
     def is_connection_exception(self, exception):
         return isinstance(exception, requests_exceptions.ConnectionError)
 
+    def is_timeout_exception(self, exception):
+        return isinstance(exception, requests_exceptions.Timeout)
+
 
 class NsxClientTestCase(NsxLibTestCase):
 
