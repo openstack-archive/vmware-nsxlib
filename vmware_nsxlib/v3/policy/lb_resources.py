@@ -79,7 +79,7 @@ class NsxPolicyLBAppProfileBase(NsxPolicyResourceBase):
         lb_app_profile_def = self.entry_def(
             lb_app_profile_id=lb_app_profile_id,
             tenant=tenant)
-        self.policy_api.get(lb_app_profile_def)
+        return self.policy_api.get(lb_app_profile_def)
 
     def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_app_profile_def = self.entry_def(tenant=tenant)
@@ -179,7 +179,7 @@ class NsxPolicyLoadBalancerLBClientSSLProfileApi(NsxPolicyResourceBase):
         lb_client_ssl_profile_def = self.entry_def(
             client_ssl_profile_id=client_ssl_profile_id,
             tenant=tenant)
-        self.policy_api.get(lb_client_ssl_profile_def)
+        return self.policy_api.get(lb_client_ssl_profile_def)
 
     def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_client_ssl_profile_def = self.entry_def(tenant=tenant)
@@ -248,7 +248,7 @@ class NsxPolicyLoadBalancerLBCookiePersistenceProfileApi(
         lb_cookie_persistence_profile_def = self.entry_def(
             persistence_profile_id=persistence_profile_id,
             tenant=tenant)
-        self.policy_api.get(lb_cookie_persistence_profile_def)
+        return self.policy_api.get(lb_cookie_persistence_profile_def)
 
     def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_cookie_persistence_profile_def = self.entry_def(tenant=tenant)
@@ -323,7 +323,7 @@ class NsxPolicyLoadBalancerLBSourceIpPersistenceProfileApi(
         lb_source_ip_persistence_profile_def = self.entry_def(
             persistence_profile_id=persistence_profile_id,
             tenant=tenant)
-        self.policy_api.get(lb_source_ip_persistence_profile_def)
+        return self.policy_api.get(lb_source_ip_persistence_profile_def)
 
     def list(self, tenant=constants.POLICY_INFRA_TENANT):
         lb_source_ip_persistence_profile_def = self.entry_def(tenant=tenant)
@@ -553,7 +553,8 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
             server_ssl_profile_binding=server_ssl_profile_binding,
             tags=tags
         )
-        return self.policy_api.create_or_update(lbvs_def)
+        self.policy_api.create_or_update(lbvs_def)
+        return virtual_server_id
 
     def delete(self, virtual_server_id,
                tenant=constants.POLICY_INFRA_TENANT):
