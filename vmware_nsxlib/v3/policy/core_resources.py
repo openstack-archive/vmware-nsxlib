@@ -2246,15 +2246,7 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
                 return
 
 
-class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
-    """NSX Policy CommunicationMap (Under a Domain)."""
-    @property
-    def entry_def(self):
-        return core_defs.CommunicationMapEntryDef
-
-    @property
-    def parent_entry_def(self):
-        return core_defs.CommunicationMapDef
+class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
 
     def _get_last_seq_num(self, domain_id, map_id,
                           tenant=constants.POLICY_INFRA_TENANT):
@@ -2435,7 +2427,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def delete_entry(self, domain_id, map_id, entry_id,
                      tenant=constants.POLICY_INFRA_TENANT):
-        entry_def = core_defs.CommunicationMapEntryDef(
+        entry_def = self.entry_def(
             domain_id=domain_id,
             map_id=map_id,
             entry_id=entry_id,
@@ -2444,7 +2436,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
 
     def get(self, domain_id, map_id,
             tenant=constants.POLICY_INFRA_TENANT, silent=False):
-        map_def = core_defs.CommunicationMapDef(
+        map_def = self.parent_entry_def(
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
@@ -2453,13 +2445,13 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def get_by_name(self, domain_id, name,
                     tenant=constants.POLICY_INFRA_TENANT):
         """Return first communication map entry matched by name"""
-        return super(NsxPolicyCommunicationMapApi, self).get_by_name(
+        return super(NsxPolicySecurityPolicyBaseApi, self).get_by_name(
             name, domain_id, tenant=tenant)
 
     def list(self, domain_id,
              tenant=constants.POLICY_INFRA_TENANT):
         """List all the map entries of a specific domain."""
-        map_def = core_defs.CommunicationMapDef(
+        map_def = self.parent_entry_def(
             domain_id=domain_id,
             tenant=tenant)
         return self._list(map_def)
@@ -2504,7 +2496,7 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def update_entries_logged(self, domain_id, map_id, logged,
                               tenant=constants.POLICY_INFRA_TENANT):
         """Update all communication map entries logged flags"""
-        map_def = core_defs.CommunicationMapDef(
+        map_def = self.parent_entry_def(
             domain_id=domain_id,
             map_id=map_id,
             tenant=tenant)
@@ -2528,27 +2520,49 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
     def get_realized_state(self, domain_id, map_id, entity_type=None,
                            tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
-        map_def = core_defs.CommunicationMapDef(map_id=map_id,
-                                                domain_id=domain_id,
-                                                tenant=tenant)
+        map_def = self.parent_entry_def(map_id=map_id,
+                                        domain_id=domain_id,
+                                        tenant=tenant)
         return self._get_realized_state(map_def, entity_type=entity_type,
                                         realization_info=realization_info)
 
     def get_realized_id(self, domain_id, map_id, entity_type=None,
                         tenant=constants.POLICY_INFRA_TENANT,
                         realization_info=None):
-        map_def = core_defs.CommunicationMapDef(map_id=map_id,
-                                                domain_id=domain_id,
-                                                tenant=tenant)
+        map_def = self.parent_entry_def(map_id=map_id,
+                                        domain_id=domain_id,
+                                        tenant=tenant)
         return self._get_realized_id(map_def, entity_type=entity_type,
                                      realization_info=realization_info)
 
     def get_realization_info(self, domain_id, map_id, entity_type=None,
                              tenant=constants.POLICY_INFRA_TENANT):
-        map_def = core_defs.CommunicationMapDef(map_id=map_id,
-                                                domain_id=domain_id,
-                                                tenant=tenant)
+        map_def = self.parent_entry_def(map_id=map_id,
+                                        domain_id=domain_id,
+                                        tenant=tenant)
         return self._get_realization_info(map_def, entity_type=entity_type)
+
+
+class NsxPolicyCommunicationMapApi(NsxPolicySecurityPolicyBaseApi):
+    """NSX Policy CommunicationMap (Under a Domain). AKA Security"""
+    @property
+    def entry_def(self):
+        return core_defs.CommunicationMapEntryDef
+
+    @property
+    def parent_entry_def(self):
+        return core_defs.CommunicationMapDef
+
+
+class NsxPolicyGatewayPolicyApi(NsxPolicySecurityPolicyBaseApi):
+    """NSX Policy Gateway policy (Edge firewall)"""
+    @property
+    def entry_def(self):
+        return core_defs.GatewayPolicyRuleDef
+
+    @property
+    def parent_entry_def(self):
+        return core_defs.GatewayPolicyDef
 
 
 class NsxPolicyEnforcementPointApi(NsxPolicyResourceBase):
