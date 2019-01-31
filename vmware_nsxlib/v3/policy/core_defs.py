@@ -1079,35 +1079,52 @@ class IPProtocolServiceEntryDef(ServiceEntryDef):
         return body
 
 
-class CommunicationMapDef(ResourceDef):
-
-    @property
-    def path_pattern(self):
-        return (DOMAINS_PATH_PATTERN + "%s/security-policies/")
+class SecurityPolicyBaseDef(ResourceDef):
 
     @property
     def path_ids(self):
         return ('tenant', 'domain_id', 'map_id')
 
-    @staticmethod
-    def resource_type():
-        return 'SecurityPolicy'
-
     def path_defs(self):
         return (TenantDef, DomainDef)
 
     def get_obj_dict(self):
-        body = super(CommunicationMapDef, self).get_obj_dict()
+        body = super(SecurityPolicyBaseDef, self).get_obj_dict()
         self._set_attr_if_specified(body, 'category')
 
         return body
+
+
+class CommunicationMapDef(SecurityPolicyBaseDef):
+    """AKA security policy"""
+    @property
+    def path_pattern(self):
+        return (DOMAINS_PATH_PATTERN + "%s/security-policies/")
+
+    @staticmethod
+    def resource_type():
+        return 'SecurityPolicy'
 
     @staticmethod
     def sub_entries_path():
         return CommunicationMapEntryDef().get_last_section_dict_key
 
 
-class CommunicationMapEntryDef(ResourceDef):
+class GatewayPolicyDef(SecurityPolicyBaseDef):
+    @property
+    def path_pattern(self):
+        return (DOMAINS_PATH_PATTERN + "%s/gateway-policies/")
+
+    @staticmethod
+    def resource_type():
+        return 'GatewayPolicy'
+
+    @staticmethod
+    def sub_entries_path():
+        return GatewayPolicyRuleDef().get_last_section_dict_key
+
+
+class SecurityPolicyRuleBaseDef(ResourceDef):
     def get_groups_path(self, domain_id, group_ids):
         if not group_ids:
             return [constants.ANY_GROUP]
@@ -1129,11 +1146,6 @@ class CommunicationMapEntryDef(ResourceDef):
         return [constants.ANY_SERVICE]
 
     @property
-    def path_pattern(self):
-        return (DOMAINS_PATH_PATTERN +
-                "%s/security-policies/%s/rules/")
-
-    @property
     def path_ids(self):
         return ('tenant', 'domain_id', 'map_id', 'entry_id')
 
@@ -1141,11 +1153,8 @@ class CommunicationMapEntryDef(ResourceDef):
     def resource_type():
         return 'Rule'
 
-    def path_defs(self):
-        return (TenantDef, DomainDef, CommunicationMapDef)
-
     def get_obj_dict(self):
-        body = super(CommunicationMapEntryDef, self).get_obj_dict()
+        body = super(SecurityPolicyRuleBaseDef, self).get_obj_dict()
         domain_id = self.get_attr('domain_id')
         if self.has_attr('source_groups'):
             body['source_groups'] = self.get_groups_path(
@@ -1161,6 +1170,28 @@ class CommunicationMapEntryDef(ResourceDef):
             service_ids = self.get_attr('service_ids')
             body['services'] = self.get_services_path(service_ids)
         return body
+
+
+class CommunicationMapEntryDef(SecurityPolicyRuleBaseDef):
+
+    @property
+    def path_pattern(self):
+        return (DOMAINS_PATH_PATTERN +
+                "%s/security-policies/%s/rules/")
+
+    def path_defs(self):
+        return (TenantDef, DomainDef, CommunicationMapDef)
+
+
+class GatewayPolicyRuleDef(SecurityPolicyRuleBaseDef):
+
+    @property
+    def path_pattern(self):
+        return (DOMAINS_PATH_PATTERN +
+                "%s/gateway-policies/%s/rules/")
+
+    def path_defs(self):
+        return (TenantDef, DomainDef, GatewayPolicyDef)
 
 
 # Currently supports only NSXT
