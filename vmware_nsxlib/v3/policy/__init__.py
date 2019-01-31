@@ -72,8 +72,8 @@ class NsxPolicyLib(lib.NsxLibBase):
             *args)
         self.tier1_segment_port = (
             core_resources.NsxPolicyTier1SegmentPortApi(*args))
-        self.comm_map = core_resources.NsxPolicyCommunicationMapApi(
-            *args)
+        self.comm_map = core_resources.NsxPolicyCommunicationMapApi(*args)
+        self.gateway_policy = core_resources.NsxPolicyGatewayPolicyApi(*args)
         self.enforcement_point = core_resources.NsxPolicyEnforcementPointApi(
             *args)
         self.transport_zone = core_resources.NsxPolicyTransportZoneApi(
