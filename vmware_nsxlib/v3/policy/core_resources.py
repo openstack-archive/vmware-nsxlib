@@ -706,6 +706,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                             failover_mode=constants.NON_PREEMPTIVE,
                             route_advertisement=IGNORE,
                             dhcp_config=IGNORE,
+                            disable_firewall=IGNORE,
                             tags=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
         tier1_id = self._init_obj_uuid(tier1_id)
@@ -718,6 +719,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    failover_mode=failover_mode,
                                    route_advertisement=route_advertisement,
                                    dhcp_config=dhcp_config,
+                                   disable_firewall=disable_firewall,
                                    tenant=tenant)
 
         self._create_or_store(tier1_def)
@@ -740,6 +742,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                force_whitelisting=IGNORE,
                failover_mode=IGNORE, tier0=IGNORE,
                dhcp_config=IGNORE, tags=IGNORE,
+               disable_firewall=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
         # Note(asarfaty): L2/L3 PATCH APIs don't support partial updates yet
         # TODO(asarfaty): Remove this when supported
@@ -753,6 +756,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                      failover_mode=failover_mode,
                      dhcp_config=dhcp_config,
                      tier0=tier0,
+                     disable_firewall=disable_firewall,
                      tags=tags,
                      tenant=tenant)
 
@@ -904,7 +908,8 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
     @check_allowed_passthrough
     def set_standby_relocation(self, tier1_id,
                                enable_standby_relocation=True,
-                               tenant=constants.POLICY_INFRA_TENANT):
+                               tenant=constants.POLICY_INFRA_TENANT,
+                               sleep=None, max_attempts=None):
         """Set the flag for standby relocation on the nsx logical router port
 
         Using passthrough api, as the policy api does not support this yet
@@ -914,9 +919,36 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
         nsx_router_uuid = self.get_realized_id(
             tier1_id, tenant=tenant, realization_info=realization_info)
-        self.nsx_api.logical_router.update(
-            nsx_router_uuid,
-            enable_standby_relocation=enable_standby_relocation)
+
+        if enable_standby_relocation:
+            # wait until the logical router has the edge_cluster
+            # even after it is realized, the edge cluster can still be missing
+            if sleep is None:
+                sleep = 0.5
+            if max_attempts is None:
+                max_attempts = self.nsxlib_config.realization_max_attempts
+            test_num = 0
+            while test_num < max_attempts:
+                lr = self.nsx_api.logical_router.get(nsx_router_uuid)
+                if lr.get('edge_cluster_id'):
+                    self.nsx_api.logical_router.update(
+                        nsx_router_uuid,
+                        enable_standby_relocation=True)
+                    return
+                eventlet.sleep(sleep)
+                test_num += 1
+
+            err_msg = (_("Could not find edge cluster on logical router "
+                         "%(lr)s after %(attempts)s "
+                         "attempts with %(sleep)s seconds sleep") %
+                       {'lr': nsx_router_uuid,
+                        'attempts': max_attempts,
+                        'sleep': sleep})
+            raise exceptions.ManagerError(details=err_msg)
+        else:
+            self.nsx_api.logical_router.update(
+                nsx_router_uuid,
+                enable_standby_relocation=False)
 
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
@@ -933,6 +965,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                             force_whitelisting=IGNORE,
                             default_rule_logging=IGNORE,
                             transit_subnets=IGNORE,
+                            disable_firewall=IGNORE,
                             tags=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
 
@@ -946,6 +979,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                                    force_whitelisting=force_whitelisting,
                                    default_rule_logging=default_rule_logging,
                                    transit_subnets=transit_subnets,
+                                   disable_firewall=disable_firewall,
                                    tags=tags,
                                    tenant=tenant)
         self.policy_api.create_or_update(tier0_def)
@@ -970,6 +1004,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                force_whitelisting=IGNORE,
                default_rule_logging=IGNORE,
                transit_subnets=IGNORE,
+               disable_firewall=IGNORE,
                tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
 
@@ -981,6 +1016,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                      force_whitelisting=force_whitelisting,
                      default_rule_logging=default_rule_logging,
                      transit_subnets=transit_subnets,
+                     disable_firewall=disable_firewall,
                      tags=tags,
                      tenant=tenant)
 
