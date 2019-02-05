@@ -2535,6 +2535,14 @@ class TestPolicyTier1Segment(NsxPolicyLibTestCase):
                 name=name, tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
 
+    def test_build_segment_subnet(self):
+        gateway_address = "10.0.0.1/24"
+        dhcp_ranges = None
+        subnet = self.resourceApi.build_segment_subnet(
+            gateway_address=gateway_address, dhcp_ranges=dhcp_ranges)
+        self.assertEqual(gateway_address, subnet.gateway_address)
+        self.assertEqual(dhcp_ranges, subnet.dhcp_ranges)
+
 
 class TestPolicySegment(NsxPolicyLibTestCase):
 
@@ -2617,6 +2625,14 @@ class TestPolicySegment(NsxPolicyLibTestCase):
             api_put.assert_called_once_with(
                 '%s/segments/%s' % (TEST_TENANT, segment_id),
                 {'id': segment_id, 'connectivity_path': None, 'subnets': None})
+
+    def test_build_segment_subnet(self):
+        gateway_address = "10.0.0.1/24"
+        dhcp_ranges = None
+        subnet = self.resourceApi.build_segment_subnet(
+            gateway_address=gateway_address, dhcp_ranges=dhcp_ranges)
+        self.assertEqual(gateway_address, subnet.gateway_address)
+        self.assertEqual(dhcp_ranges, subnet.dhcp_ranges)
 
 
 class TestPolicyIpPool(NsxPolicyLibTestCase):
