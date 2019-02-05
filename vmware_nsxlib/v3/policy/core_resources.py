@@ -1323,6 +1323,9 @@ class NsxPolicyTier1SegmentApi(NsxPolicyResourceBase):
     def entry_def(self):
         return core_defs.Tier1SegmentDef
 
+    def build_subnet(self, gateway_address, dhcp_ranges=None):
+        return core_defs.Subnet(gateway_address, dhcp_ranges)
+
     def create_or_overwrite(self, name, tier1_id,
                             segment_id=None,
                             description=IGNORE,
@@ -1398,6 +1401,9 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
     @property
     def entry_def(self):
         return core_defs.SegmentDef
+
+    def build_subnet(self, gateway_address, dhcp_ranges=None):
+        return core_defs.Subnet(gateway_address, dhcp_ranges)
 
     def create_or_overwrite(self, name,
                             segment_id=None,
