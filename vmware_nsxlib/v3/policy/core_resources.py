@@ -782,26 +782,39 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 
-    def set_edge_cluster_path(self, tier1_id, edge_cluster_path,
-                              tenant=constants.POLICY_INFRA_TENANT):
+    def _locale_service_id(self, tier1_id):
         # Supporting only a single locale-service per router for now
         # with the same id as the router id with a constant suffix
+        return tier1_id + self.LOCALE_SERVICE_SUFF
+
+    def set_edge_cluster_path(self, tier1_id, edge_cluster_path,
+                              tenant=constants.POLICY_INFRA_TENANT):
         t1service_def = core_defs.Tier1LocaleServiceDef(
             tier1_id=tier1_id,
-            service_id=tier1_id + self.LOCALE_SERVICE_SUFF,
+            service_id=self._locale_service_id(tier1_id),
             edge_cluster_path=edge_cluster_path,
-            tenant=constants.POLICY_INFRA_TENANT)
+            tenant=tenant)
         self.policy_api.create_or_update(t1service_def)
 
     def remove_edge_cluster(self, tier1_id,
                             tenant=constants.POLICY_INFRA_TENANT):
-        # Supporting only a single locale-service per router for now
-        # with the same id as the router id with a constant suffix
         t1service_def = core_defs.Tier1LocaleServiceDef(
             tier1_id=tier1_id,
-            service_id=tier1_id + self.LOCALE_SERVICE_SUFF,
-            tenant=constants.POLICY_INFRA_TENANT)
+            service_id=self._locale_service_id(tier1_id),
+            tenant=tenant)
         self.policy_api.delete(t1service_def)
+
+    def get_edge_cluster_path(self, tier1_id,
+                              tenant=constants.POLICY_INFRA_TENANT):
+        t1service_def = core_defs.Tier1LocaleServiceDef(
+            tier1_id=tier1_id,
+            service_id=self._locale_service_id(tier1_id),
+            tenant=tenant)
+        try:
+            t1service = self.policy_api.get(t1service_def)
+            return t1service.get('edge_cluster_path')
+        except exceptions.ResourceNotFound:
+            return
 
     def get_realized_state(self, tier1_id, entity_type=None,
                            tenant=constants.POLICY_INFRA_TENANT,
