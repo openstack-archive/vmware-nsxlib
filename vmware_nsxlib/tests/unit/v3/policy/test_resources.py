@@ -1882,6 +1882,11 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(obj_id, result['id'])
 
+    def test_get_path(self):
+        obj_id = '111'
+        result = self.resourceApi.get_path(obj_id, tenant=TEST_TENANT)
+        self.assertEqual('/%s/tier-1s/%s' % (TEST_TENANT, obj_id), result)
+
     def test_get_with_no_cache(self):
         """Make sure cache is not used for GET requests"""
         obj_id = '111'
@@ -2084,6 +2089,45 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             self.resourceApi.set_dhcp_relay(tier1_id, segment_id, relay_id)
             nsx_lrp_update.assert_called_once_with(
                 lrp_id, relay_service_uuid=relay_id)
+
+    def test_get_edge_cluster(self):
+        tier1_id = '111'
+        path = 'dummy/path'
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={'edge_cluster_path': path}):
+            result = self.resourceApi.get_edge_cluster_path(
+                tier1_id, tenant=TEST_TENANT)
+            self.assertEqual(path, result)
+
+    def test_set_edge_cluster(self):
+        tier1_id = '111'
+        path = 'dummy/path'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.set_edge_cluster_path(
+                tier1_id, path,
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.Tier1LocaleServiceDef(
+                tier1_id=tier1_id,
+                service_id=self.resourceApi._locale_service_id(tier1_id),
+                edge_cluster_path=path,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_remove_edge_cluster(self):
+        tier1_id = '111'
+        with mock.patch.object(self.policy_api,
+                               "delete") as api_call:
+            self.resourceApi.remove_edge_cluster(
+                tier1_id,
+                tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1LocaleServiceDef(
+                tier1_id=tier1_id,
+                service_id=self.resourceApi._locale_service_id(tier1_id),
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
 
 
 class TestPolicyTier1NoPassthrough(TestPolicyTier1):
@@ -2369,6 +2413,11 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                                               tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(obj_id, result['id'])
+
+    def test_get_path(self):
+        obj_id = '111'
+        result = self.resourceApi.get_path(obj_id, tenant=TEST_TENANT)
+        self.assertEqual('/%s/tier-0s/%s' % (TEST_TENANT, obj_id), result)
 
     def test_get_with_cache(self):
         """Make sure the cache is used for GET requests"""
