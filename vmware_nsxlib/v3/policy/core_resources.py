@@ -2514,12 +2514,16 @@ class NsxPolicyCommunicationMapApi(NsxPolicyResourceBase):
                source_groups=IGNORE, dest_groups=IGNORE,
                direction=IGNORE, logged=IGNORE, tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
-
+        # Note(asarfaty): Category is mandatory in update calls for now
+        # although it cannot change. Getting it from the NSX
+        orig_entry = self.get(domain_id, map_id, tenant=tenant)
+        category = orig_entry.get('category')
         parent_def = self._init_parent_def(
             domain_id=domain_id,
             map_id=map_id,
             name=name,
             description=description,
+            category=category,
             tags=tags,
             tenant=tenant)
 

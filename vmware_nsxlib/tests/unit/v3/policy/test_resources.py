@@ -1376,8 +1376,11 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         dest_group = 'ng2'
         service1_id = 'nc1'
         service2_id = 'nc2'
+        category = constants.CATEGORY_EMERGENCY
         with mock.patch.object(self.policy_api, "get",
                                return_value={}),\
+            mock.patch.object(self.resourceApi, "get",
+                              return_value={'category': category}),\
             mock.patch.object(self.policy_api,
                               "create_with_parent") as update_call:
             self.resourceApi.update(domain_id, map_id,
@@ -1392,6 +1395,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 map_id=map_id,
                 name=name,
                 description=description,
+                category=category,
                 tenant=TEST_TENANT)
 
             entry_def = core_defs.CommunicationMapEntryDef(
@@ -1410,6 +1414,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         domain_id = 'test'
         map_id = '111'
         dest_groups = ['/infra/stuff']
+        category = constants.CATEGORY_EMERGENCY
 
         # Until policy PATCH is fixed to accept partial update, we
         # call get on child entry
@@ -1417,7 +1422,9 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             self.policy_api, "get",
             return_value={'display_name': name,
                           'source_groups': ['/infra/other/stuff'],
-                          'destination_groups': dest_groups}):
+                          'destination_groups': dest_groups}),\
+            mock.patch.object(self.resourceApi, "get",
+                              return_value={'category': category}):
             self.resourceApi.update(domain_id, map_id,
                                     description=None,
                                     source_groups=None,
@@ -1426,6 +1433,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
 
         expected_body = {'id': map_id,
                          'description': None,
+                         'category': category,
                          'resource_type': 'SecurityPolicy',
                          'rules': [{
                              'display_name': name,
