@@ -82,11 +82,10 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         self.client.delete(resource)
 
     def find_cert_and_identity(self, name, cert_pem):
-        nsx_style_pem = cert_pem
         certs = self.get_certs()
 
         cert_ids = [cert['id'] for cert in certs
-                    if cert['pem_encoded'] == nsx_style_pem.decode('ascii')]
+                    if cert['pem_encoded'] == cert_pem]
         if not cert_ids:
             raise nsxlib_exc.ResourceNotFound(
                 manager=self.client.nsx_api_managers,
