@@ -281,7 +281,8 @@ class RouterDef(ResourceDef):
 
         self._set_attrs_if_specified(body, ['failover_mode',
                                             'force_whitelisting',
-                                            'default_rule_logging'])
+                                            'default_rule_logging',
+                                            'disable_firewall'])
 
         # Add dhcp relay config
         # TODO(asarfaty): this can be either dhcp or dhcp relay config
