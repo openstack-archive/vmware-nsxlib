@@ -714,6 +714,108 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                            application_profile_id=app_profile_id)
 
 
+class NsxPolicyLBMonitorProfileBase(NsxPolicyResourceBase):
+    """NSX Policy LB monitor profile"""
+
+    def _init_missing_kwargs(self, kwargs):
+        for arg in list(set(self.entry_def.body) - set(kwargs.keys())):
+            kwargs[arg] = IGNORE
+        return kwargs
+
+    def create_or_overwrite(self,
+                            lb_monitor_profile_id=None,
+                            tags=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT,
+                            **kwargs):
+        lb_monitor_profile_id = self._init_obj_uuid(lb_monitor_profile_id)
+        kwargs = self._init_missing_kwargs(kwargs)
+        lb_monitor_profile_def = self._init_def(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            tenant=tenant,
+            **kwargs)
+        self.policy_api.create_or_update(lb_monitor_profile_def)
+        return lb_monitor_profile_id
+
+    def delete(self, lb_monitor_profile_id,
+               tenant=constants.POLICY_INFRA_TENANT):
+        lb_monitor_profile_def = self.entry_def(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tenant=tenant)
+        self.policy_api.delete(lb_monitor_profile_def)
+
+    def get(self, lb_monitor_profile_id,
+            tenant=constants.POLICY_INFRA_TENANT):
+        lb_monitor_profile_def = self.entry_def(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tenant=tenant)
+        return self.policy_api.get(lb_monitor_profile_def)
+
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        lb_monitor_profile_def = self.entry_def(tenant=tenant)
+        return self._list(lb_monitor_profile_def)
+
+    def update(self,
+               lb_monitor_profile_id,
+               display_name=None,
+               tags=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT,
+               **kwargs):
+        kwargs = self._init_missing_kwargs(kwargs)
+        self._update(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            display_name=display_name,
+            tags=tags,
+            tenant=tenant,
+            **kwargs)
+
+    def get_path(self, lb_monitor_profile_id,
+                 tenant=constants.POLICY_INFRA_TENANT):
+        mon_def = self.entry_def(lb_monitor_profile_id=lb_monitor_profile_id,
+                                 tenant=tenant)
+        return mon_def.get_resource_full_path()
+
+
+class NsxPolicyLBMonitorProfileHttpApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB HTTP monitor profile"""
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBHttpMonitorProfileDef
+
+
+class NsxPolicyLBMonitorProfileHttpsApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB HTTP monitor profile"""
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBHttpsMonitorProfileDef
+
+
+class NsxPolicyLBMonitorProfileUdpApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB UDP monitor profile"""
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBUdpMonitorProfileDef
+
+
+class NsxPolicyLBMonitorProfileIcmpApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB ICMP monitor profile"""
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBIcmpMonitorProfileDef
+
+
+class NsxPolicyLBMonitorProfileTcpApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB TCP monitor profile"""
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBTcpMonitorProfileDef
+
+
 class NsxPolicyLoadBalancerApi(object):
     """This is the class that have all load balancer policy apis"""
     def __init__(self, *args):
@@ -729,3 +831,9 @@ class NsxPolicyLoadBalancerApi(object):
         self.lb_service = NsxPolicyLoadBalancerServiceApi(*args)
         self.virtual_server = NsxPolicyLoadBalancerVirtualServerAPI(*args)
         self.lb_pool = NsxPolicyLoadBalancerPoolApi(*args)
+        self.lb_monitor_profile_http = NsxPolicyLBMonitorProfileHttpApi(*args)
+        self.lb_monitor_profile_https = (
+            NsxPolicyLBMonitorProfileHttpsApi(*args))
+        self.lb_monitor_profile_udp = NsxPolicyLBMonitorProfileUdpApi(*args)
+        self.lb_monitor_profile_icmp = NsxPolicyLBMonitorProfileIcmpApi(*args)
+        self.lb_monitor_profile_tcp = NsxPolicyLBMonitorProfileTcpApi(*args)

@@ -21,6 +21,7 @@ LB_VIRTUAL_SERVERS_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-virtual-servers/"
 LB_SERVICES_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-services/"
 LB_POOL_PATH_PATTERN = TENANTS_PATH_PATTERN + "lb-pools/"
 LB_APP_PROFILE_PATTERN = TENANTS_PATH_PATTERN + "lb-app-profiles/"
+LB_MONITOR_PROFILE_PATTERN = TENANTS_PATH_PATTERN + "lb-monitor-profiles/"
 LB_CLIENT_SSL_PROFILE_PATTERN = (TENANTS_PATH_PATTERN +
                                  "lb-client-ssl-profiles/")
 LB_PERSISTENCE_PROFILE_PATTERN = (TENANTS_PATH_PATTERN +
@@ -368,3 +369,63 @@ class LBServiceUsageDef(ResourceDef):
     @property
     def path_ids(self):
         return ('tenant', 'lb_service_id', '')
+
+
+class LBMonitorProfileBaseDef(ResourceDef):
+
+    body = ['display_name', 'interval', 'timeout', 'id', 'fall_count',
+            'rise_count']
+
+    @property
+    def path_pattern(self):
+        return LB_MONITOR_PROFILE_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'lb_monitor_profile_id')
+
+    def get_obj_dict(self):
+        body = super(LBMonitorProfileBaseDef, self).get_obj_dict()
+        self._set_attrs_if_specified(body, self.body)
+        return body
+
+
+class LBHttpMonitorProfileDef(LBMonitorProfileBaseDef):
+
+    body = LBMonitorProfileBaseDef.body + [
+        'monitor_port', 'request_url', 'request_method', 'request_version',
+        'request_headers', 'request_body', 'response_status_codes']
+
+    @staticmethod
+    def resource_type():
+        return "LBHttpMonitorProfile"
+
+
+class LBHttpsMonitorProfileDef(LBHttpMonitorProfileDef):
+
+    @staticmethod
+    def resource_type():
+        return "LBHttpsMonitorProfile"
+
+
+class LBUdpMonitorProfileDef(LBMonitorProfileBaseDef):
+    body = LBMonitorProfileBaseDef.body + ['monitor_port', 'receive', 'send']
+
+    @staticmethod
+    def resource_type():
+        return "LBUdpMonitorProfile"
+
+
+class LBIcmpMonitorProfileDef(LBMonitorProfileBaseDef):
+
+    @staticmethod
+    def resource_type():
+        return "LBIcmpMonitorProfile"
+
+
+class LBTcpMonitorProfileDef(LBMonitorProfileBaseDef):
+    body = LBMonitorProfileBaseDef.body + ['monitor_port']
+
+    @staticmethod
+    def resource_type():
+        return "LBTcpMonitorProfile"
