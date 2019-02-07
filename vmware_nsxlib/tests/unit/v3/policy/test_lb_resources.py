@@ -863,3 +863,140 @@ class TestPolicyLBPoolApi(test_resources.NsxPolicyLibTestCase):
                 snat_translation=snat_translation,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
+
+
+class BaseTestPolicyLBMonitorProfileApi(test_resources.NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(BaseTestPolicyLBMonitorProfileApi, self).setUp()
+        self.resourceApi = None
+        self.obj_def = None
+
+    def test_create_with_id(self):
+        name = 'd1'
+        obj_id = '111'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            result = self.resourceApi.create_or_overwrite(
+                lb_monitor_profile_id=obj_id,
+                display_name=name,
+                tenant=TEST_TENANT)
+            expected_def = self.obj_def(
+                lb_monitor_profile_id=obj_id,
+                display_name=name,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual(obj_id, result)
+
+    def test_create_without_id(self):
+        name = 'd1'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            result = self.resourceApi.create_or_overwrite(
+                display_name=name,
+                tenant=TEST_TENANT)
+            expected_def = self.obj_def(
+                lb_monitor_profile_id=mock.ANY,
+                display_name=name,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertIsNotNone(result)
+
+    def test_delete(self):
+        obj_id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(obj_id, tenant=TEST_TENANT)
+            expected_def = self.obj_def(
+                lb_monitor_profile_id=obj_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        obj_id = '111'
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={'id': obj_id}) as api_call:
+            result = self.resourceApi.get(obj_id, tenant=TEST_TENANT)
+            expected_def = self.obj_def(
+                lb_monitor_profile_id=obj_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual(obj_id, result['id'])
+
+    def test_get_by_name(self):
+        name = 'd1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = self.obj_def(
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list",
+                               return_value={'results': []}) as api_call:
+            result = self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = self.obj_def(
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual([], result)
+
+    def test_update(self):
+        obj_id = '111'
+        name = 'new name'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(obj_id,
+                                    display_name=name,
+                                    tenant=TEST_TENANT)
+            expected_def = self.obj_def(
+                lb_monitor_profile_id=obj_id,
+                display_name=name,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(update_call, expected_def)
+
+
+class TestPolicyLBMonitorProfileHttpApi(BaseTestPolicyLBMonitorProfileApi):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBMonitorProfileHttpApi, self).setUp()
+        self.resourceApi = (
+            self.policy_lib.load_balancer.lb_monitor_profile_http)
+        self.obj_def = lb_defs.LBHttpMonitorProfileDef
+
+
+class TestPolicyLBMonitorProfileHttpsApi(BaseTestPolicyLBMonitorProfileApi):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBMonitorProfileHttpsApi, self).setUp()
+        self.resourceApi = (
+            self.policy_lib.load_balancer.lb_monitor_profile_https)
+        self.obj_def = lb_defs.LBHttpsMonitorProfileDef
+
+
+class TestPolicyLBMonitorProfileUdpApi(BaseTestPolicyLBMonitorProfileApi):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBMonitorProfileUdpApi, self).setUp()
+        self.resourceApi = (
+            self.policy_lib.load_balancer.lb_monitor_profile_udp)
+        self.obj_def = lb_defs.LBUdpMonitorProfileDef
+
+
+class TestPolicyLBMonitorProfileIcmpApi(BaseTestPolicyLBMonitorProfileApi):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBMonitorProfileIcmpApi, self).setUp()
+        self.resourceApi = (
+            self.policy_lib.load_balancer.lb_monitor_profile_icmp)
+        self.obj_def = lb_defs.LBIcmpMonitorProfileDef
+
+
+class TestPolicyLBMonitorProfileTcpApi(BaseTestPolicyLBMonitorProfileApi):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyLBMonitorProfileTcpApi, self).setUp()
+        self.resourceApi = (
+            self.policy_lib.load_balancer.lb_monitor_profile_tcp)
+        self.obj_def = lb_defs.LBTcpMonitorProfileDef
