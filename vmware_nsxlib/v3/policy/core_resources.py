@@ -734,6 +734,10 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
         return self.policy_api.get(tier1_def, silent=silent)
 
+    def get_path(self, tier1_id, tenant=constants.POLICY_INFRA_TENANT):
+        tier1_def = self.entry_def(tier1_id=tier1_id, tenant=tenant)
+        return tier1_def.get_resource_path()
+
     def list(self, tenant=constants.POLICY_INFRA_TENANT):
         tier1_def = self.entry_def(tenant=tenant)
         return self._list(tier1_def)
@@ -994,6 +998,10 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
             silent=False):
         tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
         return self.policy_api.get(tier0_def, silent=silent)
+
+    def get_path(self, tier0_id, tenant=constants.POLICY_INFRA_TENANT):
+        tier0_def = self.entry_def(tier0_id=tier0_id, tenant=tenant)
+        return tier0_def.get_resource_path()
 
     def list(self, tenant=constants.POLICY_INFRA_TENANT):
         tier0_def = self.entry_def(tenant=tenant)

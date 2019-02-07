@@ -2389,6 +2389,11 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(obj_id, result['id'])
 
+    def test_get_path(self):
+        obj_id = '111'
+        result = self.resourceApi.get_path(obj_id, tenant=TEST_TENANT)
+        self.assertEqual('%s/tier-0s/%s' % (TEST_TENANT, obj_id), result)
+
     def test_get_with_cache(self):
         """Make sure the cache is used for GET requests"""
         obj_id = '111'
