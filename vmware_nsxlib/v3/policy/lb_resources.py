@@ -14,7 +14,10 @@
 #    under the License.
 #
 
+import abc
+
 from oslo_log import log as logging
+import six
 
 from vmware_nsxlib.v3.policy import constants
 from vmware_nsxlib.v3.policy import lb_defs
@@ -719,6 +722,302 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                            application_profile_id=app_profile_id)
 
 
+@six.add_metaclass(abc.ABCMeta)
+class NsxPolicyLBMonitorProfileBase(NsxPolicyResourceBase):
+    """NSX Policy LB monitor profile"""
+
+    def create_or_overwrite(self,
+                            lb_monitor_profile_id=None,
+                            tags=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT,
+                            **kwargs):
+        lb_monitor_profile_id = self._init_obj_uuid(lb_monitor_profile_id)
+        lb_monitor_profile_def = self._init_def(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            tenant=tenant,
+            **kwargs)
+        self.policy_api.create_or_store(lb_monitor_profile_def)
+        return lb_monitor_profile_id
+
+    def delete(self, lb_monitor_profile_id,
+               tenant=constants.POLICY_INFRA_TENANT):
+        lb_monitor_profile_def = self.entry_def(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tenant=tenant)
+        self.policy_api.delete(lb_monitor_profile_def)
+
+    def get(self, lb_monitor_profile_id,
+            tenant=constants.POLICY_INFRA_TENANT):
+        lb_monitor_profile_def = self.entry_def(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tenant=tenant)
+        return self.policy_api.get(lb_monitor_profile_def)
+
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        lb_monitor_profile_def = self.entry_def(tenant=tenant)
+        return self._list(lb_monitor_profile_def)
+
+    def update(self,
+               lb_monitor_profile_id,
+               display_name=IGNORE,
+               tags=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT,
+               **kwargs):
+        self._update(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            display_name=display_name,
+            tags=tags,
+            tenant=tenant,
+            **kwargs)
+
+    def get_path(self, lb_monitor_profile_id,
+                 tenant=constants.POLICY_INFRA_TENANT):
+        mon_def = self.entry_def(lb_monitor_profile_id=lb_monitor_profile_id,
+                                 tenant=tenant)
+        return mon_def.get_resource_full_path()
+
+
+class NsxPolicyLBMonitorProfileHttpApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB HTTP monitor profile"""
+
+    def create_or_overwrite(self,
+                            lb_monitor_profile_id=None,
+                            tags=IGNORE,
+                            display_name=IGNORE,
+                            interval=IGNORE,
+                            timeout=IGNORE,
+                            fall_count=IGNORE,
+                            rise_count=IGNORE,
+                            monitor_port=IGNORE,
+                            request_url=IGNORE,
+                            request_method=IGNORE,
+                            request_version=IGNORE,
+                            request_headers=IGNORE,
+                            request_body=IGNORE,
+                            response_status_codes=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxPolicyLBMonitorProfileHttpApi,
+                     self).create_or_overwrite(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            display_name=display_name,
+            interval=interval,
+            timeout=timeout,
+            fall_count=fall_count,
+            rise_count=rise_count,
+            monitor_port=monitor_port,
+            request_url=request_url,
+            request_method=request_method,
+            request_version=request_version,
+            request_headers=request_headers,
+            request_body=request_body,
+            response_status_codes=response_status_codes,
+            tenant=tenant)
+
+    def update(self,
+               lb_monitor_profile_id,
+               tags=IGNORE,
+               display_name=IGNORE,
+               interval=IGNORE,
+               timeout=IGNORE,
+               fall_count=IGNORE,
+               rise_count=IGNORE,
+               monitor_port=IGNORE,
+               request_url=IGNORE,
+               request_method=IGNORE,
+               request_version=IGNORE,
+               request_headers=IGNORE,
+               request_body=IGNORE,
+               response_status_codes=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxPolicyLBMonitorProfileHttpApi, self).update(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            display_name=display_name,
+            interval=interval,
+            timeout=timeout,
+            fall_count=fall_count,
+            rise_count=rise_count,
+            monitor_port=monitor_port,
+            request_url=request_url,
+            request_method=request_method,
+            request_version=request_version,
+            request_headers=request_headers,
+            request_body=request_body,
+            response_status_codes=response_status_codes,
+            tenant=tenant)
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBHttpMonitorProfileDef
+
+
+class NsxPolicyLBMonitorProfileHttpsApi(NsxPolicyLBMonitorProfileHttpApi):
+    """NSX Policy LB HTTPS monitor profile"""
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBHttpsMonitorProfileDef
+
+
+class NsxPolicyLBMonitorProfileUdpApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB UDP monitor profile"""
+
+    def create_or_overwrite(self,
+                            lb_monitor_profile_id=None,
+                            tags=IGNORE,
+                            display_name=IGNORE,
+                            interval=IGNORE,
+                            timeout=IGNORE,
+                            fall_count=IGNORE,
+                            rise_count=IGNORE,
+                            monitor_port=IGNORE,
+                            receive=IGNORE,
+                            send=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxPolicyLBMonitorProfileUdpApi,
+                     self).create_or_overwrite(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            display_name=display_name,
+            interval=interval,
+            timeout=timeout,
+            fall_count=fall_count,
+            rise_count=rise_count,
+            monitor_port=monitor_port,
+            receive=receive,
+            send=send,
+            tenant=tenant)
+
+    def update(self,
+               lb_monitor_profile_id,
+               tags=IGNORE,
+               display_name=IGNORE,
+               interval=IGNORE,
+               timeout=IGNORE,
+               fall_count=IGNORE,
+               rise_count=IGNORE,
+               monitor_port=IGNORE,
+               receive=IGNORE,
+               send=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxPolicyLBMonitorProfileUdpApi, self).update(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            display_name=display_name,
+            interval=interval,
+            timeout=timeout,
+            fall_count=fall_count,
+            rise_count=rise_count,
+            monitor_port=monitor_port,
+            receive=receive,
+            send=send,
+            tenant=tenant)
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBUdpMonitorProfileDef
+
+
+class NsxPolicyLBMonitorProfileIcmpApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB ICMP monitor profile"""
+
+    def create_or_overwrite(self,
+                            lb_monitor_profile_id=None,
+                            tags=IGNORE,
+                            display_name=IGNORE,
+                            interval=IGNORE,
+                            timeout=IGNORE,
+                            fall_count=IGNORE,
+                            rise_count=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxPolicyLBMonitorProfileIcmpApi,
+                     self).create_or_overwrite(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            display_name=display_name,
+            interval=interval,
+            timeout=timeout,
+            fall_count=fall_count,
+            rise_count=rise_count,
+            tenant=tenant)
+
+    def update(self,
+               lb_monitor_profile_id,
+               tags=IGNORE,
+               display_name=IGNORE,
+               interval=IGNORE,
+               timeout=IGNORE,
+               fall_count=IGNORE,
+               rise_count=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxPolicyLBMonitorProfileIcmpApi, self).update(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            display_name=display_name,
+            interval=interval,
+            timeout=timeout,
+            fall_count=fall_count,
+            rise_count=rise_count,
+            tenant=tenant)
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBIcmpMonitorProfileDef
+
+
+class NsxPolicyLBMonitorProfileTcpApi(NsxPolicyLBMonitorProfileBase):
+    """NSX Policy LB TCP monitor profile"""
+
+    def create_or_overwrite(self,
+                            lb_monitor_profile_id=None,
+                            tags=IGNORE,
+                            display_name=IGNORE,
+                            interval=IGNORE,
+                            timeout=IGNORE,
+                            fall_count=IGNORE,
+                            rise_count=IGNORE,
+                            monitor_port=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxPolicyLBMonitorProfileTcpApi,
+                     self).create_or_overwrite(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            display_name=display_name,
+            interval=interval,
+            timeout=timeout,
+            fall_count=fall_count,
+            rise_count=rise_count,
+            monitor_port=monitor_port,
+            tenant=tenant)
+
+    def update(self,
+               lb_monitor_profile_id,
+               tags=IGNORE,
+               display_name=IGNORE,
+               interval=IGNORE,
+               timeout=IGNORE,
+               fall_count=IGNORE,
+               rise_count=IGNORE,
+               monitor_port=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxPolicyLBMonitorProfileTcpApi, self).update(
+            lb_monitor_profile_id=lb_monitor_profile_id,
+            tags=tags,
+            display_name=display_name,
+            interval=interval,
+            timeout=timeout,
+            fall_count=fall_count,
+            rise_count=rise_count,
+            monitor_port=monitor_port,
+            tenant=tenant)
+
+    @property
+    def entry_def(self):
+        return lb_defs.LBTcpMonitorProfileDef
+
+
 class NsxPolicyLoadBalancerApi(object):
     """This is the class that have all load balancer policy apis"""
     def __init__(self, *args):
@@ -734,3 +1033,9 @@ class NsxPolicyLoadBalancerApi(object):
         self.lb_service = NsxPolicyLoadBalancerServiceApi(*args)
         self.virtual_server = NsxPolicyLoadBalancerVirtualServerAPI(*args)
         self.lb_pool = NsxPolicyLoadBalancerPoolApi(*args)
+        self.lb_monitor_profile_http = NsxPolicyLBMonitorProfileHttpApi(*args)
+        self.lb_monitor_profile_https = (
+            NsxPolicyLBMonitorProfileHttpsApi(*args))
+        self.lb_monitor_profile_udp = NsxPolicyLBMonitorProfileUdpApi(*args)
+        self.lb_monitor_profile_icmp = NsxPolicyLBMonitorProfileIcmpApi(*args)
+        self.lb_monitor_profile_tcp = NsxPolicyLBMonitorProfileTcpApi(*args)
