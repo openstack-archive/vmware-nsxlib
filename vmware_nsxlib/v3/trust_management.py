@@ -12,6 +12,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+import six
+
 from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3 import utils
 
@@ -82,11 +85,13 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
         self.client.delete(resource)
 
     def find_cert_and_identity(self, name, cert_pem):
-        nsx_style_pem = cert_pem
         certs = self.get_certs()
 
+        if not isinstance(cert_pem, six.text_type):
+            cert_pem = cert_pem.decode('ascii')
+
         cert_ids = [cert['id'] for cert in certs
-                    if cert['pem_encoded'] == nsx_style_pem.decode('ascii')]
+                    if cert['pem_encoded'] == cert_pem]
         if not cert_ids:
             raise nsxlib_exc.ResourceNotFound(
                 manager=self.client.nsx_api_managers,
