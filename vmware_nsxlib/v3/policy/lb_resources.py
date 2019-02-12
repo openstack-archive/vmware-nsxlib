@@ -466,6 +466,7 @@ class NsxPolicyLoadBalancerServiceApi(NsxPolicyResourceBase):
                             description=IGNORE,
                             tags=IGNORE,
                             size=IGNORE,
+                            connectivity_path=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
         lb_service_id = self._init_obj_uuid(lb_service_id)
         lb_service_def = self._init_def(
@@ -474,6 +475,7 @@ class NsxPolicyLoadBalancerServiceApi(NsxPolicyResourceBase):
             description=description,
             tags=tags,
             size=size,
+            connectivity_path=connectivity_path,
             tenant=tenant)
 
         self.policy_api.create_or_update(lb_service_def)
@@ -496,12 +498,14 @@ class NsxPolicyLoadBalancerServiceApi(NsxPolicyResourceBase):
 
     def update(self, lb_service_id, name=IGNORE,
                description=IGNORE, tags=IGNORE,
-               size=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
+               size=IGNORE, connectivity_path=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
         self._update(lb_service_id=lb_service_id,
                      name=name,
                      description=description,
                      tags=tags,
                      size=size,
+                     connectivity_path=connectivity_path,
                      tenant=tenant)
 
     def get_status(self, lb_service_id):
