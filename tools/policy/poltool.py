@@ -269,7 +269,8 @@ def main(argv=sys.argv):
         nsx_api_managers=[policy_ip],
         username=policy_username,
         password=policy_password)
-    nsxlib = v3.NsxPolicyLib(nsxlib_config)
+    from vmware_nsxlib.v3 import policy
+    nsxlib = policy.NsxPolicyLib(nsxlib_config)
 
     if op == 'get':
         if not resource_id:

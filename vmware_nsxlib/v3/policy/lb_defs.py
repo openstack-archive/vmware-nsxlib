@@ -344,7 +344,7 @@ class LBServiceDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(LBServiceDef, self).get_obj_dict()
-        self._set_attr_if_specified(body, 'size')
+        self._set_attrs_if_specified(body, ['size', 'connectivity_path'])
         return body
 
 

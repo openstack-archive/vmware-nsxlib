@@ -541,6 +541,7 @@ class TestPolicyLBService(test_resources.NsxPolicyLibTestCase):
         description = 'desc'
         obj_id = '111'
         size = 'SMALL'
+        connectivity_path = 'path'
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
             result = self.resourceApi.create_or_overwrite(
@@ -548,6 +549,7 @@ class TestPolicyLBService(test_resources.NsxPolicyLibTestCase):
                 lb_service_id=obj_id,
                 description=description,
                 size=size,
+                connectivity_path=connectivity_path,
                 tenant=TEST_TENANT)
             expected_def = (
                 lb_defs.LBServiceDef(
@@ -555,6 +557,7 @@ class TestPolicyLBService(test_resources.NsxPolicyLibTestCase):
                     name=name,
                     description=description,
                     size=size,
+                    connectivity_path=connectivity_path,
                     tenant=TEST_TENANT))
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(obj_id, result)
@@ -620,19 +623,22 @@ class TestPolicyLBService(test_resources.NsxPolicyLibTestCase):
         name = 'new name'
         description = 'new desc'
         size = 'SMALL'
+        connectivity_path = 'path'
         with mock.patch.object(self.policy_api,
                                "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
                                     name=name,
                                     description=description,
                                     tenant=TEST_TENANT,
-                                    size=size)
+                                    size=size,
+                                    connectivity_path=connectivity_path)
             expected_def = lb_defs.LBServiceDef(
                 lb_service_id=obj_id,
                 name=name,
                 description=description,
                 tenant=TEST_TENANT,
-                size=size)
+                size=size,
+                connectivity_path=connectivity_path)
             self.assert_called_with_def(update_call, expected_def)
 
 
