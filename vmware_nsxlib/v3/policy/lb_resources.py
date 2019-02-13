@@ -425,8 +425,9 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
             lb_pool_id=lb_pool_id, tenant=tenant)
         lb_pool = self.policy_api.get(lb_pool_def)
         monitor_paths = lb_pool.get('active_monitor_paths', [])
-        monitor_paths.remove(monitor_path)
-        self.update(lb_pool_id, active_monitor_paths=monitor_paths)
+        if monitor_path in monitor_paths:
+            monitor_paths.remove(monitor_path)
+            self.update(lb_pool_id, active_monitor_paths=monitor_paths)
 
     def create_pool_member_and_add_to_pool(
             self, lb_pool_id, ip_address, port=None,
