@@ -64,7 +64,7 @@ class NsxPolicyLBAppProfileBase(NsxPolicyResourceBase):
             x_forwarded_for=x_forwarded_for,
             tags=tags,
             tenant=tenant)
-        self.policy_api.create_or_update(lb_app_profile_def)
+        self._create_or_store(lb_app_profile_def)
         return lb_app_profile_id
 
     def delete(self, lb_app_profile_id,
@@ -164,7 +164,7 @@ class NsxPolicyLoadBalancerLBClientSSLProfileApi(NsxPolicyResourceBase):
             tags=tags,
             protocols=protocols,
             tenant=tenant)
-        self.policy_api.create_or_update(lb_client_ssl_profile_def)
+        self._create_or_store(lb_client_ssl_profile_def)
         return client_ssl_profile_id
 
     def delete(self, client_ssl_profile_id,
@@ -233,7 +233,7 @@ class NsxPolicyLoadBalancerLBCookiePersistenceProfileApi(
             cookie_time=cookie_time,
             persistence_shared=persistence_shared,
             tenant=tenant)
-        self.policy_api.create_or_update(lb_cookie_persistence_profile_def)
+        self._create_or_store(lb_cookie_persistence_profile_def)
         return persistence_profile_id
 
     def delete(self, persistence_profile_id,
@@ -308,7 +308,7 @@ class NsxPolicyLoadBalancerLBSourceIpPersistenceProfileApi(
             purge=purge,
             timeout=timeout,
             tenant=tenant)
-        self.policy_api.create_or_update(lb_source_ip_persistence_profile_def)
+        self._create_or_store(lb_source_ip_persistence_profile_def)
         return persistence_profile_id
 
     def delete(self, persistence_profile_id,
@@ -374,7 +374,7 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
             snat_translation=snat_translation,
             tenant=tenant)
 
-        self.policy_api.create_or_update(lb_pool_def)
+        self._create_or_store(lb_pool_def)
         return lb_pool_id
 
     def delete(self, lb_pool_id,
@@ -478,7 +478,7 @@ class NsxPolicyLoadBalancerServiceApi(NsxPolicyResourceBase):
             connectivity_path=connectivity_path,
             tenant=tenant)
 
-        self.policy_api.create_or_update(lb_service_def)
+        self._create_or_store(lb_service_def)
         return lb_service_id
 
     def delete(self, lb_service_id,
@@ -557,7 +557,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
             server_ssl_profile_binding=server_ssl_profile_binding,
             tags=tags
         )
-        self.policy_api.create_or_update(lbvs_def)
+        self._create_or_store(lbvs_def)
         return virtual_server_id
 
     def delete(self, virtual_server_id,
