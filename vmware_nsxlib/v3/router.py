@@ -46,6 +46,10 @@ class RouterLib(object):
 
     def validate_tier0(self, tier0_groups_dict, tier0_uuid):
         err_msg = None
+        if not tier0_uuid:
+            err_msg = _("validate_tier0 should be called with tier0 uuid")
+            raise exceptions.NsxLibInvalidInput(error_message=err_msg)
+
         try:
             lrouter = self._router_client.get(tier0_uuid)
         except exceptions.ResourceNotFound:
