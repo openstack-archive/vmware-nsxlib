@@ -57,7 +57,7 @@ class NsxLibNsGroup(utils.NsxLibApiBase):
         name = self.get_name(security_group)
         description = security_group['description']
         logging = (log_sg_allowed_traffic or
-                   security_group[consts.LOGGING])
+                   security_group.get(consts.LOGGING, False))
         rules = self.firewall_section._process_rules_logging_for_update(
             section_id, logging)
         self.update(nsgroup_id, name, description)
