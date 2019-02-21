@@ -24,6 +24,7 @@ from vmware_nsxlib.v3.policy import lb_defs
 
 from vmware_nsxlib.v3.policy.core_resources import IGNORE
 from vmware_nsxlib.v3.policy.core_resources import NsxPolicyResourceBase
+from vmware_nsxlib.v3.policy import utils as p_utils
 
 
 LOG = logging.getLogger(__name__)
@@ -580,6 +581,24 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
         lbvs_def = self.entry_def(tenant=tenant)
         return self.policy_api.list(lbvs_def)['results']
 
+    def _update_helper(self, virtual_server_id, tenant, **kwargs):
+        vs_data = self.get(virtual_server_id, tenant)
+        if kwargs['application_profile_id'] == IGNORE:
+            kwargs['application_profile_id'] = p_utils.path_to_id(
+                    vs_data['application_profile_path'])
+
+        if kwargs['name'] == IGNORE:
+            kwargs['name'] = vs_data['display_name']
+
+        for k in kwargs.keys():
+            if kwargs.get(k) == IGNORE and vs_data.get(k):
+                kwargs[k] = vs_data[k]
+
+        self._update(
+            virtual_server_id=virtual_server_id,
+            tenant=tenant,
+            **kwargs)
+
     def update(self, virtual_server_id, name=IGNORE, description=IGNORE,
                rules=IGNORE, application_profile_id=IGNORE,
                ip_address=IGNORE, lb_service_id=IGNORE,
@@ -590,7 +609,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                server_ssl_profile_binding=IGNORE,
                tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
-        self._update(
+        self._update_helper(
             virtual_server_id=virtual_server_id,
             name=name,
             description=description,
