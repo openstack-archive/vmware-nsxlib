@@ -2067,6 +2067,16 @@ class NsxPolicyTier1SegmentPortApi(NsxPolicyResourceBase):
                                   tenant=tenant)
         return self._get_realization_info(port_def, entity_type=entity_type)
 
+    def wait_until_realized(self, tier1_id, segment_id, port_id,
+                            entity_type=None,
+                            tenant=constants.POLICY_INFRA_TENANT,
+                            sleep=None, max_attempts=None):
+        port_def = self.entry_def(segment_id=segment_id, port_id=port_id,
+                                  tier1_id=tier1_id, tenant=tenant)
+        return self._wait_until_realized(port_def, entity_type=entity_type,
+                                         sleep=sleep,
+                                         max_attempts=max_attempts)
+
 
 class NsxPolicyIpBlockApi(NsxPolicyResourceBase):
     """NSX Policy IP Block API"""

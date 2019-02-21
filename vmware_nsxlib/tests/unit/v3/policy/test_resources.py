@@ -3446,6 +3446,36 @@ class TestPolicyTier1SegmentPort(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
             self.assertIsNotNone(result)
 
+    def test_wait_until_realized_fail(self):
+        tier1_id = '111'
+        port_id = 'port-111'
+        segment_id = 'seg-111'
+        logical_port_id = 'realized_port_111'
+        info = {'state': constants.STATE_UNREALIZED,
+                'realization_specific_identifier': logical_port_id,
+                'entity_type': 'RealizedLogicalPort'}
+        with mock.patch.object(self.resourceApi, "_get_realization_info",
+                               return_value=info):
+            self.assertRaises(nsxlib_exc.ManagerError,
+                              self.resourceApi.wait_until_realized,
+                              tier1_id, segment_id, port_id, max_attempts=5,
+                              sleep=0.1, tenant=TEST_TENANT)
+
+    def test_wait_until_realized_succeed(self):
+        tier1_id = '111'
+        port_id = 'port-111'
+        segment_id = 'seg-111'
+        logical_port_id = 'realized_port_111'
+        info = {'state': constants.STATE_REALIZED,
+                'realization_specific_identifier': logical_port_id,
+                'entity_type': 'RealizedLogicalPort'}
+        with mock.patch.object(self.resourceApi, "_get_realization_info",
+                               return_value=info):
+            actual_info = self.resourceApi.wait_until_realized(
+                tier1_id, segment_id, port_id, max_attempts=5, sleep=0.1,
+                tenant=TEST_TENANT)
+            self.assertEqual(info, actual_info)
+
 
 class TestPolicyDhcpRelayConfig(NsxPolicyLibTestCase):
 
