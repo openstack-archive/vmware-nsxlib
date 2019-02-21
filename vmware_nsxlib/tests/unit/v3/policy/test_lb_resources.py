@@ -723,15 +723,20 @@ class TestPolicyLBVirtualServer(test_resources.NsxPolicyLibTestCase):
         obj_id = '111'
         name = 'new name'
         description = 'new desc'
+        dummy_id = 'xxxx'
+        dummy_path = '/test/lb-app-profiles/' + dummy_id
         with mock.patch.object(self.policy_api,
-                               "create_or_update") as update_call:
+                               "create_or_update") as update_call, \
+                mock.patch.object(
+                    self.policy_api, "get", return_value={
+                        'application_profile_path': dummy_path}):
             self.resourceApi.update(obj_id,
                                     name=name,
                                     description=description,
                                     tenant=TEST_TENANT)
             expected_def = lb_defs.LBVirtualServerDef(
                 virtual_server_id=obj_id, name=name, description=description,
-                tenant=TEST_TENANT)
+                tenant=TEST_TENANT, application_profile_id=dummy_id)
             self.assert_called_with_def(update_call, expected_def)
 
 
