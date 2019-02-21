@@ -61,6 +61,15 @@ class ResourceDef(object):
 
         self.body = {}
 
+        # As of now, for some defs (ex: services) child entry is required,
+        # meaning parent creation will fail without the child.
+        # Unfortunately in transactional API policy still fails us, even if
+        # child is specified as ChildEntry in same transaction.
+        # To provide a workaround, we need keep reference to the child and
+        # populate child entry inside parent clause in transactional API.
+        # TODO(annak): remove this if/when policy solves this
+        self.mandatory_child_def = None
+
     def get_obj_dict(self):
         body = self.body if self.body else {}
         if self.resource_type():

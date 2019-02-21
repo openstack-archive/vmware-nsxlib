@@ -169,6 +169,14 @@ class NsxPolicyTransaction(object):
                 parent_dict['children'] = []
 
             resource_class = resource_def.resource_class()
+            node = resource_def.get_obj_dict()
+            if resource_def.mandatory_child_def:
+                # This is a workaround for policy issue that involves required
+                # children (see comment on definition of mandatory_child_def)
+                # TODO(annak): remove when policy solves the issue
+                child_def = resource_def.mandatory_child_def
+                child_dict_key = child_def.get_last_section_dict_key
+                node[child_dict_key] = [child_def.get_obj_dict()]
             parent_dict['children'].append(
                 self._build_wrapper_dict(resource_class,
                                          resource_def.get_obj_dict()))
