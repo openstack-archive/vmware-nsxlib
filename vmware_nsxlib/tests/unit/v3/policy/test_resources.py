@@ -552,6 +552,7 @@ class TestPolicyL4Service(NsxPolicyLibTestCase):
         description = 'desc'
         protocol = constants.TCP
         dest_ports = [81, 82]
+        source_ports = [83, 84]
         tags = [{'scope': 'a', 'tag': 'b'}]
         with mock.patch.object(self.policy_api,
                                "create_with_parent") as api_call:
@@ -560,6 +561,7 @@ class TestPolicyL4Service(NsxPolicyLibTestCase):
                 description=description,
                 protocol=protocol,
                 dest_ports=dest_ports,
+                source_ports=source_ports,
                 tags=tags,
                 tenant=TEST_TENANT)
             exp_srv_def = core_defs.ServiceDef(service_id=mock.ANY,
@@ -573,6 +575,7 @@ class TestPolicyL4Service(NsxPolicyLibTestCase):
                 name='entry',
                 protocol=protocol,
                 dest_ports=dest_ports,
+                source_ports=source_ports,
                 tenant=TEST_TENANT)
             self.assert_called_with_defs(
                 api_call, [exp_srv_def, exp_entry_def])
@@ -652,6 +655,7 @@ class TestPolicyL4Service(NsxPolicyLibTestCase):
         description = 'new desc'
         protocol = 'udp'
         dest_ports = [555]
+        source_ports = [666]
 
         entry_body = {'id': 'entry',
                       'l4_protocol': 'tcp'}
@@ -666,6 +670,7 @@ class TestPolicyL4Service(NsxPolicyLibTestCase):
                                     description=description,
                                     protocol=protocol,
                                     dest_ports=dest_ports,
+                                    source_ports=source_ports,
                                     tenant=TEST_TENANT)
 
             service_def = core_defs.ServiceDef(service_id=srv_id,
@@ -677,6 +682,7 @@ class TestPolicyL4Service(NsxPolicyLibTestCase):
                 entry_id=mock.ANY,
                 protocol=protocol,
                 dest_ports=dest_ports,
+                source_ports=source_ports,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_defs(
@@ -968,6 +974,10 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
     def setUp(self, *args, **kwargs):
         super(TestPolicyCommunicationMap, self).setUp()
         self.resourceApi = self.policy_lib.comm_map
+        self.mapDef = core_defs.CommunicationMapDef
+        self.entryDef = core_defs.CommunicationMapEntryDef
+        self.resource_type = 'SecurityPolicy'
+        self.path_name = 'security-policies'
 
     def test_create_another(self):
         domain_id = '111'
@@ -995,7 +1005,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 direction=direction,
                 logged=True,
                 tenant=TEST_TENANT)
-            map_def = core_defs.CommunicationMapDef(
+            map_def = self.mapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
@@ -1003,7 +1013,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 category=constants.CATEGORY_APPLICATION,
                 tenant=TEST_TENANT)
 
-            entry_def = core_defs.CommunicationMapEntryDef(
+            entry_def = self.entryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id='entry',
@@ -1045,7 +1055,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 logged=False,
                 tenant=TEST_TENANT)
 
-            map_def = core_defs.CommunicationMapDef(
+            map_def = self.mapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
@@ -1053,7 +1063,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 category=category,
                 tenant=TEST_TENANT)
 
-            entry_def = core_defs.CommunicationMapEntryDef(
+            entry_def = self.entryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id='entry',
@@ -1088,7 +1098,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 dest_groups=[dest_group],
                 tenant=TEST_TENANT)
 
-            expected_map_def = core_defs.CommunicationMapDef(
+            expected_map_def = self.mapDef(
                 domain_id=domain_id,
                 map_id=mock.ANY,
                 name=name,
@@ -1096,7 +1106,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 category=constants.CATEGORY_APPLICATION,
                 tenant=TEST_TENANT)
 
-            expected_entry_def = core_defs.CommunicationMapEntryDef(
+            expected_entry_def = self.entryDef(
                 domain_id=domain_id,
                 map_id=mock.ANY,
                 entry_id=mock.ANY,
@@ -1125,7 +1135,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name, domain_id, description=description,
                 tenant=TEST_TENANT)
 
-            expected_map_def = core_defs.CommunicationMapDef(
+            expected_map_def = self.mapDef(
                 domain_id=domain_id,
                 map_id=mock.ANY,
                 name=name,
@@ -1159,7 +1169,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 direction=nsx_constants.IN,
                 tenant=TEST_TENANT)
 
-            expected_entry_def = core_defs.CommunicationMapEntryDef(
+            expected_entry_def = self.entryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id=mock.ANY,
@@ -1171,6 +1181,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 direction=nsx_constants.IN,
+                scope=None,
                 logged=False,
                 tenant=TEST_TENANT)
 
@@ -1194,7 +1205,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 sequence_number=1,
                 tenant=TEST_TENANT)
 
-            expected_entry_def = core_defs.CommunicationMapEntryDef(
+            expected_entry_def = self.entryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id=mock.ANY,
@@ -1206,6 +1217,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 service_ids=None,
                 source_groups=[source_group],
                 dest_groups=[dest_group],
+                scope=None,
                 logged=False,
                 tenant=TEST_TENANT)
 
@@ -1236,7 +1248,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 logged=False,
                 tenant=TEST_TENANT)
 
-            expected_entry_def = core_defs.CommunicationMapEntryDef(
+            expected_entry_def = self.entryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id=mock.ANY,
@@ -1248,6 +1260,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 sequence_number=seq_num + 1,
+                scope=None,
                 logged=False,
                 tenant=TEST_TENANT)
 
@@ -1291,7 +1304,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 category=category,
                 tenant=TEST_TENANT)
 
-            expected_def = core_defs.CommunicationMapDef(
+            expected_def = self.mapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
@@ -1308,7 +1321,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         map_id = '222'
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete(domain_id, map_id, tenant=TEST_TENANT)
-            expected_def = core_defs.CommunicationMapDef(
+            expected_def = self.mapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 tenant=TEST_TENANT)
@@ -1321,7 +1334,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "delete") as api_call:
             self.resourceApi.delete_entry(domain_id, map_id, entry_id,
                                           tenant=TEST_TENANT)
-            expected_def = core_defs.CommunicationMapEntryDef(
+            expected_def = self.entryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id=entry_id,
@@ -1335,7 +1348,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                return_value={'id': map_id}) as api_call:
             result = self.resourceApi.get(domain_id, map_id,
                                           tenant=TEST_TENANT)
-            expected_def = core_defs.CommunicationMapDef(
+            expected_def = self.mapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 tenant=TEST_TENANT)
@@ -1351,7 +1364,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             obj = self.resourceApi.get_by_name(domain_id, name,
                                                tenant=TEST_TENANT)
             self.assertIsNotNone(obj)
-            expected_def = core_defs.CommunicationMapDef(
+            expected_def = self.mapDef(
                 domain_id=domain_id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -1361,7 +1374,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api, "list",
                                return_value={'results': []}) as api_call:
             result = self.resourceApi.list(domain_id, tenant=TEST_TENANT)
-            expected_def = core_defs.CommunicationMapDef(
+            expected_def = self.mapDef(
                 domain_id=domain_id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
@@ -1390,7 +1403,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                     source_groups=[source_group],
                                     dest_groups=[dest_group],
                                     tenant=TEST_TENANT)
-            map_def = core_defs.CommunicationMapDef(
+            map_def = self.mapDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 name=name,
@@ -1398,7 +1411,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 category=category,
                 tenant=TEST_TENANT)
 
-            entry_def = core_defs.CommunicationMapEntryDef(
+            entry_def = self.entryDef(
                 domain_id=domain_id,
                 map_id=map_id,
                 entry_id='entry',
@@ -1434,7 +1447,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         expected_body = {'id': map_id,
                          'description': None,
                          'category': category,
-                         'resource_type': 'SecurityPolicy',
+                         'resource_type': self.resource_type,
                          'rules': [{
                              'display_name': name,
                              'id': 'entry',
@@ -1444,9 +1457,10 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                              'destination_groups': dest_groups}]
                          }
 
-        url = '%s/domains/%s/security-policies/%s' % (TEST_TENANT,
-                                                      domain_id,
-                                                      map_id)
+        url = '%s/domains/%s/%s/%s' % (TEST_TENANT,
+                                       domain_id,
+                                       self.path_name,
+                                       map_id)
         self.assert_json_call('PATCH', self.client, url, data=expected_body)
 
     def test_update_entries_logged(self):
@@ -1454,7 +1468,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         map_id = '222'
         dummy_map = {'rules': [{'logged': False}]}
         updated_map = {'rules': [{'logged': True}]}
-        map_def = core_defs.CommunicationMapDef(
+        map_def = self.mapDef(
             domain_id=domain_id,
             map_id=map_id,
             tenant=TEST_TENANT)
@@ -1480,9 +1494,20 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             state = self.resourceApi.get_realized_state(
                 domain_id, map_id, tenant=TEST_TENANT)
             self.assertEqual(constants.STATE_REALIZED, state)
-            path = "/%s/domains/%s/security-policies/%s" % (
-                TEST_TENANT, domain_id, map_id)
+            path = "/%s/domains/%s/%s/%s" % (
+                TEST_TENANT, domain_id, self.path_name, map_id)
             api_get.assert_called_once_with(path)
+
+
+class TestPolicyGatewayPolicy(TestPolicyCommunicationMap):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyGatewayPolicy, self).setUp()
+        self.resourceApi = self.policy_lib.gateway_policy
+        self.mapDef = core_defs.GatewayPolicyDef
+        self.entryDef = core_defs.GatewayPolicyRuleDef
+        self.resource_type = 'GatewayPolicy'
+        self.path_name = 'gateway-policies'
 
 
 class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
