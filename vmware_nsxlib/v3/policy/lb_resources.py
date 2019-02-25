@@ -19,6 +19,8 @@ import abc
 from oslo_log import log as logging
 import six
 
+from vmware_nsxlib._i18n import _
+from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3.policy import constants
 from vmware_nsxlib.v3.policy.core_resources import IGNORE
 from vmware_nsxlib.v3.policy.core_resources import NsxPolicyResourceBase
@@ -630,7 +632,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
     def update_virtual_server_with_pool(
             self, virtual_server_id, pool_id=IGNORE):
         body = self.get(virtual_server_id)
-        app_profile_id = body['application_profile_path'].split('/')[-1]
+        app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         return self.update(virtual_server_id, pool_id=pool_id,
                            ip_address=body['ip_address'],
                            ports=body['ports'],
@@ -647,7 +649,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
     def update_virtual_server_persistence_profile(
             self, virtual_server_id, lb_persistence_profile_id=IGNORE):
         body = self.get(virtual_server_id)
-        app_profile_id = body['application_profile_path'].split('/')[-1]
+        app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         return self.update(
             virtual_server_id,
             lb_persistence_profile_id=lb_persistence_profile_id,
@@ -658,7 +660,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
     def update_virtual_server_client_ssl_profile_binding(
             self, virtual_server_id, client_ssl_profile_binding=IGNORE):
         body = self.get(virtual_server_id)
-        app_profile_id = body['application_profile_path'].split('/')[-1]
+        app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         return self.update(
             virtual_server_id,
             client_ssl_profile_binding=client_ssl_profile_binding,
@@ -668,7 +670,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
 
     def update_virtual_server_with_vip(self, virtual_server_id, vip):
         body = self.get(virtual_server_id)
-        app_profile_id = body['application_profile_path'].split('/')[-1]
+        app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         return self.update(virtual_server_id, ip_address=vip,
                            ports=body['ports'],
                            application_profile_id=app_profile_id)
@@ -694,7 +696,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
             virtual_server_id=virtual_server_id,
             tenant=constants.POLICY_INFRA_TENANT)
         body = self.policy_api.get(lbvs_def)
-        app_profile_id = body['application_profile_path'].split('/')[-1]
+        app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         client_ssl_def = lb_defs.ClientSSLProfileBindingDef(
             default_certificate_path,
             sni_certificate_paths=sni_certificate_paths,
@@ -712,22 +714,65 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
         return lb_defs.LBRuleDef(
             actions, match_conditions, display_name, match_strategy, phase)
 
+    def _add_rule_in_position(self, body, lb_rule, position):
+        lb_rules = body.get('rules', [])
+        if position < 0:
+            lb_rules.append(lb_rule)
+        elif position <= len(lb_rules):
+            lb_rules.insert(position, lb_rule)
+        else:
+            raise nsxlib_exc.InvalidInput(
+                operation='Insert rule in position',
+                arg_val=position,
+                arg_name='position')
+
+        return lb_rules
+
     def add_lb_rule(self, virtual_server_id, actions=None,
                     name=None, match_conditions=None,
-                    match_strategy=None, phase=None, position=0):
+                    match_strategy=None, phase=None, position=-1):
         lb_rule = lb_defs.LBRuleDef(
             actions, match_conditions, name, match_strategy, phase)
         lbvs_def = self.entry_def(
             virtual_server_id=virtual_server_id,
             tenant=constants.POLICY_INFRA_TENANT)
         body = self.policy_api.get(lbvs_def)
-        app_profile_id = body['application_profile_path'].split('/')[-1]
+        app_profile_id = p_utils.path_to_id(body['application_profile_path'])
+        lb_rules = self._add_rule_in_position(body, lb_rule, position)
+        return self.update(virtual_server_id, rules=lb_rules,
+                           ip_address=body['ip_address'],
+                           ports=body['ports'],
+                           application_profile_id=app_profile_id)
+
+    def update_lb_rule(self, virtual_server_id, lb_rule_name,
+                       actions=None, match_conditions=None,
+                       match_strategy=None, phase=None, position=-1):
+        lb_rule = lb_defs.LBRuleDef(
+            actions, match_conditions, lb_rule_name, match_strategy, phase)
+        lbvs_def = self.entry_def(
+            virtual_server_id=virtual_server_id,
+            tenant=constants.POLICY_INFRA_TENANT)
+        body = self.policy_api.get(lbvs_def)
+        app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         lb_rules = body.get('rules', [])
-        if position and len(lb_rules) < position:
-            lb_rules.append(lb_rule)
-        else:
-            lb_rules.insert(position - 1, lb_rule)
-        lb_rules.append(lb_rule)
+
+        # Remove existing rule
+        try:
+            rule_index = next(lb_rules.index(r) for r in lb_rules
+                              if r.get('display_name') == lb_rule_name)
+        except Exception:
+            err_msg = (_("No resource in rules matched for values: "
+                         "%(values)s") % {'values': lb_rule_name})
+            raise nsxlib_exc.ResourceNotFound(
+                manager=self,
+                operation=err_msg)
+        if position < 0:
+            position = rule_index
+
+        del(lb_rules[rule_index])
+
+        # Insert new rule
+        lb_rules = self._add_rule_in_position(body, lb_rule, position)
         return self.update(virtual_server_id, rules=lb_rules,
                            ip_address=body['ip_address'],
                            ports=body['ports'],
@@ -737,7 +782,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
         lbvs_def = self.entry_def(virtual_server_id=virtual_server_id,
                                   tenant=constants.POLICY_INFRA_TENANT)
         body = self.policy_api.get(lbvs_def)
-        app_profile_id = body['application_profile_path'].split('/')[-1]
+        app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         lb_rules = body.get('rules', [])
         lb_rules = filter(lambda x: (x.get('display_name') !=
                                      lb_rule_name), lb_rules)
