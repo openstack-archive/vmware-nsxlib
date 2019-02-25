@@ -827,6 +827,26 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         except exceptions.ResourceNotFound:
             return
 
+    def add_segment_interface(self, tier1_id, interface_id, segment_id,
+                              subnets, tenant=constants.POLICY_INFRA_TENANT):
+        t1interface_def = core_defs.Tier1InterfaceDef(
+            tier1_id=tier1_id,
+            service_id=self._locale_service_id(tier1_id),
+            interface_id=interface_id,
+            segment_id=segment_id,
+            subnets=subnets,
+            tenant=tenant)
+        self.policy_api.create_or_update(t1interface_def)
+
+    def remove_segment_interface(self, tier1_id, interface_id,
+                                 tenant=constants.POLICY_INFRA_TENANT):
+        t1interface_def = core_defs.Tier1InterfaceDef(
+            tier1_id=tier1_id,
+            service_id=self._locale_service_id(tier1_id),
+            interface_id=interface_id,
+            tenant=tenant)
+        self.policy_api.delete(t1interface_def)
+
     def get_realized_state(self, tier1_id, entity_type=None,
                            tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):

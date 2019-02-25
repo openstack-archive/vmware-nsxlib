@@ -410,11 +410,47 @@ class Tier0InterfaceDef(ResourceDef):
 
     @property
     def path_pattern(self):
-        return TIER0S_PATH_PATTERN + "%s/locale-services/%s/interfaces"
+        return TIER0S_PATH_PATTERN + "%s/locale-services/%s/interfaces/"
 
     @property
     def path_ids(self):
         return ('tenant', 'tier0_id', 'service_id', 'interface_id')
+
+
+class Tier1InterfaceDef(ResourceDef):
+
+    @staticmethod
+    def resource_type():
+        return 'Tier1Interface'
+
+    @property
+    def path_pattern(self):
+        return TIER1S_PATH_PATTERN + "%s/locale-services/%s/interfaces/"
+
+    def get_obj_dict(self):
+        body = super(Tier1InterfaceDef, self).get_obj_dict()
+        if self.has_attr('subnets'):
+            # subnets expected to be of type InterfaceSubnet
+            if self.get_attr('subnets'):
+                subnets = [subnet.get_obj_dict()
+                           for subnet in self.get_attr('subnets')]
+                self._set_attr_if_specified(body, 'subnets',
+                                            value=subnets)
+
+        if self.has_attr('segment_id'):
+            path = ""
+            if self.get_attr('segment_id'):
+                tier1 = SegmentDef(segment_id=self.get_attr('segment_id'),
+                                   tenant=self.get_tenant())
+                path = tier1.get_resource_full_path()
+            self._set_attr_if_specified(body, 'segment_id',
+                                        body_attr='segment_path',
+                                        value=path)
+        return body
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'tier1_id', 'service_id', 'interface_id')
 
 
 class RouterNatRule(ResourceDef):
@@ -521,6 +557,17 @@ class Subnet(object):
         if self.dhcp_ranges:
             body['dhcp_ranges'] = self.dhcp_ranges
 
+        return body
+
+
+class InterfaceSubnet(object):
+    def __init__(self, ip_addresses, prefix_len):
+        self.ip_addresses = ip_addresses
+        self.prefix_len = prefix_len
+
+    def get_obj_dict(self):
+        body = {'ip_addresses': self.ip_addresses,
+                'prefix_len': self.prefix_len}
         return body
 
 
