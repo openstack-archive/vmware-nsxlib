@@ -731,6 +731,29 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                            ports=body['ports'],
                            application_profile_id=app_profile_id)
 
+    def update_lb_rule(self, virtual_server_id, name,
+                       actions=None, match_conditions=None,
+                       match_strategy=None, phase=None, position=0):
+        lb_rule = lb_defs.LBRuleDef(
+            actions, match_conditions, name, match_strategy, phase)
+        lbvs_def = self.entry_def(
+            virtual_server_id=virtual_server_id,
+            tenant=constants.POLICY_INFRA_TENANT)
+        body = self.policy_api.get(lbvs_def)
+        app_profile_id = body['application_profile_path'].split('/')[-1]
+        lb_rules = body.get('rules', [])
+        lb_rules = filter(lambda x: (x.get('display_name') != name), lb_rules)
+
+        if position and len(lb_rules) < position:
+            lb_rules.append(lb_rule)
+        else:
+            lb_rules.insert(position - 1, lb_rule)
+        lb_rules.append(lb_rule)
+        return self.update(virtual_server_id, rules=lb_rules,
+                           ip_address=body['ip_address'],
+                           ports=body['ports'],
+                           application_profile_id=app_profile_id)
+
     def remove_lb_rule(self, virtual_server_id, lb_rule_name):
         lbvs_def = self.entry_def(virtual_server_id=virtual_server_id,
                                   tenant=constants.POLICY_INFRA_TENANT)
