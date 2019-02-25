@@ -715,7 +715,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
 
     def add_lb_rule(self, virtual_server_id, actions=None,
                     name=None, match_conditions=None,
-                    match_strategy=None, phase=None):
+                    match_strategy=None, phase=None, position=0):
         lb_rule = lb_defs.LBRuleDef(
             actions, match_conditions, name, match_strategy, phase)
         lbvs_def = self.entry_def(
@@ -724,6 +724,10 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
         body = self.policy_api.get(lbvs_def)
         app_profile_id = body['application_profile_path'].split('/')[-1]
         lb_rules = body.get('rules', [])
+        if position and len(lb_rules) < position:
+            lb_rules.append(lb_rule)
+        else:
+            lb_rules.insert(position - 1, lb_rule)
         lb_rules.append(lb_rule)
         return self.update(virtual_server_id, rules=lb_rules,
                            ip_address=body['ip_address'],
