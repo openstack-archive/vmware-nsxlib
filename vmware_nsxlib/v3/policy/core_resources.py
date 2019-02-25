@@ -2469,6 +2469,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
                     scope=None,
                     source_groups=None, dest_groups=None,
                     direction=nsx_constants.IN_OUT, logged=False,
+                    ip_protocol=nsx_constants.IPV4_IPV6,
                     tenant=constants.POLICY_INFRA_TENANT):
         """Get the definition of a single map entry"""
         return self._init_def(domain_id=domain_id,
@@ -2483,6 +2484,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
                               action=action,
                               scope=scope,
                               direction=direction,
+                              ip_protocol=ip_protocol,
                               logged=logged,
                               tenant=tenant)
 
@@ -2509,6 +2511,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
                      action=constants.ACTION_ALLOW,
                      source_groups=None, dest_groups=None,
                      scope=None,
+                     ip_protocol=nsx_constants.IPV4_IPV6,
                      direction=nsx_constants.IN_OUT,
                      logged=False,
                      tenant=constants.POLICY_INFRA_TENANT):
@@ -2536,6 +2539,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
                                    service_ids=service_ids,
                                    action=action,
                                    scope=scope,
+                                   ip_protocol=ip_protocol,
                                    direction=direction,
                                    logged=logged,
                                    tenant=tenant)

@@ -1226,6 +1226,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 dest_groups=[dest_group],
                 sequence_number=1,
                 direction=nsx_constants.IN,
+                ip_protocol=nsx_constants.IPV4,
                 tenant=TEST_TENANT)
 
             expected_entry_def = self.entryDef(
@@ -1240,6 +1241,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 source_groups=[source_group],
                 dest_groups=[dest_group],
                 direction=nsx_constants.IN,
+                ip_protocol=nsx_constants.IPV4,
                 scope=None,
                 logged=False,
                 tenant=TEST_TENANT)
@@ -1271,6 +1273,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 action=constants.ACTION_ALLOW,
                 direction=nsx_constants.IN_OUT,
+                ip_protocol=nsx_constants.IPV4_IPV6,
                 description=description,
                 sequence_number=1,
                 service_ids=None,
@@ -1314,6 +1317,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 action=constants.ACTION_ALLOW,
                 direction=nsx_constants.IN_OUT,
+                ip_protocol=nsx_constants.IPV4_IPV6,
                 description=description,
                 service_ids=[service1_id, service2_id],
                 source_groups=[source_group],
@@ -1335,6 +1339,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         dest_group = 'g2'
         service_id = 'c1'
         category = 'Emergency'
+        ip_protocol = nsx_constants.IPV4
 
         rule_id = 1
         entry1 = self.resourceApi.build_entry(
@@ -1343,7 +1348,8 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             action=constants.ACTION_DENY,
             source_groups=None,
             dest_groups=[dest_group],
-            direction=nsx_constants.IN)
+            direction=nsx_constants.IN,
+            ip_protocol=ip_protocol)
         rule_id += 1
         entry2 = self.resourceApi.build_entry(
             'DHCP Request', domain_id, map_id,
@@ -1351,7 +1357,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             action=constants.ACTION_DENY,
             source_groups=[source_group],
             dest_groups=None,
-            direction=nsx_constants.OUT)
+            direction=nsx_constants.OUT, ip_protocol=ip_protocol)
 
         with mock.patch.object(self.policy_api,
                                "create_with_parent") as api_call:

@@ -1231,7 +1231,8 @@ class SecurityPolicyRuleBaseDef(ResourceDef):
                 domain_id, self.get_attr('dest_groups'))
 
         self._set_attrs_if_specified(body, ['sequence_number', 'scope',
-                                            'action', 'direction', 'logged'])
+                                            'action', 'direction', 'logged',
+                                            'ip_protocol'])
 
         if self.has_attr('service_ids'):
             service_ids = self.get_attr('service_ids')
