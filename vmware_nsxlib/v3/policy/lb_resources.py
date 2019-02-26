@@ -449,6 +449,21 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
         self.update(lb_pool_id, members=lb_pool_members)
         return lb_pool_member
 
+    def update_pool_member(
+            self, lb_pool_id, ip_address, port=None,
+            display_name=None, weight=None,
+            tenant=constants.POLICY_INFRA_TENANT):
+        lb_pool_def = lb_defs.LBPoolDef(
+            lb_pool_id=lb_pool_id, tenant=tenant)
+        lb_pool = self.policy_api.get(lb_pool_def)
+        lb_pool_members = lb_pool.get('members', [])
+        member_to_update = filter(
+            lambda x: (x.get('ip_address') == ip_address and
+                       x.get('port') == port), lb_pool_members)
+        member_to_update[0]['name'] = display_name
+        member_to_update[0]['weight'] = weight
+        self.update(lb_pool_id, members=lb_pool_members)
+
     def remove_pool_member(self, lb_pool_id, ip_address, port=None,
                            tenant=constants.POLICY_INFRA_TENANT):
         lb_pool_def = lb_defs.LBPoolDef(
