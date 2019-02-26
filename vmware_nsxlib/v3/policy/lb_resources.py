@@ -22,7 +22,6 @@ import six
 from vmware_nsxlib.v3 import exceptions as nsxlib_exc
 from vmware_nsxlib.v3.policy import constants
 from vmware_nsxlib.v3.policy import lb_defs
-
 from vmware_nsxlib.v3.policy.core_resources import IGNORE
 from vmware_nsxlib.v3.policy.core_resources import NsxPolicyResourceBase
 from vmware_nsxlib.v3.policy import utils as p_utils
@@ -449,6 +448,29 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
         lb_pool_members.append(lb_pool_member)
         self.update(lb_pool_id, members=lb_pool_members)
         return lb_pool_member
+
+    def update_pool_member(
+            self, lb_pool_id, ip_address, port=None,
+            display_name=None, weight=None,
+            tenant=constants.POLICY_INFRA_TENANT):
+        lb_pool_def = lb_defs.LBPoolDef(
+            lb_pool_id=lb_pool_id, tenant=tenant)
+        lb_pool = self.policy_api.get(lb_pool_def)
+        lb_pool_members = lb_pool.get('members', [])
+        member_to_update = filter(
+            lambda x: (x.get('ip_address') == ip_address and
+                       x.get('port') == port), lb_pool_members)
+        if member_to_update:
+            member_to_update[0]['display_name'] = display_name
+            member_to_update[0]['weight'] = weight
+            self.update(lb_pool_id, members=lb_pool_members)
+        else:
+            ops = ('Updating member %(address)s:%(port)d failed, not found in '
+                   'pool %(pool)s', {'address': ip_address,
+                                     'port': port,
+                                     'pool': lb_pool_id})
+            raise nsxlib_exc.ResourceNotFound(manager=lb_pool_def,
+                                              operation=ops)
 
     def remove_pool_member(self, lb_pool_id, ip_address, port=None,
                            tenant=constants.POLICY_INFRA_TENANT):
