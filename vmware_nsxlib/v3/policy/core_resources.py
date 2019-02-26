@@ -370,6 +370,9 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
     def build_ip_address_expression(self, ip_addresses):
         return core_defs.IPAddressExpression(ip_addresses)
 
+    def build_path_expression(self, paths):
+        return core_defs.PathExpression(paths)
+
     def build_nested_condition(
         self, operator=constants.CONDITION_OP_AND,
         conditions=None):
@@ -473,6 +476,16 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                    group_id=group_id,
                                    tenant=tenant)
         return group_def.get_resource_full_path()
+
+    def wait_until_realized(self, domain_id, group_id,
+                            entity_type=None,
+                            tenant=constants.POLICY_INFRA_TENANT,
+                            sleep=None, max_attempts=None):
+        group_def = self.entry_def(domain_id=domain_id, group_id=group_id,
+                                   tenant=tenant)
+        return self._wait_until_realized(group_def, entity_type=entity_type,
+                                         sleep=sleep,
+                                         max_attempts=max_attempts)
 
 
 class NsxPolicyServiceBase(NsxPolicyResourceBase):

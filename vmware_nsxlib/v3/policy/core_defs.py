@@ -994,6 +994,15 @@ class IPAddressExpression(object):
                 'ip_addresses': self.ip_addresses}
 
 
+class PathExpression(object):
+    def __init__(self, paths):
+        self.paths = paths
+
+    def get_obj_dict(self):
+        return {'resource_type': 'PathExpression',
+                'paths': self.paths}
+
+
 class ConjunctionOperator(object):
     def __init__(self, operator=constants.CONDITION_OP_AND):
         self.operator = operator

@@ -386,6 +386,30 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
             self.assertIsNotNone(result)
 
+    def test_create_with_path_expression(self):
+        domain_id = '111'
+        name = 'g1'
+        description = 'desc'
+        path = '/test/path1'
+
+        cond = self.resourceApi.build_path_expression([path])
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            result = self.resourceApi.create_or_overwrite_with_conditions(
+                name, domain_id, description=description,
+                conditions=[cond],
+                tenant=TEST_TENANT)
+            exp_cond = core_defs.PathExpression([path])
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=mock.ANY,
+                                              name=name,
+                                              description=description,
+                                              conditions=[exp_cond],
+                                              tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertIsNotNone(result)
+
     def test_delete(self):
         domain_id = '111'
         group_id = '222'
@@ -548,6 +572,32 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         expected_path = '/%s/domains/%s/groups/%s' % (
             TEST_TENANT, domain_id, group_id)
         self.assertEqual(expected_path, result)
+
+    def test_wait_until_realized_fail(self):
+        domain_id = 'd1'
+        group_id = 'g1'
+        info = {'state': constants.STATE_UNREALIZED,
+                'realization_specific_identifier': group_id,
+                'entity_type': 'RealizedGroup'}
+        with mock.patch.object(self.resourceApi, "_get_realization_info",
+                               return_value=info):
+            self.assertRaises(nsxlib_exc.ManagerError,
+                              self.resourceApi.wait_until_realized,
+                              domain_id, group_id, max_attempts=5,
+                              sleep=0.1, tenant=TEST_TENANT)
+
+    def test_wait_until_realized_succeed(self):
+        domain_id = 'd1'
+        group_id = 'g1'
+        info = {'state': constants.STATE_REALIZED,
+                'realization_specific_identifier': group_id,
+                'entity_type': 'RealizedGroup'}
+        with mock.patch.object(self.resourceApi, "_get_realization_info",
+                               return_value=info):
+            actual_info = self.resourceApi.wait_until_realized(
+                domain_id, group_id, max_attempts=5, sleep=0.1,
+                tenant=TEST_TENANT)
+            self.assertEqual(info, actual_info)
 
 
 class TestPolicyL4Service(NsxPolicyLibTestCase):
