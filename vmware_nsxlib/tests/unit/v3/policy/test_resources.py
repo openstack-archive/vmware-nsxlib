@@ -540,6 +540,15 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
                 TEST_TENANT, domain_id, group_id)
             api_get.assert_called_once_with(path)
 
+    def test_get_path(self):
+        domain_id = 'd1'
+        group_id = 'g1'
+        result = self.resourceApi.get_path(domain_id, group_id,
+                                           tenant=TEST_TENANT)
+        expected_path = '/%s/domains/%s/groups/%s' % (
+            TEST_TENANT, domain_id, group_id)
+        self.assertEqual(expected_path, result)
+
 
 class TestPolicyL4Service(NsxPolicyLibTestCase):
 
