@@ -752,12 +752,13 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
 
     def add_lb_rule(self, virtual_server_id, actions=None,
                     name=None, match_conditions=None,
-                    match_strategy=None, phase=None, position=0):
+                    match_strategy=None, phase=None, position=0,
+                    tenant=constants.POLICY_INFRA_TENANT):
         lb_rule = lb_defs.LBRuleDef(
             actions, match_conditions, name, match_strategy, phase)
         lbvs_def = self.entry_def(
             virtual_server_id=virtual_server_id,
-            tenant=constants.POLICY_INFRA_TENANT)
+            tenant=tenant)
         body = self.policy_api.get(lbvs_def)
         app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         lb_rules = self._add_rule_in_position(body, lb_rule, position)
@@ -768,12 +769,13 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
 
     def update_lb_rule(self, virtual_server_id, lb_rule_name,
                        actions=None, match_conditions=None,
-                       match_strategy=None, phase=None, position=-1):
+                       match_strategy=None, phase=None, position=-1,
+                       tenant=constants.POLICY_INFRA_TENANT):
         lb_rule = lb_defs.LBRuleDef(
             actions, match_conditions, lb_rule_name, match_strategy, phase)
         lbvs_def = self.entry_def(
             virtual_server_id=virtual_server_id,
-            tenant=constants.POLICY_INFRA_TENANT)
+            tenant=tenant)
         body = self.policy_api.get(lbvs_def)
         app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         lb_rules = body.get('rules', [])
@@ -789,9 +791,10 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                            ports=body['ports'],
                            application_profile_id=app_profile_id)
 
-    def remove_lb_rule(self, virtual_server_id, lb_rule_name):
+    def remove_lb_rule(self, virtual_server_id, lb_rule_name,
+                       tenant=constants.POLICY_INFRA_TENANT):
         lbvs_def = self.entry_def(virtual_server_id=virtual_server_id,
-                                  tenant=constants.POLICY_INFRA_TENANT)
+                                  tenant=tenant)
         body = self.policy_api.get(lbvs_def)
         app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         lb_rules = body.get('rules', [])
