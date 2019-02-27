@@ -263,7 +263,7 @@ class NsxPolicyResourceBase(object):
         if transaction:
             # Store this def for batch apply for this transaction
             transaction.store_def(policy_def, self.policy_api.client)
-            if child_def:
+            if child_def and not policy_def.mandatory_child_def:
                 transaction.store_def(child_def, self.policy_api.client)
         else:
             # No transaction - apply now
@@ -552,6 +552,7 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
                                    source_ports=source_ports,
                                    tenant=tenant)
 
+        service_def.mandatory_child_def = entry_def
         self._create_or_store(service_def, entry_def)
         return service_id
 
@@ -608,6 +609,7 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
             icmp_code=icmp_code,
             tenant=tenant)
 
+        service_def.mandatory_child_def = entry_def
         self._create_or_store(service_def, entry_def)
         return service_id
 
@@ -662,6 +664,7 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
             protocol_number=protocol_number,
             tenant=tenant)
 
+        service_def.mandatory_child_def = entry_def
         self._create_or_store(service_def, entry_def)
         return service_id
 
