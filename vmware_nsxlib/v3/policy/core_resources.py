@@ -467,6 +467,13 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                                        tenant=tenant)
         return self._get_realization_info(group_def, entity_type=entity_type)
 
+    def get_path(self, domain_id, group_id,
+                 tenant=constants.POLICY_INFRA_TENANT):
+        group_def = self.entry_def(domain_id=domain_id,
+                                   group_id=group_id,
+                                   tenant=tenant)
+        return group_def.get_resource_full_path()
+
 
 class NsxPolicyServiceBase(NsxPolicyResourceBase):
     """Base class for NSX Policy Service with a single entry.
