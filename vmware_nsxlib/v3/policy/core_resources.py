@@ -2436,7 +2436,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
             tenant=tenant, name=name, description=description,
             category=category, tags=tags)
 
-        self.policy_api.create_or_update(map_def)
+        self._create_or_store(map_def)
         return map_id
 
     def build_entry(self, name, domain_id, map_id, entry_id,
