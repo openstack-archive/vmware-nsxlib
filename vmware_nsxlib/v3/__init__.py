@@ -115,7 +115,8 @@ class NsxLib(lib.NsxLibBase):
     @property
     def validate_connection_method(self):
         """Return a method that will validate the NSX manager status"""
-        def check_manager_status(client, manager_url):
+        def check_manager_status_v1(client, manager_url):
+            """MP healthcheck for Version 2.3 and below"""
             # Try to get the cluster status silently and with no retries
             status = client.get('operational/application/status',
                                 silent=True, with_retries=False)
@@ -124,6 +125,25 @@ class NsxLib(lib.NsxLibBase):
                 LOG.warning(msg)
                 raise exceptions.ResourceNotFound(
                     manager=manager_url, operation=msg)
+
+        def check_manager_status_v2(client, manager_url):
+            """MP healthcheck for Version 2.4 and above"""
+            # Try to get the status silently and with no retries
+            status = client.get('reverse-proxy/node/health',
+                                silent=True, with_retries=False)
+            if (not status or not status.get('healthy', False)):
+                msg = _("Manager is not in working state: %s") % status
+                LOG.warning(msg)
+                raise exceptions.ResourceNotFound(
+                    manager=manager_url, operation=msg)
+
+        def check_manager_status(client, manager_url):
+            # Decide on the healthcheck by the version (if already initialized)
+            if (self.nsx_version and
+                version.LooseVersion(self.nsx_version) >=
+                version.LooseVersion(nsx_constants.NSX_VERSION_2_4_0)):
+                return check_manager_status_v2(client, manager_url)
+            return check_manager_status_v1(client, manager_url)
 
         return check_manager_status
 

@@ -22,6 +22,7 @@ import six.moves.urllib.parse as urlparse
 
 from vmware_nsxlib.tests.unit.v3 import mocks
 from vmware_nsxlib.tests.unit.v3 import nsxlib_testcase
+from vmware_nsxlib import v3
 from vmware_nsxlib.v3 import client
 from vmware_nsxlib.v3 import client_cert
 from vmware_nsxlib.v3 import cluster
@@ -93,7 +94,7 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
             self.assertEqual(cert_provider_inst, session.cert_provider)
             self.assertEqual(99, session.timeout)
 
-    def test_validate_connection(self):
+    def test_validate_connection_keep_alive(self):
         mock_conn = mocks.MockRequestSessionApi()
         mock_conn.default_headers = {}
         mock_ep = mock.Mock()
@@ -103,12 +104,57 @@ class RequestsHTTPProviderTestCase(unittest.TestCase):
         mock_cluster.nsxlib_config.url_base = 'abc'
         mock_cluster.nsxlib_config.keepalive_section = 'transport-zones'
         provider = cluster.NSXRequestsHTTPProvider()
-        self.assertRaises(nsxlib_exc.ResourceNotFound,
-                          provider.validate_connection,
-                          mock_cluster, mock_ep, mock_conn)
+
+        with mock.patch.object(client.JSONRESTClient, "get",
+                               return_value={'result_count': 0}):
+            self.assertRaises(nsxlib_exc.ResourceNotFound,
+                              provider.validate_connection,
+                              mock_cluster, mock_ep, mock_conn)
 
         with mock.patch.object(client.JSONRESTClient, "get",
                                return_value={'result_count': 1}):
+            provider.validate_connection(mock_cluster, mock_ep, mock_conn)
+
+    def _validate_con_mocks(self, nsx_version):
+        nsxlib_config = nsxlib_testcase.get_default_nsxlib_config()
+        nsxlib = v3.NsxLib(nsxlib_config)
+        nsxlib.nsx_version = nsx_version
+        mock_conn = mocks.MockRequestSessionApi()
+        mock_conn.default_headers = {}
+        mock_ep = mock.Mock()
+        mock_ep.provider.url = 'https://1.2.3.4'
+        conf = mock.Mock()
+        conf.url_base = 'abc'
+        conf.keepalive_section = 'transport-zones'
+        conf.validate_connection_method = nsxlib.validate_connection_method
+        mock_cluster = mock.Mock()
+        mock_cluster.nsxlib_config = conf
+        return (mock_cluster, mock_ep, mock_conn)
+
+    def test_validate_connection_method_v1(self):
+        mock_cluster, mock_ep, mock_conn = self._validate_con_mocks('2.3.0')
+        provider = cluster.NSXRequestsHTTPProvider()
+        with mock.patch.object(client.JSONRESTClient, "get",
+                               return_value={'application_status': 'DOWN'}):
+            self.assertRaises(nsxlib_exc.ResourceNotFound,
+                              provider.validate_connection,
+                              mock_cluster, mock_ep, mock_conn)
+
+        with mock.patch.object(client.JSONRESTClient, "get",
+                               return_value={'application_status': 'WORKING'}):
+            provider.validate_connection(mock_cluster, mock_ep, mock_conn)
+
+    def test_validate_connection_method_v2(self):
+        mock_cluster, mock_ep, mock_conn = self._validate_con_mocks('2.4.0')
+        provider = cluster.NSXRequestsHTTPProvider()
+        with mock.patch.object(client.JSONRESTClient, "get",
+                               return_value={'healthy': False}):
+            self.assertRaises(nsxlib_exc.ResourceNotFound,
+                              provider.validate_connection,
+                              mock_cluster, mock_ep, mock_conn)
+
+        with mock.patch.object(client.JSONRESTClient, "get",
+                               return_value={'healthy': True}):
             provider.validate_connection(mock_cluster, mock_ep, mock_conn)
 
 
