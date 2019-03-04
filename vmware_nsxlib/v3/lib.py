@@ -31,6 +31,7 @@ LOG = log.getLogger(__name__)
 class NsxLibBase(object):
     def __init__(self, nsxlib_config):
 
+        self.nsx_version = None
         self.set_config(nsxlib_config)
 
         # create the Cluster
@@ -47,7 +48,6 @@ class NsxLibBase(object):
         self.general_apis = utils.NsxLibApiBase(
             self.client, self.nsxlib_config)
 
-        self.nsx_version = None
         self.init_api()
 
         super(NsxLibBase, self).__init__()
