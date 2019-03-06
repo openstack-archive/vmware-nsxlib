@@ -20,10 +20,9 @@ from oslo_log import log as logging
 import six
 
 from vmware_nsxlib.v3.policy import constants
-from vmware_nsxlib.v3.policy import lb_defs
-
 from vmware_nsxlib.v3.policy.core_resources import IGNORE
 from vmware_nsxlib.v3.policy.core_resources import NsxPolicyResourceBase
+from vmware_nsxlib.v3.policy import lb_defs
 from vmware_nsxlib.v3.policy import utils as p_utils
 
 
