@@ -2572,6 +2572,15 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
             tenant=tenant)
         return self.policy_api.get(map_def, silent=silent)
 
+    def get_entry(self, domain_id, map_id, entry_id,
+                  tenant=constants.POLICY_INFRA_TENANT, silent=False):
+        entry_def = self.entry_def(
+            domain_id=domain_id,
+            map_id=map_id,
+            entry_id=entry_id,
+            tenant=tenant)
+        return self.policy_api.get(entry_def, silent=silent)
+
     def get_by_name(self, domain_id, name,
                     tenant=constants.POLICY_INFRA_TENANT):
         """Return first communication map entry matched by name"""

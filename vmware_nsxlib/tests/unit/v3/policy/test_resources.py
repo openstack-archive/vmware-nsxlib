@@ -1420,6 +1420,22 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(map_id, result['id'])
 
+    def test_get_entry(self):
+        domain_id = '111'
+        map_id = '222'
+        entry_id = '333'
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={'id': entry_id}) as api_call:
+            result = self.resourceApi.get_entry(domain_id, map_id,
+                                                entry_id, tenant=TEST_TENANT)
+            expected_def = self.entryDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                entry_id=entry_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual(entry_id, result['id'])
+
     def test_get_by_name(self):
         domain_id = '111'
         name = 'cm1'
