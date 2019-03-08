@@ -1213,7 +1213,8 @@ class NsxPolicyTier0NatRuleApi(NsxPolicyResourceBase):
                             sequence_number=IGNORE,
                             log=IGNORE,
                             tags=IGNORE,
-                            tenant=constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT,
+                            enabled=IGNORE):
 
         nat_rule_id = self._init_obj_uuid(nat_rule_id)
         nat_rule_def = self._init_def(tier0_id=tier0_id,
@@ -1229,7 +1230,8 @@ class NsxPolicyTier0NatRuleApi(NsxPolicyResourceBase):
                                       sequence_number=sequence_number,
                                       log=log,
                                       tags=tags,
-                                      tenant=tenant)
+                                      tenant=tenant,
+                                      enabled=enabled)
         self._create_or_store(nat_rule_def)
         return nat_rule_id
 
@@ -1259,9 +1261,11 @@ class NsxPolicyTier0NatRuleApi(NsxPolicyResourceBase):
                destination_network=IGNORE,
                translated_network=IGNORE,
                action=IGNORE,
+               sequence_number=IGNORE,
                log=IGNORE,
                tags=IGNORE,
-               tenant=constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT,
+               enabled=IGNORE):
         self._update(tier0_id=tier0_id,
                      nat_id=nat_id,
                      nat_rule_id=nat_rule_id,
@@ -1271,9 +1275,11 @@ class NsxPolicyTier0NatRuleApi(NsxPolicyResourceBase):
                      destination_network=destination_network,
                      translated_network=translated_network,
                      action=action,
+                     sequence_number=sequence_number,
                      log=log,
                      tags=tags,
-                     tenant=tenant)
+                     tenant=tenant,
+                     enabled=enabled)
 
 
 class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
@@ -1295,7 +1301,8 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
                             sequence_number=IGNORE,
                             log=IGNORE,
                             tags=IGNORE,
-                            tenant=constants.POLICY_INFRA_TENANT):
+                            tenant=constants.POLICY_INFRA_TENANT,
+                            enabled=IGNORE):
 
         nat_rule_id = self._init_obj_uuid(nat_rule_id)
         nat_rule_def = self._init_def(tier1_id=tier1_id,
@@ -1311,7 +1318,8 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
                                       sequence_number=sequence_number,
                                       log=log,
                                       tags=tags,
-                                      tenant=tenant)
+                                      tenant=tenant,
+                                      enabled=enabled)
         self._create_or_store(nat_rule_def)
         return nat_rule_id
 
@@ -1341,9 +1349,11 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
                destination_network=IGNORE,
                translated_network=IGNORE,
                action=IGNORE,
+               sequence_number=IGNORE,
                log=IGNORE,
                tags=IGNORE,
-               tenant=constants.POLICY_INFRA_TENANT):
+               tenant=constants.POLICY_INFRA_TENANT,
+               enabled=IGNORE):
         self._update(tier1_id=tier1_id,
                      nat_id=nat_id,
                      nat_rule_id=nat_rule_id,
@@ -1353,9 +1363,11 @@ class NsxPolicyTier1NatRuleApi(NsxPolicyResourceBase):
                      destination_network=destination_network,
                      translated_network=translated_network,
                      action=action,
+                     sequence_number=sequence_number,
                      log=log,
                      tags=tags,
-                     tenant=tenant)
+                     tenant=tenant,
+                     enabled=enabled)
 
 
 class NsxPolicyTier1StaticRouteApi(NsxPolicyResourceBase):
