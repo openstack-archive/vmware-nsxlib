@@ -1046,6 +1046,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         source_group = 'g1'
         dest_group = 'g2'
         seq_num = 7
+        map_seq_num = 10
         service_id = 'c1'
         direction = nsx_constants.IN_OUT
         get_return_value = {'rules': [{'sequence_number': 1}]}
@@ -1063,6 +1064,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 dest_groups=[dest_group],
                 direction=direction,
                 logged=True,
+                map_sequence_number=map_seq_num,
                 tenant=TEST_TENANT)
             map_def = self.mapDef(
                 domain_id=domain_id,
@@ -1070,6 +1072,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 category=constants.CATEGORY_APPLICATION,
+                map_sequence_number=map_seq_num,
                 tenant=TEST_TENANT)
 
             entry_def = self.entryDef(
@@ -1188,11 +1191,12 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         domain_id = '111'
         name = 'cm1'
         description = 'desc'
+        map_seq_num = 10
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
             result = self.resourceApi.create_or_overwrite_map_only(
                 name, domain_id, description=description,
-                tenant=TEST_TENANT)
+                map_sequence_number=map_seq_num, tenant=TEST_TENANT)
 
             expected_map_def = self.mapDef(
                 domain_id=domain_id,
@@ -1200,6 +1204,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 category=constants.CATEGORY_APPLICATION,
+                map_sequence_number=map_seq_num,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(api_call, expected_map_def)
@@ -1340,6 +1345,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
         service_id = 'c1'
         category = 'Emergency'
         ip_protocol = nsx_constants.IPV4
+        map_seq_num = 10
 
         rule_id = 1
         entry1 = self.resourceApi.build_entry(
@@ -1367,6 +1373,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 description=description,
                 entries=[entry1, entry2],
                 category=category,
+                map_sequence_number=map_seq_num,
                 tenant=TEST_TENANT)
 
             expected_def = self.mapDef(
@@ -1375,6 +1382,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                 name=name,
                 description=description,
                 category=category,
+                map_sequence_number=map_seq_num,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_defs(api_call,

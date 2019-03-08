@@ -2397,6 +2397,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
                             source_groups=IGNORE, dest_groups=IGNORE,
                             direction=nsx_constants.IN_OUT,
                             logged=IGNORE, tags=IGNORE,
+                            map_sequence_number=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap & Entry.
 
@@ -2439,7 +2440,8 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
         map_def = self._init_parent_def(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            category=category, tags=tags)
+            category=category, tags=tags,
+            map_sequence_number=map_sequence_number)
 
         self._create_or_store(map_def, entry_def)
         return map_id
@@ -2447,7 +2449,8 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
     def create_or_overwrite_map_only(
         self, name, domain_id, map_id=None, description=IGNORE,
         category=constants.CATEGORY_APPLICATION,
-        tags=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
+        tags=IGNORE, map_sequence_number=IGNORE,
+        tenant=constants.POLICY_INFRA_TENANT):
         """Create or update a CommunicationMap
 
         Create a communication map without any entries, or update the
@@ -2457,7 +2460,8 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
         map_def = self._init_parent_def(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            category=category, tags=tags)
+            category=category, tags=tags,
+            map_sequence_number=map_sequence_number)
 
         self._create_or_store(map_def)
         return map_id
@@ -2492,7 +2496,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
         self, name, domain_id, map_id=None,
         description=IGNORE,
         category=constants.CATEGORY_APPLICATION,
-        entries=None, tags=IGNORE,
+        entries=None, tags=IGNORE, map_sequence_number=IGNORE,
         tenant=constants.POLICY_INFRA_TENANT):
         """Create CommunicationMap with entries"""
 
@@ -2501,7 +2505,8 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
         map_def = self._init_parent_def(
             domain_id=domain_id, map_id=map_id,
             tenant=tenant, name=name, description=description,
-            category=category, tags=tags)
+            category=category, tags=tags,
+            map_sequence_number=map_sequence_number)
 
         self.policy_api.create_with_parent(map_def, entries)
         return map_id

@@ -1158,7 +1158,11 @@ class SecurityPolicyBaseDef(ResourceDef):
     def get_obj_dict(self):
         body = super(SecurityPolicyBaseDef, self).get_obj_dict()
         self._set_attr_if_specified(body, 'category')
-
+        if self.has_attr('map_sequence_number'):
+            seq_number = self.get_attr('map_sequence_number')
+            self._set_attr_if_specified(body, 'map_sequence_number',
+                                        body_attr='sequence_number',
+                                        value=seq_number)
         return body
 
 
