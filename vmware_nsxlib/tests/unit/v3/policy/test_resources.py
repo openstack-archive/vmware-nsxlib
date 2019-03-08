@@ -2257,6 +2257,7 @@ class TestPolicyTier0NatRule(NsxPolicyLibTestCase):
         action = constants.NAT_ACTION_SNAT
         cidr1 = '1.1.1.1/32'
         cidr2 = '2.2.2.0/24'
+        enabled = True
 
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
@@ -2267,7 +2268,8 @@ class TestPolicyTier0NatRule(NsxPolicyLibTestCase):
                 action=action,
                 translated_network=cidr1,
                 source_network=cidr2,
-                tenant=TEST_TENANT)
+                tenant=TEST_TENANT,
+                enabled=enabled)
             expected_def = core_defs.Tier0NatRule(
                 tier0_id=tier0_id,
                 nat_rule_id=nat_rule_id,
@@ -2277,7 +2279,8 @@ class TestPolicyTier0NatRule(NsxPolicyLibTestCase):
                 action=action,
                 translated_network=cidr1,
                 source_network=cidr2,
-                tenant=TEST_TENANT)
+                tenant=TEST_TENANT,
+                enabled=enabled)
             self.assert_called_with_def(api_call, expected_def)
             self.assertIsNotNone(result)
 
@@ -2326,6 +2329,7 @@ class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
         action = constants.NAT_ACTION_SNAT
         cidr1 = '1.1.1.1/32'
         cidr2 = '2.2.2.0/24'
+        enabled = True
 
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
@@ -2336,7 +2340,8 @@ class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
                 action=action,
                 translated_network=cidr1,
                 source_network=cidr2,
-                tenant=TEST_TENANT)
+                tenant=TEST_TENANT,
+                enabled=enabled)
 
             expected_def = core_defs.Tier1NatRule(
                 tier1_id=tier1_id,
@@ -2347,7 +2352,8 @@ class TestPolicyTier1NatRule(NsxPolicyLibTestCase):
                 action=action,
                 translated_network=cidr1,
                 source_network=cidr2,
-                tenant=TEST_TENANT)
+                tenant=TEST_TENANT,
+                enabled=enabled)
             self.assert_called_with_def(api_call, expected_def)
             self.assertIsNotNone(result)
 
