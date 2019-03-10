@@ -50,6 +50,7 @@ LROUTERPORT_LINKONTIER1 = "LogicalRouterLinkPortOnTIER1"
 
 # NSX service type
 SERVICE_DHCP = "dhcp"
+MAX_STATIC_ROUTES = 27
 
 # NSX-V3 Distributed Firewall constants
 IP_SET = 'IPSet'
