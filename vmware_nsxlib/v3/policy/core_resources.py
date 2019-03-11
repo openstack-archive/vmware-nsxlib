@@ -812,7 +812,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         # TODO(asarfaty): Remove this when supported
         tier1_def = self.entry_def(tier1_id=tier1_id,
                                    name=tier1_dict.get('display_name'),
-                                   route_adv=route_adv,
+                                   route_advertisement=route_adv,
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 

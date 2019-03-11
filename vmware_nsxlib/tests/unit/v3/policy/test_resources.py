@@ -2104,7 +2104,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
 
             expected_def = core_defs.Tier1Def(tier1_id=obj_id,
                                               name=rtr_name,
-                                              route_adv=new_adv,
+                                              route_advertisement=new_adv,
                                               tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
