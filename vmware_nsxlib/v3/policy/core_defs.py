@@ -363,9 +363,9 @@ class Tier1Def(RouterDef):
                                         body_attr='tier0_path',
                                         value=tier0_path)
 
-        if self.has_attr('route_adv'):
+        if self.has_attr('route_advertisement'):
             body['route_advertisement_types'] = self.get_attr(
-                'route_adv').get_obj_dict()
+                'route_advertisement').get_obj_dict()
 
         return body
 

@@ -327,10 +327,19 @@ class TestPolicyTier1(policy_testcase.TestPolicyApi):
         description = 'desc'
         tier0_id = '000'
         tier1_id = '111'
+        route_adv = policy.RouteAdvertisement(static_routes=True,
+                                              subnets=True,
+                                              nat=True,
+                                              lb_vip=False,
+                                              lb_snat=False)
         tier1_def = policy.Tier1Def(
             tier1_id=tier1_id,
             name=name, description=description,
+            route_advertisement=route_adv,
             tier0=tier0_id)
+        expected_data = {'id': '111',
+                         'resource_type': 'Tier1',
+                         'route_advertisement_types': route_adv.get_obj_dict()}
         self.policy_api.create_or_update(tier1_def)
         tier1_path = tier1_def.get_resource_path()
         self.assert_json_call('PATCH', self.client,
