@@ -1796,6 +1796,13 @@ class NsxLibBridgeEndpointTestCase(BaseTestResource):
             core_resources.NsxLibBridgeEndpoint)
 
 
+class NsxLibBridgeEndpointProfileTestCase(BaseTestResource):
+
+    def setUp(self):
+        super(NsxLibBridgeEndpointProfileTestCase, self).setUp(
+            core_resources.NsxLibBridgeEndpointProfile)
+
+
 class NsxLibEdgeClusterTestCase(BaseTestResource):
 
     def setUp(self):
