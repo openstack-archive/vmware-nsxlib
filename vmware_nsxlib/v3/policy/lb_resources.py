@@ -542,6 +542,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                             lb_persistence_profile_id=IGNORE,
                             ports=IGNORE,
                             server_ssl_profile_binding=IGNORE,
+                            waf_profile_binding=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT,
                             tags=IGNORE):
         virtual_server_id = self._init_obj_uuid(virtual_server_id)
@@ -559,6 +560,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
             lb_persistence_profile_id=lb_persistence_profile_id,
             ports=ports,
             server_ssl_profile_binding=server_ssl_profile_binding,
+            waf_profile_binding=waf_profile_binding,
             tags=tags
         )
         self._create_or_store(lbvs_def)
@@ -609,6 +611,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                lb_persistence_profile_id=IGNORE,
                ports=IGNORE,
                server_ssl_profile_binding=IGNORE,
+               waf_profile_binding=IGNORE,
                tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
         self._update_helper(
@@ -625,6 +628,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
             lb_persistence_profile_id=lb_persistence_profile_id,
             ports=ports,
             server_ssl_profile_binding=server_ssl_profile_binding,
+            waf_profile_binding=waf_profile_binding,
             tags=tags)
 
     def update_virtual_server_with_pool(
