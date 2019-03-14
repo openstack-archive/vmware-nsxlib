@@ -14,6 +14,7 @@
 #    under the License.
 #
 
+from vmware_nsxlib.v3.policy import constants
 from vmware_nsxlib.v3.policy.core_defs import ResourceDef
 
 TENANTS_PATH_PATTERN = "%s/"
@@ -230,6 +231,11 @@ class LBVirtualServerDef(ResourceDef):
             self._set_attr_if_specified(
                 body, 'server_ssl_profile_binding',
                 value=server_ssl_binding.get_obj_dict())
+        waf_profile_binding = self.get_attr('waf_profile_binding')
+        if waf_profile_binding:
+            self._set_attr_if_specified(
+                body, 'waf_profile_binding',
+                value=waf_profile_binding.get_obj_dict())
         rules = self.get_attr('rules')
         if self.has_attr('rules'):
             rules = rules if isinstance(rules, list) else [rules]
@@ -326,6 +332,23 @@ class ServerSSLProfileBindingDef(object):
             body['server_auth_crl_paths'] = self.server_auth_crl_paths
         if self.ssl_profile_path:
             body['ssl_profile_path'] = self.ssl_profile_path
+        return body
+
+
+class WAFProfileBindingDef(object):
+    def __init__(self, waf_profile_path,
+                 operational_mode=constants.WAF_OPERATIONAL_MODE_PROTECTION,
+                 debug_log_level=constants.WAF_LOG_LEVEL_NO_LOG):
+        self.waf_profile_path = waf_profile_path
+        self.operational_mode = operational_mode
+        self.debug_log_level = debug_log_level
+
+    def get_obj_dict(self):
+        body = {
+            'waf_profile_path': self.waf_profile_path,
+            'operational_mode': self.operational_mode,
+            'debug_log_level': self.debug_log_level
+        }
         return body
 
 
