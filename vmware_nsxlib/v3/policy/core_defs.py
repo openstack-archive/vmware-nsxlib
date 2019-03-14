@@ -47,6 +47,8 @@ MAC_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                                        "mac-discovery-profiles/")
 IPV6_NDRA_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                                    "ipv6-ndra-profiles/")
+WAF_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
+                             "waf-profiles/")
 CERTIFICATE_PATH_PATTERN = TENANTS_PATH_PATTERN + "certificates/"
 
 REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
@@ -1621,6 +1623,29 @@ class DhcpRelayConfigDef(ResourceDef):
     def get_obj_dict(self):
         body = super(DhcpRelayConfigDef, self).get_obj_dict()
         self._set_attr_if_specified(body, 'server_addresses')
+        return body
+
+
+class WAFProfileDef(ResourceDef):
+    @property
+    def path_pattern(self):
+        return WAF_PROFILES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'profile_id')
+
+    @staticmethod
+    def resource_type():
+        return 'WAFProfile'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+    def get_obj_dict(self):
+        body = super(WAFProfileDef, self).get_obj_dict()
+        # TODO(asarfaty): add all attributes here.
+        # Currently used for read only
         return body
 
 

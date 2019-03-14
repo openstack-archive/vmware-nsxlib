@@ -652,15 +652,22 @@ class TestPolicyLBVirtualServer(test_resources.NsxPolicyLibTestCase):
         name = 'd1'
         description = 'desc'
         obj_id = '111'
+        waf_profile_id = 'waf'
+        waf_profile_path = self.policy_lib.waf_profile.get_path(
+            profile_id=waf_profile_id, tenant=TEST_TENANT)
+        waf_profile_binding = lb_defs.WAFProfileBindingDef(
+            waf_profile_path=waf_profile_path)
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
             result = self.resourceApi.create_or_overwrite(
                 name,
                 virtual_server_id=obj_id,
+                waf_profile_binding=waf_profile_binding,
                 description=description,
                 tenant=TEST_TENANT)
             expected_def = lb_defs.LBVirtualServerDef(
                 virtual_server_id=obj_id, name=name, description=description,
+                waf_profile_binding=waf_profile_binding,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(obj_id, result)

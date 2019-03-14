@@ -3082,10 +3082,11 @@ class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
                                      tenant=tenant)
         self.policy_api.delete(profile_def)
 
-    def get(self, profile_id, tenant=constants.POLICY_INFRA_TENANT):
+    def get(self, profile_id, tenant=constants.POLICY_INFRA_TENANT,
+            silent=False):
         profile_def = self.entry_def(profile_id=profile_id,
                                      tenant=tenant)
-        return self.policy_api.get(profile_def)
+        return self.policy_api.get(profile_def, silent=silent)
 
     def list(self, tenant=constants.POLICY_INFRA_TENANT):
         profile_def = self.entry_def(tenant=tenant)
@@ -3102,6 +3103,10 @@ class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
                      description=description,
                      tags=tags,
                      tenant=tenant)
+
+    def get_path(self, profile_id, tenant=constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(profile_id=profile_id, tenant=tenant)
+        return profile_def.get_resource_full_path()
 
 
 class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
@@ -3238,6 +3243,12 @@ class NsxIpDiscoveryProfileApi(NsxSegmentProfileBaseApi):
     @property
     def entry_def(self):
         return core_defs.IpDiscoveryProfileDef
+
+
+class NsxWAFProfileApi(NsxSegmentProfileBaseApi):
+    @property
+    def entry_def(self):
+        return core_defs.WAFProfileDef
 
 
 class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
