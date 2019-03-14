@@ -3103,6 +3103,10 @@ class NsxSegmentProfileBaseApi(NsxPolicyResourceBase):
                      tags=tags,
                      tenant=tenant)
 
+    def get_path(self, profile_id, tenant=constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(profile_id=profile_id, tenant=tenant)
+        return profile_def.get_resource_full_path()
+
 
 class NsxSegmentSecurityProfileApi(NsxSegmentProfileBaseApi):
     @property
@@ -3238,6 +3242,12 @@ class NsxIpDiscoveryProfileApi(NsxSegmentProfileBaseApi):
     @property
     def entry_def(self):
         return core_defs.IpDiscoveryProfileDef
+
+
+class NsxWAFProfileApi(NsxSegmentProfileBaseApi):
+    @property
+    def entry_def(self):
+        return core_defs.WAFProfileDef
 
 
 class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
