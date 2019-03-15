@@ -373,6 +373,16 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
     def build_path_expression(self, paths):
         return core_defs.PathExpression(paths)
 
+    def build_union_condition(self, operator=constants.CONDITION_OP_OR,
+                              conditions=None):
+        expressions = []
+        for cond in conditions:
+            if len(expressions):
+                expressions.append(core_defs.ConjunctionOperator(
+                    operator=operator))
+            expressions.append(cond)
+        return expressions
+
     def build_nested_condition(
         self, operator=constants.CONDITION_OP_AND,
         conditions=None):

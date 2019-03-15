@@ -313,6 +313,55 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
             self.assertIsNotNone(result)
 
+    def test_create_with_union_condition(self):
+        domain_id = '111'
+        name = 'g1'
+        description = 'desc'
+        cond_val1 = '123'
+        cond_val2 = '456'
+        cond_op = constants.CONDITION_OP_EQUALS
+        cond_member_type = constants.CONDITION_MEMBER_VM
+        cond_key = constants.CONDITION_KEY_TAG
+
+        cond1 = self.resourceApi.build_condition(
+            cond_val=cond_val1,
+            cond_op=cond_op,
+            cond_member_type=cond_member_type,
+            cond_key=cond_key)
+        cond2 = self.resourceApi.build_condition(
+            cond_val=cond_val2,
+            cond_op=cond_op,
+            cond_member_type=cond_member_type,
+            cond_key=cond_key)
+        union_cond = self.resourceApi.build_union_condition(
+            conditions=[cond1, cond2])
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            result = self.resourceApi.create_or_overwrite_with_conditions(
+                name, domain_id, description=description,
+                conditions=union_cond,
+                tenant=TEST_TENANT)
+            exp_cond1 = core_defs.Condition(value=cond_val1,
+                                            key=cond_key,
+                                            operator=cond_op,
+                                            member_type=cond_member_type)
+            exp_cond2 = core_defs.Condition(value=cond_val2,
+                                            key=cond_key,
+                                            operator=cond_op,
+                                            member_type=cond_member_type)
+            or_cond = core_defs.ConjunctionOperator(
+                operator=constants.CONDITION_OP_OR)
+            union_cond = [exp_cond1, or_cond, exp_cond2]
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=mock.ANY,
+                                              name=name,
+                                              description=description,
+                                              conditions=union_cond,
+                                              tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertIsNotNone(result)
+
     def test_create_with_nested_condition(self):
         domain_id = '111'
         name = 'g1'
