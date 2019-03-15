@@ -811,8 +811,8 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
         body = self.policy_api.get(lbvs_def)
         app_profile_id = p_utils.path_to_id(body['application_profile_path'])
         lb_rules = body.get('rules', [])
-        lb_rules = filter(lambda x: (x.get('display_name') !=
-                                     lb_rule_name), lb_rules)
+        lb_rules = list(filter(lambda x: (x.get('display_name') !=
+                                          lb_rule_name), lb_rules))
         return self.update(virtual_server_id, rules=lb_rules,
                            ip_address=body['ip_address'],
                            ports=body['ports'],
