@@ -50,6 +50,8 @@ class NsxPolicyLibTestCase(policy_testcase.TestPolicyApi):
         # verify the resource definition tenant
         self.assertEqual(expected_def.get_tenant(), actual_def.get_tenant())
         # verify the resource definition values
+        print 'EX=', expected_def.get_obj_dict()
+        print 'AC=', actual_def.get_obj_dict()
         self.assertEqual(expected_def.get_obj_dict(),
                          actual_def.get_obj_dict())
 
