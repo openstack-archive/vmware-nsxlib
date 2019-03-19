@@ -604,7 +604,7 @@ class TestPolicyL4Service(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
         super(TestPolicyL4Service, self).setUp()
-        self.resourceApi = self.policy_lib.service
+        self.resourceApi = self.policy_lib.l4_service
 
     def test_create(self):
         name = 's1'

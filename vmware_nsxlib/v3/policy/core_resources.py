@@ -540,6 +540,50 @@ class NsxPolicyServiceBase(NsxPolicyResourceBase):
                                           entity_type=entity_type)
 
 
+class NsxPolicyServiceApi(NsxPolicyServiceBase):
+    """NSX Policy Service with mixed service entries."""
+
+    @property
+    def entry_def(self):
+        return core_defs.ServiceEntryDef
+
+    def create_or_overwrite(self, name, service_id=None,
+                            description=IGNORE,
+                            entries=IGNORE,
+                            tags=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        service_id = self._init_obj_uuid(service_id)
+        service_def = self._init_parent_def(service_id=service_id,
+                                            name=name,
+                                            description=description,
+                                            entries=entries,
+                                            tags=tags,
+                                            tenant=tenant)
+
+        if entries != IGNORE:
+            self._create_or_store(service_def, entries)
+        else:
+            self._create_or_store(service_def)
+        return service_id
+
+    def update(self, service_id,
+               name=IGNORE, description=IGNORE,
+               entries=IGNORE, tags=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
+
+        parent_def = self._init_parent_def(
+            service_id=service_id,
+            name=name,
+            description=description,
+            tags=tags,
+            tenant=tenant)
+
+        if entries != IGNORE:
+            self.policy_api.create_with_parent(parent_def, entries)
+        else:
+            self.policy_api.create_or_update(parent_def)
+
+
 class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
     """NSX Policy Service with a single L4 service entry.
 
@@ -597,6 +641,20 @@ class NsxPolicyL4ServiceApi(NsxPolicyServiceBase):
             tenant=tenant)
 
         self.policy_api.create_with_parent(parent_def, entry_def)
+
+    def build_entry(self, name, service_id, entry_id,
+                    description=None, protocol=None,
+                    dest_ports=None, source_ports=None,
+                    tags=None, tenant=constants.POLICY_INFRA_TENANT):
+        return self._init_def(service_id=service_id,
+                              entry_id=entry_id,
+                              name=name,
+                              description=description,
+                              protocol=protocol,
+                              dest_ports=dest_ports,
+                              source_ports=source_ports,
+                              tags=tags,
+                              tenant=tenant)
 
 
 class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
@@ -656,6 +714,20 @@ class NsxPolicyIcmpServiceApi(NsxPolicyServiceBase):
 
         return self.policy_api.create_with_parent(parent_def, entry_def)
 
+    def build_entry(self, name, service_id, entry_id,
+                    description=None, version=4,
+                    icmp_type=None, icmp_code=None,
+                    tags=None, tenant=constants.POLICY_INFRA_TENANT):
+        return self._init_def(service_id=service_id,
+                              entry_id=entry_id,
+                              name=name,
+                              description=description,
+                              version=version,
+                              icmp_type=icmp_type,
+                              icmp_code=icmp_code,
+                              tags=tags,
+                              tenant=tenant)
+
 
 class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
     """NSX Policy Service with a single IPProtocol service entry.
@@ -707,6 +779,16 @@ class NsxPolicyIPProtocolServiceApi(NsxPolicyServiceBase):
             tenant=tenant)
 
         return self.policy_api.create_with_parent(parent_def, entry_def)
+
+    def build_entry(self, name, service_id, entry_id,
+                    description=None, protocol_number=None,
+                    tags=None, tenant=constants.POLICY_INFRA_TENANT):
+        return self._init_def(service_id=service_id,
+                              entry_id=entry_id,
+                              name=name,
+                              protocol_number=protocol_number,
+                              tags=tags,
+                              tenant=tenant)
 
 
 class NsxPolicyTier1Api(NsxPolicyResourceBase):

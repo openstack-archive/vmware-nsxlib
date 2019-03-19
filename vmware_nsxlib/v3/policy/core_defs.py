@@ -1051,9 +1051,6 @@ class GroupDef(ResourceDef):
 
 
 class ServiceDef(ResourceDef):
-    def __init__(self, **kwargs):
-        super(ServiceDef, self).__init__(**kwargs)
-        self.service_entries = []
 
     @property
     def path_pattern(self):
@@ -1072,10 +1069,10 @@ class ServiceDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(ServiceDef, self).get_obj_dict()
-        entries = [entry.get_obj_dict()
-                   for entry in self.service_entries]
+        entries = self.get_attr('entries')
         if entries:
-            body['service_entries'] = entries
+            body['service_entries'] = [entry.get_obj_dict()
+                                       for entry in entries]
         return body
 
     @staticmethod
