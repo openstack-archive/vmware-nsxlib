@@ -103,6 +103,8 @@ class NsxPolicyLib(lib.NsxLibBase):
         self.segment_port_qos_profiles = (
             core_resources.SegmentPortQosProfilesBindingMapApi(
                 *args))
+        self.ipv6_ndra_profile = (
+            core_resources.NsxIpv6NdraProfileApi(*args))
         self.dhcp_relay_config = core_resources.NsxDhcpRelayConfigApi(*args)
         self.certificate = core_resources.NsxPolicyCertApi(*args)
         self.load_balancer = lb_resources.NsxPolicyLoadBalancerApi(*args)
