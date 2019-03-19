@@ -2102,6 +2102,59 @@ class TestNsxlibClusterNodesConfigTestCase(BaseTestResource):
                               test_constants.FAKE_MANAGER_IP2], result)
 
 
+class InventoryTestCase(BaseTestResource):
+    CONTAINER_CLUSTER = "k8s-cluster-1"
+
+    def setUp(self):
+        super(InventoryTestCase, self).setUp(resources.Inventory)
+
+    def test_get_resource(self):
+        self.skipTest("The action is not supported by this resource")
+
+    def test_list_all(self):
+        mocked_resource = self.get_mocked_resource()
+        mocked_resource.list(
+            self.CONTAINER_CLUSTER,
+            'ContainerApplication')
+        base_url = 'https://1.2.3.4/api/v1/fabric/container-applications'
+        surfix = '?cluster-id=%s' % self.CONTAINER_CLUSTER
+        test_client.assert_json_call(
+            'get', mocked_resource,
+            base_url + surfix,
+            headers=self.default_headers())
+
+    def test_delete_resource(self, extra_params=None):
+        mocked_resource = self.get_mocked_resource()
+        mocked_resource.delete('ContainerCluster', self.CONTAINER_CLUSTER)
+        base_url = 'https://1.2.3.4/api/v1/fabric/container-clusters'
+        surfix = '/%s' % self.CONTAINER_CLUSTER
+        test_client.assert_json_call(
+            'delete', mocked_resource,
+            base_url + surfix,
+            headers=self.default_headers())
+
+    def test_update(self):
+        mocked_resource = self.get_mocked_resource()
+        body = {}
+        update_dict = {'external_id': '1234',
+                       'resource_type': 'Application',
+                       'name': 'service-1',
+                       'labels': [{'key': 'key-1', 'value': 'value-1'}]}
+        mocked_resource.update(
+            self.CONTAINER_CLUSTER, [('CREATE', update_dict)])
+        item = {}
+        item["object_update_type"] = 'CREATE'
+        item["container_object"] = update_dict
+        body = {"container_inventory_objects": [item]}
+        base_url = 'https://1.2.3.4/api/v1/inventory/container/'
+        surfix = '%s?action=updates' % self.CONTAINER_CLUSTER
+        test_client.assert_json_call(
+            'post', mocked_resource,
+            base_url + surfix,
+            data=jsonutils.dumps(body, sort_keys=True),
+            headers=self.default_headers())
+
+
 class DummyCachedResource(utils.NsxLibApiBase):
 
     @property
