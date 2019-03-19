@@ -705,3 +705,67 @@ class NsxlibClusterNodesConfig(utils.NsxLibApiBase):
                         manager_ips.append(list_addr['ip_address'])
 
         return manager_ips
+
+
+class Inventory(utils.NsxLibApiBase):
+    """REST APIs to support inventory service."""
+
+    RESOURCES_PATH = {"ContainerCluster": "container-clusters",
+                      "ContainerProject": "container-projects",
+                      "ContainerApplication": "container-applications",
+                      "ContainerApplicationInstance":
+                      "container-application-instances",
+                      "ContainerClusterNode": "container-cluster-nodes",
+                      "ContainerNetworkPolicy": "container-network-policies",
+                      "ContainerIngressPolicy": "container-ingress-policies"}
+    SEGMENT_LIST_DEL = 'fabric'
+    SEGMENT_UPDATE = 'inventory/container'
+
+    @property
+    def uri_segment(self):
+        # only serves for list and delete. For batch update, another base url
+        # is used. The reason is update API is internal.
+        return self.SEGMENT_LIST_DEL
+
+    @property
+    def resource_type(self):
+        return 'Inventory'
+
+    def update(self, cluster_id, updates):
+        """This method supports multiple updates in a batching way."""
+        items = []
+        for update_type, update_object in updates:
+            item = {}
+            item["object_update_type"] = update_type
+            item["container_object"] = update_object
+            items.append(item)
+        body = {"container_inventory_objects": items}
+        request_url = "%s/%s?action=updates" % (
+            self.SEGMENT_UPDATE, cluster_id)
+        result = self.client.url_post(request_url, body)
+        return result
+
+    def list(self, cluster_id, resource_type):
+        if not resource_type:
+            msg = "null resource type is not supported"
+            raise exceptions.ResourceNotFound(details=msg)
+        request_url = "%s?cluster-id=%s" % (
+            self.get_path(self._get_path_for_resource(resource_type)),
+            cluster_id)
+        return self.client.url_get(request_url)
+
+    def delete(self, resource_type, resource_id):
+        if not resource_type:
+            msg = "null resource type is not supported"
+            raise exceptions.ResourceNotFound(details=msg)
+        request_url = "%s/%s" % (
+            self.get_path(self._get_path_for_resource(resource_type)),
+            resource_id)
+        return self.client.url_delete(request_url)
+
+    def _get_path_for_resource(self, resource_type):
+        path = self.RESOURCES_PATH[resource_type]
+        if not path:
+            msg = "backend resource %s is not supported" % self.resource_type
+            raise exceptions.ResourceNotFound(details=msg)
+        return path
