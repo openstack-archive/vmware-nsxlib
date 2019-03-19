@@ -139,6 +139,7 @@ NSX_VERSION_2_1_0 = '2.1.0'
 NSX_VERSION_2_2_0 = '2.2.0'
 NSX_VERSION_2_3_0 = '2.3.0'
 NSX_VERSION_2_4_0 = '2.4.0'
+NSX_VERSION_2_5_0 = '2.5.0'
 NSX_VERSION_3_0_0 = '3.0.0'
 
 # Features available depending on the NSX Manager backend version
@@ -164,3 +165,6 @@ FEATURE_ENABLE_STANDBY_RELOCATION = 'Router Enable standby relocation'
 # Features available depending on the Policy Manager backend version
 FEATURE_NSX_POLICY = 'NSX Policy'
 FEATURE_NSX_POLICY_NETWORKING = 'NSX Policy Networking'
+
+# FEATURE available depending on Inventory service backend version
+FEATURE_CONTAINER_CLUSTER_INVENTORY = 'Container Cluster Inventory'
