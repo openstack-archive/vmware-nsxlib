@@ -45,6 +45,8 @@ IP_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                                       "ip-discovery-profiles/")
 MAC_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                                        "mac-discovery-profiles/")
+IPV6_NDRA_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
+                                   "ipv6-ndra-profiles/")
 CERTIFICATE_PATH_PATTERN = TENANTS_PATH_PATTERN + "certificates/"
 
 REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
@@ -305,6 +307,19 @@ class RouterDef(ResourceDef):
             self._set_attr_if_specified(body, 'dhcp_config',
                                         body_attr='dhcp_config_paths',
                                         value=paths)
+
+        if self.has_attr('ipv6_ndra_profile_id'):
+            paths = None
+            if self.get_attr('ipv6_ndra_profile_id'):
+                ndra_profile = Ipv6NdraProfileDef(
+                    profile_id=self.get_attr('ipv6_ndra_profile_id'),
+                    tenant=self.get_tenant())
+                paths = [ndra_profile.get_resource_full_path()]
+
+            self._set_attr_if_specified(body, 'ipv6_ndra_profile_id',
+                                        body_attr='ipv6_profile_paths',
+                                        value=paths)
+
         return body
 
 
@@ -1554,6 +1569,33 @@ class MacDiscoveryProfileDef(ResourceDef):
                                             'mac_learning_enabled',
                                             'unknown_unicast_flooding_enabled',
                                             'mac_limit_policy', 'mac_limit'])
+        return body
+
+
+class Ipv6NdraProfileDef(ResourceDef):
+    DEFAULT_PROFILE = 'default-ipv6-ndra-profile'
+
+    @property
+    def path_pattern(self):
+        return IPV6_NDRA_PROFILES_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'profile_id')
+
+    @staticmethod
+    def resource_type():
+        return 'Ipv6NdraProfile'
+
+    def path_defs(self):
+        return (TenantDef,)
+
+    # TODO(annak): expose RA config when required
+    def get_obj_dict(self):
+        body = super(Ipv6NdraProfileDef, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['ra_mode',
+                                            'reachable_timer',
+                                            'retransmit_interval'])
         return body
 
 

@@ -733,6 +733,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                             route_advertisement=IGNORE,
                             dhcp_config=IGNORE,
                             disable_firewall=IGNORE,
+                            ipv6_ndra_profile_id=IGNORE,
                             tags=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
         tier1_id = self._init_obj_uuid(tier1_id)
@@ -746,6 +747,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    route_advertisement=route_advertisement,
                                    dhcp_config=dhcp_config,
                                    disable_firewall=disable_firewall,
+                                   ipv6_ndra_profile_id=ipv6_ndra_profile_id,
                                    tenant=tenant)
 
         self._create_or_store(tier1_def)
@@ -773,6 +775,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                failover_mode=IGNORE, tier0=IGNORE,
                dhcp_config=IGNORE, tags=IGNORE,
                disable_firewall=IGNORE,
+               ipv6_ndra_profile_id=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
         # Note(asarfaty): L2/L3 PATCH APIs don't support partial updates yet
         # TODO(asarfaty): Remove this when supported
@@ -787,6 +790,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                      dhcp_config=dhcp_config,
                      tier0=tier0,
                      disable_firewall=disable_firewall,
+                     ipv6_ndra_profile_id=ipv6_ndra_profile_id,
                      tags=tags,
                      tenant=tenant)
 
@@ -1030,6 +1034,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                             default_rule_logging=IGNORE,
                             transit_subnets=IGNORE,
                             disable_firewall=IGNORE,
+                            ipv6_ndra_profile_id=IGNORE,
                             tags=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT):
 
@@ -1044,6 +1049,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                                    default_rule_logging=default_rule_logging,
                                    transit_subnets=transit_subnets,
                                    disable_firewall=disable_firewall,
+                                   ipv6_ndra_profile_id=ipv6_ndra_profile_id,
                                    tags=tags,
                                    tenant=tenant)
         self.policy_api.create_or_update(tier0_def)
@@ -1073,6 +1079,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                default_rule_logging=IGNORE,
                transit_subnets=IGNORE,
                disable_firewall=IGNORE,
+               ipv6_ndra_profile_id=IGNORE,
                tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
 
@@ -1085,6 +1092,7 @@ class NsxPolicyTier0Api(NsxPolicyResourceBase):
                      default_rule_logging=default_rule_logging,
                      transit_subnets=transit_subnets,
                      disable_firewall=disable_firewall,
+                     ipv6_ndra_profile_id=ipv6_ndra_profile_id,
                      tags=tags,
                      tenant=tenant)
 
@@ -3233,6 +3241,65 @@ class NsxMacDiscoveryProfileApi(NsxSegmentProfileBaseApi):
             tenant=tenant)
         self._create_or_store(profile_def)
         return profile_id
+
+
+class NsxIpv6NdraProfileApi(NsxPolicyResourceBase):
+    @property
+    def entry_def(self):
+        return core_defs.Ipv6NdraProfileDef
+
+    def create_or_overwrite(self, name,
+                            profile_id=None,
+                            description=IGNORE,
+                            ra_mode=IGNORE,
+                            reachable_timer=IGNORE,
+                            retransmit_interval=IGNORE,
+                            tags=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+
+        profile_id = self._init_obj_uuid(profile_id)
+        profile_def = self._init_def(
+            profile_id=profile_id,
+            name=name,
+            description=description,
+            ra_mode=ra_mode,
+            reachable_timer=reachable_timer,
+            retransmit_interval=retransmit_interval,
+            tags=tags,
+            tenant=tenant)
+        self._create_or_store(profile_def)
+        return profile_id
+
+    def delete(self, profile_id, tenant=constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(profile_id=profile_id,
+                                     tenant=tenant)
+        self.policy_api.delete(profile_def)
+
+    def get(self, profile_id, tenant=constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(profile_id=profile_id,
+                                     tenant=tenant)
+        return self.policy_api.get(profile_def)
+
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        profile_def = self.entry_def(tenant=tenant)
+        return self._list(profile_def)
+
+    def get_by_name(self, name, tenant=constants.POLICY_INFRA_TENANT):
+        return super(NsxSegmentProfileBaseApi, self).get_by_name(
+            name, tenant=tenant)
+
+    def update(self, profile_id, name=IGNORE, description=IGNORE,
+               ra_mode=IGNORE, reachable_timer=IGNORE,
+               retransmit_interval=IGNORE,
+               tags=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
+        self._update(profile_id=profile_id,
+                     name=name,
+                     description=description,
+                     ra_mode=ra_mode,
+                     reachable_timer=reachable_timer,
+                     retransmit_interval=retransmit_interval,
+                     tags=tags,
+                     tenant=tenant)
 
 
 class NsxDhcpRelayConfigApi(NsxPolicyResourceBase):
