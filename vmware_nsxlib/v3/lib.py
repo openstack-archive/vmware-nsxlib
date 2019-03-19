@@ -100,6 +100,13 @@ class NsxLibBase(object):
     def subscribe(self, callback, event):
         self.cluster.subscribe(callback, event)
 
+    def _add_pagination_parameters(self, url, cursor, page_size):
+        if cursor:
+            url += "&cursor=%d" % cursor
+        if page_size:
+            url += "&page_size=%d" % page_size
+        return url
+
     # TODO(abhiraut): Revisit this method to generate complex boolean
     #                 queries to search resources.
     def search_by_tags(self, tags, resource_type=None, cursor=None,
@@ -126,11 +133,45 @@ class NsxLibBase(object):
             query += " AND %s" % query_tags
         else:
             query = query_tags
-        url = "search?query=%s" % query
-        if cursor:
-            url += "&cursor=%d" % cursor
-        if page_size:
-            url += "&page_size=%d" % page_size
+        url = self._add_pagination_parameters("search?query=%s" % query,
+                                              cursor, page_size)
+
+        # Retry the search on case of error
+        @utils.retry_upon_exception(exceptions.NsxIndexingInProgress,
+                                    max_attempts=self.client.max_attempts)
+        def do_search(url):
+            return self.client.url_get(url)
+
+        return do_search(url)
+
+    def search_resource_by_attributes(self, resource_type, cursor=None,
+                                      page_size=None, **attributes):
+        """Search resources of a given type matching specific attributes.
+
+        It is optional to specify attributes. If multiple attributes are
+        specified they are ANDed together to form the search query.
+
+        :param resource_type: String parameter specifying the desired
+                              resource_type
+        :param cursor: Opaque cursor to be used for getting next page of
+                       records (supplied by current result page).
+        :param page_size: Maximum number of results to return in this page.
+        :param **attributes: an optional set of keyword arguments
+                             specifying filters for the search query.
+                             Wildcards will not be interpeted.
+
+        :returns: a list of resources of the requested type matching
+                  specified filters.
+        """
+        if not resource_type:
+            raise exceptions.NsxSearchInvalidQuery(
+                reason=_("Resource type was not specified"))
+        attributes_query = " AND ".join(['%s:%s' % (k, v) for (k, v)
+                                         in attributes.items()])
+        query = 'resource_type:%s' % resource_type + (
+            " AND %s" % attributes_query if attributes_query else "")
+        url = self._add_pagination_parameters("search?query=%s" % query,
+                                              cursor, page_size)
 
         # Retry the search on case of error
         @utils.retry_upon_exception(exceptions.NsxIndexingInProgress,
@@ -147,6 +188,22 @@ class NsxLibBase(object):
         while True:
             response = self.search_by_tags(resource_type=resource_type,
                                            tags=tags, cursor=cursor)
+            if not response['results']:
+                return results
+            results.extend(response['results'])
+            cursor = int(response['cursor'])
+            result_count = int(response['result_count'])
+            if cursor >= result_count:
+                return results
+
+    def search_all_resource_by_attributes(self, resource_type, **attributes):
+        """Return all the results searched based on attributes."""
+        results = []
+        cursor = 0
+        while True:
+            response = self.search_resource_by_attributes(
+                resource_type=resource_type,
+                cursor=cursor, **attributes)
             if not response['results']:
                 return results
             results.extend(response['results'])

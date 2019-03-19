@@ -1474,6 +1474,41 @@ class TestNsxSearch(nsxlib_testcase.NsxClientTestCase):
             self.nsxlib.search_by_tags(tags=user_tags)
             search.assert_called_with('search?query=%s' % query)
 
+    def test_nsx_search_by_resouce_type_and_attributes(self):
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            resource_type = 'HorseWithNoName'
+            attributes = {'color': 'mauve'}
+            self.nsxlib.search_resource_by_attributes(resource_type,
+                                                      **attributes)
+            exp_query = 'resource_type:%s AND color:%s' % (
+                resource_type, attributes['color'])
+            search.assert_called_with(
+                'search?query=%s' % exp_query)
+
+    def test_nsx_search_by_resouce_type_only(self):
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            resource_type = 'HorseWithNoName'
+            self.nsxlib.search_resource_by_attributes(resource_type)
+            exp_query = 'resource_type:%s' % resource_type
+            search.assert_called_with(
+                'search?query=%s' % exp_query)
+
+    def test_nsx_search_no_resource_type_fails(self):
+        self.assertRaises(exceptions.NsxSearchInvalidQuery,
+                          self.nsxlib.search_resource_by_attributes,
+                          None, attributes={'meh': 'whatever'})
+
+    def test_nsx_search_resource_by_attributes_cursor_page_size(self):
+        with mock.patch.object(self.nsxlib.client, 'url_get') as search:
+            resource_type = 'HorseWithNoName'
+            attributes = {'color': 'mauve'}
+            self.nsxlib.search_resource_by_attributes(
+                resource_type, cursor=50, page_size=100, **attributes)
+            exp_query = 'resource_type:%s AND color:%s' % (
+                resource_type, attributes['color'])
+            search.assert_called_with(
+                'search?query=%s&cursor=50&page_size=100' % exp_query)
+
     def test_nsx_search_tags_tag_and_scope(self):
         """Test search of resources with the specified tag."""
         with mock.patch.object(self.nsxlib.client, 'url_get') as search:
