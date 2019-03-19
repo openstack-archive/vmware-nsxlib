@@ -1,0 +1,11 @@
+Verified+1: VMware NSX CI
+Code-Review+2: Adit Sarfaty <asarfaty@vmware.com>
+Code-Review+2: Tong Liu <tongl@vmware.com>
+Code-Review+2: Salvatore Orlando <salv.orlando@gmail.com>
+Workflow+1: Salvatore Orlando <salv.orlando@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 19 Mar 2019 07:39:46 +0000
+Reviewed-on: https://review.openstack.org/639106
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
