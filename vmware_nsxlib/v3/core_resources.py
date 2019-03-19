@@ -74,6 +74,61 @@ class NsxLibPortMirror(utils.NsxLibApiBase):
         self.client.delete(self.get_path(mirror_session_id))
 
 
+class NsxLibBridgeEndpointProfile(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'bridge-endpoint-profiles'
+
+    @property
+    def resource_type(self):
+        return 'BridgeEndpointProfile'
+
+    def create(self, display_name, edge_cluster_id, tags,
+               edge_cluster_member_indexes=None, failover_mode=None):
+        """Create a bridge endpoint profile on the backend.
+
+        Create a bridge endpoint profile for a given edge cluster.
+        :param display_name: name of the bridge endpoint profile
+        :param edge_cluster_id: identifier of the edge cluster this profile
+                                should be associated with.
+        :param tags: tags for the newly created resource.
+        :param edge_cluster_member_indexes: iterable of integers specifying
+                                            edge cluster members where the
+                                            bridge endpoints will be created
+        :param failover_mode: failover mode for the profile. Could be either
+                              PREEMPTIVE or NON_PREEMPTIVE.
+        """
+        tags = tags or []
+        body = {'display_name': display_name,
+                'tags': tags}
+        if failover_mode:
+            body['failover_mode'] = failover_mode
+        if edge_cluster_member_indexes:
+            # Test for a list of integers
+            try:
+                member_indexes = [int(member_idx) for member_idx in
+                                  edge_cluster_member_indexes]
+                body['edge_cluster_member_indexes'] = member_indexes
+            except (TypeError, ValueError) as e:
+                LOG.Error("Invalid values for member indexes: %s", e)
+                raise exceptions.InvalidInput(
+                    operation='Create BridgeEndpointProfile',
+                    arg_val=edge_cluster_member_indexes,
+                    arg_name='edge_cluster_member_indexes')
+
+        return self.client.create(self.get_path(), body)
+
+    def delete(self, bridge_endpoint_profile_id):
+        """Delete a bridge endpoint profile on the backend.
+
+        :param bridge_endpoint_profile_id: string representing the UUID of
+                                           the bridge endpoint profile to be
+                                           deleted.
+        """
+        self.client.delete(self.get_path(bridge_endpoint_profile_id))
+
+
 class NsxLibBridgeEndpoint(utils.NsxLibApiBase):
 
     @property
@@ -84,19 +139,24 @@ class NsxLibBridgeEndpoint(utils.NsxLibApiBase):
     def resource_type(self):
         return 'BridgeEndpoint'
 
-    def create(self, device_name, seg_id, tags):
+    def create(self, device_name, vlan_transport_zone_id, vlan_id, tags):
         """Create a bridge endpoint on the backend.
 
         Create a bridge endpoint resource on a bridge cluster for the L2
         gateway network connection.
         :param device_name: device_name actually refers to the bridge cluster's
                             UUID.
-        :param seg_id: integer representing the VLAN segmentation ID.
+        :param vlan_transport_zone_id: identifier of the transport zone id
+                                       where the endpoint will be created.
+                                       Mandatory for endpoints on edge
+                                       clusters.
+        :param vlan_id: integer representing the VLAN segmentation ID.
         :param tags: nsx backend specific tags.
         """
-        body = {'bridge_cluster_id': device_name,
+        body = {'bridge_endpoint_profile_id': device_name,
+                'vlan_transport_zone_id': vlan_transport_zone_id,
                 'tags': tags,
-                'vlan': seg_id}
+                'vlan': vlan_id}
         return self.client.create(self.get_path(), body)
 
     def delete(self, bridge_endpoint_id):
