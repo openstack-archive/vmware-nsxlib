@@ -724,18 +724,25 @@ class TestPolicyLBVirtualServer(test_resources.NsxPolicyLibTestCase):
         name = 'new name'
         description = 'new desc'
         dummy_id = 'xxxx'
+        vs_name = 'name-name'
+        vs_ip_address = '1.1.1.1'
+        vs_ports = [80]
         dummy_path = '/test/lb-app-profiles/' + dummy_id
         with mock.patch.object(self.policy_api,
                                "create_or_update") as update_call, \
                 mock.patch.object(
                     self.policy_api, "get", return_value={
+                        'ip_address': vs_ip_address,
+                        'ports': vs_ports,
+                        'display_name': vs_name,
                         'application_profile_path': dummy_path}):
             self.resourceApi.update(obj_id,
                                     name=name,
                                     description=description,
                                     tenant=TEST_TENANT)
             expected_def = lb_defs.LBVirtualServerDef(
-                virtual_server_id=obj_id, name=name, description=description,
+                virtual_server_id=obj_id, name=name, ports=vs_ports,
+                description=description, ip_address=vs_ip_address,
                 tenant=TEST_TENANT, application_profile_id=dummy_id)
             self.assert_called_with_def(update_call, expected_def)
 
@@ -1076,7 +1083,9 @@ class TestPolicyLBPoolApi(test_resources.NsxPolicyLibTestCase):
         active_monitor_paths = 'path1'
         member_group = 'group1'
         snat_translation = False
-        with mock.patch.object(self.policy_api,
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={'id': obj_id}), \
+             mock.patch.object(self.policy_api,
                                "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
                                     name=name,
