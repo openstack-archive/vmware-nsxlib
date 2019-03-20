@@ -57,6 +57,8 @@ class NsxPolicyLibTestCase(policy_testcase.TestPolicyApi):
         # verify the api was called
         mock_api.assert_called()
         actual_def = mock_api.call_args_list[call_num][0][0]
+        print 'EX=', expected_def.get_obj_dict()
+        print 'AC=', actual_def.get_obj_dict()
         self._compare_def(expected_def, actual_def)
 
     def assert_called_with_defs(self, mock_api, expected_defs, call_num=0):
