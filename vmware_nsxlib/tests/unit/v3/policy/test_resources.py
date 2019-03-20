@@ -2079,7 +2079,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             # make sure tier0 is in the body with value None
             actual_def = update_call.call_args_list[0][0][0]
             self.assertIn('tier0_path', actual_def.get_obj_dict())
-            self.assertIsNone(actual_def.get_obj_dict()['tier0_path'])
+            self.assertEqual("", actual_def.get_obj_dict()['tier0_path'])
 
     def test_update_route_adv(self):
         obj_id = '111'
