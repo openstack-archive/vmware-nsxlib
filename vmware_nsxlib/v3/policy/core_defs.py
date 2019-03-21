@@ -708,15 +708,15 @@ class SegmentPortDef(ResourceDef):
         if address_bindings:
             body['address_bindings'] = [binding.get_obj_dict()
                                         for binding in address_bindings]
-        if self.has_attr('attachment_type'):
-            # TODO(annak): add validations when we understand all
-            # use cases. Consider child classes for different
-            # attachment types.
-            if not self.get_attr('attachment_type'):
+        if self.has_attr('attachment_type') or self.has_attr('vif_id'):
+            if (not self.get_attr('attachment_type') and
+                not self.get_attr('vif_id')):
                 # detach operation
                 body['attachment'] = None
             else:
-                attachment = {'type': self.get_attr('attachment_type')}
+                attachment = {}
+                if self.get_attr('attachment_type'):
+                    attachment['type'] = self.get_attr('attachment_type')
                 if self.get_attr('vif_id'):
                     attachment['id'] = self.get_attr('vif_id')
 
