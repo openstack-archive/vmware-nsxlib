@@ -81,6 +81,10 @@ class ResourceDef(object):
         resource_id = self.get_id()
         if resource_id:
             body['id'] = resource_id
+
+        path = self.get_resource_full_path()
+        if path:
+            body['path'] = path
         return body
 
     # This is needed for sake of update due to policy issue.
