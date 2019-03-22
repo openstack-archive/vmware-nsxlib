@@ -943,10 +943,6 @@ class IpPoolBlockSubnetDef(ResourceDef):
     def path_ids(self):
         return ('tenant', 'ip_pool_id', 'ip_subnet_id')
 
-    @classmethod
-    def resource_class(cls):
-        return 'IpAddressPoolSubnet'
-
     @staticmethod
     def resource_type():
         return 'IpAddressPoolBlockSubnet'
@@ -966,6 +962,46 @@ class IpPoolBlockSubnetDef(ResourceDef):
             self._set_attr_if_specified(
                 body, 'ip_block_id', body_attr='ip_block_path',
                 value=ip_block_path)
+        return body
+
+
+class IpPoolRange(object):
+    def __init__(self, start_ip, end_ip):
+        self.start_ip = start_ip
+        self.end_ip = end_ip
+
+    def get_obj_dict(self):
+        return {'resource_type': 'IpPoolRange',
+                'start': self.start_ip,
+                'end': self.end_ip}
+
+class IpPoolStaticSubnetDef(ResourceDef):
+    '''Infra IpPool static subnet'''
+
+    @property
+    def path_pattern(self):
+        return IP_POOLS_PATH_PATTERN + "%s/ip-subnets/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'ip_pool_id', 'ip_subnet_id')
+
+    @staticmethod
+    def resource_type():
+        return 'IpAddressPoolStaticSubnet'
+
+    def path_defs(self):
+        return (TenantDef, IpPoolDef)
+
+    def get_obj_dict(self):
+        body = super(IpPoolStaticSubnetDef, self).get_obj_dict()
+        body['cidr'] = self.get_attr('cidr')
+        allocation_ranges = self.get_attr('allocation_ranges')
+        if allocation_ranges:
+            body['allocation_ranges'] = [ip_range.get_obj_dict()
+                                         for ip_range in allocation_ranges]
+        if self.has_attr('gateway_ip'):
+            body['gateway_ip'] = self.get_attr('gateway_ip')
         return body
 
 
