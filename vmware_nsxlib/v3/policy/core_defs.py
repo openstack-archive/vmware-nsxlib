@@ -943,10 +943,6 @@ class IpPoolBlockSubnetDef(ResourceDef):
     def path_ids(self):
         return ('tenant', 'ip_pool_id', 'ip_subnet_id')
 
-    @classmethod
-    def resource_class(cls):
-        return 'IpAddressPoolSubnet'
-
     @staticmethod
     def resource_type():
         return 'IpAddressPoolBlockSubnet'
@@ -966,6 +962,32 @@ class IpPoolBlockSubnetDef(ResourceDef):
             self._set_attr_if_specified(
                 body, 'ip_block_id', body_attr='ip_block_path',
                 value=ip_block_path)
+        return body
+
+
+class IpPoolStaticSubnetDef(ResourceDef):
+    '''Infra IpPool static subnet'''
+
+    @property
+    def path_pattern(self):
+        return IP_POOLS_PATH_PATTERN + "%s/ip-subnets/"
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'ip_pool_id', 'ip_subnet_id')
+
+    @staticmethod
+    def resource_type():
+        return 'IpAddressPoolStaticSubnet'
+
+    def path_defs(self):
+        return (TenantDef, IpPoolDef)
+
+    def get_obj_dict(self):
+        body = super(IpPoolStaticSubnetDef, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['cidr',
+                                            'allocation_ranges',
+                                            'gateway_ip'])
         return body
 
 
