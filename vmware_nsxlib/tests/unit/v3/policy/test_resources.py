@@ -3017,6 +3017,26 @@ class TestPolicyIpPool(NsxPolicyLibTestCase):
                 tenant=TEST_TENANT)
             self.assert_called_with_def(delete_call, expected_def)
 
+    def test_list_block_subnets(self):
+        ip_pool_id = 'ip-pool-id'
+        api_results = {
+            'results': [{'id': 'static_subnet_1',
+                         'resource_type': 'IpAddressPoolStaticSubnet'},
+                        {'id': 'block_subnet_2',
+                         'resource_type': 'IpAddressPoolBlockSubnet'}]
+        }
+        with mock.patch.object(
+            self.policy_api, "list", return_value=api_results) as api_call:
+            result = self.resourceApi.list_block_subnets(
+                ip_pool_id, tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolBlockSubnetDef(
+                ip_pool_id=ip_pool_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            expected_result = [{'id': 'block_subnet_2',
+                                'resource_type': 'IpAddressPoolBlockSubnet'}]
+            self.assertEqual(result, expected_result)
+
     def test_get_ip_subnet_realization_info(self):
         ip_pool_id = '111'
         ip_subnet_id = 'subnet-id'
@@ -3079,6 +3099,94 @@ class TestPolicyIpPool(NsxPolicyLibTestCase):
             ip = self.resourceApi.get_realized_allocated_ip(
                 ip_pool_id, ip_allocation_id, tenant=TEST_TENANT)
             self.assertEqual('5.5.0.8', ip)
+            api_get.assert_called_once()
+
+    def test_create_or_update_static_subnet(self):
+        ip_pool_id = 'ip-pool-id'
+        ip_subnet_id = 'static-subnet-id'
+        cidr = '10.10.10.0/24'
+        allocation_ranges = [{'start': '10.10.10.2', 'end': '10.10.10.250'}]
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_update_static_subnet(
+                ip_pool_id, cidr, allocation_ranges, ip_subnet_id,
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.IpPoolStaticSubnetDef(
+                ip_pool_id=ip_pool_id,
+                cidr=cidr,
+                allocation_ranges=allocation_ranges,
+                ip_subnet_id=ip_subnet_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_release_static_subnet(self):
+        ip_pool_id = 'ip-pool-id'
+        ip_subnet_id = 'static-subnet-id'
+        with mock.patch.object(self.policy_api, "delete") as delete_call:
+            self.resourceApi.release_static_subnet(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolStaticSubnetDef(
+                ip_pool_id=ip_pool_id,
+                ip_subnet_id=ip_subnet_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(delete_call, expected_def)
+
+    def test_list_static_subnet(self):
+        ip_pool_id = 'ip-pool-id'
+        api_results = {
+            'results': [{'id': 'static_subnet_1',
+                         'resource_type': 'IpAddressPoolStaticSubnet'},
+                        {'id': 'block_subnet_2',
+                         'resource_type': 'IpAddressPoolBlockSubnet'}]
+        }
+        with mock.patch.object(
+            self.policy_api, "list", return_value=api_results) as api_call:
+            result = self.resourceApi.list_static_subnets(
+                ip_pool_id, tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolStaticSubnetDef(
+                ip_pool_id=ip_pool_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            expected_result = [{'id': 'static_subnet_1',
+                                'resource_type': 'IpAddressPoolStaticSubnet'}]
+            self.assertEqual(result, expected_result)
+
+    def test_get_static_subnet(self):
+        ip_pool_id = 'ip-pool-id'
+        ip_subnet_id = 'static-subnet-id'
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get_static_subnet(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolStaticSubnetDef(
+                ip_pool_id=ip_pool_id,
+                ip_subnet_id=ip_subnet_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get_static_subnet_realization_info(self):
+        ip_pool_id = 'ip-pool-id'
+        ip_subnet_id = 'static-subnet-id'
+        result = {'extended_attributes': [
+            {'values': '10.10.10.0/24', 'key': 'cidr'},
+            {'values': [{'value': '10.10.10.2', 'key': 'start'},
+                        {'value': '10.10.10.250', 'key': 'end'}],
+             'key': 'allocation_ranges'}]}
+        with mock.patch.object(
+            self.resourceApi, "_get_realization_info",
+            return_value=result) as api_get:
+            self.resourceApi.get_ip_subnet_realization_info(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT,
+                subnet_type=constants.IPPOOL_STATIC_SUBNET)
+            api_get.assert_called_once()
+        # Test with wait set to True
+        with mock.patch.object(
+            self.resourceApi, "_wait_until_realized",
+            return_value=result) as api_get:
+            self.resourceApi.get_ip_subnet_realization_info(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT,
+                wait=True, subnet_type=constants.IPPOOL_STATIC_SUBNET)
             api_get.assert_called_once()
 
 
