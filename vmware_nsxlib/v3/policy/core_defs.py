@@ -947,8 +947,8 @@ class IpPoolAllocationDef(ResourceDef):
         return body
 
 
-class IpPoolBlockSubnetDef(ResourceDef):
-    '''Infra IpPoolSubnet belonging to IpBlock'''
+class IpPoolSubnetDef(ResourceDef):
+    '''Infra IpPool Subnet'''
 
     @property
     def path_pattern(self):
@@ -962,12 +962,16 @@ class IpPoolBlockSubnetDef(ResourceDef):
     def resource_class(cls):
         return 'IpAddressPoolSubnet'
 
+    def path_defs(self):
+        return (TenantDef, IpPoolDef)
+
+
+class IpPoolBlockSubnetDef(IpPoolSubnetDef):
+    '''Infra IpPoolSubnet belonging to IpBlock'''
+
     @staticmethod
     def resource_type():
         return 'IpAddressPoolBlockSubnet'
-
-    def path_defs(self):
-        return (TenantDef, IpPoolDef)
 
     def get_obj_dict(self):
         body = super(IpPoolBlockSubnetDef, self).get_obj_dict()
@@ -981,6 +985,21 @@ class IpPoolBlockSubnetDef(ResourceDef):
             self._set_attr_if_specified(
                 body, 'ip_block_id', body_attr='ip_block_path',
                 value=ip_block_path)
+        return body
+
+
+class IpPoolStaticSubnetDef(IpPoolSubnetDef):
+    '''Infra IpPool static subnet'''
+
+    @staticmethod
+    def resource_type():
+        return 'IpAddressPoolStaticSubnet'
+
+    def get_obj_dict(self):
+        body = super(IpPoolStaticSubnetDef, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['cidr',
+                                            'allocation_ranges',
+                                            'gateway_ip'])
         return body
 
 
