@@ -150,8 +150,8 @@ class TestPolicyTransaction(policy_testcase.TestPolicyApi):
                     size=s['size'])
 
                 pool['children'].append(
-                    {'resource_type': 'ChildIpAddressPoolSubnet',
-                     'IpAddressPoolSubnet': s})
+                    {'resource_type': 'ChildIpAddressPoolBlockSubnet',
+                     'IpAddressPoolBlockSubnet': s})
 
         expected_body = {'resource_type': 'Infra',
                          'children': [{'resource_type': 'ChildIpAddressPool',

@@ -3042,6 +3042,61 @@ class TestPolicyIpPool(NsxPolicyLibTestCase):
             self.assertEqual('5.5.0.8', ip)
             api_get.assert_called_once()
 
+    def test_create_or_update_static_subnet(self):
+        ip_pool_id = 'ip-pool-id'
+        ip_subnet_id = 'static-subnet-id'
+        cidr = '10.10.10.0/24'
+        ip_ranges = [core_defs.IpPoolRange('10.10.10.2', '10.10.10.250')]
+
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.create_or_update_static_subnet(
+                ip_pool_id, cidr, ip_ranges, ip_subnet_id, tenant=TEST_TENANT)
+
+            expected_def = core_defs.IpPoolStaticSubnetDef(
+                ip_pool_id=ip_pool_id,
+                cidr=cidr,
+                ip_ranges=ip_ranges,
+                ip_subnet_id=ip_subnet_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_release_static_subnet(self):
+        ip_pool_id = 'ip-pool-id'
+        ip_subnet_id = 'static-subnet-id'
+        with mock.patch.object(self.policy_api, "delete") as delete_call:
+            self.resourceApi.release_static_subnet(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT)
+            expected_def = core_defs.IpPoolStaticSubnetDef(
+                ip_pool_id=ip_pool_id,
+                ip_subnet_id=ip_subnet_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(delete_call, expected_def)
+
+    def test_get_static_subnet_realization_info(self):
+        ip_pool_id = 'ip-pool-id'
+        ip_subnet_id = 'static-subnet-id'
+        result = {'extended_attributes': [
+            {'values': '10.10.10.0/24', 'key': 'cidr'},
+            {'values': [{'value': '10.10.10.2', 'key': 'start'},
+                        {'value': '10.10.10.250', 'key': 'end'}],
+             'key': 'allocation_ranges'}]}
+        with mock.patch.object(
+            self.resourceApi, "_get_realization_info",
+            return_value=result) as api_get:
+            self.resourceApi.get_ip_subnet_realization_info(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT,
+                subnet_type=constants.IpPoolStaticSubnet)
+            api_get.assert_called_once()
+        # Test with wait set to True
+        with mock.patch.object(
+            self.resourceApi, "_wait_until_realized",
+            return_value=result) as api_get:
+            self.resourceApi.get_ip_subnet_realization_info(
+                ip_pool_id, ip_subnet_id, tenant=TEST_TENANT,
+                wait=True, subnet_type=constants.IpPoolStaticSubnet)
+            api_get.assert_called_once()
+
 
 class TestPolicySegmentPort(NsxPolicyLibTestCase):
 
