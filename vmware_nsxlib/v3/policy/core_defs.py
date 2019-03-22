@@ -354,7 +354,7 @@ class Tier1Def(RouterDef):
         # TODO(annak): replace with provider path when provider is exposed
         if self.has_attr('tier0'):
             tier0 = self.get_attr('tier0')
-            tier0_path = ""
+            tier0_path = None
             if tier0:
                 tenant = TENANTS_PATH_PATTERN % self.get_tenant()
                 tier0_path = "/%stier-0s/%s" % (tenant, tier0)
