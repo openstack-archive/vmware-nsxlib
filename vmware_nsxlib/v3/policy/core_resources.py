@@ -2328,15 +2328,68 @@ class NsxPolicyIpPoolApi(NsxPolicyResourceBase):
         return self._get_extended_attr_from_realized_info(
             realized_info, requested_attr='cidr')
 
-    def get_ip_subnet_realization_info(self, ip_pool_id, ip_subnet_id,
-                                       entity_type=None,
-                                       tenant=constants.POLICY_INFRA_TENANT,
-                                       wait=False, sleep=None,
-                                       max_attempts=None):
-        ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
+    def build_ip_range(self, start_ip, end_ip):
+        return core_defs.IpPoolRange(start_ip, end_ip)
+
+    def create_or_update_static_subnet(self, ip_pool_id, cidr, ip_ranges,
+                                       ip_subnet_id=None,
+                                       name=IGNORE, description=IGNORE,
+                                       gateway_ip=IGNORE, tags=IGNORE,
+                                       tenant=constants.POLICY_INFRA_TENANT):
+        ip_subnet_id = self._init_obj_uuid(ip_subnet_id)
+        args = self._get_user_args(
+            ip_pool_id=ip_pool_id,
+            ip_subnet_id=ip_subnet_id,
+            cidr=cidr,
+            ip_ranges=ip_ranges,
+            name=name,
+            description=description,
+            tags=tags,
+            tenant=tenant)
+
+        ip_subnet_def = core_defs.IpPoolStaticSubnetDef(**args)
+        self._create_or_store(ip_subnet_def)
+
+    def release_static_subnet(self, ip_pool_id, ip_subnet_id,
+                              tenant=constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = core_defs.IpPoolStaticSubnetDef(
+            ip_subnet_id=ip_subnet_id,
+            ip_pool_id=ip_pool_id,
+            tenant=tenant)
+        self.policy_api.delete(ip_subnet_def)
+
+    def list_static_subnets(self, ip_pool_id,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = core_defs.IpPoolStaticSubnetDef(
+            ip_pool_id=ip_pool_id,
+            tenant=tenant)
+        return self._list(ip_subnet_def)
+
+    def get_static_subnet(self, ip_pool_id, ip_subnet_id,
+                          tenant=constants.POLICY_INFRA_TENANT):
+        ip_subnet_def = core_defs.IpPoolStaticSubnetDef(
             ip_pool_id=ip_pool_id,
             ip_subnet_id=ip_subnet_id,
             tenant=tenant)
+        return self.policy_api.get(ip_subnet_def)
+
+    def get_ip_subnet_realization_info(
+            self, ip_pool_id, ip_subnet_id,
+            entity_type=None,
+            tenant=constants.POLICY_INFRA_TENANT,
+            wait=False, sleep=None,
+            max_attempts=None,
+            subnet_type=constants.IpPoolBlockSubnet):
+        if subnet_type == constants.IpPoolBlockSubnet:
+            ip_subnet_def = core_defs.IpPoolBlockSubnetDef(
+                ip_pool_id=ip_pool_id,
+                ip_subnet_id=ip_subnet_id,
+                tenant=tenant)
+        else:
+            ip_subnet_def = core_defs.IpPoolStaticSubnetDef(
+                ip_pool_id=ip_pool_id,
+                ip_subnet_id=ip_subnet_id,
+                tenant=tenant)
         if wait:
             return self._wait_until_realized(
                 ip_subnet_def, entity_type=entity_type,
