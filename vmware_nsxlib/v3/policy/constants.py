@@ -66,3 +66,7 @@ NAT_FIREWALL_MATCH_INTERNAL = 'MATCH_INTERNAL_ADDRESS'
 ATTACHMENT_PARENT = "PARENT"
 ATTACHMENT_CHILD = "CHILD"
 ATTACHMENT_INDEPENDENT = "INDEPENDENT"
+
+# IpPool subnet type
+IpPoolBlockSubnet = "IpAddressPoolBlockSubnet"
+IpPoolStaticSubnet = "IpAddressPoolStaticSubnet"
