@@ -424,7 +424,8 @@ class Service(LoadBalancerBase):
             return self.client.update(object_url, body)
         return do_update()
 
-    def update_service_with_attachment(self, service_id, logical_router_id):
+    def update_service_with_attachment(self, service_id, logical_router_id,
+                                       tags=None):
         # Using internal method so we can access max_attempts in the decorator
         @utils.retry_upon_exception(
             nsxlib_exc.StaleRevision,
@@ -434,6 +435,8 @@ class Service(LoadBalancerBase):
             body = self.client.get(object_url)
             body['attachment'] = {'target_id': logical_router_id,
                                   'target_type': 'LogicalRouter'}
+            if tags:
+                body['tags'] = tags
             return self.client.update(object_url, body)
         return do_update()
 
