@@ -106,6 +106,8 @@ class NsxLib(lib.NsxLibBase):
             self.client, self.nsxlib_config, nsxlib=self)
         self.cluster_nodes = resources.NsxlibClusterNodesConfig(
             self.client, self.nsxlib_config, nsxlib=self)
+        self.global_routing = core_resources.NsxLibGlobalRoutingConfig(
+            self.client, self.nsxlib_config, nsxlib=self)
 
         # Update tag limits
         self.tag_limits = self.get_tag_limits()
@@ -167,6 +169,8 @@ class NsxLib(lib.NsxLibBase):
                 version.LooseVersion(nsx_constants.NSX_VERSION_2_5_0)):
             # features available since 2.5
             if (feature == nsx_constants.FEATURE_CONTAINER_CLUSTER_INVENTORY):
+                return True
+            if (feature == nsx_constants.FEATURE_IPV6):
                 return True
 
         if (version.LooseVersion(self.get_version()) >=

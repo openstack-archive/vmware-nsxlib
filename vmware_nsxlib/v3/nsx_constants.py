@@ -174,3 +174,5 @@ FEATURE_NSX_POLICY_NETWORKING = 'NSX Policy Networking'
 
 # FEATURE available depending on Inventory service backend version
 FEATURE_CONTAINER_CLUSTER_INVENTORY = 'Container Cluster Inventory'
+
+FEATURE_IPV6 = 'IPV6 Forwarding and Address Allocation'

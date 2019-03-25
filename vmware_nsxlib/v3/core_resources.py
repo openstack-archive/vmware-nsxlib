@@ -1053,3 +1053,25 @@ class NsxLibFabricVirtualInterface(utils.NsxLibApiBase):
     def get_by_owner_vm_id(self, owner_vm_id):
         url = '%s?owner_vm_id=%s' % (self.get_path(), owner_vm_id)
         return self.client.get(url)
+
+
+class NsxLibGlobalRoutingConfig(utils.NsxLibApiBase):
+
+    @property
+    def uri_segment(self):
+        return 'global-configs/RoutingGlobalConfig'
+
+    @property
+    def resource_type(self):
+        return 'RoutingGlobalConfig'
+
+    def set_l3_forwarding_mode(self, mode):
+        config = self.client.get(self.get_path())
+        config['l3_forwarding_mode'] = mode
+        self.client.update(self.get_path(), config)
+
+    def enable_ipv6(self):
+        return self.set_l3_forwarding_mode('IPV4_AND_IPV6')
+
+    def disable_ipv6(self):
+        return self.set_l3_forwarding_mode('IPV4_ONLY')
