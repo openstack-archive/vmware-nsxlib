@@ -373,7 +373,7 @@ class LBServiceUsageDef(ResourceDef):
 
 class LBMonitorProfileBaseDef(ResourceDef):
 
-    body = ['interval', 'timeout', 'fall_count', 'rise_count']
+    addl_attrs = ['interval', 'timeout', 'fall_count', 'rise_count']
 
     @property
     def path_pattern(self):
@@ -385,13 +385,13 @@ class LBMonitorProfileBaseDef(ResourceDef):
 
     def get_obj_dict(self):
         body = super(LBMonitorProfileBaseDef, self).get_obj_dict()
-        self._set_attrs_if_specified(body, self.body)
+        self._set_attrs_if_specified(body, self.addl_attrs)
         return body
 
 
 class LBHttpMonitorProfileDef(LBMonitorProfileBaseDef):
 
-    body = LBMonitorProfileBaseDef.body + [
+    addl_attrs = LBMonitorProfileBaseDef.addl_attrs + [
         'monitor_port', 'request_url', 'request_method', 'request_version',
         'request_headers', 'request_body', 'response_status_codes']
 
@@ -409,7 +409,8 @@ class LBHttpsMonitorProfileDef(LBHttpMonitorProfileDef):
 
 class LBUdpMonitorProfileDef(LBMonitorProfileBaseDef):
 
-    body = LBMonitorProfileBaseDef.body + ['monitor_port', 'receive', 'send']
+    addl_attrs = LBMonitorProfileBaseDef.addl_attrs + [
+        'monitor_port', 'receive', 'send']
 
     @staticmethod
     def resource_type():
@@ -425,7 +426,7 @@ class LBIcmpMonitorProfileDef(LBMonitorProfileBaseDef):
 
 class LBTcpMonitorProfileDef(LBMonitorProfileBaseDef):
 
-    body = LBMonitorProfileBaseDef.body + ['monitor_port']
+    addl_attrs = LBMonitorProfileBaseDef.addl_attrs + ['monitor_port']
 
     @staticmethod
     def resource_type():
