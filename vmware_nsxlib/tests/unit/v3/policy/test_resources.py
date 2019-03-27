@@ -1511,6 +1511,42 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
 
             self.assert_called_with_defs(update_call, [map_def, entry_def])
 
+    def test_update_entry(self):
+        domain_id = '111'
+        map_id = '222'
+        entry_id = 'entry'
+        name = 'new name'
+        description = 'new desc'
+        source_group = 'ng1'
+        dest_group = 'ng2'
+        service1_id = 'nc1'
+        service2_id = 'nc2'
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={}),\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
+            self.resourceApi.update_entry(
+                domain_id, map_id, entry_id,
+                name=name,
+                description=description,
+                service_ids=[service1_id, service2_id],
+                source_groups=[source_group],
+                dest_groups=[dest_group],
+                tenant=TEST_TENANT)
+
+            entry_def = self.entryDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                entry_id='entry',
+                name=name,
+                description=description,
+                service_ids=[service1_id, service2_id],
+                source_groups=[source_group],
+                dest_groups=[dest_group],
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(update_call, entry_def)
+
     def test_unset(self):
         name = 'hello'
         domain_id = 'test'
