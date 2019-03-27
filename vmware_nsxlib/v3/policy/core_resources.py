@@ -2653,6 +2653,35 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
         else:
             self.policy_api.create_or_update(parent_def)
 
+    def update_entry(self, domain_id, map_id, entry_id,
+                     name=IGNORE, description=IGNORE,
+                     sequence_number=IGNORE, service_ids=IGNORE,
+                     action=IGNORE, source_groups=IGNORE, dest_groups=IGNORE,
+                     scope=IGNORE, ip_protocol=IGNORE,
+                     direction=IGNORE, logged=IGNORE, tags=IGNORE,
+                     tenant=constants.POLICY_INFRA_TENANT):
+        if self._any_arg_set(name, description, sequence_number, service_ids,
+                             action, source_groups, dest_groups, scope,
+                             ip_protocol, direction, logged, tags):
+            entry_def = self._get_and_update_def(
+                domain_id=domain_id,
+                map_id=map_id,
+                entry_id=entry_id,
+                name=name,
+                description=description,
+                sequence_number=sequence_number,
+                service_ids=service_ids,
+                action=action,
+                source_groups=source_groups,
+                dest_groups=dest_groups,
+                scope=scope,
+                ip_protocol=ip_protocol,
+                direction=direction,
+                logged=logged,
+                tags=tags,
+                tenant=tenant)
+            self.policy_api.create_or_update(entry_def)
+
     def update_entries(self, domain_id, map_id, entries,
                        tenant=constants.POLICY_INFRA_TENANT):
         map_def = self.parent_entry_def(
