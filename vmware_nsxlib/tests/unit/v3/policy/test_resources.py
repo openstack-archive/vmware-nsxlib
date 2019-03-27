@@ -2567,6 +2567,7 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
         description = 'desc'
         dhcp_config = '111'
         subnets = ["2.2.2.0/24"]
+        ipv6_profile_id = '222'
 
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
@@ -2576,6 +2577,7 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                 force_whitelisting=True,
                 default_rule_logging=True,
                 transit_subnets=subnets,
+                ipv6_ndra_profile_id=ipv6_profile_id,
                 tenant=TEST_TENANT)
 
             expected_def = core_defs.Tier0Def(
@@ -2588,6 +2590,7 @@ class TestPolicyTier0(NsxPolicyLibTestCase):
                 ha_mode=constants.ACTIVE_ACTIVE,
                 failover_mode=constants.NON_PREEMPTIVE,
                 transit_subnets=subnets,
+                ipv6_ndra_profile_id=ipv6_profile_id,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(api_call, expected_def)
