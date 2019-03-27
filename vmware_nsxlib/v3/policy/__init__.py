@@ -53,7 +53,8 @@ class NsxPolicyLib(lib.NsxLibBase):
         # Initialize all the different resources
         self.domain = core_resources.NsxPolicyDomainApi(*args)
         self.group = core_resources.NsxPolicyGroupApi(*args)
-        self.service = core_resources.NsxPolicyL4ServiceApi(*args)
+        self.service = core_resources.NsxPolicyServiceApi(*args)
+        self.l4_service = core_resources.NsxPolicyL4ServiceApi(*args)
         self.icmp_service = core_resources.NsxPolicyIcmpServiceApi(
             *args)
         self.ip_protocol_service = (

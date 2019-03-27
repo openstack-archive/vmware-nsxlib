@@ -600,11 +600,172 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assertEqual(info, actual_info)
 
 
+class TestPolicyService(NsxPolicyLibTestCase):
+
+    def setUp(self, *args, **kwargs):
+        super(TestPolicyService, self).setUp()
+        self.resourceApi = self.policy_lib.service
+        self.l4ServiceApi = self.policy_lib.l4_service
+        self.icmpServiceApi = self.policy_lib.icmp_service
+        self.ipServiceApi = self.policy_lib.ip_protocol_service
+
+    def test_create_service_only(self):
+        name = 's1'
+        srv_id = '111'
+        description = 'desc'
+        tags = [{'scope': 'a', 'tag': 'b'}]
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            result = self.resourceApi.create_or_overwrite(
+                name,
+                srv_id,
+                description=description,
+                tags=tags,
+                tenant=TEST_TENANT)
+
+            exp_srv_def = core_defs.ServiceDef(
+                service_id=srv_id,
+                name=name,
+                description=description,
+                tags=tags,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, exp_srv_def)
+            self.assertIsNotNone(result)
+
+    def test_create_with_entries(self):
+        name = 's1'
+        srv_id = '111'
+        description = 'desc'
+        tags = [{'scope': 'a', 'tag': 'b'}]
+        protocol = constants.TCP
+        dest_ports = [81, 82]
+        source_ports = [83, 84]
+        icmp_type = 2
+        protocol_number = 2
+
+        l4_entry = self.l4ServiceApi.build_entry(
+            'l4_entry', srv_id, 'l4_entry', protocol=protocol,
+            dest_ports=dest_ports, source_ports=source_ports,
+            tenant=TEST_TENANT)
+
+        icmp_entry = self.icmpServiceApi.build_entry(
+            'icmp_entry', srv_id, 'icmp_entry', icmp_type=icmp_type,
+            tenant=TEST_TENANT)
+
+        ip_entry = self.ipServiceApi.build_entry(
+            'ip_entry', srv_id, 'ip_entry',
+            protocol_number=protocol_number, tenant=TEST_TENANT)
+
+        with mock.patch.object(self.policy_api,
+                               "create_with_parent") as api_call:
+            result = self.resourceApi.create_or_overwrite(
+                name,
+                srv_id,
+                description=description,
+                entries=[l4_entry, icmp_entry, ip_entry],
+                tags=tags,
+                tenant=TEST_TENANT)
+
+            service_def = core_defs.ServiceDef(
+                service_id=srv_id,
+                name=name,
+                description=description,
+                tags=tags,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_defs(
+                api_call, [service_def, l4_entry, icmp_entry, ip_entry])
+            self.assertIsNotNone(result)
+
+    def test_delete(self):
+        srv_id = '111'
+        with mock.patch.object(self.policy_api, "delete") as api_call:
+            self.resourceApi.delete(srv_id, tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(service_id=srv_id,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_get(self):
+        srv_id = '111'
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={'id': srv_id}) as api_call:
+            result = self.resourceApi.get(srv_id, tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(service_id=srv_id,
+                                                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual(srv_id, result['id'])
+
+    def test_get_by_name(self):
+        name = 's1'
+        with mock.patch.object(
+            self.policy_api, "list",
+            return_value={'results': [{'display_name': name}]}) as api_call:
+            obj = self.resourceApi.get_by_name(name, tenant=TEST_TENANT)
+            self.assertIsNotNone(obj)
+            expected_def = core_defs.ServiceDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_list(self):
+        with mock.patch.object(self.policy_api, "list",
+                               return_value={'results': []}) as api_call:
+            result = self.resourceApi.list(tenant=TEST_TENANT)
+            expected_def = core_defs.ServiceDef(tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertEqual([], result)
+
+    def test_update(self):
+        name = 'newName'
+        srv_id = '111'
+        description = 'new desc'
+        tags = [{'scope': 'c', 'tag': 'd'}]
+        protocol = constants.UDP
+        dest_ports = [91, 92]
+        source_ports = [93, 94]
+        icmp_type = 3
+        protocol_number = 3
+
+        l4_entry = self.l4ServiceApi.build_entry(
+            'l4_entry', srv_id, 'l4_entry', protocol=protocol,
+            dest_ports=dest_ports, source_ports=source_ports,
+            tenant=TEST_TENANT)
+
+        icmp_entry = self.icmpServiceApi.build_entry(
+            'icmp_entry', srv_id, 'icmp_entry', icmp_type=icmp_type,
+            tenant=TEST_TENANT)
+
+        ip_entry = self.ipServiceApi.build_entry(
+            'ip_entry', srv_id, 'ip_entry',
+            protocol_number=protocol_number, tenant=TEST_TENANT)
+
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={}),\
+            mock.patch.object(self.policy_api,
+                              "create_with_parent") as update_call:
+            self.resourceApi.update(
+                srv_id,
+                name=name,
+                description=description,
+                entries=[l4_entry, icmp_entry, ip_entry],
+                tags=tags,
+                tenant=TEST_TENANT)
+
+            service_def = core_defs.ServiceDef(
+                service_id=srv_id,
+                name=name,
+                description=description,
+                tags=tags,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_defs(
+                update_call, [service_def, l4_entry, icmp_entry, ip_entry])
+
+
 class TestPolicyL4Service(NsxPolicyLibTestCase):
 
     def setUp(self, *args, **kwargs):
         super(TestPolicyL4Service, self).setUp()
-        self.resourceApi = self.policy_lib.service
+        self.resourceApi = self.policy_lib.l4_service
 
     def test_create(self):
         name = 's1'

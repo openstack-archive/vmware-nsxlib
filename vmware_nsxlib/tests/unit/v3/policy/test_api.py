@@ -175,6 +175,40 @@ class TestPolicyService(policy_testcase.TestPolicyApi):
                               'infra/services/icmpservice',
                               data=expected_data)
 
+    def test_create_mixed_with_parent(self):
+        service_def = policy.ServiceDef(name='mixedservice',
+                                        service_id='mixedservice')
+        l4_entry_def = policy.L4ServiceEntryDef(service_id='mixedservice',
+                                                protocol='TCP',
+                                                entry_id='http',
+                                                name='http',
+                                                dest_ports=[80, 8080])
+        icmp_entry_def = policy.IcmpServiceEntryDef(service_id='mixedservice',
+                                                    version=4,
+                                                    entry_id='icmp',
+                                                    name='icmpv4')
+
+        self.policy_api.create_with_parent(service_def,
+                                           [l4_entry_def, icmp_entry_def])
+
+        expected_l4_entry = {'id': 'http',
+                             'resource_type': 'L4PortSetServiceEntry',
+                             'display_name': 'http',
+                             'l4_protocol': 'TCP',
+                             'destination_ports': [80, 8080]}
+        expected_icmp_entry = {'id': 'icmp',
+                               'resource_type': 'ICMPTypeServiceEntry',
+                               'display_name': 'icmpv4',
+                               'protocol': 'ICMPv4'}
+        expected_data = {'id': 'mixedservice',
+                         'resource_type': 'Service',
+                         'display_name': 'mixedservice',
+                         'service_entries': [
+                             expected_l4_entry, expected_icmp_entry]}
+        self.assert_json_call('PATCH', self.client,
+                              'infra/services/mixedservice',
+                              data=expected_data)
+
 
 class TestPolicyCommunicationMap(policy_testcase.TestPolicyApi):
 
