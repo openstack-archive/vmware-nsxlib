@@ -58,6 +58,7 @@ class NsxPolicyLib(lib.NsxLibBase):
             *args)
         self.ip_protocol_service = (
             core_resources.NsxPolicyIPProtocolServiceApi(*args))
+        self.mixed_service = core_resources.NsxPolicyMixedServiceApi(*args)
         self.tier0 = core_resources.NsxPolicyTier0Api(*args)
         self.tier0_nat_rule = core_resources.NsxPolicyTier0NatRuleApi(
             *args)
