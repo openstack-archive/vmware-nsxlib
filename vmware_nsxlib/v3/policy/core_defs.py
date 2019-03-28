@@ -48,6 +48,8 @@ MAC_DISCOVERY_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
 IPV6_NDRA_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                                    "ipv6-ndra-profiles/")
 CERTIFICATE_PATH_PATTERN = TENANTS_PATH_PATTERN + "certificates/"
+EXCLUDE_LIST_PATH_PATTERN = (TENANTS_PATH_PATTERN +
+                             "infra/firewall-configuration/exclude-list/")
 
 REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
 DHCP_REALY_PATTERN = TENANTS_PATH_PATTERN + "dhcp-relay-configs/"
@@ -1642,6 +1644,26 @@ class CertificateDef(ResourceDef):
         body = super(CertificateDef, self).get_obj_dict()
         self._set_attrs_if_specified(body, ['pem_encoded', 'key_algo',
                                             'private_key', 'passphrase'])
+        return body
+
+
+class ExcludeListDef(ResourceDef):
+
+    @property
+    def path_pattern(self):
+        return EXCLUDE_LIST_PATH_PATTERN
+
+    @property
+    def path_ids(self):
+        return ('tenant', 'policy_id')
+
+    @staticmethod
+    def resource_type():
+        return "PolicyExcludeList"
+
+    def get_obj_dict(self):
+        body = super(ExcludeListDef, self).get_obj_dict()
+        self._set_attr_if_specified(body, 'members')
         return body
 
 
