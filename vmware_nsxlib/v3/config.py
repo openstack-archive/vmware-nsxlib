@@ -84,7 +84,8 @@ class NsxLibConfig(object):
                               not supported by the policy manager api.
     :param realization_max_attempts: Maximum number of times to retry while
                                      waiting for a resource to be realized.
-.
+    :param realization_wait_sec: Number of seconds to wait between attempts
+                                 for a resource to be realized.
     """
 
     def __init__(self,
@@ -111,8 +112,8 @@ class NsxLibConfig(object):
                  rate_limit_retry=True,
                  cluster_unavailable_retry=False,
                  allow_passthrough=False,
-                 # TODO(asarfaty): reduce the default once plugin is stable
-                 realization_max_attempts=50):
+                 realization_max_attempts=50,
+                 realization_wait_sec=1.0):
 
         self.nsx_api_managers = nsx_api_managers
         self._username = username
@@ -137,6 +138,7 @@ class NsxLibConfig(object):
         self.cluster_unavailable_retry = cluster_unavailable_retry
         self.allow_passthrough = allow_passthrough
         self.realization_max_attempts = realization_max_attempts
+        self.realization_wait_sec = realization_wait_sec
 
         if dhcp_profile_uuid:
             # this is deprecated, and never used.
