@@ -771,6 +771,14 @@ class Inventory(utils.NsxLibApiBase):
             resource_id)
         return self.client.url_delete(request_url)
 
+    def create(self, resource_type, resource):
+        if not resource_type:
+            msg = "null resource type is not supported"
+            raise exceptions.ResourceNotFound(details=msg)
+        request_url = self.get_path(
+            self._get_path_for_resource(resource_type))
+        return self.client.url_post(request_url, resource)
+
     def _get_path_for_resource(self, resource_type):
         path = self.RESOURCES_PATH.get(resource_type)
         if not path:

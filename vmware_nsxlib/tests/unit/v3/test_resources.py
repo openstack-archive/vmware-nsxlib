@@ -2182,6 +2182,21 @@ class InventoryTestCase(BaseTestResource):
             base_url + surfix,
             headers=self.default_headers())
 
+    def test_create_resource(self):
+        mocked_resource = self.get_mocked_resource()
+        body = {'resource_type': 'ContainerCluster',
+                'name': 'k8s-1',
+                'external_id': 'id-1',
+                'cluster_type': 'Kubernetes',
+                'infrastructure': {'infra_type': 'vSphere'}}
+        mocked_resource.create('ContainerCluster', body)
+        base_url = 'https://1.2.3.4/api/v1/fabric/container-clusters'
+        test_client.assert_json_call(
+            'post', mocked_resource,
+            base_url,
+            data=jsonutils.dumps(body, sort_keys=True),
+            headers=self.default_headers())
+
     def test_update(self):
         mocked_resource = self.get_mocked_resource()
         body = {}
