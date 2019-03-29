@@ -961,6 +961,37 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 
+    def add_advertisement_rule(
+            self, tier1_id, name, action=None, prefix_operator=None,
+            route_advertisement_types=None, subnets=None,
+            tenant=constants.POLICY_INFRA_TENANT):
+        tier1_dict = self.get(tier1_id, tenant)
+        adv_rules = tier1_dict.get('route_advertisement_rules', [])
+        adv_rules = [r for r in adv_rules if r.get('name') != name]
+
+        adv_rule = core_defs.RouteAdvertisementRule(
+            name=name, action=action, prefix_operator=prefix_operator,
+            route_advertisement_types=route_advertisement_types,
+            subnets=subnets)
+        adv_rules.append(adv_rule)
+        tier1_def = self.entry_def(tier1_id=tier1_id,
+                                   name=tier1_dict.get('display_name'),
+                                   route_advertisement_rules=adv_rules,
+                                   tenant=tenant)
+        self.policy_api.create_or_update(tier1_def)
+
+    def remove_advertisement_rule(self, tier1_id, name,
+                                  tenant=constants.POLICY_INFRA_TENANT):
+        tier1_dict = self.get(tier1_id, tenant)
+        adv_rules = tier1_dict.get('route_advertisement_rules', [])
+        updated_adv_rules = [r for r in adv_rules if r.get('name') != name]
+        if updated_adv_rules != adv_rules:
+            tier1_def = self.entry_def(tier1_id=tier1_id,
+                                       name=tier1_dict.get('display_name'),
+                                       route_advertisement_rules=adv_rules,
+                                       tenant=tenant)
+            self.policy_api.create_or_update(tier1_def)
+
     def _locale_service_id(self, tier1_id):
         # Supporting only a single locale-service per router for now
         # with the same id as the router id with a constant suffix
