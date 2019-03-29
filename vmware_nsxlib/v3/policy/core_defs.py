@@ -387,6 +387,11 @@ class Tier1Def(RouterDef):
                 'route_advertisement').get_obj_dict()
 
         self._set_attrs_if_specified(body, ['enable_standby_relocation'])
+        if self.has_attr('route_advertisement_rules'):
+            body['route_advertisement_rules'] = [
+                a.get_obj_dict()
+                if isinstance(a, RouteAdvertisementRule) else a
+                for a in self.get_attr('route_advertisement_rules')]
 
         return body
 
@@ -526,6 +531,26 @@ class Tier1NatRule(RouterNatRule):
 
     def path_defs(self):
         return (TenantDef, Tier1Def)
+
+
+class RouteAdvertisementRule(object):
+
+    def __init__(self, name, action=constants.ADV_RULE_PERMIT,
+                 prefix_operator=constants.ADV_RULE_OPERATOR_GE,
+                 route_advertisement_types=None,
+                 subnets=None):
+        self.name = name
+        self.action = action
+        self.prefix_operator = prefix_operator
+        self.route_advertisement_types = route_advertisement_types
+        self.subnets = subnets
+
+    def get_obj_dict(self):
+        return {'name': self.name,
+                'action': self.action,
+                'prefix_operator': self.prefix_operator,
+                'route_advertisement_types': self.route_advertisement_types,
+                'subnets': self.subnets}
 
 
 class RouterStaticRoute(ResourceDef):
