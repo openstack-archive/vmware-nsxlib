@@ -2516,6 +2516,63 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
 
             self.assert_called_with_def(api_call, expected_def)
 
+    def test_add_advertisement_rule(self):
+        tier1_id = '111'
+        rule_name = 'rule_name'
+        rule_action = 'rule_action'
+        rule_pfx_operator = 'GE'
+        rule_adv_types = ['A']
+        rule_subnets = ['x', 'y', 'z']
+        with mock.patch.object(self.policy_api,
+                               "get",
+                               return_value={'id': tier1_id,
+                                             'display_name': 'tier1name'}),\
+                mock.patch.object(self.policy_api,
+                                  'create_or_update') as api_call:
+            self.resourceApi.add_advertisement_rule(
+                tier1_id, rule_name, action=rule_action,
+                prefix_operator=rule_pfx_operator,
+                route_advertisement_types=rule_adv_types, subnets=rule_subnets,
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.Tier1Def(
+                tier1_id=tier1_id,
+                name='tier1name',
+                route_advertisement_rules=[
+                    core_defs.RouteAdvertisementRule(
+                        rule_name,
+                        action=rule_action,
+                        prefix_operator=rule_pfx_operator,
+                        route_advertisement_types=rule_adv_types,
+                        subnets=rule_subnets)],
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_remove_advertisement_rule(self):
+        tier1_id = '111'
+        rule_name = 'rule_name'
+        get_retval = {
+            'id': tier1_id,
+            'display_name': 'tier1name',
+            'route_advertisement_rules': [{'name': rule_name}]}
+        with mock.patch.object(self.policy_api,
+                               "get",
+                               return_value=get_retval),\
+                mock.patch.object(self.policy_api,
+                                  'create_or_update') as api_call:
+            self.resourceApi.remove_advertisement_rule(
+                tier1_id, rule_name, tenant=TEST_TENANT)
+
+            expected_def = core_defs.Tier1Def(
+                tier1_id=tier1_id,
+                name='tier1name',
+                route_advertisement_rules=[],
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_def(api_call, expected_def)
+
+
 
 class TestPolicyTier1NoPassthrough(TestPolicyTier1):
 
