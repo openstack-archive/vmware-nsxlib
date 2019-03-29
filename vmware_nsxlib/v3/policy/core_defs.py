@@ -510,6 +510,21 @@ class Tier1NatRule(RouterNatRule):
         return (TenantDef, Tier1Def)
 
 
+class RouteAdvertisementRule(ResourceDef):
+
+    @staticmethod
+    def resource_type():
+        return 'RouteAdvertisementRule'
+
+    def get_obj_dict(self):
+        body = super(RouteAdvertisementRule, self).get_obj_dict()
+        self._set_attrs_if_specified(body, ['action',
+                                            'prefix_operator',
+                                            'route_advertisement_types',
+                                            'subnets'])
+        return body
+
+
 class RouterStaticRoute(ResourceDef):
 
     @staticmethod
