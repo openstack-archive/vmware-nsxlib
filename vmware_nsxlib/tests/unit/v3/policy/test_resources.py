@@ -313,10 +313,58 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assert_called_with_def(api_call, expected_def)
             self.assertIsNotNone(result)
 
-    def test_create_with_nested_condition(self):
+    def _test_create_with_condition(self, condition, exp_condition):
         domain_id = '111'
         name = 'g1'
         description = 'desc'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            result = self.resourceApi.create_or_overwrite_with_conditions(
+                name, domain_id, description=description,
+                conditions=condition, tenant=TEST_TENANT)
+            expected_def = core_defs.GroupDef(domain_id=domain_id,
+                                              group_id=mock.ANY,
+                                              name=name,
+                                              description=description,
+                                              conditions=exp_condition,
+                                              tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+            self.assertIsNotNone(result)
+
+    def test_create_with_union_condition(self):
+        cond_val1 = '123'
+        cond_val2 = '456'
+        cond_op = constants.CONDITION_OP_EQUALS
+        cond_member_type = constants.CONDITION_MEMBER_VM
+        cond_key = constants.CONDITION_KEY_TAG
+
+        cond1 = self.resourceApi.build_condition(
+            cond_val=cond_val1,
+            cond_op=cond_op,
+            cond_member_type=cond_member_type,
+            cond_key=cond_key)
+        cond2 = self.resourceApi.build_condition(
+            cond_val=cond_val2,
+            cond_op=cond_op,
+            cond_member_type=cond_member_type,
+            cond_key=cond_key)
+        union_cond = self.resourceApi.build_union_condition(
+            conditions=[cond1, cond2])
+
+        exp_cond1 = core_defs.Condition(value=cond_val1,
+                                        key=cond_key,
+                                        operator=cond_op,
+                                        member_type=cond_member_type)
+        exp_cond2 = core_defs.Condition(value=cond_val2,
+                                        key=cond_key,
+                                        operator=cond_op,
+                                        member_type=cond_member_type)
+        or_cond = core_defs.ConjunctionOperator(
+            operator=constants.CONDITION_OP_OR)
+        exp_cond = [exp_cond1, or_cond, exp_cond2]
+        self._test_create_with_condition(union_cond, exp_cond)
+
+    def test_create_with_nested_condition(self):
         cond_val1 = '123'
         cond_val2 = '456'
         cond_op = constants.CONDITION_OP_EQUALS
@@ -336,31 +384,18 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
         nested = self.resourceApi.build_nested_condition(
             conditions=[cond1, cond2])
 
-        with mock.patch.object(self.policy_api,
-                               "create_or_update") as api_call:
-            result = self.resourceApi.create_or_overwrite_with_conditions(
-                name, domain_id, description=description,
-                conditions=[nested],
-                tenant=TEST_TENANT)
-            exp_cond1 = core_defs.Condition(value=cond_val1,
-                                            key=cond_key,
-                                            operator=cond_op,
-                                            member_type=cond_member_type)
-            exp_cond2 = core_defs.Condition(value=cond_val2,
-                                            key=cond_key,
-                                            operator=cond_op,
-                                            member_type=cond_member_type)
-            and_cond = core_defs.ConjunctionOperator()
-            nested_cond = core_defs.NestedExpression(
-                expressions=[exp_cond1, and_cond, exp_cond2])
-            expected_def = core_defs.GroupDef(domain_id=domain_id,
-                                              group_id=mock.ANY,
-                                              name=name,
-                                              description=description,
-                                              conditions=[nested_cond],
-                                              tenant=TEST_TENANT)
-            self.assert_called_with_def(api_call, expected_def)
-            self.assertIsNotNone(result)
+        exp_cond1 = core_defs.Condition(value=cond_val1,
+                                        key=cond_key,
+                                        operator=cond_op,
+                                        member_type=cond_member_type)
+        exp_cond2 = core_defs.Condition(value=cond_val2,
+                                        key=cond_key,
+                                        operator=cond_op,
+                                        member_type=cond_member_type)
+        and_cond = core_defs.ConjunctionOperator()
+        exp_cond = core_defs.NestedExpression(
+            expressions=[exp_cond1, and_cond, exp_cond2])
+        self._test_create_with_condition(nested, exp_cond)
 
     def test_create_with_ip_expression(self):
         domain_id = '111'
