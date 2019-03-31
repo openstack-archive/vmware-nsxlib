@@ -137,7 +137,7 @@ class NsxLibBase(object):
                                               cursor, page_size)
 
         # Retry the search on case of error
-        @utils.retry_upon_exception(exceptions.NsxIndexingInProgress,
+        @utils.retry_upon_exception(exceptions.NsxSearchError,
                                     max_attempts=self.client.max_attempts)
         def do_search(url):
             return self.client.url_get(url)

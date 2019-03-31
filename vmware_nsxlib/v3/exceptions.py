@@ -152,9 +152,18 @@ class NsxSearchInvalidQuery(NsxLibException):
     message = _("Invalid input for NSX search query. Reason: %(reason)s")
 
 
-class NsxIndexingInProgress(NsxLibException):
+class NsxSearchError(NsxLibException):
+    message = _("Search failed due to error")
+
+
+class NsxIndexingInProgress(NsxSearchError):
     message = _("Bad Request due to indexing is in progress, please retry "
                 "after sometime")
+
+
+class NsxSearchTimeout(NsxSearchError):
+    message = _("Request timed out. This may occur when system is under load "
+                "or running low on resources")
 
 
 class NsxPendingDelete(NsxLibException):
