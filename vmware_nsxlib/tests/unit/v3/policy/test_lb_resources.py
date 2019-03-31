@@ -1124,11 +1124,11 @@ class TestPolicyLBMonitorProfileHttpApi(test_resources.NsxPolicyLibTestCase):
                                "create_or_update") as api_call:
             result = self.resourceApi.create_or_overwrite(
                 lb_monitor_profile_id=obj_id,
-                display_name=name,
+                name=name,
                 tenant=TEST_TENANT)
             expected_def = self.obj_def(
                 lb_monitor_profile_id=obj_id,
-                display_name=name,
+                name=name,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
             self.assertEqual(obj_id, result)
@@ -1138,11 +1138,11 @@ class TestPolicyLBMonitorProfileHttpApi(test_resources.NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
             result = self.resourceApi.create_or_overwrite(
-                display_name=name,
+                name=name,
                 tenant=TEST_TENANT)
             expected_def = self.obj_def(
                 lb_monitor_profile_id=mock.ANY,
-                display_name=name,
+                name=name,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
             self.assertIsNotNone(result)
@@ -1193,11 +1193,11 @@ class TestPolicyLBMonitorProfileHttpApi(test_resources.NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api,
                                "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
-                                    display_name=name,
+                                    name=name,
                                     tenant=TEST_TENANT)
             expected_def = self.obj_def(
                 lb_monitor_profile_id=obj_id,
-                display_name=name,
+                name=name,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
 
