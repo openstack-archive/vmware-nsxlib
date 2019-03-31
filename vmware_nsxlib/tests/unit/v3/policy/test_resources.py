@@ -3458,6 +3458,14 @@ class TestPolicyMacDiscoveryProfile(TestPolicySegmentProfileBase):
             resource_def=core_defs.MacDiscoveryProfileDef)
 
 
+class TestPolicyWAFProfile(TestPolicySegmentProfileBase):
+
+    def setUp(self):
+        super(TestPolicyWAFProfile, self).setUp(
+            resource_api_name='waf_profile',
+            resource_def=core_defs.WAFProfileDef)
+
+
 class TestPolicySegmentSecurityProfile(TestPolicySegmentProfileBase):
 
     def test_create_with_params(self):
