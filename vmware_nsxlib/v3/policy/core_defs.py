@@ -1765,21 +1765,22 @@ class NsxPolicyApi(object):
             self.cache.update(path, result)
         return result
 
-    def list(self, resource_def):
+    def list(self, resource_def, silent=False):
         path = resource_def.get_section_path()
-        return self.client.list(path)
+        return self.client.list(path, silent=silent)
 
-    def get_realized_entities(self, path):
-        return self.client.list(REALIZATION_PATH % path)['results']
+    def get_realized_entities(self, path, silent=False):
+        return self.client.list(REALIZATION_PATH % path,
+                                silent=silent)['results']
 
-    def get_realized_entity(self, path):
+    def get_realized_entity(self, path, silent=False):
         # Return first realization entity if exists
         # Useful for resources with single realization entity
-        entities = self.get_realized_entities(path)
+        entities = self.get_realized_entities(path, silent=silent)
         if entities:
             return entities[0]
 
-    def get_realized_state(self, path):
-        entity = self.get_realized_entity(path)
+    def get_realized_state(self, path, silent=False):
+        entity = self.get_realized_entity(path, silent=silent)
         if entity:
             return entity['state']
