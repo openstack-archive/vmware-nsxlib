@@ -215,33 +215,29 @@ class NsxPolicyResourceBase(object):
         Return the realization info, or raise an error
         """
         if sleep is None:
-            sleep = 0.5
+            sleep = self.nsxlib_config.realization_wait_sec
         if max_attempts is None:
             max_attempts = self.nsxlib_config.realization_max_attempts
 
-        test_num = 0
-        while test_num < max_attempts:
+        @utils.retry_upon_none_result(max_attempts, delay=sleep, random=True)
+        def get_info():
             info = self._get_realization_info(
                 resource_def, entity_type=entity_type)
             if info and info['state'] == constants.STATE_REALIZED:
-                # TODO(asarfaty): why sometimes realization takes so long?
-                if test_num > 5:
-                    LOG.warning("Waited %(time)s seconds for realization of "
-                                "%(type)s %(id)s",
-                                {'time': test_num * sleep,
-                                 'type': resource_def.resource_type(),
-                                 'id': resource_def.get_id()})
                 return info
-            eventlet.sleep(sleep)
-            test_num += 1
 
-        err_msg = (_("%(type)s ID %(id)s was not realized after %(attempts)s "
-                     "attempts with %(sleep)s seconds sleep") %
-                   {'type': resource_def.resource_type(),
-                    'id': resource_def.get_id(),
-                    'attempts': max_attempts,
-                    'sleep': sleep})
-        raise exceptions.ManagerError(details=err_msg)
+        try:
+            return get_info()
+        except Exception:
+            # max retries reached
+            err_msg = (_("%(type)s ID %(id)s was not realized after "
+                         "%(attempts)s attempts with %(sleep)s seconds "
+                         "sleep") %
+                       {'type': resource_def.resource_type(),
+                        'id': resource_def.get_id(),
+                        'attempts': max_attempts,
+                        'sleep': sleep})
+            raise exceptions.ManagerError(details=err_msg)
 
     def _get_extended_attr_from_realized_info(self, realization_info,
                                               requested_attr):
