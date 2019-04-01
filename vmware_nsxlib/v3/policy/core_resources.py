@@ -170,10 +170,13 @@ class NsxPolicyResourceBase(object):
             if obj.get('display_name') == name:
                 return obj
 
-    def _get_realization_info(self, resource_def, entity_type=None):
+    def _get_realization_info(self, resource_def, entity_type=None,
+                              silent=False):
+        entities = []
         try:
             path = resource_def.get_resource_full_path()
-            entities = self.policy_api.get_realized_entities(path)
+            entities = self.policy_api.get_realized_entities(
+                path, silent=silent)
             if entities:
                 if entity_type:
                     # look for the entry with the right entity_type
@@ -184,12 +187,18 @@ class NsxPolicyResourceBase(object):
                     # return the first realization entry
                     # (Useful for resources with single realization entity)
                     return entities[0]
-            else:
-                # resource not deployed yet
-                LOG.warning("No realized state found for %s", path)
         except exceptions.ResourceNotFound:
-            # resource not deployed yet
-            LOG.warning("No realized state found for %s", path)
+            pass
+
+        # If we got here the resource was not deployed yet
+        if silent:
+            LOG.debug("No realization info found for %(path)s type %(type)s: "
+                      "%(entities)s",
+                      {"path": path, "type": entity_type,
+                       "entities": entities})
+        else:
+            LOG.warning("No realization info found for %(path)s type %(type)s",
+                        {"path": path, "type": entity_type})
 
     def _get_realized_state(self, resource_def, entity_type=None,
                             realization_info=None):
@@ -222,7 +231,7 @@ class NsxPolicyResourceBase(object):
         @utils.retry_upon_none_result(max_attempts, delay=sleep, random=True)
         def get_info():
             info = self._get_realization_info(
-                resource_def, entity_type=entity_type)
+                resource_def, entity_type=entity_type, silent=True)
             if info and info['state'] == constants.STATE_REALIZED:
                 return info
 

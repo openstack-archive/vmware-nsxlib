@@ -545,7 +545,7 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assertEqual(constants.STATE_REALIZED, state)
             path = "/%s/domains/%s/groups/%s" % (
                 TEST_TENANT, domain_id, group_id)
-            api_get.assert_called_once_with(path)
+            api_get.assert_called_once_with(path, silent=False)
 
     def test_get_realized_multiple_results_get_default(self):
         domain_id = 'd1'
@@ -562,7 +562,7 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assertEqual(constants.STATE_UNREALIZED, state)
             path = "/%s/domains/%s/groups/%s" % (
                 TEST_TENANT, domain_id, group_id)
-            api_get.assert_called_once_with(path)
+            api_get.assert_called_once_with(path, silent=False)
 
     def test_get_realized_multiple_results_get_specific(self):
         domain_id = 'd1'
@@ -580,7 +580,7 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assertEqual(constants.STATE_REALIZED, state)
             path = "/%s/domains/%s/groups/%s" % (
                 TEST_TENANT, domain_id, group_id)
-            api_get.assert_called_once_with(path)
+            api_get.assert_called_once_with(path, silent=False)
 
     def test_get_realized_id(self):
         domain_id = 'd1'
@@ -597,7 +597,7 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assertEqual(realized_id, result_id)
             path = "/%s/domains/%s/groups/%s" % (
                 TEST_TENANT, domain_id, group_id)
-            api_get.assert_called_once_with(path)
+            api_get.assert_called_once_with(path, silent=False)
 
     def test_get_path(self):
         domain_id = 'd1'
@@ -1817,7 +1817,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             self.assertEqual(constants.STATE_REALIZED, state)
             path = "/%s/domains/%s/%s/%s" % (
                 TEST_TENANT, domain_id, self.path_name, map_id)
-            api_get.assert_called_once_with(path)
+            api_get.assert_called_once_with(path, silent=False)
 
 
 class TestPolicyGatewayPolicy(TestPolicyCommunicationMap):
@@ -1957,7 +1957,7 @@ class TestPolicyEnforcementPoint(NsxPolicyLibTestCase):
             self.assertEqual(constants.STATE_REALIZED, state)
             path = "/%s/sites/default/enforcement-points/%s" % (
                 TEST_TENANT, ep_id)
-            api_get.assert_called_once_with(path)
+            api_get.assert_called_once_with(path, silent=False)
 
 
 class TestPolicyDeploymentMap(NsxPolicyLibTestCase):
