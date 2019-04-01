@@ -170,10 +170,13 @@ class NsxPolicyResourceBase(object):
             if obj.get('display_name') == name:
                 return obj
 
-    def _get_realization_info(self, resource_def, entity_type=None):
+    def _get_realization_info(self, resource_def, entity_type=None,
+                              silent=False):
+        entities = []
         try:
             path = resource_def.get_resource_full_path()
-            entities = self.policy_api.get_realized_entities(path)
+            entities = self.policy_api.get_realized_entities(
+                path, silent=silent)
             if entities:
                 if entity_type:
                     # look for the entry with the right entity_type
@@ -184,12 +187,18 @@ class NsxPolicyResourceBase(object):
                     # return the first realization entry
                     # (Useful for resources with single realization entity)
                     return entities[0]
-            else:
-                # resource not deployed yet
-                LOG.warning("No realized state found for %s", path)
         except exceptions.ResourceNotFound:
-            # resource not deployed yet
-            LOG.warning("No realized state found for %s", path)
+            pass
+
+        # If we got here the resource was not deployed yet
+        if silent:
+            LOG.debug("No realization info found for %(path)s type %(type)s: "
+                      "%(entities)s",
+                      {"path": path, "type": entity_type,
+                       "entities": entities})
+        else:
+            LOG.warning("No realization info found for %(path)s type %(type)s",
+                        {"path": path, "type": entity_type})
 
     def _get_realized_state(self, resource_def, entity_type=None,
                             realization_info=None):
@@ -209,7 +218,8 @@ class NsxPolicyResourceBase(object):
             return realization_info['realization_specific_identifier']
 
     def _wait_until_realized(self, resource_def, entity_type=None,
-                             sleep=None, max_attempts=None):
+                             sleep=None, max_attempts=None,
+                             sleep_before=False):
         """Wait until the resource has been realized
 
         Return the realization info, or raise an error
@@ -219,10 +229,15 @@ class NsxPolicyResourceBase(object):
         if max_attempts is None:
             max_attempts = self.nsxlib_config.realization_max_attempts
 
+        if sleep_before:
+            # If the resource was just created, sleep a bit before the first
+            # call, as it will surely fail
+            eventlet.sleep(0.1)
+
         @utils.retry_upon_none_result(max_attempts, delay=sleep, random=True)
         def get_info():
             info = self._get_realization_info(
-                resource_def, entity_type=entity_type)
+                resource_def, entity_type=entity_type, silent=True)
             if info and info['state'] == constants.STATE_REALIZED:
                 return info
 
@@ -1014,7 +1029,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
             # get all the realized resources of the tier1
             entities = self.policy_api.get_realized_entities(path)
             for e in entities:
-                # Look fir router ports
+                # Look for router ports
                 if (e['entity_type'] == 'RealizedLogicalRouterPort' and
                     e['state'] == constants.STATE_REALIZED):
                     # Get the NSX port to check if its the downlink port
@@ -1701,11 +1716,13 @@ class NsxPolicySegmentApi(NsxPolicyResourceBase):
     def get_realized_logical_switch_id(
         self,
         segment_id,
-        tenant=constants.POLICY_INFRA_TENANT):
+        tenant=constants.POLICY_INFRA_TENANT,
+        sleep_before=False):
 
         segment_def = self.entry_def(segment_id=segment_id, tenant=tenant)
         realization_info = self._wait_until_realized(
-            segment_def, entity_type='RealizedLogicalSwitch')
+            segment_def, entity_type='RealizedLogicalSwitch',
+            sleep_before=sleep_before)
         return self._get_realized_id(segment_def,
                                      realization_info=realization_info)
 
