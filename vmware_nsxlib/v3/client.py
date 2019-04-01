@@ -112,7 +112,8 @@ class RESTClient(object):
         return self.url_patch(resource, body, headers=headers)
 
     def url_list(self, url, headers=None, silent=False):
-        concatenate_response = self.url_get(url, headers=headers)
+        concatenate_response = self.url_get(url, headers=headers,
+                                            silent=silent)
         cursor = concatenate_response.get('cursor', NULL_CURSOR_PREFIX)
         op = '&' if urlparse.urlparse(url).query else '?'
         url += op + 'cursor='
