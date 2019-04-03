@@ -3585,3 +3585,50 @@ class NsxPolicyCertApi(NsxPolicyResourceBase):
                      passphrase=passphrase,
                      key_algo=key_algo,
                      tenant=tenant)
+
+
+class NsxPolicyExcludeList(NsxPolicyResourceBase):
+    """NSX Policy Exclude list."""
+
+    DEFAULT_ENTRY_ID = 'security-policy'
+    DEFAULT_NAME = 'security-policy'
+
+    @property
+    def entry_def(self):
+        return core_defs.ExcludeListDef
+
+    def create_or_overwrite(self, name=DEFAULT_NAME,
+                            policy_id=DEFAULT_ENTRY_ID,
+                            members=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        exclude_list_def = self._init_def(policy_id=policy_id,
+                                          name=name,
+                                          members=members,
+                                          tenant=tenant)
+
+        self._create_or_store(exclude_list_def)
+        return policy_id
+
+    def delete(self, policy_id=DEFAULT_ENTRY_ID,
+               tenant=constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
+
+    def get(self, policy_id=DEFAULT_ENTRY_ID,
+            tenant=constants.POLICY_INFRA_TENANT, silent=False):
+        exclude_list_def = self.entry_def(policy_id=policy_id,
+                                          tenant=tenant)
+        return self.policy_api.get(exclude_list_def, silent=silent)
+
+    def list(self, tenant=constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
+
+    def update(self, name=DEFAULT_NAME,
+               policy_id=DEFAULT_ENTRY_ID,
+               members=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT):
+        err_msg = (_("This action is not supported"))
+        raise exceptions.ManagerError(details=err_msg)
+
+    # TODO(asarfaty): Add support for add/remove member
