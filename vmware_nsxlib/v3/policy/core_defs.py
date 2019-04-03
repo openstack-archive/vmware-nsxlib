@@ -1167,7 +1167,8 @@ class IcmpServiceEntryDef(ServiceEntryDef):
             body['protocol'] = 'ICMPv' + str(self.get_attr('version'))
 
         for attr in ('icmp_type', 'icmp_code'):
-            if self.get_attr(attr):
+            # Note that icmp_type and icmp_code could be 0.
+            if self.get_attr(attr) is not None:
                 body[attr] = self.get_attr(attr)
         return body
 
@@ -1180,7 +1181,8 @@ class IPProtocolServiceEntryDef(ServiceEntryDef):
 
     def get_obj_dict(self):
         body = super(IPProtocolServiceEntryDef, self).get_obj_dict()
-        if self.get_attr('protocol_number'):
+        if self.get_attr('protocol_number') is not None:
+            # Note that protocol_number could be 0.
             body['protocol_number'] = self.get_attr('protocol_number')
         return body
 

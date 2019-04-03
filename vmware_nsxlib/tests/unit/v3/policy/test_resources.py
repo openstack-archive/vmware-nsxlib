@@ -941,6 +941,13 @@ class TestPolicyIcmpService(NsxPolicyLibTestCase):
             self.assert_called_with_defs(
                 update_call, [service_def, entry_def])
 
+    def test_icmp_type_and_code_in_obj_dict(self):
+        icmp_type, icmp_code = 0, 0
+        entry_def = core_defs.IcmpServiceEntryDef(
+            icmp_type=icmp_type, icmp_code=icmp_code)
+        body = entry_def.get_obj_dict()
+        self.assertEqual(icmp_type, body["icmp_type"])
+        self.assertEqual(icmp_code, body["icmp_code"])
 
 class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
 
@@ -1062,6 +1069,12 @@ class TestPolicyIPProtocolService(NsxPolicyLibTestCase):
             self.assert_called_with_defs(service_update_call,
                                          [service_def, entry_def])
 
+    def test_protocol_number_in_obj_dict(self):
+        protocol_number = 0
+        entry_def = core_defs.IPProtocolServiceEntryDef(
+            protocol_number=protocol_number)
+        body = entry_def.get_obj_dict()
+        self.assertEqual(protocol_number, body["protocol_number"])
 
 class TestPolicyMixedService(NsxPolicyLibTestCase):
 
