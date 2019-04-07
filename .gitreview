@@ -1,4 +1,5 @@
 [gerrit]
 host=review.openstack.org
 port=29418
+branch=stable/stein
 project=openstack/vmware-nsxlib.git
