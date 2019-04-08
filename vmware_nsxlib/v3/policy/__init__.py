@@ -25,6 +25,7 @@ from vmware_nsxlib.v3 import nsx_constants
 
 from vmware_nsxlib.v3.policy import core_defs
 from vmware_nsxlib.v3.policy import core_resources
+from vmware_nsxlib.v3.policy import ipsec_vpn_resources
 from vmware_nsxlib.v3.policy import lb_resources
 
 LOG = log.getLogger(__name__)
@@ -112,6 +113,7 @@ class NsxPolicyLib(lib.NsxLibBase):
         self.certificate = core_resources.NsxPolicyCertApi(*args)
         self.exclude_list = core_resources.NsxPolicyExcludeList(*args)
         self.load_balancer = lb_resources.NsxPolicyLoadBalancerApi(*args)
+        self.ipsec_vpn = ipsec_vpn_resources.NsxPolicyIpsecVpnApi(*args)
 
     @property
     def keepalive_section(self):
