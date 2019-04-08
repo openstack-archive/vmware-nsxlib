@@ -861,14 +861,19 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                force_whitelisting=IGNORE,
                failover_mode=IGNORE, tier0=IGNORE,
                dhcp_config=IGNORE, tags=IGNORE,
+               enable_standby_relocation=IGNORE,
                disable_firewall=IGNORE,
                ipv6_ndra_profile_id=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
         # Note(asarfaty): L2/L3 PATCH APIs don't support partial updates yet
         # TODO(asarfaty): Remove this when supported
-        if name == IGNORE:
+        if name == IGNORE or enable_standby_relocation == IGNORE:
             current_body = self.get(tier1_id, tenant=tenant)
-            name = current_body.get('display_name', IGNORE)
+            if name == IGNORE:
+                name = current_body.get('display_name', IGNORE)
+            else:
+                enable_standby_relocation = current_body.get(
+                    'enable_standby_relocation', IGNORE)
         self._update(tier1_id=tier1_id,
                      name=name,
                      description=description,
@@ -876,6 +881,7 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                      failover_mode=failover_mode,
                      dhcp_config=dhcp_config,
                      tier0=tier0,
+                     enable_standby_relocation=enable_standby_relocation,
                      disable_firewall=disable_firewall,
                      ipv6_ndra_profile_id=ipv6_ndra_profile_id,
                      tags=tags,
@@ -903,6 +909,8 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         # TODO(asarfaty): Remove this when supported
         tier1_def = self.entry_def(tier1_id=tier1_id,
                                    name=tier1_dict.get('display_name'),
+                                   enable_standby_relocation=tier1_dict.get(
+                                       'enable_standby_relocation'),
                                    route_advertisement=route_adv,
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
@@ -1059,51 +1067,16 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         self.nsx_api.logical_router_port.update(
             downlink_port_id, relay_service_uuid=relay_service_uuid)
 
-    @check_allowed_passthrough
     def set_standby_relocation(self, tier1_id,
                                enable_standby_relocation=True,
-                               tenant=constants.POLICY_INFRA_TENANT,
-                               sleep=None, max_attempts=None):
-        """Set the flag for standby relocation on the nsx logical router port
+                               tenant=constants.POLICY_INFRA_TENANT):
+        """Set the flag for standby relocation on the nsx logical
 
-        Using passthrough api, as the policy api does not support this yet
+        router port
         """
-        realization_info = self.wait_until_realized(
-            tier1_id, entity_type='RealizedLogicalRouter', tenant=tenant)
-
-        nsx_router_uuid = self.get_realized_id(
-            tier1_id, tenant=tenant, realization_info=realization_info)
-
-        if enable_standby_relocation:
-            # wait until the logical router has the edge_cluster
-            # even after it is realized, the edge cluster can still be missing
-            # TODO(asarfaty): remove this loop once NSX is fixed
-            if sleep is None:
-                sleep = 0.5
-            if max_attempts is None:
-                max_attempts = self.nsxlib_config.realization_max_attempts
-            test_num = 0
-            while test_num < max_attempts:
-                lr = self.nsx_api.logical_router.get(nsx_router_uuid)
-                if lr.get('edge_cluster_id'):
-                    self.nsx_api.logical_router.update(
-                        nsx_router_uuid,
-                        enable_standby_relocation=True)
-                    return
-                eventlet.sleep(sleep)
-                test_num += 1
-
-            err_msg = (_("Could not find edge cluster on logical router "
-                         "%(lr)s after %(attempts)s "
-                         "attempts with %(sleep)s seconds sleep") %
-                       {'lr': nsx_router_uuid,
-                        'attempts': max_attempts,
-                        'sleep': sleep})
-            raise exceptions.ManagerError(details=err_msg)
-        else:
-            self.nsx_api.logical_router.update(
-                nsx_router_uuid,
-                enable_standby_relocation=False)
+        return self.update(tier1_id,
+                           enable_standby_relocation=enable_standby_relocation,
+                           tenant=tenant)
 
 
 class NsxPolicyTier0Api(NsxPolicyResourceBase):
