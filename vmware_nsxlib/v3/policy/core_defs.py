@@ -386,6 +386,8 @@ class Tier1Def(RouterDef):
             body['route_advertisement_types'] = self.get_attr(
                 'route_advertisement').get_obj_dict()
 
+        self._set_attrs_if_specified(body, ['enable_standby_relocation'])
+
         return body
 
     @staticmethod
