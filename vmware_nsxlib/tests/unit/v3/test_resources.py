@@ -306,6 +306,14 @@ class LogicalPortTestCase(BaseTestResource):
                                        'id': profile_id['value']})
         return fake_profile_dicts
 
+    def _get_extra_config_dicts(self, fake_port):
+        fake_extra_config_dicts = []
+        for config in fake_port['extra_configs']:
+            fake_extra_config_dicts.append(
+                {'config_value': config['config_pair']['value'],
+                 'config_key': config['config_pair']['key']})
+        return fake_extra_config_dicts
+
     def _get_pktcls_bindings(self):
         fake_pkt_classifiers = []
         fake_binding_repr = []
@@ -629,6 +637,53 @@ class LogicalPortTestCase(BaseTestResource):
             }
         }
         fake_port['address_bindings'] = binding_repr
+        test_client.assert_json_call(
+            'put', mocked_resource,
+            'https://1.2.3.4/api/v1/logical-ports/%s' % fake_port['id'],
+            data=jsonutils.dumps(fake_port, sort_keys=True),
+            headers=self.default_headers())
+
+    def test_update_logical_port_with_extra_configs(self):
+        fake_port = copy.deepcopy(test_constants.FAKE_CONTAINER_PORT)
+        mocked_resource = self.get_mocked_resource()
+        new_name = 'updated_port'
+        new_desc = 'updated'
+        fake_port_ctx = fake_port['attachment']['context']
+        fake_container_host_vif_id = fake_port_ctx['container_host_vif_id']
+        extra_configs = self._get_extra_config_dicts(fake_port)
+
+        def get_fake_port(*args, **kwargs):
+            return copy.copy(fake_port)
+
+        mocked_resource.client.get = get_fake_port
+
+        mocked_resource.update(
+            fake_port['id'],
+            fake_port['attachment']['id'],
+            name=new_name,
+            description=new_desc,
+            parent_vif_id=fake_container_host_vif_id,
+            traffic_tag=fake_port_ctx['vlan_tag'],
+            vif_type=fake_port_ctx['vif_type'],
+            app_id=fake_port_ctx['app_id'],
+            allocate_addresses=fake_port_ctx['allocate_addresses'],
+            extra_configs=extra_configs)
+
+        fake_port['display_name'] = new_name
+        fake_port['description'] = new_desc
+        fake_port['attachment'] = {
+            'attachment_type': 'VIF',
+            'id': fake_port['attachment']['id'],
+            'context': {
+                'resource_type': 'VifAttachmentContext',
+                'allocate_addresses': 'Both',
+                'parent_vif_id': fake_container_host_vif_id,
+                'traffic_tag': fake_port_ctx['vlan_tag'],
+                'app_id': fake_port_ctx['app_id'],
+                'vif_type': 'CHILD',
+            }
+        }
+
         test_client.assert_json_call(
             'put', mocked_resource,
             'https://1.2.3.4/api/v1/logical-ports/%s' % fake_port['id'],

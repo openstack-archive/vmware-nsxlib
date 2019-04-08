@@ -103,6 +103,20 @@ FAKE_CONTAINER_PORT = {
             "value": "f313290b-eba8-4262-bd93-fab5026e9495",
             "key": "QosSwitchingProfile"
         }
+    ],
+    "extra_configs": [
+        {
+            "config_pair": {
+                "value": "value1",
+                "key": "key1"
+            }
+        },
+        {
+            "config_pair": {
+                "value": "value2",
+                "key": "key2"
+            }
+        }
     ]
 }
 
