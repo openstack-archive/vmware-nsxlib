@@ -2282,10 +2282,12 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
                                     name=name, tier0=tier0,
+                                    enable_standby_relocation=False,
                                     tenant=TEST_TENANT)
             expected_def = core_defs.Tier1Def(tier1_id=obj_id,
                                               name=name,
                                               tier0=tier0,
+                                              enable_standby_relocation=False,
                                               tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
@@ -2297,9 +2299,11 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
                                     name=name,
+                                    enable_standby_relocation=False,
                                     tenant=TEST_TENANT)
             expected_def = core_defs.Tier1Def(tier1_id=obj_id,
                                               name=name,
+                                              enable_standby_relocation=False,
                                               tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
             # make sure tier0 is not in the body
@@ -2316,11 +2320,13 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                                     name=name,
                                     description=description,
                                     tier0=None,
+                                    enable_standby_relocation=False,
                                     tenant=TEST_TENANT)
             expected_def = core_defs.Tier1Def(tier1_id=obj_id,
                                               name=name,
                                               description=description,
                                               tier0=None,
+                                              enable_standby_relocation=False,
                                               tenant=TEST_TENANT)
             self.assert_called_with_def(update_call, expected_def)
             # make sure tier0 is in the body with value None
@@ -2333,6 +2339,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         rtr_name = 'rtr111'
         get_result = {'id': obj_id,
                       'display_name': rtr_name,
+                      'enable_standby_relocation': False,
                       'route_advertisement_types': ['TIER1_NAT',
                                                     'TIER1_LB_VIP']}
         with mock.patch.object(self.policy_api, "get",
@@ -2351,7 +2358,26 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
 
             expected_def = core_defs.Tier1Def(tier1_id=obj_id,
                                               name=rtr_name,
+                                              enable_standby_relocation=False,
                                               route_advertisement=new_adv,
+                                              tenant=TEST_TENANT)
+            self.assert_called_with_def(
+                update_call, expected_def)
+
+    def test_set_enable_standby_relocation(self):
+        obj_id = '111'
+        name = 'new name'
+        tier0 = 'tier0'
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as update_call:
+            self.resourceApi.update(obj_id,
+                                    name=name, tier0=tier0,
+                                    enable_standby_relocation=True,
+                                    tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(tier1_id=obj_id,
+                                              name=name,
+                                              tier0=tier0,
+                                              enable_standby_relocation=True,
                                               tenant=TEST_TENANT)
             self.assert_called_with_def(
                 update_call, expected_def)
