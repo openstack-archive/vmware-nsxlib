@@ -596,6 +596,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                             ports=IGNORE,
                             server_ssl_profile_binding=IGNORE,
                             waf_profile_binding=IGNORE,
+                            max_concurrent_connections=IGNORE,
                             tenant=constants.POLICY_INFRA_TENANT,
                             tags=IGNORE):
         virtual_server_id = self._init_obj_uuid(virtual_server_id)
@@ -614,6 +615,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
             ports=ports,
             server_ssl_profile_binding=server_ssl_profile_binding,
             waf_profile_binding=waf_profile_binding,
+            max_concurrent_connections=max_concurrent_connections,
             tags=tags
         )
         self._create_or_store(lbvs_def)
@@ -683,6 +685,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
                ports=IGNORE,
                server_ssl_profile_binding=IGNORE,
                waf_profile_binding=IGNORE,
+               max_concurrent_connections=IGNORE,
                tags=IGNORE,
                tenant=constants.POLICY_INFRA_TENANT):
         self._update_helper(
@@ -700,6 +703,7 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
             ports=ports,
             server_ssl_profile_binding=server_ssl_profile_binding,
             waf_profile_binding=waf_profile_binding,
+            max_concurrent_connections=max_concurrent_connections,
             tags=tags)
 
     def update_virtual_server_with_pool(
