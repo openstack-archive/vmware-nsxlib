@@ -961,6 +961,30 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
             tenant=tenant)
         self.policy_api.delete(t1interface_def)
 
+    def add_ipsec_vpn_service(self, tier1_id, vpn_service_id, enabled=IGNORE,
+                              ike_log_level=IGNORE, tags=IGNORE,
+                              tenant=constants.POLICY_INFRA_TENANT):
+        service_def = core_defs.Tier1IPSecVpnServiceDef(
+            **self._get_user_args(
+                tier1_id=tier1_id,
+                service_id=self._locale_service_id(tier1_id),
+                vpn_service_id=vpn_service_id,
+                enabled=enabled,
+                ike_log_level=ike_log_level,
+                tags=tags,
+                tenant=tenant))
+        self.policy_api.create_or_update(service_def)
+
+    def remove_ipsec_vpn_service(self, tier1_id, vpn_service_id,
+                                 tenant=constants.POLICY_INFRA_TENANT):
+        service_def = core_defs.Tier1IPSecVpnServiceDef(
+            **self._get_user_args(
+                tier1_id=tier1_id,
+                service_id=self._locale_service_id(tier1_id),
+                vpn_service_id=vpn_service_id,
+                tenant=tenant))
+        self.policy_api.delete(service_def)
+
     def get_realized_state(self, tier1_id, entity_type=None,
                            tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):

@@ -2531,6 +2531,43 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
 
             self.assert_called_with_def(api_call, expected_def)
 
+    def test_add_ipsec_vpn_service(self):
+        tier1_id = '111'
+        vpn_srv_id = 'seg-vpn'
+        enabled = True
+        ike_log_level = constants.IPSEC_IKE_LOG_LEVEL_WARN
+        with mock.patch.object(self.policy_api,
+                               "create_or_update") as api_call:
+            self.resourceApi.add_ipsec_vpn_service(
+                tier1_id, vpn_srv_id, enabled=enabled,
+                ike_log_level=ike_log_level,
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.Tier1IPSecVpnServiceDef(
+                tier1_id=tier1_id,
+                service_id=self.resourceApi._locale_service_id(tier1_id),
+                vpn_service_id=vpn_srv_id,
+                enabled=enabled,
+                ike_log_level=ike_log_level,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
+    def test_remove_ipsec_vpn_service(self):
+        tier1_id = '111'
+        vpn_srv_id = 'seg-vpn'
+        with mock.patch.object(self.policy_api,
+                               "delete") as api_call:
+            self.resourceApi.remove_ipsec_vpn_service(
+                tier1_id, vpn_srv_id,
+                tenant=TEST_TENANT)
+
+            expected_def = core_defs.Tier1IPSecVpnServiceDef(
+                tier1_id=tier1_id,
+                service_id=self.resourceApi._locale_service_id(tier1_id),
+                vpn_service_id=vpn_srv_id,
+                tenant=TEST_TENANT)
+            self.assert_called_with_def(api_call, expected_def)
+
 
 class TestPolicyTier1NoPassthrough(TestPolicyTier1):
 
