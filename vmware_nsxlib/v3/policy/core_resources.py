@@ -916,10 +916,11 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 
-    def _locale_service_id(self, tier1_id):
+    @staticmethod
+    def _locale_service_id(tier1_id):
         # Supporting only a single locale-service per router for now
         # with the same id as the router id with a constant suffix
-        return tier1_id + self.LOCALE_SERVICE_SUFF
+        return tier1_id + NsxPolicyTier1Api.LOCALE_SERVICE_SUFF
 
     def set_edge_cluster_path(self, tier1_id, edge_cluster_path,
                               tenant=constants.POLICY_INFRA_TENANT):
