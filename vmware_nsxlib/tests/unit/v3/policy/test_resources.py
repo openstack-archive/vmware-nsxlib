@@ -4194,31 +4194,21 @@ class TestPolicyExcludeList(NsxPolicyLibTestCase):
         members = ["/infra/domains/default/groups/adit1"]
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
-            result = self.resourceApi.create_or_overwrite(
-                members=members,
-                tenant=TEST_TENANT)
-            expected_def = (
-                core_defs.ExcludeListDef(
-                    policy_id=self.resourceApi.DEFAULT_ENTRY_ID,
-                    name=self.resourceApi.DEFAULT_NAME,
-                    members=members,
-                    tenant=TEST_TENANT))
+            self.resourceApi.create_or_overwrite(
+                members=members, tenant=TEST_TENANT)
+            expected_def = core_defs.ExcludeListDef(
+                members=members, tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
-            self.assertIsNotNone(result)
 
     def test_delete(self):
         self.skipTest("The action is not supported by this resource")
 
     def test_get(self):
-        obj_id = self.resourceApi.DEFAULT_ENTRY_ID
-        with mock.patch.object(self.policy_api, "get",
-                               return_value={'id': obj_id}) as api_call:
-            result = self.resourceApi.get(obj_id, tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api, "get") as api_call:
+            self.resourceApi.get(tenant=TEST_TENANT)
             expected_def = core_defs.ExcludeListDef(
-                policy_id=obj_id,
                 tenant=TEST_TENANT)
             self.assert_called_with_def(api_call, expected_def)
-            self.assertEqual(obj_id, result['id'])
 
     def test_list(self):
         self.skipTest("The action is not supported by this resource")

@@ -110,7 +110,7 @@ class NsxPolicyLib(lib.NsxLibBase):
             core_resources.NsxIpv6NdraProfileApi(*args))
         self.dhcp_relay_config = core_resources.NsxDhcpRelayConfigApi(*args)
         self.certificate = core_resources.NsxPolicyCertApi(*args)
-        self.exclude_list = core_resources.NsxPolicyExcludeList(*args)
+        self.exclude_list = core_resources.NsxPolicyExcludeListApi(*args)
         self.load_balancer = lb_resources.NsxPolicyLoadBalancerApi(*args)
 
     @property

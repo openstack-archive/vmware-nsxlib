@@ -51,7 +51,7 @@ WAF_PROFILES_PATH_PATTERN = (TENANTS_PATH_PATTERN +
                              "waf-profiles/")
 CERTIFICATE_PATH_PATTERN = TENANTS_PATH_PATTERN + "certificates/"
 EXCLUDE_LIST_PATH_PATTERN = (TENANTS_PATH_PATTERN +
-                             "firewall-configuration/exclude-list/")
+                             "settings/firewall/security/exclude-list")
 
 REALIZATION_PATH = "infra/realized-state/realized-entities?intent_path=%s"
 DHCP_REALY_PATTERN = TENANTS_PATH_PATTERN + "dhcp-relay-configs/"
@@ -1701,7 +1701,7 @@ class ExcludeListDef(ResourceDef):
 
     @property
     def path_ids(self):
-        return ('tenant', 'policy_id')
+        return ('tenant')
 
     @staticmethod
     def resource_type():
