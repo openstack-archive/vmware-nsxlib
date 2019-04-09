@@ -2845,13 +2845,29 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
             tenant=tenant)
         map_path = map_def.get_resource_path()
 
+        def _overwrite_entries(old_entries, new_entries):
+            # Replace old entries with new entries, but copy additional
+            # attributes from old entries for those kept in new entries.
+            old_rules = {entry["id"]: entry for entry in old_entries}
+            new_rules = []
+            for entry in new_entries:
+                rule_id = entry.get_id()
+                new_rule = entry.get_obj_dict()
+                old_rule = old_rules.get(rule_id)
+                if old_rule:
+                    for key, value in old_rule.items():
+                        if key not in new_rule:
+                            new_rule[key] = value
+                new_rules.append(new_rule)
+            return new_rules
+
         @utils.retry_upon_exception(
             exceptions.StaleRevision,
             max_attempts=self.policy_api.client.max_attempts)
         def _update():
             # Get the current data of communication map & its' entries
             comm_map = self.policy_api.get(map_def)
-            comm_map['rules'] = [rule.get_obj_dict() for rule in entries]
+            comm_map['rules'] = _overwrite_entries(comm_map['rules'], entries)
             # Update the entire map at the NSX
             self.policy_api.client.update(map_path, comm_map)
 
