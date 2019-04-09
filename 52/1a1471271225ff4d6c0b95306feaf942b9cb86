@@ -1,0 +1,10 @@
+Verified+1: VMware NSX CI
+Code-Review+2: Tong Liu <tongl@vmware.com>
+Code-Review+2: Abhishek Raut <rauta@vmware.com>
+Workflow+1: Tong Liu <tongl@vmware.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 09 Apr 2019 19:05:32 +0000
+Reviewed-on: https://review.openstack.org/650620
+Project: openstack/vmware-nsxlib
+Branch: refs/heads/master
