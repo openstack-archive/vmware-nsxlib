@@ -82,7 +82,8 @@ class LogicalPort(utils.NsxLibApiBase):
             address_bindings=None,
             switch_profile_ids=None,
             attachment=None,
-            description=None):
+            description=None,
+            extra_configs=None):
         tags = tags or []
         switch_profile_ids = switch_profile_ids or []
         body = {}
@@ -127,6 +128,16 @@ class LogicalPort(utils.NsxLibApiBase):
         if description is not None:
             body['description'] = description
 
+        if extra_configs:
+            configs = []
+            for config in extra_configs:
+                configs.append({
+                    'config_pair': {
+                        'value': config.get('config_value'),
+                        'key': config.get('config_key')}
+                })
+            body['extra_configs'] = configs
+
         return body
 
     def _prepare_attachment(self, attachment_type, vif_uuid,
@@ -159,7 +170,8 @@ class LogicalPort(utils.NsxLibApiBase):
                parent_vif_id=None, traffic_tag=None,
                switch_profile_ids=None, vif_type=None, app_id=None,
                allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE,
-               description=None, tn_uuid=None):
+               description=None, tn_uuid=None,
+               extra_configs=None):
         tags = tags or []
         body = {'logical_switch_id': lswitch_id}
         # NOTE(arosen): If parent_vif_id is specified we need to use
@@ -174,7 +186,8 @@ class LogicalPort(utils.NsxLibApiBase):
             address_bindings=address_bindings,
             switch_profile_ids=switch_profile_ids,
             attachment=attachment,
-            description=description))
+            description=description,
+            extra_configs=extra_configs))
         return self.client.create(self.get_path(), body=body)
 
     def delete(self, lport_id):
@@ -188,7 +201,8 @@ class LogicalPort(utils.NsxLibApiBase):
                parent_vif_id=None, traffic_tag=None,
                vif_type=None, app_id=None,
                allocate_addresses=nsx_constants.ALLOCATE_ADDRESS_NONE,
-               description=None, tn_uuid=None):
+               description=None, tn_uuid=None,
+               extra_configs=None):
         attachment = self._prepare_attachment(attachment_type, vif_uuid,
                                               allocate_addresses, vif_type,
                                               parent_vif_id, traffic_tag,
@@ -202,7 +216,8 @@ class LogicalPort(utils.NsxLibApiBase):
             address_bindings=address_bindings,
             switch_profile_ids=switch_profile_ids,
             attachment=attachment,
-            description=description))
+            description=description,
+            extra_configs=extra_configs))
 
         return self._update_resource(
             self.get_path(lport_id), lport, retry=True)
