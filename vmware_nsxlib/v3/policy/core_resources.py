@@ -951,13 +951,15 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
             return
 
     def add_segment_interface(self, tier1_id, interface_id, segment_id,
-                              subnets, tenant=constants.POLICY_INFRA_TENANT):
+                              subnets, ipv6_ndra_profile_id=IGNORE,
+                              tenant=constants.POLICY_INFRA_TENANT):
         t1interface_def = core_defs.Tier1InterfaceDef(
             tier1_id=tier1_id,
             service_id=self._locale_service_id(tier1_id),
             interface_id=interface_id,
             segment_id=segment_id,
             subnets=subnets,
+            ipv6_ndra_profile_id=ipv6_ndra_profile_id,
             tenant=tenant)
         self.policy_api.create_or_update(t1interface_def)
 

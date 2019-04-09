@@ -476,6 +476,18 @@ class Tier1InterfaceDef(ResourceDef):
             self._set_attr_if_specified(body, 'segment_id',
                                         body_attr='segment_path',
                                         value=path)
+
+        if self.has_attr('ipv6_ndra_profile_id'):
+            paths = None
+            if self.get_attr('ipv6_ndra_profile_id'):
+                ndra_profile = Ipv6NdraProfileDef(
+                    profile_id=self.get_attr('ipv6_ndra_profile_id'),
+                    tenant=self.get_tenant())
+                paths = [ndra_profile.get_resource_full_path()]
+
+            self._set_attr_if_specified(body, 'ipv6_ndra_profile_id',
+                                        body_attr='ipv6_profile_paths',
+                                        value=paths)
         return body
 
     @property
