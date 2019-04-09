@@ -29,8 +29,8 @@ USER_GROUP_TYPES = [
 
 class NsxLibTrustManagement(utils.NsxLibApiBase):
 
-    def create_cert(self, cert_pem, private_key=None, passphrase=None,
-                    tags=None):
+    def create_cert_list(self, cert_pem, private_key=None, passphrase=None,
+                         tags=None):
         resource = CERT_SECTION + '?action=import'
         body = {'pem_encoded': cert_pem}
         if private_key:
@@ -40,7 +40,14 @@ class NsxLibTrustManagement(utils.NsxLibApiBase):
             body.update({'passphrase': passphrase})
         if tags:
             body.update({'tags': tags})
-        results = self.client.create(resource, body)['results']
+        return self.client.create(resource, body)['results']
+
+    def create_cert(self, cert_pem, private_key=None, passphrase=None,
+                    tags=None):
+        results = self.create_cert_list(cert_pem, private_key, passphrase,
+                                        tags)
+        # note: the assumption of only one result is wrong. It returns the
+        # chained certs
         if len(results) > 0:
             # should be only one result
             return results[0]['id']

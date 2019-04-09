@@ -637,3 +637,14 @@ FAKE_CLUSTER_NODES_CONFIG = [{
     },
     "appliance_mgmt_listen_addr": FAKE_MANAGER_IP2
 }]
+
+FAKE_TAGS = [
+    {
+        'scope': 'os-project-id',
+        'tag': 'project-1'
+    },
+    {
+        'scope': 'os-api-version',
+        'tag': '2.1.1.0'
+    }
+]
