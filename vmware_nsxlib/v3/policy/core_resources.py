@@ -2633,7 +2633,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
         self._create_or_store(map_def)
         return map_id
 
-    def build_entry(self, name, domain_id, map_id, entry_id,
+    def build_entry(self, name, domain_id, map_id, entry_id=None,
                     description=None,
                     sequence_number=None, service_ids=None,
                     action=constants.ACTION_ALLOW,
@@ -2643,6 +2643,7 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
                     ip_protocol=nsx_constants.IPV4_IPV6,
                     tenant=constants.POLICY_INFRA_TENANT):
         """Get the definition of a single map entry"""
+        entry_id = self._init_obj_uuid(entry_id)
         return self._init_def(domain_id=domain_id,
                               map_id=map_id,
                               entry_id=entry_id,
