@@ -2574,6 +2574,11 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                 subnets=[subnet],
                 tenant=TEST_TENANT)
 
+            verify_def = core_defs.Tier1LocaleServiceDef(
+                tier1_id=tier1_id,
+                service_id=self.resourceApi._locale_service_id(tier1_id),
+                tenant=TEST_TENANT)
+
             expected_def = core_defs.Tier1InterfaceDef(
                 tier1_id=tier1_id,
                 service_id=self.resourceApi._locale_service_id(tier1_id),
@@ -2582,7 +2587,8 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                 subnets=[subnet],
                 tenant=TEST_TENANT)
 
-            self.assert_called_with_def(api_call, expected_def)
+            self.assert_called_with_def(api_call, verify_def)
+            self.assert_called_with_def(api_call, expected_def, 1)
 
     def test_remove_router_interface(self):
         tier1_id = '111'
