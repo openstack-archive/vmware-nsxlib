@@ -220,7 +220,7 @@ class LBVirtualServerDef(ResourceDef):
     def get_obj_dict(self):
         body = super(LBVirtualServerDef, self).get_obj_dict()
         self._set_attrs_if_specified(
-            body, ['ip_address', 'ports'])
+            body, ['ip_address', 'ports', 'max_concurrent_connections'])
         client_ssl_binding = self.get_attr('client_ssl_profile_binding')
         if client_ssl_binding:
             self._set_attr_if_specified(
