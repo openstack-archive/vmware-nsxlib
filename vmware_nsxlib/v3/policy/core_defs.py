@@ -1733,9 +1733,7 @@ class NsxPolicyApi(object):
         path = resource_def.get_resource_path()
         if resource_def.resource_use_cache():
             self.cache.remove(path)
-        body = resource_def.body
-        if not body:
-            body = resource_def.get_obj_dict()
+        body = resource_def.get_obj_dict()
         self.client.patch(path, body)
 
     def create_with_parent(self, parent_def, resource_def):
