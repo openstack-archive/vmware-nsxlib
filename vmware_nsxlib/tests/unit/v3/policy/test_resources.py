@@ -2380,8 +2380,9 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         obj_id = '111'
         name = 'new name'
         tier0 = 'tier0'
-        with mock.patch.object(self.policy_api,
-                               "create_or_update") as update_call:
+        with mock.patch.object(self.policy_api, "get", return_value={}),\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
                                     name=name, tier0=tier0,
                                     enable_standby_relocation=False,
@@ -2397,8 +2398,10 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
     def test_update_ignore_tier0(self):
         obj_id = '111'
         name = 'new name'
-        with mock.patch.object(self.policy_api,
-                               "create_or_update") as update_call:
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={}),\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
                                     name=name,
                                     enable_standby_relocation=False,
@@ -2416,8 +2419,10 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         obj_id = '111'
         name = 'new name'
         description = 'abc'
-        with mock.patch.object(self.policy_api,
-                               "create_or_update") as update_call:
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={}),\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
                                     name=name,
                                     description=description,
@@ -2439,9 +2444,12 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
     def test_update_route_adv(self):
         obj_id = '111'
         rtr_name = 'rtr111'
+        ndra_profile_id = 'test'
+        ndra_profile_path = '/infra/ipv6-ndra-profile/%s' % ndra_profile_id
         get_result = {'id': obj_id,
                       'display_name': rtr_name,
                       'enable_standby_relocation': False,
+                      'ipv6_profile_paths': [ndra_profile_path],
                       'route_advertisement_types': ['TIER1_NAT',
                                                     'TIER1_LB_VIP']}
         with mock.patch.object(self.policy_api, "get",
@@ -2458,11 +2466,14 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
             new_adv = self.resourceApi.build_route_advertisement(
                 nat=True, static_routes=True, lb_snat=True)
 
-            expected_def = core_defs.Tier1Def(tier1_id=obj_id,
-                                              name=rtr_name,
-                                              enable_standby_relocation=False,
-                                              route_advertisement=new_adv,
-                                              tenant=TEST_TENANT)
+            expected_def = core_defs.Tier1Def(
+                tier1_id=obj_id,
+                name=rtr_name,
+                enable_standby_relocation=False,
+                route_advertisement=new_adv,
+                ipv6_ndra_profile_id=ndra_profile_id,
+                tenant=TEST_TENANT)
+
             self.assert_called_with_def(
                 update_call, expected_def)
 
@@ -2470,8 +2481,10 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         obj_id = '111'
         name = 'new name'
         tier0 = 'tier0'
-        with mock.patch.object(self.policy_api,
-                               "create_or_update") as update_call:
+        with mock.patch.object(self.policy_api, "get",
+                               return_value={}),\
+            mock.patch.object(self.policy_api,
+                              "create_or_update") as update_call:
             self.resourceApi.update(obj_id,
                                     name=name, tier0=tier0,
                                     enable_standby_relocation=True,
