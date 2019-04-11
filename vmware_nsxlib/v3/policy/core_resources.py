@@ -887,6 +887,16 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                      tags=tags,
                      tenant=tenant)
 
+    def _get_ipv6_profile_from_dict(self, obj_dict):
+        ipv6_profiles = obj_dict.get('ipv6_profile_paths')
+        if not ipv6_profiles:
+            return IGNORE
+
+        for profile in ipv6_profiles:
+            tokens = profile.split('/')
+            if len(tokens) > 2 and tokens[1] == 'ipv6-ndra-profiles':
+                return tokens[2]
+
     def update_route_advertisement(
         self, tier1_id,
         static_routes=None,
@@ -906,13 +916,16 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
         # Note(asarfaty) keep tier1 name and enable_standby_relocation as
         # well, as the current nsx implementation resets name to the ID and
-        # enable_standby_relocation to false.
+        # enable_standby_relocation to false and ndra profile.
         # TODO(asarfaty): Remove this when supported
-        tier1_def = self.entry_def(tier1_id=tier1_id,
+        ndra_profile_id = self._get_ipv6_profile_from_dict(tier1_dict)
+
+        tier1_def = self._init_def(tier1_id=tier1_id,
                                    name=tier1_dict.get('display_name'),
                                    enable_standby_relocation=tier1_dict.get(
                                        'enable_standby_relocation'),
                                    route_advertisement=route_adv,
+                                   ipv6_ndra_profile_id=ndra_profile_id,
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 
