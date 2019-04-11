@@ -867,13 +867,18 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                tenant=constants.POLICY_INFRA_TENANT):
         # Note(asarfaty): L2/L3 PATCH APIs don't support partial updates yet
         # TODO(asarfaty): Remove this when supported
-        if name == IGNORE or enable_standby_relocation == IGNORE:
+        if (name == IGNORE or enable_standby_relocation == IGNORE or
+            ipv6_ndra_profile_id == IGNORE):
             current_body = self.get(tier1_id, tenant=tenant)
             if name == IGNORE:
                 name = current_body.get('display_name', IGNORE)
-            else:
+            if enable_standby_relocation == IGNORE:
                 enable_standby_relocation = current_body.get(
                     'enable_standby_relocation', IGNORE)
+            if ipv6_ndra_profile_id == IGNORE:
+                ipv6_ndra_profile_id = self._get_ipv6_profile_from_dict(
+                    current_body)
+
         self._update(tier1_id=tier1_id,
                      name=name,
                      description=description,
@@ -886,6 +891,17 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                      ipv6_ndra_profile_id=ipv6_ndra_profile_id,
                      tags=tags,
                      tenant=tenant)
+
+    # TODO(annak): remove this func when partial update is supported
+    def _get_ipv6_profile_from_dict(self, obj_dict):
+        ipv6_profiles = obj_dict.get('ipv6_profile_paths', [])
+        if not ipv6_profiles:
+            return IGNORE
+
+        for profile in ipv6_profiles:
+            tokens = profile.split('/')
+            if len(tokens) > 3 and tokens[2] == 'ipv6-ndra-profile':
+                return tokens[3]
 
     def update_route_advertisement(
         self, tier1_id,
@@ -906,13 +922,16 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
 
         # Note(asarfaty) keep tier1 name and enable_standby_relocation as
         # well, as the current nsx implementation resets name to the ID and
-        # enable_standby_relocation to false.
+        # enable_standby_relocation to false and ndra profile.
         # TODO(asarfaty): Remove this when supported
-        tier1_def = self.entry_def(tier1_id=tier1_id,
+        ndra_profile_id = self._get_ipv6_profile_from_dict(tier1_dict)
+
+        tier1_def = self._init_def(tier1_id=tier1_id,
                                    name=tier1_dict.get('display_name'),
                                    enable_standby_relocation=tier1_dict.get(
                                        'enable_standby_relocation'),
                                    route_advertisement=route_adv,
+                                   ipv6_ndra_profile_id=ndra_profile_id,
                                    tenant=tenant)
         self.policy_api.create_or_update(tier1_def)
 
