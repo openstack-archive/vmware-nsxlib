@@ -32,17 +32,6 @@ monitor_types = load_balancer.MonitorTypes
 monitors = [monitor_types.HTTP, monitor_types.HTTPS, monitor_types.ICMP,
             monitor_types.PASSIVE, monitor_types.TCP, monitor_types.UDP]
 
-tags = [
-    {
-        'scope': 'os-project-id',
-        'tag': 'project-1'
-    },
-    {
-        'scope': 'os-api-version',
-        'tag': '2.1.1.0'
-    }
-]
-
 
 class TestApplicationProfile(nsxlib_testcase.NsxClientTestCase):
 
@@ -53,14 +42,14 @@ class TestApplicationProfile(nsxlib_testcase.NsxClientTestCase):
                 'display_name': fake_profile['display_name'],
                 'description': fake_profile['description'],
                 'resource_type': profile_type,
-                'tags': tags
+                'tags': consts.FAKE_TAGS
             }
             with mock.patch.object(self.nsxlib.client, 'create') as create:
                 self.nsxlib.load_balancer.application_profile.create(
                     display_name=body['display_name'],
                     description=body['description'],
                     resource_type=body['resource_type'],
-                    tags=tags)
+                    tags=consts.FAKE_TAGS)
                 create.assert_called_with('loadbalancer/application-profiles',
                                           body)
 
@@ -96,12 +85,12 @@ class TestPersistenceProfile(nsxlib_testcase.NsxClientTestCase):
                 'display_name': fake_profile['display_name'],
                 'description': fake_profile['description'],
                 'resource_type': profile_type,
-                'tags': tags
+                'tags': consts.FAKE_TAGS
             }
             with mock.patch.object(self.nsxlib.client, 'create') as create:
                 self.nsxlib.load_balancer.persistence_profile.create(
-                    body['display_name'], body['description'], tags,
-                    body['resource_type'])
+                    body['display_name'], body['description'],
+                    consts.FAKE_TAGS, body['resource_type'])
                 create.assert_called_with('loadbalancer/persistence-profiles',
                                           body)
 
@@ -137,7 +126,7 @@ class TestRule(nsxlib_testcase.NsxClientTestCase):
             'resource_type': fake_rule['resource_type'],
             'phase': fake_rule['phase'],
             'match_strategy': fake_rule['match_strategy'],
-            'tags': tags
+            'tags': consts.FAKE_TAGS
         }
         with mock.patch.object(self.nsxlib.client, 'create') as create:
             self.nsxlib.load_balancer.rule.create(**body)
@@ -169,11 +158,12 @@ class TestClientSslProfile(nsxlib_testcase.NsxClientTestCase):
         body = {
             'display_name': fake_profile['display_name'],
             'description': fake_profile['description'],
-            'tags': tags
+            'tags': consts.FAKE_TAGS
         }
         with mock.patch.object(self.nsxlib.client, 'create') as create:
                 self.nsxlib.load_balancer.client_ssl_profile.create(
-                    body['display_name'], body['description'], tags)
+                    body['display_name'], body['description'],
+                    consts.FAKE_TAGS)
                 create.assert_called_with('loadbalancer/client-ssl-profiles',
                                           body)
 
@@ -207,11 +197,12 @@ class TestServerSslProfile(nsxlib_testcase.NsxClientTestCase):
         body = {
             'display_name': fake_profile['display_name'],
             'description': fake_profile['description'],
-            'tags': tags
+            'tags': consts.FAKE_TAGS
         }
         with mock.patch.object(self.nsxlib.client, 'create') as create:
                 self.nsxlib.load_balancer.server_ssl_profile.create(
-                    body['display_name'], body['description'], tags)
+                    body['display_name'], body['description'],
+                    consts.FAKE_TAGS)
                 create.assert_called_with('loadbalancer/server-ssl-profiles',
                                           body)
 
@@ -247,12 +238,12 @@ class TestMonitor(nsxlib_testcase.NsxClientTestCase):
                 'display_name': fake_monitor['display_name'],
                 'description': fake_monitor['description'],
                 'resource_type': monitor_type,
-                'tags': tags
+                'tags': consts.FAKE_TAGS
             }
             with mock.patch.object(self.nsxlib.client, 'create') as create:
                 self.nsxlib.load_balancer.monitor.create(
-                    body['display_name'], body['description'], tags,
-                    body['resource_type'])
+                    body['display_name'], body['description'],
+                    consts.FAKE_TAGS, body['resource_type'])
                 create.assert_called_with('loadbalancer/monitors',
                                           body)
 
@@ -284,12 +275,12 @@ class TestPool(nsxlib_testcase.NsxClientTestCase):
             'display_name': fake_pool['display_name'],
             'description': fake_pool['description'],
             'algorithm': fake_pool['algorithm'],
-            'tags': tags
+            'tags': consts.FAKE_TAGS
         }
         with mock.patch.object(self.nsxlib.client, 'create') as create:
                 self.nsxlib.load_balancer.pool.create(
-                    body['display_name'], body['description'], tags,
-                    algorithm=body['algorithm'])
+                    body['display_name'], body['description'],
+                    consts.FAKE_TAGS, algorithm=body['algorithm'])
                 create.assert_called_with('loadbalancer/pools',
                                           body)
 
@@ -365,13 +356,13 @@ class TestVirtualServer(nsxlib_testcase.NsxClientTestCase):
             'ip_protocol': fake_virtual_server['ip_protocol'],
             'port': fake_virtual_server['port'],
             'enabled': fake_virtual_server['enabled'],
-            'tags': tags
+            'tags': consts.FAKE_TAGS
         }
         with mock.patch.object(self.nsxlib.client, 'create') as create:
                 self.nsxlib.load_balancer.virtual_server.create(
-                    body['display_name'], body['description'], tags,
-                    ip_protocol=body['ip_protocol'], port=body['port'],
-                    enabled=body['enabled'])
+                    body['display_name'], body['description'],
+                    consts.FAKE_TAGS, ip_protocol=body['ip_protocol'],
+                    port=body['port'], enabled=body['enabled'])
                 create.assert_called_with('loadbalancer/virtual-servers',
                                           body)
 
@@ -509,12 +500,13 @@ class TestService(nsxlib_testcase.NsxClientTestCase):
             'description': fake_service['description'],
             'enabled': fake_service['enabled'],
             'attachment': fake_service['attachment'],
-            'tags': tags
+            'tags': consts.FAKE_TAGS
         }
         with mock.patch.object(self.nsxlib.client, 'create') as create:
                 self.nsxlib.load_balancer.service.create(
-                    body['display_name'], body['description'], tags,
-                    enabled=body['enabled'], attachment=body['attachment'])
+                    body['display_name'], body['description'],
+                    consts.FAKE_TAGS, enabled=body['enabled'],
+                    attachment=body['attachment'])
                 create.assert_called_with('loadbalancer/services',
                                           body)
 
