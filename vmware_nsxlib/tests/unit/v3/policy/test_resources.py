@@ -510,6 +510,54 @@ class TestPolicyGroup(NsxPolicyLibTestCase):
             self.assert_called_with_def(
                 update_call, expected_def)
 
+    def test_update_with_conditions(self):
+        domain_id = '111'
+        group_id = '222'
+        name = 'name'
+        new_name = 'new name'
+        description = 'desc'
+        new_description = 'new desc'
+
+        cond_val1 = '123'
+        cond_val2 = '456'
+        cond_op = constants.CONDITION_OP_EQUALS
+        cond_member_type = constants.CONDITION_MEMBER_VM
+        cond_key = constants.CONDITION_KEY_TAG
+        cond1_def = core_defs.Condition(value=cond_val1,
+                                        key=cond_key,
+                                        operator=cond_op,
+                                        member_type=cond_member_type)
+        cond2_def = core_defs.Condition(value=cond_val2,
+                                        key=cond_key,
+                                        operator=cond_op,
+                                        member_type=cond_member_type)
+        original_group = {
+            'id': group_id,
+            'resource_type': 'Group',
+            'display_name': name,
+            'description': description,
+            'expression': [cond1_def.get_obj_dict()]}
+        updated_group = {
+            'id': group_id,
+            'resource_type': 'Group',
+            'display_name': new_name,
+            'description': new_description,
+            'expression': [cond2_def.get_obj_dict()]}
+        group_def = core_defs.GroupDef(
+            domain_id=domain_id,
+            group_id=group_id,
+            tenant=TEST_TENANT)
+        with mock.patch.object(self.policy_api, "get",
+                               return_value=original_group),\
+            mock.patch.object(self.policy_api.client,
+                              "update") as update_call:
+            self.resourceApi.update_with_conditions(
+                domain_id, group_id, name=new_name,
+                description=new_description,
+                conditions=[cond2_def], tenant=TEST_TENANT)
+            update_call.assert_called_once_with(
+                group_def.get_resource_path(), updated_group)
+
     def test_unset(self):
         domain_id = '111'
         group_id = '222'
@@ -1761,6 +1809,17 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
     def test_update_entries(self):
         domain_id = '111'
         map_id = '222'
+        entries = "fake_entries"
+        with mock.patch.object(self.resourceApi,
+                               "update_with_entries") as update_call:
+            self.resourceApi.update_entries(
+                domain_id, map_id, entries, tenant=TEST_TENANT)
+            update_call.assert_called_once_with(
+                domain_id, map_id, entries, tenant=TEST_TENANT)
+
+    def test_update_with_entries(self):
+        domain_id = '111'
+        map_id = '222'
         entry1_id = 'entry1'
         entry2_id = 'entry2'
         entry3_id = 'entry3'
@@ -1776,18 +1835,28 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             entry_id=entry2_id,
             scope=['scope2'],
             tenant=TEST_TENANT)
-        original_map = {'rules': [
-            {'id': entry1_id, 'resource_type': 'Rule',
-             'dsiplay_name': 'name1', 'scope': ['scope1']},
-            {'id': entry2_id, 'resource_type': 'Rule',
-             'display_name': 'name2', 'scope': ['scope2']},
-            {'id': entry3_id, 'resource_type': 'Rule',
-             'display_name': 'name3', 'scope': ['scope3']}]}
-        updated_map = {'rules': [
-            {'id': entry1_id, 'resource_type': 'Rule',
-             'dsiplay_name': 'name1', 'scope': ['new_scope1']},
-            {'id': entry2_id, 'resource_type': 'Rule',
-             'display_name': 'name2', 'scope': ['scope2']}]}
+        original_map = {
+            'id': map_id,
+            'resource_type': self.resource_type,
+            'category': constants.CATEGORY_APPLICATION,
+            'display_name': 'map_name',
+            'rules': [
+                {'id': entry1_id, 'resource_type': 'Rule',
+                 'dsiplay_name': 'name1', 'scope': ['scope1']},
+                {'id': entry2_id, 'resource_type': 'Rule',
+                 'display_name': 'name2', 'scope': ['scope2']},
+                {'id': entry3_id, 'resource_type': 'Rule',
+                 'display_name': 'name3', 'scope': ['scope3']}]}
+        updated_map = {
+            'id': map_id,
+            'resource_type': self.resource_type,
+            'category': constants.CATEGORY_APPLICATION,
+            'display_name': 'new_map_name',
+            'rules': [
+                {'id': entry1_id, 'resource_type': 'Rule',
+                 'dsiplay_name': 'name1', 'scope': ['new_scope1']},
+                {'id': entry2_id, 'resource_type': 'Rule',
+                 'display_name': 'name2', 'scope': ['scope2']}]}
         map_def = self.mapDef(
             domain_id=domain_id,
             map_id=map_id,
@@ -1796,9 +1865,9 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
                                return_value=original_map),\
             mock.patch.object(self.policy_api.client,
                               "update") as update_call:
-            self.resourceApi.update_entries(
-                domain_id, map_id, [entry1, entry2],
-                tenant=TEST_TENANT)
+            self.resourceApi.update_with_entries(
+                domain_id, map_id, entries=[entry1, entry2],
+                name='new_map_name', tenant=TEST_TENANT)
             update_call.assert_called_once_with(
                 map_def.get_resource_path(), updated_map)
 
