@@ -233,9 +233,11 @@ class LBVirtualServerDef(ResourceDef):
                 value=server_ssl_binding.get_obj_dict())
         waf_profile_binding = self.get_attr('waf_profile_binding')
         if waf_profile_binding:
+            if isinstance(waf_profile_binding, WAFProfileBindingDef):
+                waf_profile_binding = waf_profile_binding.get_obj_dict()
             self._set_attr_if_specified(
                 body, 'waf_profile_binding',
-                value=waf_profile_binding.get_obj_dict())
+                value=waf_profile_binding)
         rules = self.get_attr('rules')
         if self.has_attr('rules'):
             rules = rules if isinstance(rules, list) else [rules]

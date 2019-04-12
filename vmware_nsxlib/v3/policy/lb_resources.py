@@ -412,7 +412,7 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
                 pool_data.get('active_monitor_paths'))
 
         if kwargs.get('algorithm', IGNORE) == IGNORE:
-            kwargs['algorithm'] = pool_data['algorithm']
+            kwargs['algorithm'] = pool_data.get('algorithm')
 
         for k in kwargs.keys():
             if kwargs.get(k) == IGNORE and pool_data.get(k):
