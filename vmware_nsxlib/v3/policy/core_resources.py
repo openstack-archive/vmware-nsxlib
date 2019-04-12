@@ -455,6 +455,32 @@ class NsxPolicyGroupApi(NsxPolicyResourceBase):
                      tags=tags,
                      tenant=tenant)
 
+    def update_with_conditions(
+        self, domain_id, group_id,
+        name=IGNORE, description=IGNORE, conditions=IGNORE,
+        tags=IGNORE, tenant=constants.POLICY_INFRA_TENANT):
+        group_def = self._init_def(domain_id=domain_id,
+                                   group_id=group_id,
+                                   name=name,
+                                   description=description,
+                                   conditions=conditions,
+                                   tags=tags,
+                                   tenant=tenant)
+        group_path = group_def.get_resource_path()
+
+        @utils.retry_upon_exception(
+            exceptions.StaleRevision,
+            max_attempts=self.policy_api.client.max_attempts)
+        def _update():
+            # Get the current data of group
+            group = self.policy_api.get(group_def)
+            group_def.set_obj_dict(group)
+            body = group_def.get_obj_dict()
+            # Update the entire group at the NSX
+            self.policy_api.client.update(group_path, body)
+
+        _update()
+
     def get_realized_state(self, domain_id, group_id, entity_type=None,
                            tenant=constants.POLICY_INFRA_TENANT,
                            realization_info=None):
@@ -2857,10 +2883,18 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
 
     def update_entries(self, domain_id, map_id, entries,
                        tenant=constants.POLICY_INFRA_TENANT):
-        map_def = self.parent_entry_def(
-            domain_id=domain_id,
-            map_id=map_id,
-            tenant=tenant)
+        self.update_with_entries(domain_id, map_id, entries, tenant=tenant)
+
+    def update_with_entries(self, domain_id, map_id, entries=IGNORE,
+                            name=IGNORE, description=IGNORE,
+                            category=constants.CATEGORY_APPLICATION,
+                            tags=IGNORE, map_sequence_number=IGNORE,
+                            tenant=constants.POLICY_INFRA_TENANT):
+        map_def = self._init_parent_def(
+            domain_id=domain_id, map_id=map_id,
+            tenant=tenant, name=name, description=description,
+            category=category, tags=tags,
+            map_sequence_number=map_sequence_number)
         map_path = map_def.get_resource_path()
 
         def _overwrite_entries(old_entries, new_entries):
@@ -2883,11 +2917,14 @@ class NsxPolicySecurityPolicyBaseApi(NsxPolicyResourceBase):
             exceptions.StaleRevision,
             max_attempts=self.policy_api.client.max_attempts)
         def _update():
-            # Get the current data of communication map & its' entries
+            # Get the current data of communication map & its entries
             comm_map = self.policy_api.get(map_def)
-            comm_map['rules'] = _overwrite_entries(comm_map['rules'], entries)
+            map_def.set_obj_dict(comm_map)
+            body = map_def.get_obj_dict()
+            if entries != IGNORE:
+                body['rules'] = _overwrite_entries(comm_map['rules'], entries)
             # Update the entire map at the NSX
-            self.policy_api.client.update(map_path, comm_map)
+            self.policy_api.client.update(map_path, body)
 
         _update()
 
