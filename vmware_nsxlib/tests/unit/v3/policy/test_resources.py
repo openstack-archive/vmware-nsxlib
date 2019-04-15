@@ -1567,6 +1567,7 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             dest_groups=[dest_group],
             direction=nsx_constants.IN,
             ip_protocol=ip_protocol)
+        self.assertEqual(rule_id, entry1.get_id())
         rule_id += 1
         entry2 = self.resourceApi.build_entry(
             'DHCP Request', domain_id, map_id,
@@ -1575,6 +1576,63 @@ class TestPolicyCommunicationMap(NsxPolicyLibTestCase):
             source_groups=[source_group],
             dest_groups=None,
             direction=nsx_constants.OUT, ip_protocol=ip_protocol)
+        self.assertEqual(rule_id, entry2.get_id())
+
+        with mock.patch.object(self.policy_api,
+                               "create_with_parent") as api_call:
+            result = self.resourceApi.create_with_entries(
+                name, domain_id,
+                map_id=map_id,
+                description=description,
+                entries=[entry1, entry2],
+                category=category,
+                map_sequence_number=map_seq_num,
+                tenant=TEST_TENANT)
+
+            expected_def = self.mapDef(
+                domain_id=domain_id,
+                map_id=map_id,
+                name=name,
+                description=description,
+                category=category,
+                map_sequence_number=map_seq_num,
+                tenant=TEST_TENANT)
+
+            self.assert_called_with_defs(api_call,
+                                         [expected_def, entry1, entry2])
+            self.assertEqual(map_id, result)
+
+    def test_create_with_entries_no_id(self):
+        domain_id = '111'
+        map_id = '222'
+        name = 'cm1'
+        description = 'desc'
+        source_group = 'g1'
+        dest_group = 'g2'
+        service_id = 'c1'
+        category = 'Emergency'
+        ip_protocol = nsx_constants.IPV4
+        map_seq_num = 10
+
+        rule_id = 1
+        entry1 = self.resourceApi.build_entry(
+            'DHCP Reply', domain_id, map_id,
+            sequence_number=rule_id, service_ids=[service_id],
+            action=constants.ACTION_DENY,
+            source_groups=None,
+            dest_groups=[dest_group],
+            direction=nsx_constants.IN,
+            ip_protocol=ip_protocol)
+        self.assertIsNotNone(entry1.get_id())
+        rule_id += 1
+        entry2 = self.resourceApi.build_entry(
+            'DHCP Request', domain_id, map_id,
+            sequence_number=rule_id, service_ids=None,
+            action=constants.ACTION_DENY,
+            source_groups=[source_group],
+            dest_groups=None,
+            direction=nsx_constants.OUT, ip_protocol=ip_protocol)
+        self.assertIsNotNone(entry2.get_id())
 
         with mock.patch.object(self.policy_api,
                                "create_with_parent") as api_call:
