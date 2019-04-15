@@ -2637,12 +2637,14 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         segment_id = 'seg'
         ip_addr = '1.1.1.1'
         prefix_len = '24'
+        ndra_profile = 'slaac'
         subnet = core_defs.InterfaceSubnet([ip_addr], prefix_len)
         with mock.patch.object(self.policy_api,
                                "create_or_update") as api_call:
             self.resourceApi.add_segment_interface(
                 tier1_id, interface_id, segment_id,
                 subnets=[subnet],
+                ipv6_ndra_profile_id=ndra_profile,
                 tenant=TEST_TENANT)
 
             expected_def = core_defs.Tier1InterfaceDef(
@@ -2651,6 +2653,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
                 interface_id=interface_id,
                 segment_id=segment_id,
                 subnets=[subnet],
+                ipv6_ndra_profile_id=ndra_profile,
                 tenant=TEST_TENANT)
 
             self.assert_called_with_def(api_call, expected_def)
