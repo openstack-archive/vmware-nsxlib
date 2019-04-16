@@ -414,6 +414,9 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
         if kwargs.get('algorithm', IGNORE) == IGNORE:
             kwargs['algorithm'] = pool_data.get('algorithm')
 
+        if kwargs.get('members', IGNORE) == IGNORE:
+            kwargs['members'] = pool_data.get('members')
+
         for k in kwargs.keys():
             if kwargs.get(k) == IGNORE and pool_data.get(k):
                 kwargs[k] = pool_data[k]
