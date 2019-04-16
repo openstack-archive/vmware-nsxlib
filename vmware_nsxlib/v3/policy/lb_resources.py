@@ -484,9 +484,8 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
             lb_pool_id=lb_pool_id, tenant=tenant)
         lb_pool = self.policy_api.get(lb_pool_def)
         lb_pool_members = lb_pool.get('members', [])
-        member_to_update = filter(
-            lambda x: (x.get('ip_address') == ip_address and
-                       x.get('port') == port), lb_pool_members)
+        member_to_update = [x for x in lb_pool_members if (
+            x.get('ip_address') == ip_address and x.get('port') == port)]
         if member_to_update:
             member_to_update[0]['display_name'] = display_name
             member_to_update[0]['weight'] = weight
@@ -506,9 +505,8 @@ class NsxPolicyLoadBalancerPoolApi(NsxPolicyResourceBase):
             lb_pool_id=lb_pool_id, tenant=tenant)
         lb_pool = self.policy_api.get(lb_pool_def)
         lb_pool_members = lb_pool.get('members', [])
-        lb_pool_members = filter(
-            lambda x: (x.get('ip_address') != ip_address or
-                       x.get('port') != port), lb_pool_members)
+        lb_pool_members = [x for x in lb_pool_members if (
+            x.get('ip_address') != ip_address and x.get('port') != port)]
         self._update_helper(lb_pool_id, members=lb_pool_members,
                             pool_data=lb_pool, tenant=tenant)
 
