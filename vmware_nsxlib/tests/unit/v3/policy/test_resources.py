@@ -2514,7 +2514,7 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         obj_id = '111'
         rtr_name = 'rtr111'
         ndra_profile_id = 'test'
-        ndra_profile_path = '/infra/ipv6-ndra-profile/%s' % ndra_profile_id
+        ndra_profile_path = '/infra/ipv6-ndra-profiles/%s' % ndra_profile_id
         get_result = {'id': obj_id,
                       'display_name': rtr_name,
                       'enable_standby_relocation': False,
@@ -2760,7 +2760,8 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api,
                                "get",
                                return_value={'id': tier1_id,
-                                             'display_name': 'tier1name'}),\
+                                             'display_name': 'tier1name',
+                                             'resource_type': 'Tier1'}),\
                 mock.patch.object(self.policy_api,
                                   'create_or_update') as api_call:
             self.resourceApi.add_advertisement_rule(
