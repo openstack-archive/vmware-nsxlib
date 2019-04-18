@@ -757,7 +757,7 @@ class Inventory(utils.NsxLibApiBase):
         if not resource_type:
             msg = "null resource type is not supported"
             raise exceptions.ResourceNotFound(details=msg)
-        request_url = "%s?cluster_id=%s" % (
+        request_url = "%s?container_cluster_id=%s" % (
             self.get_path(self._get_path_for_resource(resource_type)),
             cluster_id)
         return self.client.url_get(request_url)

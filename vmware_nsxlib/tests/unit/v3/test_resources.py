@@ -2166,7 +2166,7 @@ class InventoryTestCase(BaseTestResource):
             self.CONTAINER_CLUSTER,
             'ContainerApplication')
         base_url = 'https://1.2.3.4/api/v1/fabric/container-applications'
-        surfix = '?cluster_id=%s' % self.CONTAINER_CLUSTER
+        surfix = '?container_cluster_id=%s' % self.CONTAINER_CLUSTER
         test_client.assert_json_call(
             'get', mocked_resource,
             base_url + surfix,
