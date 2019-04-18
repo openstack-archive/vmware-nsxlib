@@ -2760,7 +2760,8 @@ class TestPolicyTier1(NsxPolicyLibTestCase):
         with mock.patch.object(self.policy_api,
                                "get",
                                return_value={'id': tier1_id,
-                                             'display_name': 'tier1name'}),\
+                                             'display_name': 'tier1name',
+                                             'resource_type': 'Tier1'}),\
                 mock.patch.object(self.policy_api,
                                   'create_or_update') as api_call:
             self.resourceApi.add_advertisement_rule(
