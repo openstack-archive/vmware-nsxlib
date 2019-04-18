@@ -672,6 +672,10 @@ class NsxPolicyLoadBalancerVirtualServerAPI(NsxPolicyResourceBase):
             if kwargs.get(k) == IGNORE and vs_data.get(k):
                 kwargs[k] = vs_data[k]
 
+        if (kwargs.get('tags', IGNORE) == IGNORE and
+                vs_data.get('tags')):
+            kwargs['tags'] = vs_data['tags']
+
         self._update(
             virtual_server_id=virtual_server_id,
             tenant=tenant,
