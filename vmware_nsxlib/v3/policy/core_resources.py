@@ -890,12 +890,16 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                enable_standby_relocation=IGNORE,
                disable_firewall=IGNORE,
                ipv6_ndra_profile_id=IGNORE,
-               tenant=constants.POLICY_INFRA_TENANT):
+               route_advertisement=IGNORE,
+               route_advertisement_rules=IGNORE,
+               tenant=constants.POLICY_INFRA_TENANT,
+               current_body=None):
         # Note(asarfaty): L2/L3 PATCH APIs don't support partial updates yet
         # TODO(asarfaty): Remove this when supported
         if (name == IGNORE or enable_standby_relocation == IGNORE or
             ipv6_ndra_profile_id == IGNORE):
-            current_body = self.get(tier1_id, tenant=tenant)
+            if not current_body:
+                current_body = self.get(tier1_id, tenant=tenant)
             if name == IGNORE:
                 name = current_body.get('display_name', IGNORE)
             if enable_standby_relocation == IGNORE:
@@ -903,6 +907,13 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                     'enable_standby_relocation', IGNORE)
             if ipv6_ndra_profile_id == IGNORE:
                 ipv6_ndra_profile_id = self._get_ipv6_profile_from_dict(
+                    current_body)
+            if route_advertisement_rules == IGNORE:
+                route_advertisement_rules = current_body.get(
+                    'route_advertisement_rules', IGNORE)
+            if route_advertisement == IGNORE and current_body.get(
+                    'route_advertisement_types'):
+                route_advertisement = self.entry_def.get_route_adv(
                     current_body)
 
         self._update(tier1_id=tier1_id,
@@ -915,6 +926,8 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                      enable_standby_relocation=enable_standby_relocation,
                      disable_firewall=disable_firewall,
                      ipv6_ndra_profile_id=ipv6_ndra_profile_id,
+                     route_advertisement=route_advertisement,
+                     route_advertisement_rules=route_advertisement_rules,
                      tags=tags,
                      tenant=tenant)
 
@@ -946,20 +959,10 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
                          lb_vip=lb_vip,
                          lb_snat=lb_snat)
 
-        # Note(asarfaty) keep tier1 name and enable_standby_relocation as
-        # well, as the current nsx implementation resets name to the ID and
-        # enable_standby_relocation to false and ndra profile.
-        # TODO(asarfaty): Remove this when supported
-        ndra_profile_id = self._get_ipv6_profile_from_dict(tier1_dict)
-
-        tier1_def = self._init_def(tier1_id=tier1_id,
-                                   name=tier1_dict.get('display_name'),
-                                   enable_standby_relocation=tier1_dict.get(
-                                       'enable_standby_relocation'),
-                                   route_advertisement=route_adv,
-                                   ipv6_ndra_profile_id=ndra_profile_id,
-                                   tenant=tenant)
-        self.policy_api.create_or_update(tier1_def)
+        self.update(tier1_id,
+                    route_advertisement=route_adv,
+                    tenant=tenant,
+                    current_body=tier1_dict)
 
     def add_advertisement_rule(
             self, tier1_id, name, action=None, prefix_operator=None,
@@ -974,11 +977,10 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
             route_advertisement_types=route_advertisement_types,
             subnets=subnets)
         adv_rules.append(adv_rule)
-        tier1_def = self.entry_def(tier1_id=tier1_id,
-                                   name=tier1_dict.get('display_name'),
-                                   route_advertisement_rules=adv_rules,
-                                   tenant=tenant)
-        self.policy_api.create_or_update(tier1_def)
+        self.update(tier1_id,
+                    route_advertisement_rules=adv_rules,
+                    tenant=tenant,
+                    current_body=tier1_dict)
 
     def remove_advertisement_rule(self, tier1_id, name,
                                   tenant=constants.POLICY_INFRA_TENANT):
@@ -986,12 +988,10 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         adv_rules = tier1_dict.get('route_advertisement_rules', [])
         updated_adv_rules = [r for r in adv_rules if r.get('name') != name]
         if updated_adv_rules != adv_rules:
-            tier1_def = self.entry_def(
-                tier1_id=tier1_id,
-                name=tier1_dict.get('display_name'),
-                route_advertisement_rules=updated_adv_rules,
-                tenant=tenant)
-            self.policy_api.create_or_update(tier1_def)
+            self.update(tier1_id,
+                        route_advertisement_rules=updated_adv_rules,
+                        tenant=tenant,
+                        current_body=tier1_dict)
 
     def _locale_service_id(self, tier1_id):
         # Supporting only a single locale-service per router for now
