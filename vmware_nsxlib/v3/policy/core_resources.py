@@ -953,6 +953,14 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
         # with the same id as the router id with a constant suffix
         return tier1_id + self.LOCALE_SERVICE_SUFF
 
+    def _ensure_locale_service(self, tier1_id,
+                               tenant=constants.POLICY_INFRA_TENANT):
+        t1service_def = core_defs.Tier1LocaleServiceDef(
+            tier1_id=tier1_id,
+            service_id=self._locale_service_id(tier1_id),
+            tenant=tenant)
+        self.policy_api.create_or_update(t1service_def)
+
     def set_edge_cluster_path(self, tier1_id, edge_cluster_path,
                               tenant=constants.POLICY_INFRA_TENANT):
         t1service_def = core_defs.Tier1LocaleServiceDef(
@@ -985,6 +993,8 @@ class NsxPolicyTier1Api(NsxPolicyResourceBase):
     def add_segment_interface(self, tier1_id, interface_id, segment_id,
                               subnets, ipv6_ndra_profile_id=IGNORE,
                               tenant=constants.POLICY_INFRA_TENANT):
+        self._ensure_locale_service(tier1_id, tenant)
+
         t1interface_def = core_defs.Tier1InterfaceDef(
             tier1_id=tier1_id,
             service_id=self._locale_service_id(tier1_id),
