@@ -1,9 +1,0 @@
-[run]
-branch = True
-source = vmware_nsxlib
-omit = vmware_nsxlib/tests/*
-
-[report]
-ignore_errors = True
-[report]
-ignore_errors = True

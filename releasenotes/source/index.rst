@@ -1,8 +1,0 @@
-============================
- vmware_nsxlib Release Notes
-============================
-
-.. toctree::
-   :maxdepth: 1
-
-   unreleased
